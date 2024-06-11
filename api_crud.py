@@ -153,8 +153,8 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
     #delete s3
     if "file_url" in object and object["file_url"]:
        for url in object["file_url"].split(","):
-          if config_
-          background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+          if config_aws_s3_bucket_name in url:
+             background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
     #set self
     created_by_id=None
     if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
