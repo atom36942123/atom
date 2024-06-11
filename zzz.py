@@ -45,7 +45,7 @@ and datname='database_name';
 
 #ec2
 path = sudo -i / cd atom/atom
-code pull = git pull origin master
+code pull = git pull origin main
 server starts = sh /opt/fastapi.sh
 edit file = nano .env
 
@@ -66,12 +66,6 @@ running=redis-cli ping
 #mongo
 start=brew services start mongodb-community
 stop=brew services stop mongodb-community
-
-#git
-start=git init
-remote=git remote -v
-gitignore=git config --global core.excludesfile .gitignore
-cache_remove=git rm -r --cached .
 
 #env
 create=python -m venv atom
