@@ -1,3 +1,15 @@
+#ec2
+path = sudo -i / cd atom/atom
+code pull = git pull origin main
+server starts = sh /opt/fastapi.sh
+edit file = nano .env
+
+#update	requirement
+1. pip-review
+2. pip-review --auto
+3. pip freeze > requirement.txt
+4. pip install -r requirement.txt
+
 #drop all
 DO $$ DECLARE r RECORD;
 BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
@@ -34,95 +46,3 @@ tag_append_duplicate_not=update box set tag=(select array_agg(distinct t) from u
 tag_append_position=update post set tag='news'::text||tag[1:] where type='acquisition';
 tag_remove_one=update box set tag=array_remove(tag,'atom');
 tag_replace=update post set tag=array_replace(tag,'meme','memes')
-
-#connection kill
-select pg_terminate_backend(pid) from pg_stat_activity 
-where 
--- don't kill my own connection!
-pid <> pg_backend_pid()
--- don't kill the connections to other databases
-and datname='database_name';
-
-#ec2
-path = sudo -i / cd atom/atom
-code pull = git pull origin main
-server starts = sh /opt/fastapi.sh
-edit file = nano .env
-
-#postgres
-install=brew install postgresql
-start=brew services start postgresql
-stop=brew services stop postgresql
-restart=brew services restart postgresql
-login=psql postgres ritu
-
-#redis
-install=brew install redis
-start=brew services start redis
-stop=brew services stop redis
-info=brew services info redis
-running=redis-cli ping
-
-#mongo
-start=brew services start mongodb-community
-stop=brew services stop mongodb-community
-
-#env
-create=python -m venv atom
-activate= source atom/bin/activate
-freeze=pip freeze > requirement.txt
-install=pip install -r requirement.txt --ignore-installed PyYAML
-
-#jupyter
-create env=conda create --name ml
-activate env=conda activate ml
-delete=conda remove -n ml --all
-start=jupyter notebook
-
-#kill pid
-lsof -i:8000
-kill -9 44511
-
-#update	requirement
-1. pip-review
-2. pip-review --auto 
-3. pip freeze > requirement.txt
-4. pip install -r requirement.txt
-5. if 3rd step - no error - gut push
-6. else reduce version of red ones in requirement.txt and run again step 4 till error is zero
-7. <pip install -r requirement.txt> on server
-
-#retool api trigger
-await create_s3_url.trigger({
-  onSuccess:function(data) {
-  upload_s3_url.trigger({
-  onSuccess:function(data) {
-  localStorage.setValue( "s3_url", (create_s3_url.data.message.url + create_s3_url.data.message.fields.key)  );
-  }})
-}})
-
-#postman if/else
-#if
-postman.setEnvironmentVariable("x","xxx");
-if (pm.environment.name=="prod")
-{ postman.setEnvironmentVariable("x","yyy");
-}
-
-#logout javascript
-var logout_days=30
-//logic
-if (localStorage.values.login_time!=null){
-  var login_time=localStorage.values.login_time;
-  var now=moment().unix();
-  var ageing_days=(now-login_time)/86400;
-  if (ageing_days > logout_days ){logout.trigger();} 
-}
-
-#object key into list
-const post_tag= {{localStorage.values.project_cache.post_tag}}
-const post_tag_list=post_tag.map(v=>v.tag)
-return post_tag_list
-
-#linux
-rm <file_name>
-rm -r <folder_name>
