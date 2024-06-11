@@ -76,8 +76,8 @@ cache_remove=git rm -r --cached .
 #env
 create=python -m venv atom
 activate= source atom/bin/activate
-freeze=pip freeze > package.txt
-install=pip install -r package.txt --ignore-installed PyYAML
+freeze=pip freeze > requirement.txt
+install=pip install -r requirement.txt --ignore-installed PyYAML
 
 #jupyter
 create env=conda create --name ml
@@ -92,11 +92,11 @@ kill -9 44511
 #update	package
 1. pip-review
 2. pip-review --auto 
-3. pip freeze > package.py
-4. pip install -r package.py
+3. pip freeze > requirement.txt
+4. pip install -r requirement.txt
 5. if 3rd step - no error - gut push
 6. else reduce version of red ones in package.py and run again step 4 till error is zero
-7. <pip install -r package.py> on server
+7. <pip install -r requirement.txt> on server
 
 #retool api trigger
 await create_s3_url.trigger({
