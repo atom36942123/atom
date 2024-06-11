@@ -4,12 +4,6 @@ code pull = git pull origin main
 server starts = sh /opt/fastapi.sh
 edit file = nano .env
 
-#update	requirement
-1. pip-review
-2. pip-review --auto
-3. pip freeze > requirement.txt
-4. pip install -r requirement.txt
-
 #drop all
 DO $$ DECLARE r RECORD;
 BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
