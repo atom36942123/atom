@@ -54,17 +54,17 @@ async def api_func_root(x:str):
    return {"status":1,"message":f"welcome to {x}"}
 
 #router
-from mongo import router
+from api_login import router
 app.include_router(router)
-from es import router
+from api_my import router
 app.include_router(router)
-from login import router
+from api_crud import router
 app.include_router(router)
-from my import router
+from api_utility import router
 app.include_router(router)
-from crud import router
+from api_mongo import router
 app.include_router(router)
-from utility import router
+from api_elasticsearch import router
 app.include_router(router)
 
 #server
