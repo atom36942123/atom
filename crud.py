@@ -1,0 +1,258 @@
+#import
+from object import postgres_object
+from config import *
+from function import *
+from fastapi import Request
+from fastapi import BackgroundTasks
+from datetime import datetime
+from typing import Literal
+import json
+from fastapi import Body
+from fastapi_cache.decorator import cache
+
+#router
+from fastapi import APIRouter
+router=APIRouter(tags=["crud"])
+
+#schema
+from pydantic import BaseModel
+from typing import Literal
+from datetime import datetime
+class schema_atom(BaseModel):
+   username:str|None=None
+   name:str|None=None
+   gender:str|None=None
+   date_of_birth:datetime|None=None
+   profile_pic_url:str|None=None
+   received_by_id:int|None=None
+   type:str|None=None
+   title:str|None=None
+   description:str|None=None
+   file_url:str|None=None
+   link_url:str|None=None
+   tag:list|None=None
+   number:float|None=None
+   date:datetime|None=None
+   status:str|None=None
+   remark:str|None=None
+   parent_table:str|None=None
+   parent_id:int|None=None
+   email:str|None=None
+   mobile:str|None=None
+   whatsapp:str|None=None
+   phone:str|None=None
+   country:str|None=None
+   state:str|None=None
+   city:str|None=None
+   rating:int|None=None
+   is_active:int|None=None
+   is_verified:int|None=None
+   is_deleted:int|None=None
+   is_admin:int|None=None
+   metadata:dict|None=None
+   
+#api
+@router.post("/{x}/object-create/{table}")
+async def api_func(x:str,table:str,request:Request,body:schema_atom):
+    #token check
+    request_user={}
+    request_user["id"]=None
+    if table not in ["helpdesk"]:
+        response=await function_token_decode(request,config_jwt_secret_key)
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        request_user=response["message"]
+    #check body
+    response=await function_check_body(vars(body))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #check
+    if table=="message" and body.received_by_id==request_user["id"]:return function_http_response(400,0,"self message not allowed")
+    if table=="post" and (not body.description and not body.file_url):return function_http_response(400,0,"title/description/file any one is mandatory")
+    if table=="helpdesk" and not body.description:return function_http_response(400,0,"description is mandatory")
+    if body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
+    #param set
+    try:
+        param=vars(body)
+        param={k: v for k, v in param.items() if v}
+        if not param:return function_http_response(400,0,"all keys cant be null")
+        if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+        if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+        if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+        if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+        if table in ["report","helpdesk"]:param["status"]="pending"
+        if table in ["message"]:param["status"]="unread"
+        param["created_by_id"]=request_user["id"]
+        if "number" in param:param["number"]=round(param["number"],5)
+    except Exception as e:return function_http_response(400,0,e.args)
+    #key set
+    try:
+        key_1=",".join([*param])
+        key_2=",".join([":"+item for item in [*param]])
+    except Exception as e:return function_http_response(400,0,e.args)
+    #logic
+    query=f'''insert into {table} ({key_1}) values ({key_2}) returning *;'''
+    response=await function_query_runner(postgres_object[x],"write",query,param)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #finally
+    return response
+
+@router.put("/{x}/object-update/{table}/{id}")
+async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
+    #token check
+    response=await function_token_decode(request,config_jwt_secret_key)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #check body
+    response=await function_check_body(vars(body))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #set self
+    created_by_id=None
+    if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
+    if request_user["is_admin"]==0 and table!="users":created_by_id=request_user['id']
+    #param set
+    try:
+        param=vars(body)
+        param={k: v for k,v in param.items() if v!=None}
+        if not param:return function_http_response(400,0,"all keys cant be null")
+        if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+        if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+        if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+        if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+        param["updated_at"]=datetime.now()
+        param["updated_by_id"]=request_user["id"]
+        if "number" in param:param["number"]=round(param["number"],5)
+    except Exception as e:return function_http_response(400,0,e.args)
+    #key set
+    try:
+        key=""
+        for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+        key=key.strip().rsplit(',', 1)[0]
+    except Exception as e:return function_http_response(400,0,e.args)
+    #logic
+    query=f"update {table} set {key} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+    response=await function_query_runner(postgres_object[x],"write",query,param|{"id":id,"created_by_id":created_by_id})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #finally
+    return response
+
+@router.delete("/{x}/object-delete/{table}/{id}")
+async def api_func(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
+    #token check
+    response=await function_token_decode(request,config_jwt_secret_key)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #check table
+    if table=="users":return function_http_response(400,0,"users table not allowed")
+    #read object
+    query=f"select * from {table} where id={id};"
+    response=await function_query_runner(postgres_object[x],"read",query,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return function_http_response(400,0,"no such object")
+    object=response["message"][0]
+    #if object admin
+    if "is_admin" in object and object["is_admin"]==1:return function_http_response(400,0,"admin object cant be deleted")
+    #delete s3
+    if "file_url" in object and object["file_url"]:
+        for url in object["file_url"].split(","):background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+    #set self
+    created_by_id=None
+    if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
+    if request_user["is_admin"]==0 and table!="users":created_by_id=request_user['id']
+    #logic
+    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+    values={"id":id,"created_by_id":created_by_id}
+    response=await function_query_runner(postgres_object[x],"write",query,values)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #delete post child
+    if table in ["post"]:
+        query_dict={
+        "likes":f"delete from likes where parent_table='post' and parent_id={id};",
+        "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
+        "report":f"delete from report where parent_table='post' and parent_id={id};",
+        "rating":f"delete from rating where parent_table='post' and parent_id={id};",
+        "comment":f"delete from comment where parent_table='post' and parent_id={id};",
+        }
+        for k,v in query_dict.items():background_tasks.add_task(function_query_runner,postgres_object[x],"write",v,{})
+    #finally
+    return {"status":1,"message":"object deleted"}
+
+@router.get("/{x}/object-read-self/{table}/{page}")
+async def api_func(x:str,request:Request,table:str,page:int,id:int=None):
+   #token check
+   response=await function_token_decode(request,config_jwt_secret_key)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #table check
+   if table=="users":return function_http_response(400,0,"users table not allowed")
+   #logic
+   limit=30
+   offset=(page-1)*limit
+   param={"created_by_id":request_user['id'],"id":id}
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add user key
+   response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add like count
+   if table=="post":
+      response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add comment count
+   if table=="post":
+      response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #finally
+   return response
+
+@router.get("/{x}/object-read-public/{table}/{page}")
+@cache(expire=60)
+async def api_func(x:str,request:Request,table:Literal["users","atom","post","comment"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+   #logic
+   limit=30
+   offset=(page-1)*limit
+   param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add user key
+   if table!="users":
+      response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add like count
+   if table=="post":
+      response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add comment count
+   if table=="post":
+      response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #finally
+   return response
+
+@router.get("/{x}/object-read-admin/{table}/{page}")
+async def api_func(x:str,request:Request,table:str,page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+   #token check
+   response=await function_token_decode(request,config_jwt_secret_key)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #admin check
+   if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
+   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   #logic
+   limit=30
+   offset=(page-1)*limit
+   param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add user key
+   if table!="users" and False:
+      response=await function_add_user_key(postgres_object[x],function_query_runner,table,response["message"],"created_by_id")
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add like count
+   if table=="post" and False:
+      response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add comment count
+   if table=="post" and False:
+      response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #finally
+   return response
