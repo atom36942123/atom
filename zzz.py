@@ -89,13 +89,13 @@ start=jupyter notebook
 lsof -i:8000
 kill -9 44511
 
-#update	package
+#update	requirement
 1. pip-review
 2. pip-review --auto 
 3. pip freeze > requirement.txt
 4. pip install -r requirement.txt
 5. if 3rd step - no error - gut push
-6. else reduce version of red ones in package.py and run again step 4 till error is zero
+6. else reduce version of red ones in requirement.txt and run again step 4 till error is zero
 7. <pip install -r requirement.txt> on server
 
 #retool api trigger
