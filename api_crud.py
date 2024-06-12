@@ -68,7 +68,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
     if table=="message" and body.received_by_id==request_user["id"]:return function_http_response(400,0,"self message not allowed")
     if table=="post" and (not body.description and not body.file_url):return function_http_response(400,0,"title/description/file any one is mandatory")
     if table=="helpdesk" and not body.description:return function_http_response(400,0,"description is mandatory")
-    if body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
+    if table not in ["atom"] and body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
     #param set
     try:
         param=vars(body)
