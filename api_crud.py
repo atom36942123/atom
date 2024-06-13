@@ -22,6 +22,10 @@ class schema_atom(BaseModel):
    username:str|None=None
    name:str|None=None
    gender:str|None=None
+   college:str|None=None
+   linkedin_url:str|None=None
+   portfolio_url:str|None=None
+   work_profile:str|None=None
    date_of_birth:datetime|None=None
    profile_pic_url:str|None=None
    received_by_id:int|None=None
