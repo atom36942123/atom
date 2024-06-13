@@ -49,11 +49,11 @@ async def api_func(x:str,request:Request):
     "gender":["text",["users","workseeker"]],
     "date_of_birth":["date",["users"]],
     "profile_pic_url":["text",["users"]],
-        
+
+    "profile":["text",["workseeker"]],
     "college":["text",["workseeker"]],
     "linkedin_url":["text",["workseeker"]],
     "portfolio_url":["text",["workseeker"]],
-    "work_profile":["text",["workseeker"]],
     "experience":["int",["workseeker"]],
     "location_current":["text",["workseeker"]],
     "location_expected":["text",["workseeker"]],
