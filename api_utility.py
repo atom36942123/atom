@@ -122,8 +122,8 @@ async def api_func(x:str,request:Request):
     mapping_column_default={
     "created_at":["now()",config_table],
     "last_active_at":["now()",["users"]],
-    "is_active":["1",["atom","users","post","comment"]],
-    "is_verified":["0",["atom","users","post","comment"]],
+    "is_active":["1",["atom","users","post","comment","workseeker"]],
+    "is_verified":["0",["atom","users","post","comment","workseeker"]],
     "is_admin":["0",["atom","users","post"]],
     }
     for k,v in mapping_column_default.items():
@@ -168,6 +168,7 @@ async def api_func(x:str,request:Request):
     "is_active":["(0,1)",["atom","users","post","comment"]],
     "is_verified":["(0,1)",["atom","users","post","comment"]],
     "is_admin":["(0,1)",["atom","users","post"]],
+    "is_working":["(0,1)",["workseeker"]],
     }
     for k,v in mapping_column_check_in.items():
         for item in v[1]:
