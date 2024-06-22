@@ -34,6 +34,5 @@ config_admin_panel=env("admin_panel")
 
 #custom
 config_x=["test","atom"]
-config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 config_switch_mongo=0
 config_switch_elasticsearch=0
