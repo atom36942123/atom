@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Literal
 import json
 import random
-import uuid
 from fastapi import File
 from fastapi import UploadFile
 from fastapi import Body
