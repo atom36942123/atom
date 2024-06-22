@@ -8,6 +8,8 @@ from fastapi import Request
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
+config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
+
 #api
 @router.get("/{x}/database")
 async def api_func(x:str,request:Request):
