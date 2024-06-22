@@ -4,9 +4,6 @@ from function import *
 from object import postgres_object
 from fastapi import Request
 
-#xxx
-rohit
-
 #router
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
@@ -14,6 +11,20 @@ router=APIRouter(tags=["database"])
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 
 #api
+@router.get("/{x}/database-create-table")
+async def api_func(x:str,request:Request):
+    #token check
+    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    #create table
+    for item in config_table:
+        query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
+        response=await function_query_runner(postgres_object[x],"write",query,{})
+        if response["status"]==0:return function_http_response(400,0,f"create_table_error={response['message']}+{query}")
+    #finally
+    return {"status":1,"message":"done"}
+
+
+
 @router.get("/{x}/database")
 async def api_func(x:str,request:Request):
     #token check
