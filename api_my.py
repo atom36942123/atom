@@ -1,13 +1,7 @@
 #import
+from config import *
+from function import *
 from object import postgres_object
-from config import config_jwt_secret_key
-from function import function_http_response
-from function import function_query_runner
-from function import function_object_read
-from function import function_token_decode
-from function import function_add_user_key
-from function import function_add_like_count
-from function import function_add_comment_count
 from fastapi import Request
 from fastapi import BackgroundTasks
 from datetime import datetime
