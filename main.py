@@ -60,7 +60,6 @@ from api_my import router
 app.include_router(router)
 from api_crud import router
 app.include_router(router)
-
 from api_database import router
 app.include_router(router)
 from api_s3 import router
@@ -69,7 +68,6 @@ from api_utility import router
 app.include_router(router)
 from api_admin import router
 app.include_router(router)
-
 from api_mongo import router
 app.include_router(router)
 from api_elasticsearch import router
