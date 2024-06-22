@@ -77,3 +77,34 @@ async def api_func(x:str,request:Request,table:Literal["atom","post"],file:Uploa
     file.file.close
     #finally
     return {"status":1,"message":f"rows inserted={count}"}
+
+@router.get("/{x}/checklist")
+async def api_func(x:str,request:Request):
+   #ops query
+   query_dict={
+   "post_creator_null":"delete from post where id in (select x.id from post as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "likes_creator_null":"delete from likes where id in (select x.id from likes as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "bookmark_creator_null":"delete from bookmark where id in (select x.id from bookmark as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "report_creator_null":"delete from report where id in (select x.id from report as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "comment_creator_null":"delete from comment where id in (select x.id from comment as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "rating_creator_null":"delete from rating where id in (select x.id from rating as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "block_creator_null":"delete from block where id in (select x.id from block as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
+   "likes_parent_null_post":"delete from likes where id in (select x.id from likes as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
+   "bookmark_parent_null_post":"delete from bookmark where id in (select x.id from bookmark as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
+   "comment_parent_null_post":"delete from comment where id in (select x.id from comment as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
+   "mark_post_admin":"update post set is_admin=1 where id in (select p.id from post as p left join users as u on p.created_by_id=u.id where p.is_admin=0 and u.is_admin=1);",
+   "delete_duplicate_tag":"delete from atom as a1 using atom as a2 where a1.type='tag' and a2.type='tag' and a1.ctid>a2.ctid and a1.title=a2.title;",
+   "delete_message_old":"delete from message where created_at<now()-interval '30 days';",
+   }
+   for k,v in query_dict.items():
+      response=await function_query_runner(postgres_object[x],"write",v,{})
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #root user check
+   query="select * from users where id=1;"
+   response=await function_query_runner(postgres_object[x],"read",query,{})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if not response["message"]:return function_http_response(400,0,"root user null issue")
+   object=response["message"][0]
+   if object["username"]!="root" or object["is_admin"]!=1 or object["is_active"]!=1:return function_http_response(400,0,"root user data issue")
+   #finally
+   return {"status":1,"message":"done"}
