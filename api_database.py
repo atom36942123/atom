@@ -53,6 +53,35 @@ config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
+config_column_check_in={
+"is_active":["(0,1)",["atom","users","post","comment"]],
+"is_verified":["(0,1)",["atom","users","post","comment"]],
+"is_admin":["(0,1)",["atom","users","post"]],
+"is_working":["(0,1)",["workseeker"]],
+}
+config_column_index={
+"created_at":["atom","users","post","message"],
+"created_by_id":["atom","post","likes","comment","bookmark","report","rating","message"],
+"parent_table":["likes","comment","bookmark","report","rating","block"],
+"parent_id":["likes","comment","bookmark","report","rating","block"],
+"received_by_id":["message"],
+"description":["comment","message","helpdesk"],
+"type":["atom","post","helpdesk"],
+"password":["users"],
+"firebase_id":["users"],
+"email":["otp"],
+"mobile":["otp"],
+}
+config_column_index_array={
+"tag":["atom","users","post"],
+}
+config_query={
+"rule_delete_disable_atom":"create or replace rule rule_delete_disable_atom as on delete to atom where old.is_admin=1 do instead nothing;",
+"rule_delete_disable_post":"create or replace rule rule_delete_disable_post as on delete to post where old.is_admin=1 do instead nothing;",
+"rule_delete_disable_users":"create or replace rule rule_delete_disable_users as on delete to users where old.is_admin=1 do instead nothing;",
+"rule_delete_disable_root":"create or replace rule rule_delete_disable_root as on delete to users where old.id=1 do instead nothing;",
+"index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
+}
 
 #api
 @router.get("/{x}/database")
@@ -103,23 +132,8 @@ async def api_func(x:str,request:Request):
                 query=f"alter table {item} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
-
-
-
-    
-    
-    
-                        
-    
-                    
     #column check in
-    mapping_column_check_in={
-    "is_active":["(0,1)",["atom","users","post","comment"]],
-    "is_verified":["(0,1)",["atom","users","post","comment"]],
-    "is_admin":["(0,1)",["atom","users","post"]],
-    "is_working":["(0,1)",["workseeker"]],
-    }
-    for k,v in mapping_column_check_in.items():
+    for k,v in config_column_check_in.items():
         for item in v[1]:
             constraint_name=f"check_in_{k}_{item}"
             if constraint_name not in schema_constraint_name_list:
@@ -127,42 +141,19 @@ async def api_func(x:str,request:Request):
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_check_in_error={response['message']}+{query}")
     #column index
-    mapping_column_index={
-    "created_at":["atom","users","post","message"],
-    "created_by_id":["atom","post","likes","comment","bookmark","report","rating","message"],
-    "parent_table":["likes","comment","bookmark","report","rating","block"],
-    "parent_id":["likes","comment","bookmark","report","rating","block"],
-    "received_by_id":["message"],
-    "description":["comment","message","helpdesk"],
-    "type":["atom","post","helpdesk"],
-    "password":["users"],
-    "firebase_id":["users"],
-    "email":["otp"],
-    "mobile":["otp"],
-    }
-    for k,v in mapping_column_index.items():
+    for k,v in config_column_index.items():
         for item in v:
             query=f"create index if not exists index_{k}_{item} on {item}({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_index_error={response['message']}+{query}")
     #column index array
-    mapping_column_index_array={
-    "tag":["atom","users","post"],
-    }
-    for k,v in mapping_column_index_array.items():
+    for k,v in config_column_index_array.items():
         for item in v:
             query=f"create index if not exists index_{k}_{item} on {item} using gin ({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_index_array_error={response['message']}+{query}")
     #query
-    query_dict={
-    "rule_delete_disable_atom":"create or replace rule rule_delete_disable_atom as on delete to atom where old.is_admin=1 do instead nothing;",
-    "rule_delete_disable_post":"create or replace rule rule_delete_disable_post as on delete to post where old.is_admin=1 do instead nothing;",
-    "rule_delete_disable_users":"create or replace rule rule_delete_disable_users as on delete to users where old.is_admin=1 do instead nothing;",
-    "rule_delete_disable_root":"create or replace rule rule_delete_disable_root as on delete to users where old.id=1 do instead nothing;",
-    "index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
-    }
-    for k,v in query_dict.items():
+    for k,v in config_query.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"query error={response['message']}")
     #create root user
@@ -172,4 +163,3 @@ async def api_func(x:str,request:Request):
     if response["status"]==0:return function_http_response(400,0,f"root_user_create_error={response['message']}+{query}")
     #finally
     return {"status":1,"message":"done"}
-
