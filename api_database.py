@@ -11,60 +11,34 @@ router=APIRouter(tags=["database"])
 #config
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 config_column={
-"created_at":["timestamptz",config_table],
-"created_by_id":["bigint",config_table],
-"updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
-"updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
+"created_at":["timestamptz",config_table],"created_by_id":["bigint",config_table],
+"updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],"updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
 "received_by_id":["bigint",["message"]],
-"is_active":["int",["atom","users","post","comment","workseeker"]],
-"is_verified":["int",["atom","users","post","comment","workseeker"]],
+"is_active":["int",["atom","users","post","comment","workseeker"]],"is_verified":["int",["atom","users","post","comment","workseeker"]],"is_deleted":["int",[]],
 "is_admin":["int",["atom","users","post"]],
-"is_deleted":["int",[]],
-"username":["text",["users"]],
-"password":["text",["users"]],
-"firebase_id":["text",["users"]],
-"last_active_at":["timestamptz",["users"]],
-"name":["text",["users","workseeker"]],
-"gender":["text",["users","workseeker"]],
-"date_of_birth":["date",["users"]],
-"profile_pic_url":["text",["users"]],
-"profile":["text",["workseeker"]],
-"college":["text",["workseeker"]],
-"linkedin_url":["text",["workseeker"]],
-"portfolio_url":["text",["workseeker"]],
-"experience":["int",["workseeker"]],
-"location_current":["text",["workseeker"]],
-"location_expected":["text",["workseeker"]],
-"salary_type":["text",["workseeker"]],
-"salary_current":["int",["workseeker"]],
-"salary_expected":["int",["workseeker"]],
-"sector":["text",["workseeker"]],
-"total_past_company":["int",["workseeker"]],
-"is_working":["int",["workseeker"]],
-"joining_days":["int",["workseeker"]],
+"username":["text",["users"]],"password":["text",["users"]],"firebase_id":["text",["users"]],"last_active_at":["timestamptz",["users"]],"profile_pic_url":["text",["users"]],
+"name":["text",["users","workseeker"]],"gender":["text",["users","workseeker"]],"date_of_birth":["date",["users"]],
+"profile":["text",["workseeker"]],"college":["text",["workseeker"]],"linkedin_url":["text",["workseeker"]],"portfolio_url":["text",["workseeker"]],"experience":["int",["workseeker"]],
+"location_current":["text",["workseeker"]],"location_expected":["text",["workseeker"]],
+"salary_type":["text",["workseeker"]],"salary_current":["int",["workseeker"]],"salary_expected":["int",["workseeker"]],
+"sector":["text",["workseeker"]],"total_past_company":["int",["workseeker"]],"is_working":["int",["workseeker"]],"joining_days":["int",["workseeker"]],
 "type":["text",["atom","users","post","helpdesk","workseeker"]],
-"title":["text",["atom","users","post"]],
-"description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
-"file_url":["text",["atom","post","s3"]],
-"link_url":["text",["atom","post"]],
-"tag":["text[]",["atom","users","post","workseeker"]],
-"number":["numeric",["post"]],
-"date":["date",["post"]],
-"status":["text",["post","report","message","helpdesk"]],
-"remark":["text",["post","report","helpdesk"]],
-"parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
-"parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
-"email":["text",["users","post","otp","helpdesk","workseeker"]],
-"mobile":["text",["users","post","otp","helpdesk","workseeker"]],
-"whatsapp":["text",["users","post","workseeker"]],
-"phone":["text",["users","post"]],
-"country":["text",["users","post"]],
-"state":["text",["users","post"]],
-"city":["text",["users","post"]],
-"rating":["int",["rating","helpdesk"]],
-"otp":["int",["otp"]],
+"title":["text",["atom","users","post"]],"description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
+"file_url":["text",["atom","post","s3"]],"link_url":["text",["atom","post"]],"tag":["text[]",["atom","users","post","workseeker"]],
+"number":["numeric",["post"]],"date":["date",["post"]],
+"status":["text",["post","report","message","helpdesk"]],"remark":["text",["post","report","helpdesk"]],
+"parent_table":["text",["likes","comment","bookmark","report","rating","block"]],"parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
+"email":["text",["users","post","otp","helpdesk","workseeker"]],"mobile":["text",["users","post","otp","helpdesk","workseeker"]],"whatsapp":["text",["users","post","workseeker"]],"phone":["text",["users","post"]],
+"country":["text",["users","post"]],"state":["text",["users","post"]],"city":["text",["users","post"]],
+"rating":["int",["rating","helpdesk"]],"otp":["int",["otp"]],
 "metadata":["jsonb",["post"]],
-"xxx":["text",["atom"]],
+}
+config_column_default={
+"created_at":["now()",config_table],
+"last_active_at":["now()",["users"]],
+"is_active":["1",["atom","users","post","comment","workseeker"]],
+"is_verified":["0",["atom","users","post","comment","workseeker"]],
+"is_admin":["0",["atom","users","post"]],
 }
 
 #api
@@ -83,34 +57,21 @@ async def api_func(x:str,request:Request):
             query=f"alter table {item} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_add_error={response['message']}+{query}")
-    #column delete
-    mapping_column_delete={
-    "xxx":["atom"],
-    }
-    for k,v in mapping_column_delete.items():
-        for item in v:
-            query=f"alter table {item} drop column if exists {k};"
-            response=await function_query_runner(postgres_object[x],"write",query,{})
-            if response["status"]==0:return function_http_response(400,0,f"column_index_error={response['message']}+{query}")
-    #constraint list
+    #schema read
     query="select constraint_name from information_schema.constraint_column_usage;"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #column info
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     column_info=response["message"]
+
+
+
+    
     #column default
-    mapping_column_default={
-    "created_at":["now()",config_table],
-    "last_active_at":["now()",["users"]],
-    "is_active":["1",["atom","users","post","comment","workseeker"]],
-    "is_verified":["0",["atom","users","post","comment","workseeker"]],
-    "is_admin":["0",["atom","users","post"]],
-    }
-    for k,v in mapping_column_default.items():
+    for k,v in config_column_default.items():
         for item in v[1]:
             for column in column_info:
                 if column["table_name"]==item and column["column_name"]==k and not column["column_default"]:
