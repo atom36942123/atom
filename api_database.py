@@ -61,23 +61,24 @@ async def api_func(x:str,request:Request):
     query="select constraint_name from information_schema.constraint_column_usage;"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    constraint_name_list=[item["constraint_name"] for item in response["message"]]
+    schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    column_info=response["message"]
-
-
-
-    
+    schema_column=response["message"]
     #column default
     for k,v in config_column_default.items():
         for item in v[1]:
-            for column in column_info:
+            for column in schema_column:
                 if column["table_name"]==item and column["column_name"]==k and not column["column_default"]:
                     query=f"alter table {item} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+
+
+
+    
+    
     #column not null
     mapping_column_not_null={
     "created_by_id":["likes","comment","bookmark","report","rating","block","message"],
@@ -90,11 +91,12 @@ async def api_func(x:str,request:Request):
     }
     for k,v in mapping_column_not_null.items():
         for item in v:
-            for column in column_info:
+            for column in schema_column:
                 if column["table_name"]==item and column["column_name"]==k and column["is_nullable"]=="YES":
                     query=f"alter table {item} alter column {k} set not null;"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
+                        
     #column unique
     mapping_column_unique={
     "username":["users"],
@@ -104,10 +106,11 @@ async def api_func(x:str,request:Request):
     for k,v in mapping_column_unique.items():
         for item in v:
             constraint_name=f"unique_{k}_{item}".replace(",","_")
-            if constraint_name not in constraint_name_list:
+            if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {item} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
+                    
     #column check in
     mapping_column_check_in={
     "is_active":["(0,1)",["atom","users","post","comment"]],
@@ -118,7 +121,7 @@ async def api_func(x:str,request:Request):
     for k,v in mapping_column_check_in.items():
         for item in v[1]:
             constraint_name=f"check_in_{k}_{item}"
-            if constraint_name not in constraint_name_list:
+            if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {item} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_check_in_error={response['message']}+{query}")
