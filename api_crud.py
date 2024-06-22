@@ -1,6 +1,6 @@
 #import
-from object import postgres_object
 from config import *
+from object import *
 from function import *
 from fastapi import Request
 from fastapi import BackgroundTasks
