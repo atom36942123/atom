@@ -49,6 +49,10 @@ config_column_default={
 "is_verified":["0",["atom","users","post","comment","workseeker"]],
 "is_admin":["0",["atom","users","post"]],
 }
+config_column_unique={
+"username":["users"],
+"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
+}
 
 #api
 @router.get("/{x}/database")
@@ -91,6 +95,14 @@ async def api_func(x:str,request:Request):
                     query=f"alter table {item} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+    #column unique
+    for k,v in config_column_unique.items():
+        for item in v:
+            constraint_name=f"unique_{k}_{item}".replace(",","_")
+            if constraint_name not in schema_constraint_name_list:
+                query=f"alter table {item} add constraint {constraint_name} unique ({k});"
+                response=await function_query_runner(postgres_object[x],"write",query,{})
+                if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
 
 
 
@@ -98,19 +110,7 @@ async def api_func(x:str,request:Request):
     
     
                         
-    #column unique
-    mapping_column_unique={
-    "username":["users"],
-    "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
-    }
-    query=f"alter table {v[0]} add constraint {k} unique ({v[1]});"
-    for k,v in mapping_column_unique.items():
-        for item in v:
-            constraint_name=f"unique_{k}_{item}".replace(",","_")
-            if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {item} add constraint {constraint_name} unique ({k});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
+    
                     
     #column check in
     mapping_column_check_in={
