@@ -1,7 +1,7 @@
 #import
 from config import *
-from object import *
 from function import *
+from object import postgres_object
 from fastapi import Request
 from fastapi import BackgroundTasks
 from datetime import datetime
