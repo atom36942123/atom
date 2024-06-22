@@ -8,23 +8,66 @@ from fastapi import Request
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
+#config
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
+config_column={
+"created_at":["timestamptz",config_table],
+"created_by_id":["bigint",config_table],
+"updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
+"updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
+"received_by_id":["bigint",["message"]],
+"is_active":["int",["atom","users","post","comment","workseeker"]],
+"is_verified":["int",["atom","users","post","comment","workseeker"]],
+"is_admin":["int",["atom","users","post"]],
+"is_deleted":["int",[]],
+"username":["text",["users"]],
+"password":["text",["users"]],
+"firebase_id":["text",["users"]],
+"last_active_at":["timestamptz",["users"]],
+"name":["text",["users","workseeker"]],
+"gender":["text",["users","workseeker"]],
+"date_of_birth":["date",["users"]],
+"profile_pic_url":["text",["users"]],
+"profile":["text",["workseeker"]],
+"college":["text",["workseeker"]],
+"linkedin_url":["text",["workseeker"]],
+"portfolio_url":["text",["workseeker"]],
+"experience":["int",["workseeker"]],
+"location_current":["text",["workseeker"]],
+"location_expected":["text",["workseeker"]],
+"salary_type":["text",["workseeker"]],
+"salary_current":["int",["workseeker"]],
+"salary_expected":["int",["workseeker"]],
+"sector":["text",["workseeker"]],
+"total_past_company":["int",["workseeker"]],
+"is_working":["int",["workseeker"]],
+"joining_days":["int",["workseeker"]],
+"type":["text",["atom","users","post","helpdesk","workseeker"]],
+"title":["text",["atom","users","post"]],
+"description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
+"file_url":["text",["atom","post","s3"]],
+"link_url":["text",["atom","post"]],
+"tag":["text[]",["atom","users","post","workseeker"]],
+"number":["numeric",["post"]],
+"date":["date",["post"]],
+"status":["text",["post","report","message","helpdesk"]],
+"remark":["text",["post","report","helpdesk"]],
+"parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
+"parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
+"email":["text",["users","post","otp","helpdesk","workseeker"]],
+"mobile":["text",["users","post","otp","helpdesk","workseeker"]],
+"whatsapp":["text",["users","post","workseeker"]],
+"phone":["text",["users","post"]],
+"country":["text",["users","post"]],
+"state":["text",["users","post"]],
+"city":["text",["users","post"]],
+"rating":["int",["rating","helpdesk"]],
+"otp":["int",["otp"]],
+"metadata":["jsonb",["post"]],
+"xxx":["text",["atom"]],
+}
 
 #api
-@router.get("/{x}/database-create-table")
-async def api_func(x:str,request:Request):
-    #token check
-    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #create table
-    for item in config_table:
-        query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
-        response=await function_query_runner(postgres_object[x],"write",query,{})
-        if response["status"]==0:return function_http_response(400,0,f"create_table_error={response['message']}+{query}")
-    #finally
-    return {"status":1,"message":"done"}
-
-
-
 @router.get("/{x}/database")
 async def api_func(x:str,request:Request):
     #token check
@@ -34,72 +77,8 @@ async def api_func(x:str,request:Request):
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
         response=await function_query_runner(postgres_object[x],"write",query,{})
         if response["status"]==0:return function_http_response(400,0,f"create_table_error={response['message']}+{query}")
-    #column add
-    mapping_column_add={
-    "created_at":["timestamptz",config_table],
-    "created_by_id":["bigint",config_table],
-    "updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
-    "updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
-    "received_by_id":["bigint",["message"]],
-    "is_active":["int",["atom","users","post","comment","workseeker"]],
-    "is_verified":["int",["atom","users","post","comment","workseeker"]],
-    "is_admin":["int",["atom","users","post"]],
-    "is_deleted":["int",[]],
-        
-    "username":["text",["users"]],
-    "password":["text",["users"]],
-    "firebase_id":["text",["users"]],
-    "last_active_at":["timestamptz",["users"]],
-    "name":["text",["users","workseeker"]],
-    "gender":["text",["users","workseeker"]],
-    "date_of_birth":["date",["users"]],
-    "profile_pic_url":["text",["users"]],
-
-    "profile":["text",["workseeker"]],
-    "college":["text",["workseeker"]],
-    "linkedin_url":["text",["workseeker"]],
-    "portfolio_url":["text",["workseeker"]],
-    "experience":["int",["workseeker"]],
-    "location_current":["text",["workseeker"]],
-    "location_expected":["text",["workseeker"]],
-    "salary_type":["text",["workseeker"]],
-    "salary_current":["int",["workseeker"]],
-    "salary_expected":["int",["workseeker"]],
-    "sector":["text",["workseeker"]],
-    "total_past_company":["int",["workseeker"]],
-    "is_working":["int",["workseeker"]],
-    "joining_days":["int",["workseeker"]],
-
-    "type":["text",["atom","users","post","helpdesk","workseeker"]],
-    "title":["text",["atom","users","post"]],
-    "description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
-    "file_url":["text",["atom","post","s3"]],
-    "link_url":["text",["atom","post"]],
-    "tag":["text[]",["atom","users","post","workseeker"]],
-    "number":["numeric",["post"]],
-    "date":["date",["post"]],
-    "status":["text",["post","report","message","helpdesk"]],
-    "remark":["text",["post","report","helpdesk"]],
-        
-    "parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
-    "parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
-        
-    "email":["text",["users","post","otp","helpdesk","workseeker"]],
-    "mobile":["text",["users","post","otp","helpdesk","workseeker"]],
-    "whatsapp":["text",["users","post","workseeker"]],
-    "phone":["text",["users","post"]],
-        
-    "country":["text",["users","post"]],
-    "state":["text",["users","post"]],
-    "city":["text",["users","post"]],
-        
-    "rating":["int",["rating","helpdesk"]],
-    "otp":["int",["otp"]],
-        
-    "metadata":["jsonb",["post"]],
-    "xxx":["text",["atom"]],
-    }
-    for k,v in mapping_column_add.items():
+    #create column
+    for k,v in config_column.items():
         for item in v[1]:
             query=f"alter table {item} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
