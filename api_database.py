@@ -101,23 +101,28 @@ config_query={
 }
 
 #api
-@router.get("/{x}/database")
-async def api_func(x:str,request:Request,mode:str=None):
+@router.get("/{x}/database-reset")
+async def api_func(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #reset
-    if mode=="reset" and config_switch_database_reset!=1:return {"status":1,"message":"reset switch off"}
-    if mode=="reset" and config_switch_database_reset==1:
-        query='''
-        DO $$ DECLARE r RECORD;
-        BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
-        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; 
-        END LOOP;
-        END $$;
-        '''
+    #logic
+    query='''
+    DO $$ DECLARE r RECORD;
+    BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
+    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; 
+    END LOOP;
+    END $$;
+    '''
+    if config_switch_database_reset!=1:return {"status":1,"message":"reset switch off"}
+    if config_switch_database_reset==1:
         response=await function_query_runner(postgres_object[x],"write",query,{})
-        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+        if response["status"]==0:return function_http_response(400,0,response["message"])
         return {"status":1,"message":"reset done"}
+
+@router.get("/{x}/database-init")
+async def api_func(x:str,request:Request):
+    #token check
+    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #create table
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
