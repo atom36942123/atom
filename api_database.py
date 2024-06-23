@@ -63,12 +63,18 @@ config_column={
 "is_working":["int",["workseeker"]],
 "joining_days":["int",["workseeker"]],
 }
+config_column_checkin={
+"is_active":[(0,1),["atom","users","post","comment","workseeker"]],
+"is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
+"is_admin":[(0,1),["users"]],
+"is_working":[(0,1),["workseeker"]],
+}
 config_column_default={
 "created_at":["now()",config_table],
 "last_active_at":["now()",["users"]],
-}
-config_column_checkin={
-"is_admin":["(0,1)",["users"]],
+"is_active":[1,["atom","users","post","comment","workseeker"]],
+"is_verified":[0,["atom","users","post","comment","workseeker"]],
+"is_admin":[0,["users"]],
 }
 config_column_nullable={
 "created_by_id":["message"],
@@ -144,14 +150,6 @@ async def api_func(x:str,request:Request):
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #column default
-    for column in schema_column:
-        for k,v in config_column_default.items():
-            for table in v[1]:
-                if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
-                    query=f"alter table {table} alter column {k} set default {v[0]};"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column checkin
     for k,v in config_column_checkin.items():
         for table in v[1]:
@@ -160,6 +158,14 @@ async def api_func(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+    #column default
+    for column in schema_column:
+        for k,v in config_column_default.items():
+            for table in v[1]:
+                if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
+                    query=f"alter table {table} alter column {k} set default {v[0]};"
+                    response=await function_query_runner(postgres_object[x],"write",query,{})
+                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column nullable
     for column in schema_column:
         for k,v in config_column_nullable.items():
