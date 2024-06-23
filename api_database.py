@@ -106,7 +106,8 @@ async def api_func(x:str,request:Request,mode:str=None):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #reset
-    if config_switch_database_reset==1 and mode=="reset":
+    if mode=="reset" and config_switch_database_reset!=1:return {"status":1,"message":"reset switch off"}
+    if mode=="reset" and config_switch_database_reset==1:
         query='''
         DO $$ DECLARE r RECORD;
         BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
