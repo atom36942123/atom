@@ -69,14 +69,19 @@ config_column_not_null={
 "parent_table":["likes","comment","bookmark","report","rating","block"],
 "parent_id":["likes","comment","bookmark","report","rating","block"],
 }
-
-
-
-
+config_column_default={
+"created_at":["now()",config_table],
+"last_active_at":["now()",["users"]],
+}
 config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
+
+
+
+
+
 
 config_column_check_in={
 "is_active":["(0,1)",["atom","users","post","comment"]],
@@ -143,6 +148,33 @@ async def api_func(x:str,request:Request):
                     query=f"alter table {item} alter column {k} set not null;"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
+    #column default
+    for column in schema_column:
+        for k,v in config_column_default.items():
+            for table in v[1]:
+                if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
+                    query=f"alter table {item} alter column {k} set default {v[0]};"
+                    response=await function_query_runner(postgres_object[x],"write",query,{})
+                    if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+    #column unique
+    for k,v in config_column_unique.items():
+        for table in v:
+            constraint_name=f"unique_{k}_{table}".replace(",","_")
+            if constraint_name not in schema_constraint_name_list:
+                query=f"alter table {table} add constraint {constraint_name} unique ({k});"
+                response=await function_query_runner(postgres_object[x],"write",query,{})
+                if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
+                
+        
+
+    
+    
+        
+            
+                
+                    
+                    
+                    
             
         
         
@@ -161,14 +193,7 @@ async def api_func(x:str,request:Request):
             
     
                     
-    #column unique
-    for k,v in config_column_unique.items():
-        for item in v:
-            constraint_name=f"unique_{k}_{item}".replace(",","_")
-            if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {item} add constraint {constraint_name} unique ({k});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
+    
 
     
     #column check in
