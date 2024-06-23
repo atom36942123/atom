@@ -116,6 +116,7 @@ async def api_func(x:str,request:Request,mode:str=None):
         '''
         response=await function_query_runner(postgres_object[x],"write",query,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+        return response
     #create table
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
