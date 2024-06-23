@@ -80,30 +80,23 @@ config_column_unique={
 config_column_checkin={
 "is_admin":["(0,1)",["users"]],
 }
-
-
-
-
-
-
-
-
 config_column_index={
-"created_at":["atom","users","post","message"],
-"created_by_id":["atom","post","likes","comment","bookmark","report","rating","message"],
-"parent_table":["likes","comment","bookmark","report","rating","block"],
-"parent_id":["likes","comment","bookmark","report","rating","block"],
-"received_by_id":["message"],
-"description":["comment","message","helpdesk"],
-"type":["atom","post","helpdesk"],
-"password":["users"],
-"firebase_id":["users"],
-"email":["otp"],
-"mobile":["otp"],
+"created_at":["default",["atom","users","post","message"]],
+"created_by_id":["default",["atom","post","likes","comment","bookmark","report","rating","message"]],
+"parent_table":["default",["likes","comment","bookmark","report","rating","block"]],
+"parent_id":["default",["likes","comment","bookmark","report","rating","block"]],
+"received_by_id":["default",["message"]],
+"description":["default",["comment","message","helpdesk"]],
+"type":["default",["atom","post","helpdesk"]],
+"password":["default",["users"]],
+"firebase_id":["default",["users"]],
+"email":["default",["otp"]],
+"mobile":["default",["otp"]],
+"tag":["array",["atom","users","post"]],
 }
-config_column_index_array={
-"tag":["atom","users","post"],
-}
+
+
+
 config_query={
 "rule_delete_disable_atom":"create or replace rule rule_delete_disable_atom as on delete to atom where old.is_admin=1 do instead nothing;",
 "rule_delete_disable_post":"create or replace rule rule_delete_disable_post as on delete to post where old.is_admin=1 do instead nothing;",
@@ -170,51 +163,48 @@ async def api_func(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_check_in_error={response['message']}+{query}")
-                
-        
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-            
-        
-        
-        
-
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-    
-            
-    
-                    
-    
-
-    
-    
     #column index
     for k,v in config_column_index.items():
-        for item in v:
-            query=f"create index if not exists index_{k}_{item} on {item}({k});"
+        for table in v[1]:
+            if v[0]=="array:
+            query=f"create index if not exists index_{k}_{table} on {table} using gin ({k});"
+            else:query=f"create index if not exists index_{k}_{table} on {table}({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_index_error={response['message']}+{query}")
-    #column index array
-    for k,v in config_column_index_array.items():
-        for item in v:
-            query=f"create index if not exists index_{k}_{item} on {item} using gin ({k});"
-            response=await function_query_runner(postgres_object[x],"write",query,{})
-            if response["status"]==0:return function_http_response(400,0,f"column_index_array_error={response['message']}+{query}")
+ 
+        
+
+    
+    
+        
+            
+                
+                    
+                    
+                    
+            
+        
+        
+        
+
+
+    
+    
+        
+            
+                
+                    
+                    
+                    
+    
+            
+    
+                    
+    
+
+    
+    
+    
     #query
     for k,v in config_query.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
