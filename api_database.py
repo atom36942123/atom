@@ -77,18 +77,16 @@ config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
-
-
-
-
-
-
-config_column_check_in={
-"is_active":["(0,1)",["atom","users","post","comment"]],
-"is_verified":["(0,1)",["atom","users","post","comment"]],
-"is_admin":["(0,1)",["atom","users","post"]],
-"is_working":["(0,1)",["workseeker"]],
+config_column_checkin={
+"is_admin":["(0,1)",["users"]],
 }
+
+
+
+
+
+
+
 
 config_column_index={
 "created_at":["atom","users","post","message"],
@@ -164,46 +162,47 @@ async def api_func(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
-                
-        
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-            
-        
-        
-        
-
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-    
-            
-    
-                    
-    
-
-    
-    #column check in
-    for k,v in config_column_check_in.items():
-        for item in v[1]:
-            constraint_name=f"check_in_{k}_{item}"
+    #column checkin
+    for k,v in config_column_checkin.items():
+        for table in v[1]:
+            constraint_name=f"checkin_{k}_{table}"
             if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {item} add constraint {constraint_name} check ({k} in {v[0]});"
+                query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"column_check_in_error={response['message']}+{query}")
+                
+        
+
+    
+    
+        
+            
+                
+                    
+                    
+                    
+            
+        
+        
+        
+
+
+    
+    
+        
+            
+                
+                    
+                    
+                    
+    
+            
+    
+                    
+    
+
+    
+    
     #column index
     for k,v in config_column_index.items():
         for item in v:
