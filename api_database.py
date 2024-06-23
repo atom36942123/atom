@@ -102,20 +102,31 @@ config_query={
 
 #api
 @router.get("/{x}/database")
-async def api_func(x:str,request:Request):
+async def api_func(x:str,request:Request,mode:str=None):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    #reset
+    if mode=="reset":
+        query='''
+        DO $$ DECLARE r RECORD;
+        BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
+        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; 
+        END LOOP;
+        END $$;
+        '''
+        response=await function_query_runner(postgres_object[x],"write",query,{})
+        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #create table
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
         response=await function_query_runner(postgres_object[x],"write",query,{})
-        if response["status"]==0:return function_http_response(400,0,f"create_table_error={response['message']}+{query}")
+        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #create column
     for k,v in config_column.items():
         for item in v[1]:
             query=f"alter table {item} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
-            if response["status"]==0:return function_http_response(400,0,f"column_add_error={response['message']}+{query}")
+            if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #schema column
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
@@ -133,7 +144,7 @@ async def api_func(x:str,request:Request):
                 if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
                     query=f"alter table {item} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column nullable
     for column in schema_column:
         for k,v in config_column_nullable.items():
@@ -141,7 +152,7 @@ async def api_func(x:str,request:Request):
                 if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
                     query=f"alter table {item} alter column {k} set not null;"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
+                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column unique
     for k,v in config_column_unique.items():
         for table in v:
@@ -149,7 +160,7 @@ async def api_func(x:str,request:Request):
             if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {table} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"column_unique_error={response['message']}+{query}")
+                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column checkin
     for k,v in config_column_checkin.items():
         for table in v[1]:
@@ -157,22 +168,22 @@ async def api_func(x:str,request:Request):
             if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"column_checkin_error={response['message']}+{query}")
+                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column index
     for k,v in config_column_index.items():
         for table in v[1]:
             query=f"create index if not exists index_{k}_{table} on {table}({k});"
             if v[0]=="array":query=f"create index if not exists index_{k}_{table} on {table} using gin ({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
-            if response["status"]==0:return function_http_response(400,0,f"column_index_error={response['message']}+{query}")
+            if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #query
     for k,v in config_query.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
-        if response["status"]==0:return function_http_response(400,0,f"query error={response['message']}")
+        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #create root user
     query="insert into users (username,password,is_admin) values (:username,:password,:is_admin) on conflict do nothing returning *;"
     values={"username":"root","password":"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3","is_admin":1}
     response=await function_query_runner(postgres_object[x],"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,f"root_user_create_error={response['message']}+{query}")
+    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #finally
     return {"status":1,"message":"done"}
