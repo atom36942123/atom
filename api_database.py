@@ -63,15 +63,15 @@ config_column={
 "is_working":["int",["workseeker"]],
 "joining_days":["int",["workseeker"]],
 }
+config_column_default={
+"created_at":["now()",config_table],
+"last_active_at":["now()",["users"]],
+}
 config_column_not_null={
 "created_by_id":["message"],
 "received_by_id":["message"],
 "parent_table":["likes","comment","bookmark","report","rating","block"],
 "parent_id":["likes","comment","bookmark","report","rating","block"],
-}
-config_column_default={
-"created_at":["now()",config_table],
-"last_active_at":["now()",["users"]],
 }
 config_column_unique={
 "username":["users"],
@@ -126,14 +126,6 @@ async def api_func(x:str,request:Request):
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #column not null
-    for column in schema_column:
-        for k,v in config_column_not_null.items():
-            for table in v:
-                if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
-                    query=f"alter table {item} alter column {k} set not null;"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
     #column default
     for column in schema_column:
         for k,v in config_column_default.items():
@@ -142,6 +134,14 @@ async def api_func(x:str,request:Request):
                     query=f"alter table {item} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+    #column not null
+    for column in schema_column:
+        for k,v in config_column_not_null.items():
+            for table in v:
+                if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
+                    query=f"alter table {item} alter column {k} set not null;"
+                    response=await function_query_runner(postgres_object[x],"write",query,{})
+                    if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
     #column unique
     for k,v in config_column_unique.items():
         for table in v:
