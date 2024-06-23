@@ -36,4 +36,4 @@ config_admin_panel=env("admin_panel")
 config_x=["test","atom"]
 config_switch_mongo=0
 config_switch_elasticsearch=0
-config_switch_database_reset=1
+config_switch_database_reset=0
