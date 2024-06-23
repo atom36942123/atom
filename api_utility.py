@@ -49,8 +49,8 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
    request_user=response["message"]
    #set self
    created_by_id=None
-   if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
-   if request_user["is_admin"]==0 and table!="users":created_by_id=request_user['id']
+   if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
+   if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
    #validation/conversion
    if column=="username" and len(value)>100:return function_http_response(400,0,"value should be less than 100")
    if column=="password" and len(value)>1000:return function_http_response(400,0,"value should be less than 1000")
