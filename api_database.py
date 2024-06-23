@@ -161,7 +161,7 @@ async def api_func(x:str,request:Request):
     #column index
     for k,v in config_column_index.items():
         for table in v[1]:
-            if v[0]=="array:
+            if v[0]=="array":
             query=f"create index if not exists index_{k}_{table} on {table} using gin ({k});"
             else:query=f"create index if not exists index_{k}_{table} on {table}({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
