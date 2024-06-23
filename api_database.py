@@ -64,9 +64,7 @@ config_column={
 "joining_days":["int",["workseeker"]],
 }
 
-config_column_default={
-"created_at":["now()",config_table]
-}
+
 
 
 config_column_unique={
@@ -121,23 +119,30 @@ async def api_func(x:str,request:Request):
             query=f"alter table {item} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_add_error={response['message']}+{query}")
-    #schema read
-    query="select constraint_name from information_schema.constraint_column_usage;"
-    response=await function_query_runner(postgres_object[x],"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
+    #schema column
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
-    #column default
-    for k,v in config_column_default.items():
-        for item in v[1]:
-            for column in schema_column:
-                if column["table_name"]==item and column["column_name"]==k and not column["column_default"]:
-                    query=f"alter table {item} alter column {k} set default {v[0]};"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+    #schema constraint
+    query="select constraint_name from information_schema.constraint_column_usage;"
+    response=await function_query_runner(postgres_object[x],"read",query,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
+    #created_at default
+    for item in schema_column:
+        if item["column_name"]=="created_at" and not item["column_default"]:
+            query=f"alter table {item['table_name']} alter column created_at set default now();"
+            response=await function_query_runner(postgres_object[x],"write",query,{})
+            if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
+            
+        
+        
+        
+
+    
+
+                    
     #column unique
     for k,v in config_column_unique.items():
         for item in v:
