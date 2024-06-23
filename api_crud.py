@@ -91,7 +91,6 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
         if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
         if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
         if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-        if table in ["report","helpdesk"]:param["status"]="pending"
         if table in ["message"]:param["status"]="unread"
         param["created_by_id"]=request_user["id"]
         if "number" in param:param["number"]=round(param["number"],5)
