@@ -63,15 +63,9 @@ config_column={
 "is_working":["int",["workseeker"]],
 "joining_days":["int",["workseeker"]],
 }
-config_column_not_null={
-"created_by_id":["likes","comment","bookmark","report","rating","block","message"],
-"parent_table":["likes","comment","bookmark","report","rating","block"],
-"parent_id":["likes","comment","bookmark","report","rating","block"],
-"received_by_id":["message"],
-"is_active":["atom","users","post","comment"],
-"is_verified":["atom","users","post","comment"],
-"is_admin":["atom","users","post"],
-}
+
+
+
 config_column_default={
 "created_at":["now()",config_table],
 "last_active_at":["now()",["users"]],
@@ -138,14 +132,6 @@ async def api_func(x:str,request:Request):
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
-    #column not null
-    for k,v in config_column_not_null.items():
-        for item in v:
-            for column in schema_column:
-                if column["table_name"]==item and column["column_name"]==k and column["is_nullable"]=="YES":
-                    query=f"alter table {item} alter column {k} set not null;"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"column_not_null_error={response['message']}+{query}")
     #column default
     for k,v in config_column_default.items():
         for item in v[1]:
