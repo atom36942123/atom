@@ -130,8 +130,8 @@ async def api_func(x:str,request:Request):
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #create column
     for k,v in config_column.items():
-        for item in v[1]:
-            query=f"alter table {item} add column if not exists {k} {v[0]};"
+        for table in v[1]:
+            query=f"alter table {table} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #schema column
@@ -149,7 +149,7 @@ async def api_func(x:str,request:Request):
         for k,v in config_column_default.items():
             for table in v[1]:
                 if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
-                    query=f"alter table {item} alter column {k} set default {v[0]};"
+                    query=f"alter table {table} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column nullable
@@ -157,7 +157,7 @@ async def api_func(x:str,request:Request):
         for k,v in config_column_nullable.items():
             for table in v:
                 if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
-                    query=f"alter table {item} alter column {k} set not null;"
+                    query=f"alter table {table} alter column {k} set not null;"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #column unique
