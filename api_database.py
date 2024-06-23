@@ -134,7 +134,7 @@ async def api_func(x:str,request:Request):
                     query=f"alter table {item} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
-    #column not null
+    #column nullable
     for column in schema_column:
         for k,v in config_column_nullable.items():
             for table in v:
