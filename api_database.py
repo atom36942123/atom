@@ -67,7 +67,7 @@ config_column_default={
 "created_at":["now()",config_table],
 "last_active_at":["now()",["users"]],
 }
-config_column_not_null={
+config_column_nullable={
 "created_by_id":["message"],
 "received_by_id":["message"],
 "parent_table":["likes","comment","bookmark","report","rating","block"],
@@ -136,7 +136,7 @@ async def api_func(x:str,request:Request):
                     if response["status"]==0:return function_http_response(400,0,f"column_default_error={response['message']}+{query}")
     #column not null
     for column in schema_column:
-        for k,v in config_column_not_null.items():
+        for k,v in config_column_nullable.items():
             for table in v:
                 if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
                     query=f"alter table {item} alter column {k} set not null;"
