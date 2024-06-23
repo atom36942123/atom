@@ -94,12 +94,7 @@ config_column_index={
 "mobile":["default",["otp"]],
 "tag":["array",["atom","users","post"]],
 }
-
-
-
 config_query={
-"rule_delete_disable_atom":"create or replace rule rule_delete_disable_atom as on delete to atom where old.is_admin=1 do instead nothing;",
-"rule_delete_disable_post":"create or replace rule rule_delete_disable_post as on delete to post where old.is_admin=1 do instead nothing;",
 "rule_delete_disable_users":"create or replace rule rule_delete_disable_users as on delete to users where old.is_admin=1 do instead nothing;",
 "rule_delete_disable_root":"create or replace rule rule_delete_disable_root as on delete to users where old.id=1 do instead nothing;",
 "index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
@@ -171,40 +166,6 @@ async def api_func(x:str,request:Request):
             else:query=f"create index if not exists index_{k}_{table} on {table}({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"column_index_error={response['message']}+{query}")
- 
-        
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-            
-        
-        
-        
-
-
-    
-    
-        
-            
-                
-                    
-                    
-                    
-    
-            
-    
-                    
-    
-
-    
-    
-    
     #query
     for k,v in config_query.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
