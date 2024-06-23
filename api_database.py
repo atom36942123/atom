@@ -65,8 +65,7 @@ config_column={
 }
 
 config_column_default={
-"created_at":["now()",config_table],
-"last_active_at":["now()",["users"]],
+"created_at":["now()",config_table]
 }
 
 
@@ -74,12 +73,14 @@ config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
+
 config_column_check_in={
 "is_active":["(0,1)",["atom","users","post","comment"]],
 "is_verified":["(0,1)",["atom","users","post","comment"]],
 "is_admin":["(0,1)",["atom","users","post"]],
 "is_working":["(0,1)",["workseeker"]],
 }
+
 config_column_index={
 "created_at":["atom","users","post","message"],
 "created_by_id":["atom","post","likes","comment","bookmark","report","rating","message"],
