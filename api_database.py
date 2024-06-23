@@ -157,7 +157,7 @@ async def api_func(x:str,request:Request):
             if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"column_check_in_error={response['message']}+{query}")
+                if response["status"]==0:return function_http_response(400,0,f"column_checkin_error={response['message']}+{query}")
     #column index
     for k,v in config_column_index.items():
         for table in v[1]:
