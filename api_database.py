@@ -64,15 +64,12 @@ config_column={
 "joining_days":["int",["workseeker"]],
 }
 
-
-
 config_column_default={
 "created_at":["now()",config_table],
 "last_active_at":["now()",["users"]],
-"is_active":["1",["atom","users","post","comment","workseeker"]],
-"is_verified":["0",["atom","users","post","comment","workseeker"]],
-"is_admin":["0",["atom","users","post"]],
 }
+
+
 config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
