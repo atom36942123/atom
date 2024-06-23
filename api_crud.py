@@ -19,23 +19,12 @@ from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
 class schema_atom(BaseModel):
+   is_active:int|None=None
+   is_verified:int|None=None
+   is_admin:int|None=None
    username:str|None=None
    name:str|None=None
    gender:str|None=None
-   college:str|None=None
-   linkedin_url:str|None=None
-   portfolio_url:str|None=None
-   profile:str|None=None
-   experience:int|None=None
-   location_current:str|None=None
-   location_expected:str|None=None
-   salary_type:str|None=None
-   salary_current:str|None=None
-   salary_expected:str|None=None
-   sector:str|None=None
-   total_past_company:int|None=None
-   is_working:int|None=None
-   joining_days:int|None=None
    date_of_birth:datetime|None=None
    profile_pic_url:str|None=None
    received_by_id:int|None=None
@@ -59,11 +48,21 @@ class schema_atom(BaseModel):
    state:str|None=None
    city:str|None=None
    rating:int|None=None
-   is_active:int|None=None
-   is_verified:int|None=None
-   is_deleted:int|None=None
-   is_admin:int|None=None
    metadata:dict|None=None
+   college:str|None=None
+   linkedin_url:str|None=None
+   portfolio_url:str|None=None
+   profile:str|None=None
+   experience:int|None=None
+   location_current:str|None=None
+   location_expected:str|None=None
+   salary_type:str|None=None
+   salary_current:str|None=None
+   salary_expected:str|None=None
+   sector:str|None=None
+   past_company_count:int|None=None
+   is_working:int|None=None
+   joining_days:int|None=None
    
 #api
 @router.post("/{x}/object-create/{table}")
@@ -120,8 +119,8 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #set self
     created_by_id=None
-    if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
-    if request_user["is_admin"]==0 and table!="users":created_by_id=request_user['id']
+    if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
+    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
     #param set
     try:
         param=vars(body)
@@ -171,8 +170,8 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
              background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
     #set self
     created_by_id=None
-    if request_user["is_admin"]==0 and table=="users":id,created_by_id=request_user['id'],None
-    if request_user["is_admin"]==0 and table!="users":created_by_id=request_user['id']
+    if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
+    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
     #logic
     query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
     values={"id":id,"created_by_id":created_by_id}
