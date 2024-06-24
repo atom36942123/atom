@@ -128,7 +128,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    #param default
    param["updated_at"]=datetime.now()
    param["updated_by_id"]=request_user["id"]
-   #permission check
+   #permission set
    if request_user["type"] in ["root","admin"]:created_by_id=None
    else:
       if table=="users":created_by_id,id=None,request_user['id']
@@ -160,7 +160,7 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no such object")
    object=response["message"][0]
-   #permission check
+   #permission set
    if request_user["type"] in ["root","admin"]:created_by_id=None
    else:
       if table=="users":created_by_id,id=None,request_user['id']
@@ -218,7 +218,7 @@ async def api_func(x:str,request:Request,table:str,page:int,id:int=None):
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
-async def api_func(x:str,request:Request,table:Literal["users","atom","post","comment"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+async def api_func(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
    #logic
    limit=30
    offset=(page-1)*limit
@@ -247,8 +247,8 @@ async def api_func(x:str,request:Request,table:str,page:int,id:int=None,created_
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #admin check
-   if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #logic
    limit=30
    offset=(page-1)*limit
