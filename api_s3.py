@@ -1,15 +1,3 @@
-#import
-from config import *
-from function import *
-from object import postgres_object
-from fastapi import Request
-from fastapi import BackgroundTasks
-import uuid
-
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["s3"])
-
 @router.get("/{x}/create-s3-url")
 async def api_func(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
     #token check
