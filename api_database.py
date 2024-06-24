@@ -109,6 +109,8 @@ config_query={
 async def api_func(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    #x check
+    if x not in ["test"]:return function_http_response(400,0,"x not allowed")
     #drop all query
     query='''
     DO $$ DECLARE r RECORD;
@@ -118,11 +120,10 @@ async def api_func(x:str,request:Request):
     END $$;
     '''
     #logic
-    if True:
-        response=await function_query_runner(postgres_object[x],"write",query,{})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        return {"status":1,"message":"reset done"}
-    else:return {"status":0,"message":"switch off"}
+    response=await function_query_runner(postgres_object[x],"write",query,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #finally
+    return {"status":1,"message":"reset done"}
 
 @router.get("/{x}/database-init")
 async def api_func(x:str,request:Request):
