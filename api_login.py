@@ -6,20 +6,18 @@ from fastapi import Request
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 import hashlib
+from pydantic import BaseModel
+from typing import Literal
 
 #router
 from fastapi import APIRouter
 router=APIRouter(tags=["login"])
 
 #schema
-from pydantic import BaseModel
-from typing import Literal
-from datetime import datetime
-
 class schema_signup(BaseModel):
    username:str
    password:str
-
+   
 class schema_login(BaseModel):
    mode:Literal["username","firebase","email","mobile"]="username"
    username:str|None=None
@@ -93,7 +91,7 @@ async def api_func(x:str,request:Request,body:schema_login):
         if response["status"]==0:return function_http_response(400,0,response["message"])
         user=response["message"][0]
     #token encode
-    data={"x":x,"id":user["id"],"is_active":user["is_active"],"is_admin":user["is_admin"]}
+    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
     response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #finally
@@ -113,7 +111,7 @@ async def api_func(x:str,request:Request):
     request_user=response["message"][0]
     #token encode
     user=request_user
-    data={"x":x,"id":user["id"],"is_active":user["is_active"],"is_admin":user["is_admin"]}
+    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
     response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #finally
