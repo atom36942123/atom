@@ -15,24 +15,6 @@ from fastapi import APIRouter
 router=APIRouter(tags=["crud"])
 
 config_column={
-"type":["text",["atom","users","post","helpdesk","workseeker"]],
-"title":["text",["atom","users","post"]],
-"description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
-"file_url":["text",["atom","post","s3"]],
-"link_url":["text",["atom","post"]],"tag":["text[]",["atom","users","post","workseeker"]],
-"number":["numeric",["post"]],
-"date":["date",["post"]],
-"status":["text",["post","report","message","helpdesk"]],
-"remark":["text",["post","report","helpdesk"]],
-"parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
-"parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
-"email":["text",["users","post","otp","helpdesk","workseeker"]],
-"mobile":["text",["users","post","otp","helpdesk","workseeker"]],
-"whatsapp":["text",["users","post","workseeker"]],
-"phone":["text",["users","post"]],
-"country":["text",["users","post"]],
-"state":["text",["users","post"]],
-"city":["text",["users","post"]],
 "rating":["int",["rating","helpdesk"]],
 "otp":["int",["otp"]],
 "received_by_id":["bigint",["message"]],
@@ -72,12 +54,6 @@ class schema_atom(BaseModel):
    file_url:str|None=None
    link_url:str|None=None
    tag:list|None=None
-   
-   
-   
-   
-   received_by_id:int|None=None
-   
    number:float|None=None
    date:datetime|None=None
    status:str|None=None
@@ -91,6 +67,15 @@ class schema_atom(BaseModel):
    country:str|None=None
    state:str|None=None
    city:str|None=None
+
+
+   
+   
+   
+   
+   received_by_id:int|None=None
+   
+   
    rating:int|None=None
    metadata:dict|None=None
    college:str|None=None
