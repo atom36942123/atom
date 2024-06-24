@@ -128,14 +128,11 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    #param default
    param["updated_at"]=datetime.now()
    param["updated_by_id"]=request_user["id"]
-
-   
-   #set self
-   created_by_id=None
-   if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
-   if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
-   
-   
+   #permission check
+   if request_user["type"] in ["root"]:created_by_id=None
+   else:
+      if table=="users":created_by_id,id=None,request_user['id']
+      if table!="users":created_by_id=request_user['id']
    #key
    try:
       key=""
