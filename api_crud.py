@@ -246,7 +246,7 @@ async def api_func(x:str,request:Request,table:str,page:int,id:int=None,created_
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #admin check
+   #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #logic
