@@ -35,7 +35,7 @@ async def api_func(x:str,request:Request):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"root user null issue")
    object=response["message"][0]
-   if object["username"]!="root" or object["is_admin"]!=1 or object["is_active"]!=1:return function_http_response(400,0,"root user data issue")
+   if object["username"]!="root" or object["is_active"]!=1 or object["type"]!="root":return function_http_response(400,0,"root user data issue")
    #query
    query_dict={
    "delete_post_creator_null":"delete from post where id in (select x.id from post as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
