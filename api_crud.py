@@ -67,127 +67,127 @@ class schema_atom(BaseModel):
 #api
 @router.post("/{x}/object-create/{table}")
 async def api_func(x:str,table:str,request:Request,body:schema_atom):
-    #token check
-    request_user={}
-    request_user["id"]=None
-    if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
-        response=await function_token_decode(request,config_jwt_secret_key)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
-    #check body
-    response=await function_check_body(vars(body))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #check
-    if table=="message" and body.received_by_id==request_user["id"]:return function_http_response(400,0,"self message not allowed")
-    if table=="post" and (not body.description and not body.file_url):return function_http_response(400,0,"title/description/file any one is mandatory")
-    if table=="helpdesk" and not body.description:return function_http_response(400,0,"description is mandatory")
-    if table not in ["atom"] and body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
-    #param set
-    try:
-        param=vars(body)
-        param={k: v for k, v in param.items() if v}
-        if not param:return function_http_response(400,0,"all keys cant be null")
-        if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
-        if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
-        if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-        if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-        if table in ["message"]:param["status"]="unread"
-        param["created_by_id"]=request_user["id"]
-        if "number" in param:param["number"]=round(param["number"],5)
-    except Exception as e:return function_http_response(400,0,e.args)
-    #key set
-    try:
-        key_1=",".join([*param])
-        key_2=",".join([":"+item for item in [*param]])
-    except Exception as e:return function_http_response(400,0,e.args)
-    #logic
-    query=f'''insert into {table} ({key_1}) values ({key_2}) returning *;'''
-    response=await function_query_runner(postgres_object[x],"write",query,param)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
-    return response
+   #token check
+   request_user={}
+   request_user["id"]=None
+   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
+      response=await function_token_decode(request,config_jwt_secret_key)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      request_user=response["message"]
+   #check body
+   response=await function_check_body(vars(body))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #check
+   if table=="message" and body.received_by_id==request_user["id"]:return function_http_response(400,0,"self message not allowed")
+   if table=="post" and (not body.description and not body.file_url):return function_http_response(400,0,"title/description/file any one is mandatory")
+   if table=="helpdesk" and not body.description:return function_http_response(400,0,"description is mandatory")
+   if table not in ["atom"] and body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
+   #param set
+   try:
+      param=vars(body)
+      param={k: v for k, v in param.items() if v}
+      if not param:return function_http_response(400,0,"all keys cant be null")
+      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+      if table in ["message"]:param["status"]="unread"
+      param["created_by_id"]=request_user["id"]
+      if "number" in param:param["number"]=round(param["number"],5)
+   except Exception as e:return function_http_response(400,0,e.args)
+   #key set
+   try:
+      key_1=",".join([*param])
+      key_2=",".join([":"+item for item in [*param]])
+   except Exception as e:return function_http_response(400,0,e.args)
+   #logic
+   query=f'''insert into {table} ({key_1}) values ({key_2}) returning *;'''
+   response=await function_query_runner(postgres_object[x],"write",query,param)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #finally
+   return response
 
 @router.put("/{x}/object-update/{table}/{id}")
 async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
-    #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #check body
-    response=await function_check_body(vars(body))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #set self
-    created_by_id=None
-    if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
-    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
-    #param set
-    try:
-        param=vars(body)
-        param={k: v for k,v in param.items() if v!=None}
-        if not param:return function_http_response(400,0,"all keys cant be null")
-        if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
-        if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
-        if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-        if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-        param["updated_at"]=datetime.now()
-        param["updated_by_id"]=request_user["id"]
-        if "number" in param:param["number"]=round(param["number"],5)
-    except Exception as e:return function_http_response(400,0,e.args)
-    #key set
-    try:
-        key=""
-        for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-        key=key.strip().rsplit(',', 1)[0]
-    except Exception as e:return function_http_response(400,0,e.args)
-    #logic
-    query=f"update {table} set {key} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-    response=await function_query_runner(postgres_object[x],"write",query,param|{"id":id,"created_by_id":created_by_id})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
-    return response
+   #token check
+   response=await function_token_decode(request,config_jwt_secret_key)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #check body
+   response=await function_check_body(vars(body))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #set self
+   created_by_id=None
+   if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
+   if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
+   #param set
+   try:
+      param=vars(body)
+      param={k: v for k,v in param.items() if v!=None}
+      if not param:return function_http_response(400,0,"all keys cant be null")
+      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+      param["updated_at"]=datetime.now()
+      param["updated_by_id"]=request_user["id"]
+      if "number" in param:param["number"]=round(param["number"],5)
+   except Exception as e:return function_http_response(400,0,e.args)
+   #key set
+   try:
+      key=""
+      for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+      key=key.strip().rsplit(',', 1)[0]
+   except Exception as e:return function_http_response(400,0,e.args)
+   #logic
+   query=f"update {table} set {key} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   response=await function_query_runner(postgres_object[x],"write",query,param|{"id":id,"created_by_id":created_by_id})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #finally
+   return response
 
 @router.delete("/{x}/object-delete/{table}/{id}")
 async def api_func(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
-    #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #check table
-    if table=="users":return function_http_response(400,0,"users table not allowed")
-    #read object
-    query=f"select * from {table} where id={id};"
-    response=await function_query_runner(postgres_object[x],"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return function_http_response(400,0,"no such object")
-    object=response["message"][0]
-    #if object admin
-    if "is_admin" in object and object["is_admin"]==1:return function_http_response(400,0,"admin object cant be deleted")
-    #delete s3
-    if "file_url" in object and object["file_url"]:
-       for url in object["file_url"].split(","):
-          if config_aws_s3_bucket_name in url:
-             background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
-    #set self
-    created_by_id=None
-    if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
-    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
-    #logic
-    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-    values={"id":id,"created_by_id":created_by_id}
-    response=await function_query_runner(postgres_object[x],"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #delete post child
-    if table in ["post"]:
-        query_dict={
-        "likes":f"delete from likes where parent_table='post' and parent_id={id};",
-        "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
-        "report":f"delete from report where parent_table='post' and parent_id={id};",
-        "rating":f"delete from rating where parent_table='post' and parent_id={id};",
-        "comment":f"delete from comment where parent_table='post' and parent_id={id};",
-        }
-        for k,v in query_dict.items():background_tasks.add_task(function_query_runner,postgres_object[x],"write",v,{})
-    #finally
-    return {"status":1,"message":"object deleted"}
+   #token check
+   response=await function_token_decode(request,config_jwt_secret_key)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #check table
+   if table=="users":return function_http_response(400,0,"users table not allowed")
+   #read object
+   query=f"select * from {table} where id={id};"
+   response=await function_query_runner(postgres_object[x],"read",query,{})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if not response["message"]:return function_http_response(400,0,"no such object")
+   object=response["message"][0]
+   #if object admin
+   if "is_admin" in object and object["is_admin"]==1:return function_http_response(400,0,"admin object cant be deleted")
+   #delete s3
+   if "file_url" in object and object["file_url"]:
+      for url in object["file_url"].split(","):
+         if config_aws_s3_bucket_name in url:
+            background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+   #set self
+   created_by_id=None
+   if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
+   if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
+   #logic
+   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+   values={"id":id,"created_by_id":created_by_id}
+   response=await function_query_runner(postgres_object[x],"write",query,values)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #delete post child
+   if table in ["post"]:
+      query_dict={
+      "likes":f"delete from likes where parent_table='post' and parent_id={id};",
+      "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
+      "report":f"delete from report where parent_table='post' and parent_id={id};",
+      "rating":f"delete from rating where parent_table='post' and parent_id={id};",
+      "comment":f"delete from comment where parent_table='post' and parent_id={id};",
+      }
+      for k,v in query_dict.items():background_tasks.add_task(function_query_runner,postgres_object[x],"write",v,{})
+   #finally
+   return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
 async def api_func(x:str,request:Request,table:str,page:int,id:int=None):
