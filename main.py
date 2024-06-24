@@ -54,13 +54,13 @@ async def api_func_root(x:str):
    return {"status":1,"message":f"welcome to {x}"}
 
 #router
+from api_database import router
+app.include_router(router)
 from api_login import router
 app.include_router(router)
 from api_my import router
 app.include_router(router)
 from api_crud import router
-app.include_router(router)
-from api_database import router
 app.include_router(router)
 from api_s3 import router
 app.include_router(router)
