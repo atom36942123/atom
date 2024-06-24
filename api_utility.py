@@ -119,7 +119,7 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
     column_datatype=response["message"][0]["data_type"]
     #conversion
     try:
-	    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+        if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
 		if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
 		if column_datatype=="ARRAY":value=value.split(",")
 		if column_datatype=="jsonb":value=json.dumps(value,default=str)
