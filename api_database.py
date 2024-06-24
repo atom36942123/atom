@@ -98,8 +98,8 @@ config_column_index={
 "tag":["array",["atom","users","post"]],
 }
 config_query={
-"rule_delete_disable_users_admin":"create or replace rule rule_delete_disable_users_admin as on delete to users where old.type='admin' do instead nothing;",
 "rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.type='root' do instead nothing;",
+"rule_delete_disable_users_admin":"create or replace rule rule_delete_disable_users_admin as on delete to users where old.type='admin' do instead nothing;",
 "index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
 }
 
@@ -137,12 +137,12 @@ async def api_func(x:str,request:Request):
             query=f"alter table {table} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #schema column
+    #read schema column
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
-    #schema constraint
+    #read schema constraint
     query="select constraint_name from information_schema.constraint_column_usage;"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
