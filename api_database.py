@@ -17,7 +17,6 @@ config_column={
 "updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
 "is_active":["int",["atom","users","post","comment","workseeker"]],
 "is_verified":["int",["atom","users","post","comment","workseeker"]],
-"is_admin":["int",["users"]],
 "username":["text",["users"]],
 "password":["text",["users"]],
 "firebase_id":["text",["users"]],
@@ -66,7 +65,6 @@ config_column={
 config_column_checkin={
 "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
 "is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
-"is_admin":[(0,1),["users"]],
 "is_working":[(0,1),["workseeker"]],
 }
 config_column_default={
@@ -74,7 +72,6 @@ config_column_default={
 "last_active_at":["now()",["users"]],
 "is_active":[1,["atom","users","post","comment","workseeker"]],
 "is_verified":[0,["atom","users","post","comment","workseeker"]],
-"is_admin":[0,["users"]],
 }
 config_column_nullable={
 "created_by_id":["message"],
@@ -101,8 +98,8 @@ config_column_index={
 "tag":["array",["atom","users","post"]],
 }
 config_query={
-"rule_delete_disable_users":"create or replace rule rule_delete_disable_users as on delete to users where old.is_admin=1 do instead nothing;",
-"rule_delete_disable_root":"create or replace rule rule_delete_disable_root as on delete to users where old.id=1 do instead nothing;",
+"rule_delete_disable_users_admin":"create or replace rule rule_delete_disable_users_admin as on delete to users where old.type='admin' do instead nothing;",
+"rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.type='root' do instead nothing;",
 "index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
 }
 
@@ -195,8 +192,8 @@ async def api_func(x:str,request:Request):
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #create root user
-    query="insert into users (username,password,is_admin) values (:username,:password,:is_admin) on conflict do nothing returning *;"
-    values={"username":"root","password":"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3","is_admin":1}
+    query="insert into users (username,password,type) values (:username,:password,:type) on conflict do nothing returning *;"
+    values={"username":"root","password":"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3","type":'root'}
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #finally
