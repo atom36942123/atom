@@ -68,9 +68,7 @@ from api_utility import router
 app.include_router(router)
 from api_admin import router
 app.include_router(router)
-from api_mongo import router
-app.include_router(router)
-from api_elasticsearch import router
+from api_zzz import router
 app.include_router(router)
 
 #server
