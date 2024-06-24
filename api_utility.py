@@ -98,7 +98,7 @@ async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #finally
-    return response
+    return {"status":1,"message":"opt sent"}
 
 @router.put("/{x}/update-cell")
 async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
