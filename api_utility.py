@@ -125,12 +125,11 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
 	if column_datatype=="ARRAY":value=value.split(",")
 	if column_datatype=="jsonb":value=json.dumps(value,default=str)
     except Exception as e:return function_http_response(400,0,e.args)
-	#user type check
+	#permission check
 	if request_user["type"] in ["root"]:created_by_id=None
-    if request_user["type"] is None and table=="users":id,created_by_id=request_user['id'],None
-    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
-	
-	
+    else:
+        if table=="users":created_by_id,id=None,request_user['id']
+        if table!="users":created_by_id=request_user['id']
     #logic
     query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
     values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
