@@ -161,7 +161,7 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
    if not response["message"]:return function_http_response(400,0,"no such object")
    object=response["message"][0]
    #permission set
-   if request_user["type"] in ["root","admin"]:created_by_id=None
+   if request_user["type"] in ["root"]:created_by_id=None
    else:
       if table=="users":created_by_id,id=None,request_user['id']
       if table!="users":created_by_id=request_user['id']
