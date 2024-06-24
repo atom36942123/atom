@@ -21,8 +21,8 @@ async def api_func(x:str,request:Request,url:str,background_tasks:BackgroundTask
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #admin check
-   if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #check
    if config_aws_s3_bucket_name not in url:return function_http_response(400,0,"invalid url")
    #logic
