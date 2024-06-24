@@ -92,7 +92,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    #param default
    param["created_by_id"]=request_user["id"]
    if table in ["message"]:param["status"]="unread"
-   #key set
+   #key
    try:
       key_1=",".join([*param])
       key_2=",".join([":"+item for item in [*param]])
@@ -113,24 +113,30 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    #check body
    response=await function_check_body(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
+   #param
+   param=vars(body)
+   param={k: v for k, v in param.items() if v}
+   if not param:return function_http_response(400,0,"all keys cant be null")
+   #param conversion
+   try:
+      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+      if "number" in param:param["number"]=round(param["number"],5)
+   except Exception as e:return function_http_response(400,0,e.args)
+   #param default
+   param["updated_at"]=datetime.now()
+   param["updated_by_id"]=request_user["id"]
+
+   
    #set self
    created_by_id=None
    if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
    if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
-   #param set
-   try:
-      param=vars(body)
-      param={k: v for k,v in param.items() if v!=None}
-      if not param:return function_http_response(400,0,"all keys cant be null")
-      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
-      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
-      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-      param["updated_at"]=datetime.now()
-      param["updated_by_id"]=request_user["id"]
-      if "number" in param:param["number"]=round(param["number"],5)
-   except Exception as e:return function_http_response(400,0,e.args)
-   #key set
+   
+   
+   #key
    try:
       key=""
       for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
