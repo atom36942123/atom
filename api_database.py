@@ -100,7 +100,8 @@ config_column_index={
 config_query={
 "rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.type='root' do instead nothing;",
 "rule_delete_disable_users_admin":"create or replace rule rule_delete_disable_users_admin as on delete to users where old.type='admin' do instead nothing;",
-"index_comment_pp": "create index if not exists index_comment_pp on comment(parent_table,parent_id);",
+"index_comment_pp":"create index if not exists index_comment_pp on comment(parent_table,parent_id);",
+"create_root_user":"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;"
 }
 
 #api
@@ -191,10 +192,5 @@ async def api_func(x:str,request:Request):
     for k,v in config_query.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    #create root user
-    query="insert into users (username,password,type) values (:username,:password,:type) on conflict do nothing returning *;"
-    values={"username":"root","password":"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3","type":'root'}
-    response=await function_query_runner(postgres_object[x],"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #finally
     return {"status":1,"message":"database init done"}
