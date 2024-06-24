@@ -91,7 +91,7 @@ config_column_index={
 "parent_id":["default",["likes","comment","bookmark","report","rating","block"]],
 "received_by_id":["default",["message"]],
 "description":["default",["comment","message","helpdesk"]],
-"type":["default",["atom","post","helpdesk"]],
+"type":["default",["atom","post","helpdesk","users"]],
 "password":["default",["users"]],
 "firebase_id":["default",["users"]],
 "email":["default",["otp"]],
