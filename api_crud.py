@@ -14,35 +14,17 @@ from fastapi_cache.decorator import cache
 from fastapi import APIRouter
 router=APIRouter(tags=["crud"])
 
-config_column={
-"rating":["int",["rating","helpdesk"]],
-"otp":["int",["otp"]],
-"received_by_id":["bigint",["message"]],
-"metadata":["jsonb",["post"]],
-"profile":["text",["workseeker"]],
-"college":["text",["workseeker"]],
-"linkedin_url":["text",["workseeker"]],
-"portfolio_url":["text",["workseeker"]],
-"experience":["int",["workseeker"]],
-"location_current":["text",["workseeker"]],
-"location_expected":["text",["workseeker"]],
-"salary_type":["text",["workseeker"]],
-"salary_current":["int",["workseeker"]],
-"salary_expected":["int",["workseeker"]],
-"sector":["text",["workseeker"]],
-"past_company_count":["int",["workseeker"]],
-"is_working":["int",["workseeker"]],
-"joining_days":["int",["workseeker"]],
-}
-
 #schema
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
 class schema_atom(BaseModel):
    created_by_id:int|None=None
+   received_by_id:int|None=None
    is_active:int|None=None
    is_verified:int|None=None
+   parent_table:str|None=None
+   parent_id:int|None=None
    username:str|None=None
    profile_pic_url:str|None=None
    name:str|None=None
@@ -58,8 +40,6 @@ class schema_atom(BaseModel):
    date:datetime|None=None
    status:str|None=None
    remark:str|None=None
-   parent_table:str|None=None
-   parent_id:int|None=None
    email:str|None=None
    mobile:str|None=None
    whatsapp:str|None=None
@@ -67,21 +47,12 @@ class schema_atom(BaseModel):
    country:str|None=None
    state:str|None=None
    city:str|None=None
-
-
-   
-   
-   
-   
-   received_by_id:int|None=None
-   
-   
    rating:int|None=None
    metadata:dict|None=None
+   profile:str|None=None
    college:str|None=None
    linkedin_url:str|None=None
    portfolio_url:str|None=None
-   profile:str|None=None
    experience:int|None=None
    location_current:str|None=None
    location_expected:str|None=None
@@ -92,7 +63,7 @@ class schema_atom(BaseModel):
    past_company_count:int|None=None
    is_working:int|None=None
    joining_days:int|None=None
-   
+
 #api
 @router.post("/{x}/object-create/{table}")
 async def api_func(x:str,table:str,request:Request,body:schema_atom):
