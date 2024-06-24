@@ -20,11 +20,10 @@ config_elasticsearch_password=env("elasticsearch_password")
 #aws
 config_aws_access_key_id=env("aws_access_key_id")
 config_aws_secret_access_key=env("aws_secret_access_key")
+config_aws_s3_bucket_region=env("aws_s3_bucket_region")
+config_aws_s3_bucket_name=env("aws_s3_bucket_name")
 config_aws_ses_region=env("aws_ses_region")
 config_aws_ses_sender=env("aws_ses_sender")
-config_aws_s3_bucket_name=env("aws_s3_bucket_name")
-config_aws_s3_bucket_region=env("aws_s3_bucket_region")
-config_aws_cloudfront_url=env("aws_cloudfront_url")
 
 #misc
 config_jwt_secret_key=env("jwt_secret_key")
