@@ -98,10 +98,9 @@ config_column_index={
 "tag":["array",["atom","users","post"]],
 }
 config_query={
-"rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.type='root' do instead nothing;",
-"rule_delete_disable_users_admin":"create or replace rule rule_delete_disable_users_admin as on delete to users where old.type='admin' do instead nothing;",
-"index_comment_pp":"create index if not exists index_comment_pp on comment(parent_table,parent_id);",
 "create_root_user":"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;"
+"rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.type='root' do instead nothing;",
+"index_comment_parent":"create index if not exists index_comment_parent on comment(parent_table,parent_id);",
 }
 
 #api
