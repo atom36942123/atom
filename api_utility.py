@@ -126,7 +126,7 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
 	if column_datatype=="jsonb":value=json.dumps(value,default=str)
     except Exception as e:return function_http_response(400,0,e.args)
 	#user type check
-	created_by_id=None
+	if request_user["type"] in ["root"]:created_by_id=None
     if request_user["type"] is None and table=="users":id,created_by_id=request_user['id'],None
     if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
 	
