@@ -129,9 +129,9 @@ async def function_add_user_key(postgres_object,function_query_runner,object_lis
       for user in object_list_user:
          if object[user_column]==user["id"]:
             if user_column=="created_by_id":
-               object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_is_admin"]=user["username"],user["profile_pic_url"],user["is_admin"]
+               object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
             if user_column=="received_by_id":
-               object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_is_admin"]=user["username"],user["profile_pic_url"],user["is_admin"]
+               object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
    #finally
    return {"status":1,"message":object_list}
 
