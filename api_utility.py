@@ -126,7 +126,7 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
     if column_datatype=="integer":value=int(value)
   except Exception as e:return function_http_response(400,0,e.args)
   #permission check
-  if request_user["type"] in ["root"]:created_by_id=None
+  if request_user["type"] in ["root","admin"]:created_by_id=None
   else:
     if table=="users":created_by_id,id=None,request_user['id']
     if table!="users":created_by_id=request_user['id']
