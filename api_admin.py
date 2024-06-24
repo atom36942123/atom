@@ -14,6 +14,27 @@ from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
 #api
+@router.delete("/{x}/delete-s3-url")
+async def api_func(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
+    #token check
+    response=await function_token_decode(request,config_jwt_secret_key)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #admin check
+    if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
+    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+    #check
+    if config_aws_s3_bucket_name not in url:return function_http_response(400,0,"invalid url")
+    #logic
+    response=await function_s3_delete_url(config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #delete saved url
+    query="delete from s3 where file_url=:file_url;"
+    values={"file_url":url}
+    background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
+    #finally
+    return response
+    
 @router.get("/{x}/query-runner")
 async def api_func(x:str,request:Request,mode:str,query:str):
     #token check
