@@ -15,7 +15,6 @@ for item in config_x:
 
 #mongo
 from config import config_mongo_url
-from config import config_switch_mongo
 import motor.motor_asyncio
 mongo_object=None
 if False:
@@ -23,13 +22,11 @@ if False:
    except Exception as e:print(e)
 
 #elasticsearch
+from elasticsearch import Elasticsearch
 from config import config_elasticsearch_cloud_id
 from config import config_elasticsearch_username
 from config import config_elasticsearch_password
-from config import config_switch_elasticsearch
-from elasticsearch import Elasticsearch
 elasticsearch_object=None
 if False:
    try:elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    except Exception as e:print(e)
-   
