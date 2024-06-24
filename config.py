@@ -30,6 +30,4 @@ config_jwt_secret_key=env("jwt_secret_key")
 config_jwt_expire_day=env.int("jwt_expire_day")
 config_token_root=env("token_root")
 config_admin_panel=env("admin_panel")
-
-#custom
-config_x=["test","atom"]
+config_x=env.list("x")
