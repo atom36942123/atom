@@ -133,6 +133,6 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
     query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
     values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
     response=await function_query_runner(postgres_object[x],"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if response["status"]==0:return function_http_response(400,0,response["message"],column_datatype)
     #finally
     return response
