@@ -62,14 +62,12 @@ from api_my import router
 app.include_router(router)
 from api_utility import router
 app.include_router(router)
-from api_zzz import router
-app.include_router(router)
-
 from api_crud import router
 app.include_router(router)
 from api_admin import router
 app.include_router(router)
-
+from api_zzz import router
+app.include_router(router)
 
 #server
 from config import config_backend_host
