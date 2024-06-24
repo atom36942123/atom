@@ -18,7 +18,7 @@ from config import config_mongo_url
 from config import config_switch_mongo
 import motor.motor_asyncio
 mongo_object=None
-if config_switch_mongo:
+if False:
    try:mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_url)
    except Exception as e:print(e)
 
@@ -29,7 +29,7 @@ from config import config_elasticsearch_password
 from config import config_switch_elasticsearch
 from elasticsearch import Elasticsearch
 elasticsearch_object=None
-if config_switch_elasticsearch:
+if False:
    try:elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    except Exception as e:print(e)
    
