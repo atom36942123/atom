@@ -77,24 +77,21 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    #check body
    response=await function_check_body(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #check
-   if table=="message" and body.received_by_id==request_user["id"]:return function_http_response(400,0,"self message not allowed")
-   if table=="post" and (not body.description and not body.file_url):return function_http_response(400,0,"title/description/file any one is mandatory")
-   if table=="helpdesk" and not body.description:return function_http_response(400,0,"description is mandatory")
-   if table not in ["atom"] and body.description and len(body.description)<5:return function_http_response(400,0,"description should be greater than 5 character")
-   #param set
+   #param
+   param=vars(body)
+   param={k: v for k, v in param.items() if v}
+   if not param:return function_http_response(400,0,"all keys cant be null")
+   #param conversion
    try:
-      param=vars(body)
-      param={k: v for k, v in param.items() if v}
-      if not param:return function_http_response(400,0,"all keys cant be null")
+      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
       if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
       if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-      if table in ["message"]:param["status"]="unread"
-      param["created_by_id"]=request_user["id"]
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return function_http_response(400,0,e.args)
+   #param default
+   param["created_by_id"]=request_user["id"]
+   if table in ["message"]:param["status"]="unread"
    #key set
    try:
       key_1=",".join([*param])
