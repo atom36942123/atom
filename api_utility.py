@@ -47,13 +47,13 @@ async def api_func(x:str,request:Request,to:str,title:str,description:str):
 async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
     #check
     if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
-    #otp
+    #generate otp
     otp=random.randint(100000,999999)
-    #email
+    #logic email
     if email:
         response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,email,"otp from atom",str(otp))
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    #mobile
+    #logic mobile
     #save otp
     query="insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;"
     values={"created_by_id":None,"otp":otp,"email":email,"mobile":mobile}
