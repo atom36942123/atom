@@ -45,20 +45,65 @@ async def api_func(x:str,request:Request,to:str,title:str,description:str):
 
 @router.get("/{x}/send-otp")
 async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
-   #check
-   if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
-   #logic
-   otp=random.randint(100000,999999)
-   if email:
-      response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,email,"otp from atom",str(otp))
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #save otp
-   query="insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;"
-   values={"created_by_id":None,"otp":otp,"email":email,"mobile":mobile}
-   response=await function_query_runner(postgres_object[x],"write",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
-   return response
+    #check
+    if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
+    #otp
+    otp=random.randint(100000,999999)
+    #email
+    if email:
+        response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,email,"otp from atom",str(otp))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+    #mobile
+    #save otp
+    query="insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;"
+    values={"created_by_id":None,"otp":otp,"email":email,"mobile":mobile}
+    response=await function_query_runner(postgres_object[x],"write",query,values)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #finally
+    return response
+
+@router.get("/{x}/pcache")
+@cache(expire=60)
+async def api_func(x:str,request:Request):
+    #query
+    output={}
+    query_dict={
+    "post_tag":"with x as (select unnest(tag) as tag from post where tag is not null) select tag,count(*) from x group by tag order by count desc;",
+    "user_tag":"with x as (select unnest(tag) as tag from users where tag is not null) select tag,count(*) from x group by tag order by count desc;",
+    "user_count":"select count(*) from users;",
+    }
+    for k,v in query_dict.items():
+        response=await function_query_runner(postgres_object[x],"read",v,{})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        output[k]=response["message"]
+    #post type tag
+    output["post_tag_type"]={}
+    query="select distinct(type) from post where type is not null;"
+    response=await function_query_runner(postgres_object[x],"read",query,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    type_list=[item["type"] for item in response["message"] if item["type"]]
+    for item in type_list:
+        query=f"with x as (select unnest(tag) as tag from post where type='{item}' and tag is not null) select tag,count(*) from x group by tag order by count desc limit 1000;"
+        response=await function_query_runner(postgres_object[x],"read",query,{})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        output["post_tag_type"][item]=response["message"]
+    #custom
+    output["admin_panel"]=config_admin_panel
+    output["mapping_post_type"]={"hiring":"hiring post","funding":"funding post","workseeker":"looking for job","workgiver":"looking to hire","requirement":"requirement post"}
+    #custom-query
+    query_dict={
+    "logo":"select * from atom where type='logo' and is_active=1 limit 1;",
+    "about":"select * from atom where type='about' and is_active=1 limit 1;",
+    "post_tag_trending":"select * from atom where type='post_tag_trending' and is_active=1 limit 1;",
+    "curated":"select * from atom where type='curated' and is_active=1 order by id asc limit 1000;",
+    "link":"select * from atom where type='link' and is_active=1 order by id asc limit 10;",
+    }
+    for k,v in query_dict.items():
+        response=await function_query_runner(postgres_object[x],"read",v,{})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        output[k]=response["message"]
+    #finally
+    return {"status":1,"message":output}
 
 @router.put("/{x}/update-cell")
 async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
@@ -95,46 +140,3 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
    return response
-
-@router.get("/{x}/pcache")
-@cache(expire=60)
-async def api_func(x:str,request:Request):
-   #general-query
-   output={}
-   query_dict={
-   "post_tag":"with x as (select unnest(tag) as tag from post where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-   "user_tag":"with x as (select unnest(tag) as tag from users where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-   "user_count":"select count(*) from users;",
-   }
-   for k,v in query_dict.items():
-      response=await function_query_runner(postgres_object[x],"read",v,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      output[k]=response["message"]
-   #general-post type tag
-   output["post_tag_type"]={}
-   query="select distinct(type) from post where type is not null;"
-   response=await function_query_runner(postgres_object[x],"read",query,{})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   type_list=[item["type"] for item in response["message"] if item["type"]]
-   for item in type_list:
-      query=f"with x as (select unnest(tag) as tag from post where type='{item}' and tag is not null) select tag,count(*) from x group by tag order by count desc limit 1000;"
-      response=await function_query_runner(postgres_object[x],"read",query,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      output["post_tag_type"][item]=response["message"]
-   #custom-direct
-   output["admin_panel"]=config_admin_panel
-   output["mapping_post_type"]={"hiring":"hiring post","funding":"funding post","workseeker":"looking for job","workgiver":"looking to hire","requirement":"requirement post"}
-   #custom-query
-   query_dict={
-   "logo":"select * from atom where type='logo' and is_active=1 limit 1;",
-   "about":"select * from atom where type='about' and is_active=1 limit 1;",
-   "post_tag_trending":"select * from atom where type='post_tag_trending' and is_active=1 limit 1;",
-   "curated":"select * from atom where type='curated' and is_active=1 order by id asc limit 1000;",
-   "link":"select * from atom where type='link' and is_active=1 order by id asc limit 10;",
-   }
-   for k,v in query_dict.items():
-      response=await function_query_runner(postgres_object[x],"read",v,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      output[k]=response["message"]
-   #finally
-   return {"status":1,"message":output}
