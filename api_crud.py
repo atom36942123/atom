@@ -160,17 +160,11 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no such object")
    object=response["message"][0]
-   #if object admin
-   if "is_admin" in object and object["is_admin"]==1:return function_http_response(400,0,"admin object cant be deleted")
-   #delete s3
-   if "file_url" in object and object["file_url"]:
-      for url in object["file_url"].split(","):
-         if config_aws_s3_bucket_name in url:
-            background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
-   #set self
-   created_by_id=None
-   if request_user["is_admin"]!=1 and table=="users":id,created_by_id=request_user['id'],None
-   if request_user["is_admin"]!=1 and table!="users":created_by_id=request_user['id']
+   #permission check
+   if request_user["type"] in ["root","admin"]:created_by_id=None
+   else:
+      if table=="users":created_by_id,id=None,request_user['id']
+      if table!="users":created_by_id=request_user['id']
    #logic
    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
    values={"id":id,"created_by_id":created_by_id}
@@ -186,6 +180,11 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
       "comment":f"delete from comment where parent_table='post' and parent_id={id};",
       }
       for k,v in query_dict.items():background_tasks.add_task(function_query_runner,postgres_object[x],"write",v,{})
+   #delete s3
+   if "file_url" in object and object["file_url"]:
+      for url in object["file_url"].split(","):
+         if config_aws_s3_bucket_name in url:
+            background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
    #finally
    return {"status":1,"message":"object deleted"}
 
