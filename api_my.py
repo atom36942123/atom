@@ -210,7 +210,7 @@ async def api_func(x:str,request:Request,background_tasks:BackgroundTasks):
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #admin check
-    if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"root/admin user cant be deleted")
+    if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"admin user cant be deleted")
     #logic
     query="delete from users where id=:id;"
     values={"id":request_user["id"]}
