@@ -65,17 +65,11 @@ async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
 @router.get("/{x}/pcache")
 @cache(expire=60)
 async def api_func(x:str,request:Request):
-    #query
+    #output
     output={}
-    query_dict={
-    "post_tag":"with x as (select unnest(tag) as tag from post where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-    "user_tag":"with x as (select unnest(tag) as tag from users where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-    "user_count":"select count(*) from users;",
-    }
-    for k,v in query_dict.items():
-        response=await function_query_runner(postgres_object[x],"read",v,{})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        output[k]=response["message"]
+    #custom
+    output["admin_panel"]=config_admin_panel
+    output["mapping_post_type"]={"hiring":"hiring post","funding":"funding post","workseeker":"looking for job","workgiver":"looking to hire","requirement":"requirement post"}
     #post type tag
     output["post_tag_type"]={}
     query="select distinct(type) from post where type is not null;"
@@ -87,11 +81,11 @@ async def api_func(x:str,request:Request):
         response=await function_query_runner(postgres_object[x],"read",query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         output["post_tag_type"][item]=response["message"]
-    #custom
-    output["admin_panel"]=config_admin_panel
-    output["mapping_post_type"]={"hiring":"hiring post","funding":"funding post","workseeker":"looking for job","workgiver":"looking to hire","requirement":"requirement post"}
-    #custom-query
+    #query
     query_dict={
+    "post_tag":"with x as (select unnest(tag) as tag from post where tag is not null) select tag,count(*) from x group by tag order by count desc;",
+    "user_tag":"with x as (select unnest(tag) as tag from users where tag is not null) select tag,count(*) from x group by tag order by count desc;",
+    "user_count":"select count(*) from users;",
     "logo":"select * from atom where type='logo' and is_active=1 limit 1;",
     "about":"select * from atom where type='about' and is_active=1 limit 1;",
     "post_tag_trending":"select * from atom where type='post_tag_trending' and is_active=1 limit 1;",
