@@ -20,7 +20,7 @@ async def api_func(x:str,request:Request,url:str,background_tasks:BackgroundTask
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #admin check
+   #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #check
@@ -41,9 +41,9 @@ async def api_func(x:str,request:Request,mode:str,query:str):
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #admin check
-   if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
+   #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only admin allowed")
    #check keywords
    if request_user["id"]!=1:
       if "insert" in query:return function_http_response(400,0,"insert in query not allowed")
@@ -68,7 +68,7 @@ async def api_func(x:str,request:Request,table:Literal["atom","post"],file:Uploa
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
    request_user=response["message"][0]
-   #admin check
+   #permission check
    if request_user["is_admin"]!=1:return function_http_response(400,0,"only admin allowed")
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["id"]!=1:return function_http_response(400,0,"only root user allowed")
