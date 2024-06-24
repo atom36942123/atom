@@ -70,7 +70,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    #token check
    request_user={}
    request_user["id"]=None
-   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
+   if request.headers.get("token") or table not in ["helpdesk","workseeker"]:
       response=await function_token_decode(request,config_jwt_secret_key)
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
