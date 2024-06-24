@@ -31,7 +31,7 @@ config_column={
 "type":["text",["atom","users","post","helpdesk","workseeker"]],
 "title":["text",["atom","users","post"]],
 "description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
-"file_url":["text",["atom","post","s3"]],
+"file_url":["text",["atom","post","s3",,"workseeker"]],
 "link_url":["text",["atom","post"]],
 "tag":["text[]",["atom","users","post","workseeker"]],
 "number":["numeric",["post"]],
