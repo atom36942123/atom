@@ -106,6 +106,9 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
   response=await function_token_decode(request,config_jwt_secret_key)
   if response["status"]==0:return function_http_response(400,0,response["message"])
   request_user=response["message"]
+  #column not allowed
+  if request_user["type"] not in ["root","admin"]:
+      if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
   #validation
   if column=="username" and len(value)>100:return function_http_response(400,0,"value should be less than 100")
   if column=="password" and len(value)>1000:return function_http_response(400,0,"value should be less than 1000")
@@ -125,9 +128,6 @@ async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
     if column_datatype=="jsonb":value=json.dumps(value,default=str)
     if column_datatype=="integer":value=int(value)
   except Exception as e:return function_http_response(400,0,e.args)
-  #column not allowed
-  if request_user["type"] not in ["root","admin"]:
-      if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
   #permission set
   if request_user["type"] in ["root","admin"]:created_by_id=None
   else:
