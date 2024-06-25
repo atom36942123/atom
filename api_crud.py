@@ -116,7 +116,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    #param
    param=vars(body)
    param={k: v for k, v in param.items() if v}
-   if not param:return function_http_response(400,0,"all keys cant be null")
+   if not param:return function_http_response(400,0,"body null issue")
    #param conversion
    try:
       if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
@@ -128,6 +128,10 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    #param default
    param["updated_at"]=datetime.now()
    param["updated_by_id"]=request_user["id"]
+   #keys not allowed
+   if request_user["type"] not in ["root","admin"]:
+      for item in ["created_by_id","received_by_id","is_active","is_verified"]:del param[item]
+   if not param:return function_http_response(400,0,"body null issue after not allowed keys remove")
    #permission set
    if request_user["type"] in ["root","admin"]:created_by_id=None
    else:
