@@ -110,13 +110,13 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #check body
-   response=await function_check_body(vars(body))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #param
    param=vars(body)
    param={k: v for k, v in param.items() if v is not None}
    if not param:return function_http_response(400,0,"body null issue")
+   #check body
+   response=await function_check_body(vars(body))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    try:
       if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
