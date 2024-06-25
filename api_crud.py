@@ -79,7 +79,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param
    param=vars(body)
-   param={k: v for k, v in param.items() if v}
+   param={k: v for k, v in param.items() if v is not None}
    if not param:return function_http_response(400,0,"all keys cant be null")
    #param conversion
    try:
@@ -115,7 +115,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param
    param=vars(body)
-   param={k: v for k, v in param.items() if v}
+   param={k: v for k, v in param.items() if v is not None}
    if not param:return function_http_response(400,0,"body null issue")
    #param conversion
    try:
