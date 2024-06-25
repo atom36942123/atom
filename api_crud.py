@@ -92,7 +92,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    #param default
    param["created_by_id"]=request_user["id"]
    if table in ["message"]:param["status"]="unread"
-   #key
+   #param set
    try:
       key_1=",".join([*param])
       key_2=",".join([":"+item for item in [*param]])
@@ -133,7 +133,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    else:
       if table=="users":created_by_id,id=None,request_user['id']
       if table!="users":created_by_id=request_user['id']
-   #key
+   #param set
    try:
       key=""
       for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
