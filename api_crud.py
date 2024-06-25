@@ -74,13 +74,13 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
       response=await function_token_decode(request,config_jwt_secret_key)
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
-   #check body
-   response=await function_check_body(vars(body))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #param
    param=vars(body)
    param={k: v for k, v in param.items() if v is not None}
    if not param:return function_http_response(400,0,"all keys cant be null")
+   #param validation
+   response=await function_check_body(vars(body))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    try:
       if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
@@ -114,7 +114,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    param=vars(body)
    param={k: v for k, v in param.items() if v is not None}
    if not param:return function_http_response(400,0,"body null issue")
-   #check body
+   #param validation
    response=await function_check_body(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
@@ -125,7 +125,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return function_http_response(400,0,e.args)
-   #keys not allowed
+   #param keys not allowed
    if request_user["type"] not in ["root","admin"]:
       for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:
          if item in param:del param[item]
