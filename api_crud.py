@@ -130,7 +130,8 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    param["updated_by_id"]=request_user["id"]
    #keys not allowed
    if request_user["type"] not in ["root","admin"]:
-      for item in ["created_by_id","received_by_id","is_active","is_verified"]:del param[item]
+      for item in ["created_by_id","received_by_id","is_active","is_verified"]:
+         del param[item]
    if not param:return function_http_response(400,0,"body null issue after not allowed keys remove")
    #permission set
    if request_user["type"] in ["root","admin"]:created_by_id=None
