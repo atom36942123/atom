@@ -86,7 +86,7 @@ async def api_func(x:str,request:Request,table:Literal["atom","post"],file:Uploa
    request_user=response["message"]
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only admin allowed")
+   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
    #prework
    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
@@ -117,7 +117,7 @@ async def api_func(x:str,request:Request,mode:str,query:str):
    request_user=response["message"]
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only admin allowed")
+   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
    #query alias
    if query=="database":query="select * from pg_database where datistemplate=false;"
    if query=="table":query="select * from information_schema.tables where table_schema='public' and table_type='BASE TABLE';"
