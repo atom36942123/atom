@@ -92,7 +92,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    #param default
    param["created_by_id"]=request_user["id"]
    if table in ["message"]:param["status"]="unread"
-   #param set
+   #query key set
    try:
       key_1=",".join([*param])
       key_2=",".join([":"+item for item in [*param]])
@@ -133,7 +133,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    else:
       if table=="users":created_by_id,id=None,request_user['id']
       if table!="users":created_by_id=request_user['id']
-   #param set
+   #query key set
    try:
       key=""
       for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
@@ -141,7 +141,8 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    except Exception as e:return function_http_response(400,0,e.args)
    #logic
    query=f"update {table} set {key} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   response=await function_query_runner(postgres_object[x],"write",query,param|{"id":id,"created_by_id":created_by_id})
+   values=param|{"id":id,"created_by_id":created_by_id}
+   response=await function_query_runner(postgres_object[x],"write",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
    return response
