@@ -29,7 +29,7 @@ class schema_login(BaseModel):
 
 #api
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
-async def api_func(x:str,request:Request,body:schema_signup):
+async def api_func_signup(x:str,request:Request,body:schema_signup):
     #check body
     response=await function_check_body(vars(body))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -47,7 +47,7 @@ async def api_func(x:str,request:Request,body:schema_signup):
     return response
 
 @router.post("/{x}/login")
-async def api_func(x:str,request:Request,body:schema_login):
+async def api_func_login(x:str,request:Request,body:schema_login):
     #check mode
     if body.mode=="username":
         if not body.username or not body.password:return function_http_response(400,0,"username/password must")
@@ -98,7 +98,7 @@ async def api_func(x:str,request:Request,body:schema_login):
     return response
 
 @router.get("/{x}/token-refresh")
-async def api_func(x:str,request:Request):
+async def api_func_token_refresh(x:str,request:Request):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
