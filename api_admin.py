@@ -15,7 +15,7 @@ router=APIRouter(tags=["admin"])
 
 #api
 @router.get("/{x}/checklist")
-async def api_func_checklist(x:str,request:Request):
+async def function_api_checklist(x:str,request:Request):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -58,7 +58,7 @@ async def api_func_checklist(x:str,request:Request):
    return {"status":1,"message":"done"}
    
 @router.delete("/{x}/delete-s3-url")
-async def api_func_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
+async def function_api_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -79,7 +79,7 @@ async def api_func_delete_s3_url(x:str,request:Request,url:str,background_tasks:
    return response
 
 @router.post("/{x}/insert-csv")
-async def api_func_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
+async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -110,7 +110,7 @@ async def api_func_insert_csv(x:str,request:Request,table:Literal["atom","post"]
    return {"status":1,"message":f"rows inserted={count}"}
 
 @router.get("/{x}/query-runner")
-async def api_func_query_runner(x:str,request:Request,mode:str,query:str):
+async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
