@@ -20,7 +20,7 @@ async def function_api_checklist(x:str,request:Request):
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #refresh request_user
+   #read user
    param={"id":request_user["id"]}
    response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
    if response["status"]==0:return function_http_response(400,0,response["message"])
