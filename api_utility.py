@@ -17,7 +17,7 @@ router=APIRouter(tags=["utility"])
 #api
 @router.get("/{x}/pcache")
 @cache(expire=60)
-async def api_func(x:str,request:Request):
+async def api_func_pcache(x:str,request:Request):
     #output
     output={}
     #custom
@@ -53,7 +53,7 @@ async def api_func(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/create-s3-url")
-async def api_func(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
+async def api_func_create_s3_url(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -70,7 +70,7 @@ async def api_func(x:str,request:Request,filename:str,background_tasks:Backgroun
     return response
 
 @router.get("/{x}/send-email")
-async def api_func(x:str,request:Request,to:str,title:str,description:str):
+async def api_func_send_email(x:str,request:Request,to:str,title:str,description:str):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -82,7 +82,7 @@ async def api_func(x:str,request:Request,to:str,title:str,description:str):
     return response
 
 @router.get("/{x}/send-otp")
-async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
+async def api_func_send_otp(x:str,request:Request,email:str=None,mobile:str=None):
     #check
     if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
     #generate otp
@@ -101,7 +101,7 @@ async def api_func(x:str,request:Request,email:str=None,mobile:str=None):
     return {"status":1,"message":"opt sent"}
 
 @router.put("/{x}/update-cell")
-async def api_func(x:str,request:Request,table:str,id:int,column:str,value:str):
+async def api_func_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
   #token check
   response=await function_token_decode(request,config_jwt_secret_key)
   if response["status"]==0:return function_http_response(400,0,response["message"])
