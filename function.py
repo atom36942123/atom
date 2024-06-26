@@ -40,13 +40,9 @@ def function_http_response(status_code,status,message):
    #finally
    return response
 
-import hashlib
-async def function_object_read(postgres_object,function_query_runner,table,param,olo):
+async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset):
    #param set
    param={k:v for k,v in param.items() if v is not None}
-   if "password" in param:param["password"]=hashlib.sha256(param["password"].encode()).hexdigest()
-   if "firebase_id" in param:param["firebase_id"]=hashlib.sha256(param["firebase_id"].encode()).hexdigest()
-   if "tag" in param:param["tag"]=param["tag"].split(",")
    #where set
    where="where "
    for k,v in param.items():
@@ -55,7 +51,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    where=where.strip().rsplit('and',1)[0]
    if where=="where":where=""
    #logic
-   query=f"select * from {table} {where} order by {olo[0]} {olo[1]} limit {olo[2]} offset {olo[3]};"
+   query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
    response=await function_query_runner(postgres_object,"read",query,param)
    if response["status"]==0:return response
    #finally
