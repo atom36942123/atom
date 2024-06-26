@@ -66,7 +66,7 @@ class schema_atom(BaseModel):
 
 #api
 @router.post("/{x}/object-create/{table}")
-async def api_func(x:str,table:str,request:Request,body:schema_atom):
+async def api_func_object_create(x:str,table:str,request:Request,body:schema_atom):
    #token check
    request_user={}
    request_user["id"]=None
@@ -105,7 +105,7 @@ async def api_func(x:str,table:str,request:Request,body:schema_atom):
    return response
 
 @router.put("/{x}/object-update/{table}/{id}")
-async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
+async def api_func_object_update(x:str,request:Request,table:str,id:int,body:schema_atom):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -153,7 +153,7 @@ async def api_func(x:str,request:Request,table:str,id:int,body:schema_atom):
    return response
 
 @router.delete("/{x}/object-delete/{table}/{id}")
-async def api_func(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
+async def api_func_object_delete(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -195,7 +195,7 @@ async def api_func(x:str,request:Request,table:str,id:int,background_tasks:Backg
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
-async def api_func(x:str,request:Request,table:str,page:int,id:int=None):
+async def api_func_object_read_self(x:str,request:Request,table:str,page:int,id:int=None):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -224,7 +224,7 @@ async def api_func(x:str,request:Request,table:str,page:int,id:int=None):
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
-async def api_func(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+async def api_func_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
    #logic
    limit=30
    offset=(page-1)*limit
@@ -247,7 +247,7 @@ async def api_func(x:str,request:Request,table:Literal["users","atom","post","co
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
-async def api_func(x:str,request:Request,table:str,page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+async def api_func_object_read_admin(x:str,request:Request,table:str,page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
