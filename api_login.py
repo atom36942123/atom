@@ -33,16 +33,10 @@ async def function_api_signup(x:str,request:Request,body:schema_signup):
    #check body
    response=await function_check_body(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #read user
-   #read user
-   query="select * from users where id=:id;"
-   values={"id":request_user["id"]}
+   #check username if exist
+   query="select * from users where username=:username;"
+   values={"username":body.username}
    response=await function_query_runner(postgres_object[x],"read",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   user=response["message"][0]
-   param={"username":body.username}
-   response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if response["message"]:return function_http_response(400,0,"username already exist")
    #logic
