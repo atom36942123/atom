@@ -104,14 +104,14 @@ async def function_api_token_refresh(x:str,request:Request):
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #refresh request_user
-   param={"id":request_user["id"]}
-   response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
+   #read user
+   query="select * from users where id=:id;"
+   values={"id":request_user["id"]}
+   response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   request_user=response["message"][0]
+   user=response["message"][0]
    #token encode
-   user=request_user
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
