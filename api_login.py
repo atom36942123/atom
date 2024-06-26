@@ -55,6 +55,9 @@ async def function_api_login(x:str,request:Request,body:schema_login):
    #username
    if body.mode=="username":
       if not body.username or not body.password:return function_http_response(400,0,"username/password must")
+      query="select * from users where username=:username and password=:password;"
+      values={"username":body.username,"password":body.password}
+      response=await function_query_runner(postgres_object[x],"read",query,values)
    #firebase
    if body.mode=="firebase":
       if not body.firebase:return function_http_response(400,0,"firebase_id must")
@@ -81,9 +84,6 @@ async def function_api_login(x:str,request:Request,body:schema_login):
   
       
    #read user
-   param={"username":body.username,"password":body.password,"firebase_id":body.firebase_id,"email":body.email,"mobile":body.mobile}
-   response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:user=None
    else:user=response["message"][0]
    #check user
