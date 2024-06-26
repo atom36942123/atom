@@ -200,6 +200,17 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
+   #table=users
+   if table=="users":
+      query="select * from users where id=:id;"
+      values={"id":request_user["id"]}
+      response=await function_query_runner(postgres_object[x],"read",query,values)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      if not response["message"]:return function_http_response(400,0,"no user for token passed")
+      user=response["message"][0]
+      return response
+
+   
    #logic
    limit=30
    offset=(page-1)*limit
