@@ -240,6 +240,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    if tag:tag=tag.split(",")
    query=f"select * from {table} where (id=:id or :id is null) and (created_by_id=:created_by_id or :created_by_id is null) and (type=:type or :type is null) and (username=:username or :username is null) and (parent_table=:parent_table or :parent_table is null) and (parent_id=:parent_id or :parent_id is null) and (tag@>:tag or :tag is null) order by id desc offset {offset} limit {limit};"
    values={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
+   values={k:v for k,v in values.items() if v is not None}
    response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
