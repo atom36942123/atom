@@ -208,24 +208,24 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"no user for token passed")
       user=response["message"][0]
-      return response
-
-   
-   #logic
+      return {"status":1,"message":user}
+   #table!=users
    limit=30
    offset=(page-1)*limit
-   param={"created_by_id":request_user['id'],"id":id}
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
+   query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+   values={"created_by_id":request_user['id'],"id":id}
+   response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
-   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if table in ["post"]:
+      response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
+      if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
-   if table=="post":
+   if table in ["post"]:
       response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add comment count
-   if table=="post":
+   if table in ["post"]:
       response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
@@ -245,11 +245,11 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
-   if table=="post":
+   if table in ["post"]:
       response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add comment count
-   if table=="post":
+   if table in ["post"]:
       response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
