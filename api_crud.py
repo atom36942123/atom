@@ -200,8 +200,6 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #table check
-   if table=="users":return function_http_response(400,0,"users table not allowed")
    #logic
    limit=30
    offset=(page-1)*limit
