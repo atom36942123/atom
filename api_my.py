@@ -13,7 +13,7 @@ router=APIRouter(tags=["my"])
 
 #api
 @router.get("/{x}/my-profile")
-async def api_func_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_api_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -32,7 +32,7 @@ async def api_func_my_profile(x:str,request:Request,background_tasks:BackgroundT
     return {"status":1,"message":request_user}
 
 @router.get("/{x}/my-metric")
-async def api_func_my_metric(x:str,request:Request,mode:str=None):
+async def function_api_my_metric(x:str,request:Request,mode:str=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -60,7 +60,7 @@ async def api_func_my_metric(x:str,request:Request,mode:str=None):
     return {"status":1,"message":output}
 
 @router.get("/{x}/my-action-check")
-async def api_func_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
+async def function_api_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -80,7 +80,7 @@ async def api_func_my_action_check(x:str,request:Request,action:str,table:str,id
     return {"status":1,"message":ids_filtered}
 
 @router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
-async def api_func_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
+async def function_api_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -110,7 +110,7 @@ async def api_func_my_read_parent(x:str,request:Request,table:str,parent_table:s
     return response
 
 @router.get("/{x}/my-message-inbox/{page}")
-async def api_func_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
+async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -147,7 +147,7 @@ async def api_func_my_message_inbox(x:str,request:Request,page:int,is_unread:int
     return response
 
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
-async def api_func_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
+async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -173,7 +173,7 @@ async def api_func_my_message_thread(x:str,request:Request,user_id:int,page:int,
     return response
 
 @router.delete("/{x}/my-delete")
-async def api_func_my_delete(request:Request,x:str,mode:Literal["message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_api_my_delete(request:Request,x:str,mode:Literal["message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -204,7 +204,7 @@ async def api_func_my_delete(request:Request,x:str,mode:Literal["message_all","m
     return {"status":1,"message":"object deleted"}
 
 @router.delete("/{x}/my-delete-account")
-async def api_func_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_api_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
