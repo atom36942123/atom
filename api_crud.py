@@ -268,8 +268,9 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    #logic
    limit=30
    offset=(page-1)*limit
+   if tag:tag=tag.split(",")
    param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
    if table!="users" and False:
