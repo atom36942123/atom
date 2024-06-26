@@ -234,20 +234,9 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
 async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
-   #logic
-   limit=30
-   offset=(page-1)*limit
+   #filter param set
    if tag:tag=tag.split(",")
    param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
-
-
-
-   
-   query=f"select * from {table} where (id=:id or :id is null) and (created_by_id=:created_by_id or :created_by_id is null) and (type=:type or :type is null) and (username=:username or :username is null) and (parent_table=:parent_table or :parent_table is null) and (parent_id=:parent_id or :parent_id is null) and (tag@>:tag or :tag is null) order by id desc offset {offset} limit {limit};"
-   values={k:v for k,v in values.items() if v is not None}
-   response=await function_query_runner(postgres_object[x],"read",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-      
    #where set
    where="where "
    for k,v in param.items():
@@ -256,10 +245,11 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    where=where.strip().rsplit('and',1)[0]
    if where=="where":where=""
    #logic
-   query=f"select * from {table} {where} order by {olo[0]} {olo[1]} limit {olo[2]} offset {olo[3]};"
+   limit=30
+   offset=(page-1)*limit
+   query=f"select * from {table} {where} order by id desc offset {offset} limit {limit};"
    response=await function_query_runner(postgres_object,"read",query,param)
    if response["status"]==0:return response
-      
    #add user key
    if table in ["post"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
