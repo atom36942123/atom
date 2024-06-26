@@ -47,6 +47,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    where="where "
    for k,v in param.items():
       if k=="tag":where=where+f"({k}@>:{k} or :{k} is null) and "
+      if k=="rating":where=where+f"({k}>=:{k} or :{k} is null) and "
       else:where=where+f"({k}=:{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
    if where=="where":where=""
