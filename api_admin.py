@@ -21,11 +21,14 @@ async def function_api_checklist(x:str,request:Request):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #read user
-   param={"id":request_user["id"]}
-   response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
+   query="select * from users where id=:id;"
+   values={"id":request_user["id"]}
+   response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   request_user=response["message"][0]
+   user=response["message"][0]
+   #refresh request user
+   request_user=user
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
