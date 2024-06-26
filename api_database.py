@@ -106,7 +106,7 @@ config_query={
 
 #api
 @router.get("/{x}/database-reset")
-async def api_func(x:str,request:Request):
+async def api_func_database_reset(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #x check
@@ -126,7 +126,7 @@ async def api_func(x:str,request:Request):
     return {"status":1,"message":"reset done"}
 
 @router.get("/{x}/database-init")
-async def api_func(x:str,request:Request):
+async def api_func_database_init(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #create table
