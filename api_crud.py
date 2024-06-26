@@ -49,7 +49,7 @@ class schema_atom(BaseModel):
    city:str|None=None
    rating:int|None=None
    metadata:dict|None=None
-   profile:str|None=None
+   work_profile:str|None=None
    experience:int|None=None
    sector:str|None=None
    college:str|None=None
