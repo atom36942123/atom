@@ -43,7 +43,7 @@ def function_http_response(status_code,status,message):
 import hashlib
 async def function_object_read(postgres_object,function_query_runner,table,param,olo):
    #param set
-   param={k:v for k,v in param.items() if v}
+   param={k:v for k,v in param.items() if v is not None}
    if "password" in param:param["password"]=hashlib.sha256(param["password"].encode()).hexdigest()
    if "firebase_id" in param:param["firebase_id"]=hashlib.sha256(param["firebase_id"].encode()).hexdigest()
    if "tag" in param:param["tag"]=param["tag"].split(",")
