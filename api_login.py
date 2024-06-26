@@ -54,22 +54,73 @@ async def function_api_login(x:str,request:Request,body:schema_login):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #username
    if body.mode=="username":
+      #check body
       if not body.username or not body.password:return function_http_response(400,0,"username/password must")
+      #read user
       query="select * from users where username=:username and password=:password;"
-      values={"username":body.username,"password":body.password}
+      values={"username":body.username,"password":hashlib.sha256(body.password.encode()).hexdigest()}
       response=await function_query_runner(postgres_object[x],"read",query,values)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      if not response["message"]:return function_http_response(400,0,"no such user")
+      #user define
+      user=response["message"][0]
    #firebase
    if body.mode=="firebase":
+      #check body
       if not body.firebase:return function_http_response(400,0,"firebase_id must")
+      #read user
+      query="select * from users where firebase_id=:firebase_id order by id desc limit 1;"
+      values={"firebase_id":hashlib.sha256(body.firebase_id.encode()).hexdigest()}
+      response=await function_query_runner(postgres_object[x],"read",query,values)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      #user define
+      if response["message"]:user=response["message"][0]
+      #user define if not exist
+      else:
+         #user create
+         query="insert into users (firebase_id) values (:firebase_id) returning *;"
+         values={"firebase_id":hashlib.sha256(body.firebase_id.encode()).hexdigest()}
+         response=await function_query_runner(postgres_object[x],"write",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #read user
+         query="select * from users where id=:id;"
+         values={"id":response["message"]}
+         response=await function_query_runner(postgres_object[x],"read",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #user define
+         user=response["message"][0]
    #email
    if body.mode=="email":
+      #check body
       if not body.email or not body.otp:return function_http_response(400,0,"email is must")
+      #otp check
       query="select * from otp where email=:email order by id desc limit 1;"
       values={"email":body.email}
       response=await function_query_runner(postgres_object[x],"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"otp not exist")
       if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
+      #read user
+      query="select * from users where email=:email order by id desc limit 1;"
+      values={"email":body.email}
+      response=await function_query_runner(postgres_object[x],"read",query,values)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      #user define
+      if response["message"]:user=response["message"][0]
+      #user define if not exist
+      else:
+         #user create
+         query="insert into users (email) values (:email) returning *;"
+         values={"email":body.email}
+         response=await function_query_runner(postgres_object[x],"write",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #read user
+         query="select * from users where id=:id;"
+         values={"id":response["message"]}
+         response=await function_query_runner(postgres_object[x],"read",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #user define
+         user=response["message"][0]
    #mobile
    if body.mode=="mobile":
       if not body.mobile or not body.otp:return function_http_response(400,0,"mobile is must")
@@ -79,26 +130,27 @@ async def function_api_login(x:str,request:Request,body:schema_login):
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"otp not exist")
       if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
-         
-   
-  
-      
-   #read user
-   if not response["message"]:user=None
-   else:user=response["message"][0]
-   #check user
-   if body.mode=="username" and not user:return function_http_response(400,0,"no such user")
-   if body.mode in ["firebase","email","mobile"] and not user:
-      #create user
-      query="insert into users (firebase_id,email,mobile) values (:firebase_id,:email,:mobile) returning *;"
-      values={"firebase_id":hashlib.sha256(body.firebase_id.encode()).hexdigest(),"email":body.email,"mobile":body.mobile}
-      response=await function_query_runner(postgres_object[x],"write",query,values)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
       #read user
-      param={"id":response["message"]}
-      response=await function_object_read(postgres_object[x],function_query_runner,"users",param,["id","desc",1,0])
+      query="select * from users where mobile=:mobile order by id desc limit 1;"
+      values={"mobile":body.mobile}
+      response=await function_query_runner(postgres_object[x],"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
-      user=response["message"][0]
+      #user define
+      if response["message"]:user=response["message"][0]
+      #user define if not exist
+      else:
+         #user create
+         query="insert into users (mobile) values (:mobile) returning *;"
+         values={"mobile":body.mobile}
+         response=await function_query_runner(postgres_object[x],"write",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #read user
+         query="select * from users where id=:id;"
+         values={"id":response["message"]}
+         response=await function_query_runner(postgres_object[x],"read",query,values)
+         if response["status"]==0:return function_http_response(400,0,response["message"])
+         #user define
+         user=response["message"][0]
    #token encode
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
