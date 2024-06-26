@@ -13,16 +13,6 @@ def function_server_start(app,host,port):
    #finally
    return None
 
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-def function_http_response(status_code,status,message):
-   #message change
-   if "unique_action_tcpp" in str(message):message="action alredy performed"
-   #logic
-   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   #finally
-   return response
-
 async def function_query_runner(postgres_object,mode,query,values):
    #start
    if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
@@ -39,6 +29,16 @@ async def function_query_runner(postgres_object,mode,query,values):
          return {"status":0,"message":e.args}
    #finally
    return {"status":1,"message":output}
+
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+def function_http_response(status_code,status,message):
+   #message change
+   if "unique_action_tcpp" in str(message):message="action alredy performed"
+   #logic
+   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
+   #finally
+   return response
 
 import hashlib
 async def function_object_read(postgres_object,function_query_runner,table,param,olo):
