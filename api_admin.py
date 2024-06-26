@@ -58,7 +58,7 @@ async def function_api_checklist(x:str,request:Request):
       response=await function_query_runner(postgres_object[x],"write",v,{})
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
-   return {"status":1,"message":"done"}
+   return {"status":1,"message":"checklist done"}
    
 @router.delete("/{x}/delete-s3-url")
 async def function_api_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
