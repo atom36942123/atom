@@ -237,11 +237,14 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    #logic
    limit=30
    offset=(page-1)*limit
-   param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc",limit,offset])
-   if response["status"]==0:return function_http_response(400,0,response["message"])
+   query=f"select * from {table} where (id=:id or :id is null) and (created_by_id=:created_by_id or :created_by_id is null) and (type=:type or :type is null) and (username=:username or :username is null) and (parent_table=:parent_table or :parent_table is null) and (parent_id=:parent_id or :parent_id is null) order by id desc offset {offset} limit {limit};"
+   values={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
+
+
+
+   
    #add user key
-   if table!="users":
+   if table in ["post"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
