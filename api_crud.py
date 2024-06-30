@@ -67,9 +67,10 @@ class schema_atom(BaseModel):
 #api
 @router.post("/{x}/object-create/{table}")
 async def function_api_object_create(x:str,table:str,request:Request,body:schema_atom):
-   #token check
+   #start
    request_user={}
    request_user["id"]=None
+   #token check
    if request.headers.get("token") or table not in ["helpdesk","workseeker"]:
       response=await function_token_decode(request,config_jwt_secret_key)
       if response["status"]==0:return function_http_response(400,0,response["message"])
