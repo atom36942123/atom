@@ -23,6 +23,7 @@ async def function_api_pcache(x:str,request:Request):
     #custom
     output["admin_panel"]=config_admin_panel
     output["mapping_post_type"]={"hiring":"hiring post","funding":"funding post","workseeker":"looking for job","workgiver":"looking to hire","requirement":"requirement post"}
+    output["switch_listing"]=0
     #post type tag
     output["post_tag_type"]={}
     query="select distinct(type) from post where type is not null;"
