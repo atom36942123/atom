@@ -24,7 +24,7 @@ config_column={
 "password":["text",["users"]],
 "firebase_id":["text",["users"]],
 "last_active_at":["timestamptz",["users"]],
-"work_profile_pic_url":["text",["users"]],
+"profile_pic_url":["text",["users"]],
 "name":["text",["users","workseeker"]],
 "gender":["text",["users","workseeker"]],
 "date_of_birth":["date",["users"]],
