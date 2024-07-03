@@ -9,6 +9,8 @@ from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
 #config
+config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
+
 
 config_column_checkin={
 "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
@@ -63,7 +65,6 @@ async def function_api_database_create(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #table
-    config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
         response=await function_query_runner(postgres_object[x],"write",query,{})
