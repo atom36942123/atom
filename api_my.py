@@ -174,16 +174,25 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     return response
 
 @router.delete("/{x}/my-delete")
-async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","likes_all","bookmark_all","comment_all","message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","likes_post_all","bookmark_post_all","comment_post_all","message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #query set
     if mode=="post_all":
-        
+        if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
         query="delete from post where created_by_id=:created_by_id;"
         values={"created_by_id":request_user['id']}
+    if mode=="likes_post_all":
+        query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;"
+        values={"created_by_id":request_user['id'],"parent_table":"post"}
+    if mode=="bookmark_post_all":
+        query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;"
+        values={"created_by_id":request_user['id'],"parent_table":"post"}
+    if mode=="comment_post_all":
+        query="delete from comment where created_by_id=:created_by_id and parent_table=:parent_table;"
+        values={"created_by_id":request_user['id'],"parent_table":"post"}
     if mode=="message_all":
         query="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;"
         values={"created_by_id":request_user['id'],"received_by_id":request_user['id']}
@@ -215,7 +224,7 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #admin check
+    #permission check
     if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"admin user cant be deleted")
     #logic
     query="delete from users where id=:id;"
