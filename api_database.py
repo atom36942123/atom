@@ -165,7 +165,7 @@ async def function_api_database_alter(x:str,request:Request):
     }
     for k,v in config_column_unique.items():
         for table in v:
-            constraint_name=f"unique_{k}_{table}".replace(",","_")
+            constraint_name=f"unique_{k.replace(',','_')}_{table}".replace(",","_")
             if constraint_name not in schema_constraint_name_list:
                 query=f"alter table {table} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
@@ -199,7 +199,7 @@ async def function_api_database_index(x:str,request:Request):
     #logic
     for k,v in config_column_index.items():
         for table in v[1]:
-            index_name=f"index_{k}_{table}"
+            index_name=f"index_{k.replace(',','_')}_{table}"
             query=f"create index if not exists {index_name} on {table}({k});"
             if v[0]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
