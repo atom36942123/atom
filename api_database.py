@@ -173,7 +173,7 @@ async def function_api_database_init(x:str,request:Request):
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #finally
-    return {"status":1,"message":"database init done"}
+    return {"status":1,"message":"init done"}
 
 @router.get("/{x}/database-index")
 async def function_api_database_index(x:str,request:Request):
@@ -206,4 +206,4 @@ async def function_api_database_index(x:str,request:Request):
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #finally
-    return {"status":1,"message":"reset done"}
+    return {"status":1,"message":"index done"}
