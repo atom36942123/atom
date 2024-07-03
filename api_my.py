@@ -174,12 +174,16 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     return response
 
 @router.delete("/{x}/my-delete")
-async def function_api_my_delete(request:Request,x:str,mode:Literal["message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","likes_all","bookmark_all","comment_all","message_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #logic
+    #query set
+    if mode=="post_all":
+        
+        query="delete from post where created_by_id=:created_by_id;"
+        values={"created_by_id":request_user['id']}
     if mode=="message_all":
         query="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;"
         values={"created_by_id":request_user['id'],"received_by_id":request_user['id']}
@@ -199,6 +203,7 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["message_all
         if not post_id:return function_http_response(400,0,"post_id must")
         query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;"
         values={"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
+    #query run
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #finally
