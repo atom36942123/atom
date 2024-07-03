@@ -25,6 +25,9 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
     user=response["message"][0]
+    #custom key
+    user["is_admin"]=0
+    if user["type"] in ["root","admin"]:user["is_admin"]=1
     #background task
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":user['id']}
