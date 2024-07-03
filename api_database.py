@@ -9,60 +9,7 @@ from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
 #config
-config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
-config_column={
-"created_at":["timestamptz",config_table],
-"created_by_id":["bigint",config_table],
-"updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
-"updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
-"is_active":["int",["atom","users","post","comment","workseeker"]],
-"is_verified":["int",["atom","users","post","comment","workseeker"]],
-"parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
-"parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
-"received_by_id":["bigint",["message"]],
-"username":["text",["users"]],
-"password":["text",["users"]],
-"firebase_id":["text",["users"]],
-"last_active_at":["timestamptz",["users"]],
-"profile_pic_url":["text",["users"]],
-"name":["text",["users","workseeker"]],
-"gender":["text",["users","workseeker"]],
-"date_of_birth":["date",["users"]],
-"type":["text",["atom","users","post","helpdesk","workseeker"]],
-"title":["text",["atom","users","post"]],
-"description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
-"file_url":["text",["atom","post","s3","workseeker"]],
-"link_url":["text",["atom","post"]],
-"tag":["text[]",["atom","users","post","workseeker"]],
-"number":["numeric",["post"]],
-"date":["date",["post"]],
-"status":["text",["post","report","message","helpdesk"]],
-"remark":["text",["post","report","helpdesk"]],
-"email":["text",["users","post","otp","helpdesk","workseeker"]],
-"mobile":["text",["users","post","otp","helpdesk","workseeker"]],
-"whatsapp":["text",["users","post","workseeker"]],
-"phone":["text",["users","post"]],
-"country":["text",["users","post"]],
-"state":["text",["users","post"]],
-"city":["text",["users","post"]],
-"rating":["int",["rating","helpdesk"]],
-"otp":["int",["otp"]],
-"metadata":["jsonb",["post"]],
-"work_profile":["text",["workseeker"]],
-"experience":["int",["workseeker"]],
-"sector":["text",["workseeker"]],
-"college":["text",["workseeker"]],
-"linkedin_url":["text",["workseeker"]],
-"portfolio_url":["text",["workseeker"]],
-"location_current":["text",["workseeker"]],
-"location_expected":["text",["workseeker"]],
-"salary_type":["text",["workseeker"]],
-"salary_current":["int",["workseeker"]],
-"salary_expected":["int",["workseeker"]],
-"past_company_count":["int",["workseeker"]],
-"is_working":["int",["workseeker"]],
-"joining_days":["int",["workseeker"]],
-}
+
 config_column_checkin={
 "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
 "is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
@@ -111,21 +58,82 @@ async def function_api_database_reset(x:str,request:Request):
     #finally
     return {"status":1,"message":"reset done"}
 
-@router.get("/{x}/database-init")
-async def function_api_database_init(x:str,request:Request):
+@router.get("/{x}/database-create")
+async def function_api_database_reset(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #create table
+    #table
+    config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
         response=await function_query_runner(postgres_object[x],"write",query,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #create column
+    #column
+    config_column={
+    "created_at":["timestamptz",config_table],
+    "created_by_id":["bigint",config_table],
+    "updated_at":["timestamptz",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
+    "updated_by_id":["bigint",["atom","users","post","comment","report","message","helpdesk","workseeker"]],
+    "is_active":["int",["atom","users","post","comment","workseeker"]],
+    "is_verified":["int",["atom","users","post","comment","workseeker"]],
+    "parent_table":["text",["likes","comment","bookmark","report","rating","block"]],
+    "parent_id":["bigint",["likes","comment","bookmark","report","rating","block"]],
+    "received_by_id":["bigint",["message"]],
+    "username":["text",["users"]],
+    "password":["text",["users"]],
+    "firebase_id":["text",["users"]],
+    "last_active_at":["timestamptz",["users"]],
+    "profile_pic_url":["text",["users"]],
+    "name":["text",["users","workseeker"]],
+    "gender":["text",["users","workseeker"]],
+    "date_of_birth":["date",["users"]],
+    "type":["text",["atom","users","post","helpdesk","workseeker"]],
+    "title":["text",["atom","users","post"]],
+    "description":["text",["atom","users","post","comment","report","rating","block","message","helpdesk","workseeker"]],
+    "file_url":["text",["atom","post","s3","workseeker"]],
+    "link_url":["text",["atom","post"]],
+    "tag":["text[]",["atom","users","post","workseeker"]],
+    "number":["numeric",["post"]],
+    "date":["date",["post"]],
+    "status":["text",["post","report","message","helpdesk"]],
+    "remark":["text",["post","report","helpdesk"]],
+    "email":["text",["users","post","otp","helpdesk","workseeker"]],
+    "mobile":["text",["users","post","otp","helpdesk","workseeker"]],
+    "whatsapp":["text",["users","post","workseeker"]],
+    "phone":["text",["users","post"]],
+    "country":["text",["users","post"]],
+    "state":["text",["users","post"]],
+    "city":["text",["users","post"]],
+    "rating":["int",["rating","helpdesk"]],
+    "otp":["int",["otp"]],
+    "metadata":["jsonb",["post"]],
+    "work_profile":["text",["workseeker"]],
+    "experience":["int",["workseeker"]],
+    "sector":["text",["workseeker"]],
+    "college":["text",["workseeker"]],
+    "linkedin_url":["text",["workseeker"]],
+    "portfolio_url":["text",["workseeker"]],
+    "location_current":["text",["workseeker"]],
+    "location_expected":["text",["workseeker"]],
+    "salary_type":["text",["workseeker"]],
+    "salary_current":["int",["workseeker"]],
+    "salary_expected":["int",["workseeker"]],
+    "past_company_count":["int",["workseeker"]],
+    "is_working":["int",["workseeker"]],
+    "joining_days":["int",["workseeker"]],
+    }
     for k,v in config_column.items():
         for table in v[1]:
             query=f"alter table {table} add column if not exists {k} {v[0]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+    #finally
+    return {"status":1,"message":"create done"}
+
+@router.get("/{x}/database-init")
+async def function_api_database_init(x:str,request:Request):
+    #token check
+    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #read schema column
     query="select * from information_schema.columns where table_schema='public';"
     response=await function_query_runner(postgres_object[x],"read",query,{})
