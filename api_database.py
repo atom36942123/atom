@@ -94,6 +94,7 @@ async def function_api_database_create(x:str,request:Request):
     "past_company_count":["int",["workseeker"]],
     "is_working":["int",["workseeker"]],
     "joining_days":["int",["workseeker"]],
+    "is_pinned":["int",["post"]],
     }
     for k,v in config_column.items():
         for table in v[1]:
@@ -123,6 +124,7 @@ async def function_api_database_alter(x:str,request:Request):
     "last_active_at":["now()",["users"]],
     "is_active":[1,["atom","users","post","comment","workseeker"]],
     "is_verified":[0,["atom","users","post","comment","workseeker"]],
+    "is_pinned":[0,["post"]],
     }
     for column in schema_column:
         for k,v in config_column_default.items():
@@ -136,6 +138,7 @@ async def function_api_database_alter(x:str,request:Request):
     "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
     "is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
     "is_working":[(0,1),["workseeker"]],
+    "is_pinned":[(0,1),["post"]],
     }
     for k,v in config_column_checkin.items():
         for table in v[1]:
@@ -195,6 +198,9 @@ async def function_api_database_index(x:str,request:Request):
     "mobile":["default",["otp"]],
     "tag":["array",["atom","users","post"]],
     "parent_table,parent_id":["default",["likes","comment","bookmark","report","rating","block"]],
+    "is_active":["default",["atom","users","post","comment","workseeker"]],
+    "is_verified":["default",["atom","users","post","comment","workseeker"]],
+    "is_pinned":["default",["post"]],
     }
     #logic
     for k,v in config_column_index.items():
