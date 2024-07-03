@@ -196,3 +196,21 @@ async def function_api_database_init(x:str,request:Request):
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #finally
     return {"status":1,"message":"database init done"}
+
+@router.get("/{x}/database-index")
+async def function_api_database_index(x:str,request:Request):
+    #token check
+    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    #drop all query
+    query='''
+    DO $$ DECLARE r RECORD;
+    BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
+    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; 
+    END LOOP;
+    END $$;
+    '''
+    #logic
+    response=await function_query_runner(postgres_object[x],"write",query,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #finally
+    return {"status":1,"message":"reset done"}
