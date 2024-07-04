@@ -218,7 +218,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   if table in ["post"]:
+   if table in ["post","comment"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
@@ -243,7 +243,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   if table in ["post"]:
+   if table in ["post","comment"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
@@ -273,17 +273,5 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add user key
-   if table!="users" and False:
-      response=await function_add_user_key(postgres_object[x],function_query_runner,table,response["message"],"created_by_id")
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add like count
-   if table=="post" and False:
-      response=await function_add_like_count(postgres_object[x],function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add comment count
-   if table=="post" and False:
-      response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
    #finally
    return response
