@@ -37,36 +37,13 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
         response=await function_query_runner(postgres_object[x],"read",v,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         user[k]=response["message"][0]["number"]
-      
-    
-
-    
     #background task
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":user['id']}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
     #finally
     return {"status":1,"message":user}
-
-@router.get("/{x}/my-metric")
-async def function_api_my_metric(x:str,request:Request,mode:str=None):
-    #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #if mode
-    if mode=="message_unread":
-      query=f"select count(*) from message where received_by_id={request_user['id']} and status='unread';"
-      response=await function_query_runner(postgres_object[x],"read",query,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      return {"status":1,"message":response["message"][0]["count"]}
-    #if moode null
-    output={}
-   
     
-    #finally
-    return {"status":1,"message":output}
-
 @router.get("/{x}/my-action-check")
 async def function_api_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
     #token check
@@ -184,7 +161,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     return response
 
 @router.delete("/{x}/my-delete")
-async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","likes_post_all","bookmark_post_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -200,7 +177,7 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     if mode=="message_all":
         query="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;"
         values={"created_by_id":request_user['id'],"received_by_id":request_user['id']}
-    if mode=="likes_post_all":
+    if mode=="like_post_all":
         query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;"
         values={"created_by_id":request_user['id'],"parent_table":"post"}
     if mode=="bookmark_post_all":
