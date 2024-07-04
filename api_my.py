@@ -26,8 +26,17 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
     user=response["message"][0]
     #custom key
-    user["is_admin"]=0
-    if user["type"] in ["root","admin"]:user["is_admin"]=1
+    query_dict={
+    "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
+    "message_unread_count":f"select count(*) as number from message where received_by_id={request_user['id']} and status='unread';"
+
+    "total_comment_count":f"select count(*) as number from comment where created_by_id={request_user['id']};",
+    "bookmark_post":f"select count(*) as number from bookmark where parent_table='post' and created_by_id={request_user['id']};",
+    "like_post":f"select count(*) as number from likes where parent_table='post' and created_by_id={request_user['id']};",
+    }
+    
+
+    
     #background task
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":user['id']}
@@ -49,13 +58,7 @@ async def function_api_my_metric(x:str,request:Request,mode:str=None):
       return {"status":1,"message":response["message"][0]["count"]}
     #if moode null
     output={}
-    query_dict={
-    "post":f"select count(*) as number from post where created_by_id={request_user['id']};",
-    "comment":f"select count(*) as number from comment where created_by_id={request_user['id']};",
-    "bookmark_post":f"select count(*) as number from bookmark where parent_table='post' and created_by_id={request_user['id']};",
-    "like_post":f"select count(*) as number from likes where parent_table='post' and created_by_id={request_user['id']};",
-    "message_unread":f"select count(*) as number from message where received_by_id={request_user['id']} and status='unread';"
-    }
+   
     for k,v in query_dict.items():
       response=await function_query_runner(postgres_object[x],"read",v,{})
       if response["status"]==0:return function_http_response(400,0,response["message"])
