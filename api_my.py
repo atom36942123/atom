@@ -25,15 +25,19 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
     user=response["message"][0]
-    #custom key
+    #custom key count
     query_dict={
     "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
+    "comment_count":f"select count(*) as number from comment where created_by_id={request_user['id']};",
     "message_unread_count":f"select count(*) as number from message where received_by_id={request_user['id']} and status='unread';"
-
-    "total_comment_count":f"select count(*) as number from comment where created_by_id={request_user['id']};",
-    "bookmark_post":f"select count(*) as number from bookmark where parent_table='post' and created_by_id={request_user['id']};",
-    "like_post":f"select count(*) as number from likes where parent_table='post' and created_by_id={request_user['id']};",
+    "like_post_count":f"select count(*) as number from likes where created_by_id={request_user['id']} and parent_table='post;",
+    "bookmark_post_count":f"select count(*) as number from bookmark where created_by_id={request_user['id']} and parent_table='post;",
     }
+    for k,v in query_dict.items():
+        response=await function_query_runner(postgres_object[x],"read",v,{})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        user[k]=response["message"][0]["number"]
+      
     
 
     
@@ -59,10 +63,7 @@ async def function_api_my_metric(x:str,request:Request,mode:str=None):
     #if moode null
     output={}
    
-    for k,v in query_dict.items():
-      response=await function_query_runner(postgres_object[x],"read",v,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      output[k]=response["message"][0]["number"]
+    
     #finally
     return {"status":1,"message":output}
 
@@ -122,9 +123,10 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #logic
+    #pagination set
     limit=30
     offset=(page-1)*limit
+    #query set default
     query='''
     with
     mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),
@@ -133,15 +135,17 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
     select * from y order by id desc;
     '''
     values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
+    #query set is unread
     if is_unread==1:
-      query='''
-      with
-      mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),
-      x as (select owner_id,max(id) as id from mcr group by owner_id),
-      y as (select m.* from x left join message as m on x.id=m.id)
-      select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;
-      '''
-      values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
+        query='''
+        with
+        mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),
+        x as (select owner_id,max(id) as id from mcr group by owner_id),
+        y as (select m.* from x left join message as m on x.id=m.id)
+        select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;
+        '''
+        values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
+    #query run
     response=await function_query_runner(postgres_object[x],"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #add user key
