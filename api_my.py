@@ -24,7 +24,23 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     response=await function_query_runner(postgres_object[x],"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
+    #outout
     user=response["message"][0]
+    #background task
+    query=f"update users set last_active_at=:last_active_at where id=:id;"
+    values={"last_active_at":datetime.now(),"id":user['id']}
+    background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
+    #finally
+    return {"status":1,"message":user}
+
+@router.get("/{x}/my-profile-misc")
+async def function_api_my_profile_misc(x:str,request:Request,background_tasks:BackgroundTasks):
+    #token check
+    response=await function_token_decode(request,config_jwt_secret_key)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #outout
+    user={}
     #count key
     query_dict={
     "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
