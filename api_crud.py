@@ -234,7 +234,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
-async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None,is_pinned:int=None):
    #logic
    limit=30
    offset=(page-1)*limit
