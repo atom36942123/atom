@@ -36,7 +36,8 @@ async def middleware(request:Request,api_function):
    #x check
    if str(request.url).split("/")[3] not in ["","docs","redoc","openapi.json"]+config_x:return function_http_response(400,0,"wrong x")
    #api response
-   response=await api_function(request)
+   try:response=await api_function(request)
+   
    #finally
    return response
 
