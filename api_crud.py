@@ -242,6 +242,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag,"is_pinned":is_pinned}
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
+   return response
    #add user key
    if table in ["post","comment"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
