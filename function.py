@@ -46,14 +46,13 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    #where set
    where="where "
    for k,v in param.items():
+      where=where+f"({k} = :{k} or :{k} is null) and "
       if k=="tag":where=where+f"({k} @> :{k} or :{k} is null) and "
       if k=="rating":where=where+f"({k} >= :{k} or :{k} is null) and "
-      where=where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
    if where=="where":where=""
    #logic
    query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
-   return {"status":1,"message":query}
    response=await function_query_runner(postgres_object,"read",query,param)
    if response["status"]==0:return response
    #finally
