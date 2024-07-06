@@ -58,8 +58,8 @@ class schema_atom(BaseModel):
    location_current:str|None=None
    location_expected:str|None=None
    salary_type:str|None=None
-   salary_current:str|None=None
-   salary_expected:str|None=None
+   salary_current:int|None=None
+   salary_expected:int|None=None
    past_company_count:int|None=None
    is_working:int|None=None
    joining_days:int|None=None
