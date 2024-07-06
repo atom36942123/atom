@@ -53,6 +53,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    if where=="where":where=""
    #logic
    query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
+   return query
    response=await function_query_runner(postgres_object,"read",query,param)
    if response["status"]==0:return response
    #finally
