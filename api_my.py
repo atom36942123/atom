@@ -34,7 +34,7 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     return {"status":1,"message":user}
 
 @router.get("/{x}/my-profile-misc")
-async def function_api_my_profile_misc(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_api_my_profile_misc(x:str,request:Request):
     #token check
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -53,10 +53,6 @@ async def function_api_my_profile_misc(x:str,request:Request,background_tasks:Ba
         response=await function_query_runner(postgres_object[x],"read",v,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         user[k]=response["message"][0]["number"]
-    #background task
-    query=f"update users set last_active_at=:last_active_at where id=:id;"
-    values={"last_active_at":datetime.now(),"id":user['id']}
-    background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
     #finally
     return {"status":1,"message":user}
     
