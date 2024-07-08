@@ -76,6 +76,10 @@ async def function_api_send_email(x:str,request:Request,to:str,title:str,descrip
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
+    #param validation
+    param={"email":to,"title":title,"description":description}
+    response=await function_param_validation(param)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
     #logic
     response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,to,title,description)
     if response["status"]==0:return function_http_response(400,0,response["message"])
