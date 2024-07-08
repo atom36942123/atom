@@ -60,9 +60,7 @@ async def function_api_create_s3_url(x:str,request:Request,filename:str,backgrou
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #param validation
-    param={"filename":filename}
-    response=await function_param_validation(param)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if "." not in filename:return function_http_response(400,0,"file extenstion is must")
     #logic
     key=str(uuid.uuid4())+"."+filename.split(".")[-1]
     response=await function_s3_create_url(config_aws_s3_bucket_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,key)
