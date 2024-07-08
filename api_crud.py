@@ -116,9 +116,6 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    #param validation
    response=await function_param_validation(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #param table validation
-   response=await function_param_table_validation(param,table)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    response=await function_param_conversion(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
