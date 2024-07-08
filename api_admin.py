@@ -121,17 +121,6 @@ async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #query alias
-   if query=="database":query="select * from pg_database where datistemplate=false;"
-   if query=="table":query="select * from information_schema.tables where table_schema='public' and table_type='BASE TABLE';"
-   if query=="column":query="select * from information_schema.columns where table_schema='public';"
-   if query=="constraint":query="select * from information_schema.constraint_column_usage;"
-   if query=="index":query="select * from pg_indexes where schemaname='public';"
-   if query=="column_count":query='''
-   with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),
-   y as (select table_name,count(*) as count_column from information_schema.columns group by table_name)
-   select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;
-   '''
    #logic
    response=await function_query_runner(postgres_object[x],mode,query,{})
    if response["status"]==0:return function_http_response(400,0,response["message"])
