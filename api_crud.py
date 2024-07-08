@@ -116,7 +116,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"body null issue")
    #param validation
-   response=await function_param_validation(vars(param)
+   response=await function_param_validation(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    try:
