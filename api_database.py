@@ -12,26 +12,6 @@ router=APIRouter(tags=["database"])
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 
 #api
-@router.get("/{x}/database-reset")
-async def function_api_database_reset(x:str,request:Request):
-    #token check
-    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #x check
-    if x not in ["test"]:return function_http_response(400,0,"x not allowed")
-    #drop all query
-    query='''
-    DO $$ DECLARE r RECORD;
-    BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP
-    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; 
-    END LOOP;
-    END $$;
-    '''
-    #logic
-    response=await function_query_runner(postgres_object[x],"write",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
-    return {"status":1,"message":"reset done"}
-
 @router.get("/{x}/database-create")
 async def function_api_database_create(x:str,request:Request):
     #token check
