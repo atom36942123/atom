@@ -58,22 +58,21 @@ async def function_param_validation(param):
    #finally
    return {"status":1,"message":"done"}
 
+import json
 async def function_param_conversion(param):
    #check
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if not param:return {"status":0,"message":"param is null"}
    #logic
-    try:
+   try:
       if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
       if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
       if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
       if "number" in param:param["number"]=round(param["number"],5)
-
-   
-  
+   except Exception as e:return {"status":0,"message":e.args}
    #finally
-   return {"status":1,"message":"done"}
+   return {"status":1,"message":param}
 
 async def function_add_user_key(postgres_object,function_query_runner,object_list,user_column):
    #check
