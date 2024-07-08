@@ -21,7 +21,7 @@ async def function_api_pcache(x:str,request:Request):
     #output
     output={}
     #custom
-    output["mapping_post_type"]={"funding":"startup idea"}
+    output["mapping_post_type"]={"funding123":"startup idea"}
     output["switch"]={"listing":0}
     output["admin_type"]=["root","admin"]
     #post type tag
