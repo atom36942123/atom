@@ -110,9 +110,9 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     #column not allowed
     if request_user["type"] not in ["root","admin"]:
         if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
-    #validation
+    #param validation
     param={column:value}
-    response=await function_check_body(param)
+    response=await function_param_validation(param)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #read datatype
     query="select data_type from information_schema.columns where column_name=:column_name limit 1;"
