@@ -33,59 +33,6 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    #finally
    return response
 
-import uvicorn
-import asyncio
-def function_server_start(app,host,port):
-   #start
-   uvicorn_config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")
-   uvicorn_web_server_object=uvicorn.Server(config=uvicorn_config)
-   loop=asyncio.new_event_loop()
-   asyncio.set_event_loop(loop)
-   #logic
-   try:
-      loop.run_until_complete(uvicorn_web_server_object.serve())
-   except Exception as e:print(e.args)
-   #finally
-   return None
-
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-def function_http_response(status_code,status,message):
-   #message change
-   if "unique_action_tcpp" in str(message):message="action alredy performed"
-   #logic
-   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   #finally
-   return response
-
-import jwt,json
-import time
-from datetime import datetime,timedelta
-async def function_token_encode(data,jwt_expire_day,jwt_secret_key):
-   #logic
-   try:
-      payload={"data":json.dumps(data,default=str),"exp":time.mktime((datetime.now()+timedelta(days=int(jwt_expire_day))).timetuple())}
-      token=jwt.encode(payload,jwt_secret_key)
-   except Exception as e:return {"status":0,"message":e.args}
-   #finally
-   return {"status":1,"message":token}
-
-import jwt,json
-async def function_token_decode(request,jwt_secret_key):
-   #start
-   token=request.headers.get("token")
-   request_user={}
-   x=str(request.url).split("/")[3]
-   #logic
-   if not token:return {"status":0,"message":"token is must"}
-   try:payload=jwt.decode(token,jwt_secret_key,algorithms="HS256")
-   except Exception as e:return {"status":0,"message":e.args}
-   request_user=json.loads(payload["data"])
-   if "x" not in request_user:return {"status":0,"message":"x was not set in token encode while login"}
-   if request_user["x"]!=x:return {"status":0,"message":"token x mismatch"}
-   #finally
-   return {"status":1,"message":request_user}
-
 async def function_check_body(param):
    #check
    if not param:return {"status":0,"message":"body is null"}
@@ -164,6 +111,60 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
    #finally
    return {"status":1,"message":object_list}
+
+
+import uvicorn
+import asyncio
+def function_server_start(app,host,port):
+   #start
+   uvicorn_config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")
+   uvicorn_web_server_object=uvicorn.Server(config=uvicorn_config)
+   loop=asyncio.new_event_loop()
+   asyncio.set_event_loop(loop)
+   #logic
+   try:
+      loop.run_until_complete(uvicorn_web_server_object.serve())
+   except Exception as e:print(e.args)
+   #finally
+   return None
+
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+def function_http_response(status_code,status,message):
+   #message change
+   if "unique_action_tcpp" in str(message):message="action alredy performed"
+   #logic
+   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
+   #finally
+   return response
+
+import jwt,json
+import time
+from datetime import datetime,timedelta
+async def function_token_encode(data,jwt_expire_day,jwt_secret_key):
+   #logic
+   try:
+      payload={"data":json.dumps(data,default=str),"exp":time.mktime((datetime.now()+timedelta(days=int(jwt_expire_day))).timetuple())}
+      token=jwt.encode(payload,jwt_secret_key)
+   except Exception as e:return {"status":0,"message":e.args}
+   #finally
+   return {"status":1,"message":token}
+
+import jwt,json
+async def function_token_decode(request,jwt_secret_key):
+   #start
+   token=request.headers.get("token")
+   request_user={}
+   x=str(request.url).split("/")[3]
+   #logic
+   if not token:return {"status":0,"message":"token is must"}
+   try:payload=jwt.decode(token,jwt_secret_key,algorithms="HS256")
+   except Exception as e:return {"status":0,"message":e.args}
+   request_user=json.loads(payload["data"])
+   if "x" not in request_user:return {"status":0,"message":"x was not set in token encode while login"}
+   if request_user["x"]!=x:return {"status":0,"message":"token x mismatch"}
+   #finally
+   return {"status":1,"message":request_user}
 
 import boto3
 async def function_s3_create_url(aws_s3_bucket_region,aws_access_key_id,aws_secret_access_key,aws_s3_bucket_name,key):
