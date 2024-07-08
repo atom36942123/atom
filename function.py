@@ -47,7 +47,6 @@ async def function_param_validation(param):
    "username":100,"password":1000,"firebase_id":1000,
    "name":100,"gender":100,"profile_pic_url":1000,
    "table":100,"column":100,"value":5000,
-   "url":1000,"query":1000
    }
    for k,v in param.items():
       if k in mapping_max_length:
