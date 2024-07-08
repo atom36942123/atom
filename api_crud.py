@@ -75,7 +75,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
       response=await function_token_decode(request,config_jwt_secret_key)
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
-   #param
+   #param define
    param=vars(body)
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"all body keys cant be null")
@@ -90,7 +90,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return function_http_response(400,0,e.args)
-   #param default
+   #param key default set
    param["created_by_id"]=request_user["id"]
    if table in ["message"]:param["status"]="unread"
    #query key set
@@ -111,7 +111,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #param
+   #param define
    param=vars(body)
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"body null issue")
@@ -126,7 +126,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return function_http_response(400,0,e.args)
-   #param keys not allowed
+   #param key delete
    if request_user["type"] not in ["root","admin"]:
       for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:
          if item in param:del param[item]
@@ -136,7 +136,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    else:
       if table=="users":created_by_id,id=None,request_user['id']
       if table!="users":created_by_id=request_user['id']
-   #param default
+   #param keys default set
    param["updated_at"]=datetime.now()
    param["updated_by_id"]=request_user["id"]
    #query key set
