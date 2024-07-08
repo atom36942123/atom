@@ -33,29 +33,6 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    #finally
    return response
 
-async def function_check_body(param):
-   #check
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if not param:return {"status":0,"message":"param is null"}
-   #length
-   mapping_max_length={
-   "type":100,"title":1000,"description":5000,"file_url":1000,"link_url":1000,"tag":10,"parent_table":100,"status":100,"remark":1000,
-   "email":50,"mobile":50,"whatsapp":50,"phone":50,"country":50,"state":50,"city":50,
-   "username":100,"password":1000,"firebase_id":1000,"name":100,"gender":100,"profile_pic_url":1000,
-   "table":100,"column":100,"value":5000,
-   "url":1000,"query":1000
-   }
-   for k,v in param.items():
-      if k in mapping_max_length:
-         if v and len(v)>mapping_max_length[k]:return {"status":0,"message":f"{k} length should be less than {mapping_max_length[k]}"}
-   #validation
-   if "username" in param and " " in param["username"]:return {"status":0,"message":"whitespace not allowed in username"}
-   if "filename" in param and "." not in param["filename"]:return {"status":0,"message":"file extension is must"}
-   if "email" in param and "@" not in param["email"]:return {"status":0,"message":"@ in email is must"}
-   if "rating" in param and (param["rating"]<0 or param["rating"]>10):return {"status":0,"message":"0<=rating<1=0"}
-   #finally
-   return {"status":1,"message":"done"}
-   
 async def function_param_validation(param):
    #check
    param={k:v for k,v in param.items() if v not in [None,""," "]}
