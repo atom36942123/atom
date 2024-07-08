@@ -73,6 +73,15 @@ async def function_param_conversion(param):
    #finally
    return {"status":1,"message":param}
 
+async def function_param_table_validation(param,table):
+   #check
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
+   if not param:return {"status":0,"message":"param is null"}
+   #validation
+   if table=="rating" and "rating" not in param:return {"status":0,"message":"rating is must"}
+   #finally
+   return {"status":1,"message":"done"}
+
 async def function_add_user_key(postgres_object,function_query_runner,object_list,user_column):
    #check
    if not object_list:return {"status":1,"message":object_list}
