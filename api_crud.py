@@ -80,7 +80,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"all keys cant be null")
    #param validation
-   response=await function_check_body(vars(body))
+   response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    try:
@@ -116,7 +116,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"body null issue")
    #param validation
-   response=await function_check_body(vars(body))
+   response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
    try:
