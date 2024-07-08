@@ -30,8 +30,8 @@ class schema_login(BaseModel):
 #api
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request,body:schema_signup):
-   #check body
-   response=await function_check_body(vars(body))
+   #param validaton
+   response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #check username if exist
    query="select * from users where username=:username;"
@@ -49,8 +49,8 @@ async def function_api_signup(x:str,request:Request,body:schema_signup):
 
 @router.post("/{x}/login")
 async def function_api_login(x:str,request:Request,body:schema_login):
-   #check body
-   response=await function_check_body(vars(body))
+   #param validation
+   response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #username
    if body.mode=="username":
