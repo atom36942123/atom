@@ -82,8 +82,10 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    response=await function_param_validation(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param table validation
-   response=await function_param_table_validation(param,table)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if table=="atom" and "type" not in param:return function_http_response(400,0,"type is must")
+   if table=="comment" and "description" not in param:return function_http_response(400,0,"description is must")
+   if table=="message" and "description" not in param:return function_http_response(400,0,"description is must")
+   if table=="rating" and "rating" not in param:return function_http_response(400,0,"rating is must")
    #param conversion
    response=await function_param_conversion(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
