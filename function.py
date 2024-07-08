@@ -42,7 +42,7 @@ def function_http_response(status_code,status,message):
 
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset):
    #param set
-   param={k:v for k,v in param.items() if v is not None}
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
    #where set
    where="where "
    for k,v in param.items():
