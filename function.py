@@ -50,7 +50,6 @@ async def function_param_validation(param):
          if v and len(v)>mapping_max_length[k]:return {"status":0,"message":f"{k} length should be less than {mapping_max_length[k]}"}
    #validation
    if "username" in param and " " in param["username"]:return {"status":0,"message":"whitespace not allowed in username"}
-   if "filename" in param and "." not in param["filename"]:return {"status":0,"message":"file extension is must"}
    if "email" in param and "@" not in param["email"]:return {"status":0,"message":"@ in email is must"}
    if "rating" in param and (param["rating"]<0 or param["rating"]>10):return {"status":0,"message":"0<=rating<1=0"}
    #finally
