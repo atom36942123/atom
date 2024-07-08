@@ -69,7 +69,7 @@ async def function_api_delete_s3_url(x:str,request:Request,url:str,background_ta
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #check
+   #param validation
    if config_aws_s3_bucket_name not in url:return function_http_response(400,0,"invalid url")
    #logic
    response=await function_s3_delete_url(config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
@@ -90,10 +90,12 @@ async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","po
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #prework
+   #param validation
    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
+   #file object
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   #column allowed check
    column_allowed=["created_by_id","type","title","description","file_url","link_url","tag"]
    csv_column=file_object.fieldnames
    if set(csv_column)!=set(column_allowed):return function_http_response(400,0,"column mismatch")
