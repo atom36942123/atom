@@ -35,9 +35,8 @@ async def function_object_read(postgres_object,function_query_runner,table,param
 
 async def function_check_body(param):
    #check
-   if not param:return {"status":0,"message":"body is null"}
-   #param cleaning
-   param={k: v for k, v in param.items() if v}
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
+   if not param:return {"status":0,"message":"param is null"}
    #length
    mapping_max_length={
    "type":100,"title":1000,"description":5000,"file_url":1000,"link_url":1000,"tag":10,"parent_table":100,"status":100,"remark":1000,
