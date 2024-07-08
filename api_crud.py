@@ -83,12 +83,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    response=await function_param_validation(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
-   try:
-      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
-      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
-      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-      if "number" in param:param["number"]=round(param["number"],5)
+  
    except Exception as e:return function_http_response(400,0,e.args)
    #param key default set
    param["created_by_id"]=request_user["id"]
