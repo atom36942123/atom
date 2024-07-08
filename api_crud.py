@@ -77,7 +77,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
       request_user=response["message"]
    #param
    param=vars(body)
-   param={k: v for k, v in param.items() if v is not None}
+   param={k: v for k, v in param.items() if v in [None,""]}
    if not param:return function_http_response(400,0,"all keys cant be null")
    #param validation
    response=await function_check_body(vars(body))
