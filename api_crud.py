@@ -84,7 +84,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #param conversion
   
-   except Exception as e:return function_http_response(400,0,e.args)
+  
    #param key default set
    param["created_by_id"]=request_user["id"]
    if table in ["message"]:param["status"]="unread"
