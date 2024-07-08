@@ -90,8 +90,12 @@ async def function_api_send_email(x:str,request:Request,to:str,title:str,descrip
 
 @router.get("/{x}/send-otp")
 async def function_api_send_otp(x:str,request:Request,email:str=None,mobile:str=None):
-    #check
+    #param must check
     if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
+    #param validation
+    param={"email":email,"mobile":mobile}
+    response=await function_param_validation(param)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
     #generate otp
     otp=random.randint(100000,999999)
     #logic email
