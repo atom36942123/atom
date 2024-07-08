@@ -66,9 +66,9 @@ async def function_param_conversion(param):
    #logic
    try:
       if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
       if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
       if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return {"status":0,"message":e.args}
    #finally
