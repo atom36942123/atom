@@ -1,4 +1,4 @@
-#server
+#server start
 from app import app
 from config import config_backend_host,config_backend_port
 from function import function_server_start
