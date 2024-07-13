@@ -6,4 +6,4 @@ from fastapi import Request
 
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["database"])
+router=APIRouter(tags=["root"])
