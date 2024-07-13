@@ -1,6 +1,7 @@
 #import
 from config import *
 from query import *
+from schema import *
 from function import *
 from object import postgres_object
 from fastapi import Request,Depends
