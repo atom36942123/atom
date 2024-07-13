@@ -14,7 +14,7 @@ async def function_api_root():
    return {"status":1,"message":"welcome to atom"}
 
 #database
-@router_database.get("/{x}/database-create")
+@router.get("/{x}/database-create")
 async def function_api_database_create(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
