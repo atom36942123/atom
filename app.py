@@ -22,6 +22,5 @@ async def middleware(request:Request,api_function):
    return response
 
 #router
-from api import router_list
-for item in router_list
-app.include_router(item)
+from api import router
+app.include_router(router)
