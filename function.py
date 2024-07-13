@@ -12,7 +12,7 @@ async def function_query_runner(postgres_object,mode,query,values):
       except Exception as e:
          print(query)
          return {"status":0,"message":e.args}
-   #finally
+   #final response
    return {"status":1,"message":output}
 
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset):
@@ -30,7 +30,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
    response=await function_query_runner(postgres_object,"read",query,param)
    if response["status"]==0:return response
-   #finally
+   #final response
    return response
 
 async def function_param_validation(param):
@@ -54,7 +54,7 @@ async def function_param_validation(param):
    if "username" in param and " " in param["username"]:return {"status":0,"message":"whitespace not allowed in username"}
    if "email" in param and "@" not in param["email"]:return {"status":0,"message":"@ in email is must"}
    if "rating" in param and (param["rating"]<0 or param["rating"]>10):return {"status":0,"message":"0<=rating<1=0"}
-   #finally
+   #final response
    return {"status":1,"message":"done"}
 
 import json
@@ -70,7 +70,7 @@ async def function_param_conversion(param):
       if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
       if "number" in param:param["number"]=round(param["number"],5)
    except Exception as e:return {"status":0,"message":e.args}
-   #finally
+   #final response
    return {"status":1,"message":param}
 
 async def function_add_user_key(postgres_object,function_query_runner,object_list,user_column):
@@ -91,7 +91,7 @@ async def function_add_user_key(postgres_object,function_query_runner,object_lis
                object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
             if user_column=="received_by_id":
                object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
-   #finally
+   #final response
    return {"status":1,"message":object_list}
 
 async def function_add_like_count(postgres_object,function_query_runner,table,object_list):
@@ -108,7 +108,7 @@ async def function_add_like_count(postgres_object,function_query_runner,table,ob
       object["like_count"]=0
       for object_like in object_like_list:
          if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-   #finally
+   #final response
    return {"status":1,"message":object_list}
 
 async def function_add_comment_count(postgres_object,function_query_runner,table,object_list):
@@ -125,7 +125,7 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
       object["comment_count"]=0
       for object_comment in object_comment_list:
          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-   #finally
+   #final response
    return {"status":1,"message":object_list}
 
 import uvicorn
@@ -140,7 +140,7 @@ def function_server_start(app,host,port):
    try:
       loop.run_until_complete(uvicorn_web_server_object.serve())
    except Exception as e:print(e.args)
-   #finally
+   #final response
    return None
 
 from fastapi.responses import JSONResponse
@@ -150,7 +150,7 @@ def function_http_response(status_code,status,message):
    if "unique_action_tcpp" in str(message):message="action alredy performed"
    #logic
    response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   #finally
+   #final response
    return response
 
 import jwt
@@ -163,7 +163,7 @@ async def function_token_encode(data,jwt_expire_day,jwt_secret_key):
       payload={"data":json.dumps(data,default=str),"exp":time.mktime((datetime.now()+timedelta(days=int(jwt_expire_day))).timetuple())}
       token=jwt.encode(payload,jwt_secret_key)
    except Exception as e:return {"status":0,"message":e.args}
-   #finally
+   #final response
    return {"status":1,"message":token}
 
 import jwt,json
@@ -179,7 +179,7 @@ async def function_token_decode(request,jwt_secret_key):
    request_user=json.loads(payload["data"])
    if "x" not in request_user:return {"status":0,"message":"x was not set in token encode while login"}
    if request_user["x"]!=x:return {"status":0,"message":"token x mismatch"}
-   #finally
+   #final response
    return {"status":1,"message":request_user}
 
 import boto3
@@ -220,7 +220,7 @@ async def function_add_cloudfront_url(aws_s3_bucket_name,aws_cloudfront_url,obje
             else:url_list.append(url)
       object_list[index]["file_url"]=",".join(url_list)
       url_list=[]
-   #finally
+   #final response
    return {"status":1,"message":object_list}
 
 async def function_update_mat_all(postgres_object,function_query_runner):
@@ -233,7 +233,7 @@ async def function_update_mat_all(postgres_object,function_query_runner):
       query=f"refresh materialized view {item};"
       response=await function_query_runner(postgres_object,"write",query,{})
       if response["status"]==0:return response
-   #finally
+   #final response
    return {"status":1,"message":"done"}
 
 async def function_drop_all_mat(postgres_object,function_query_runner):
@@ -245,7 +245,7 @@ async def function_drop_all_mat(postgres_object,function_query_runner):
    if drop_all_query:
       response=await function_query_runner(postgres_object,"write",drop_all_query,{})
       if response["status"]==0:return response
-   #finally
+   #final response
    return {"status":1,"message":"done"}
 
 async def function_drop_all_index(postgres_object,function_query_runner):
@@ -267,7 +267,7 @@ async def function_drop_all_index(postgres_object,function_query_runner):
    if drop_all_query:
       response=await function_query_runner(postgres_object,"write",drop_all_query,{})
       if response["status"]==0:return response
-   #finally
+   #final response
    return {"status":1,"message":"done"}
 
 async def function_drop_all_view(postgres_object,function_query_runner):
@@ -283,5 +283,5 @@ async def function_drop_all_view(postgres_object,function_query_runner):
    if drop_all_query:
       response=await function_query_runner(postgres_object,"write",drop_all_query,{})
       if response["status"]==0:return response
-   #finally
+   #final response
    return {"status":1,"message":"done"}
