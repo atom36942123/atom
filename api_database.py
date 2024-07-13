@@ -1,15 +1,4 @@
-#import
-from config import *
-from function import *
-from object import postgres_object
-from fastapi import Request
 
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["database"])
-
-#config
-config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 
 #api
 @router.get("/{x}/database-create")
