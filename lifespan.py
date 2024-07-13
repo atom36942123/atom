@@ -20,8 +20,8 @@ async def lifespan(app:FastAPI):
    for k,v in postgres_object.items():
       try:await v.connect()
       except Exception as e:print(e.args)
-   yield
    #postgres disconnect
+   yield
    for k,v in postgres_object.items():
       try:await v.disconnect()
       except Exception as e:print(e.args)
