@@ -1,4 +1,4 @@
-#lifespan
+#import
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi_cache import FastAPICache
@@ -6,6 +6,8 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from object import redis_object
 from object import postgres_object
+
+#logic
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis cache
