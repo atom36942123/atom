@@ -1,4 +1,5 @@
 #import
+from app import app
 from fastapi import Request
 from config import config_x
 from function import function_http_response
