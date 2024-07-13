@@ -6,9 +6,7 @@ from fastapi import Request
 
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["root"])
-router_database=APIRouter(tags=["database"])
-router_list=[router,router_database]
+router=APIRouter()
 
 #root
 @router.get("/")
