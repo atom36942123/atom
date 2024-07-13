@@ -37,8 +37,6 @@ async def function_api_database_alter(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #read schema column
-    query="select * from information_schema.columns where table_schema='public';"
-    query="select constraint_name from information_schema.constraint_column_usage;"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
