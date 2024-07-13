@@ -103,7 +103,7 @@ async def function_api_database_query(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #logic
-    for k,v in config_query.items():
+    for item in []:
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #finally
