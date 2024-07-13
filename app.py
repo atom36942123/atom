@@ -18,9 +18,10 @@ async def middleware(request:Request,api_function):
    #api response
    try:response=await api_function(request)
    except Exception as e:return function_http_response(400,0,e.args)
-   #finally
+   #final response
    return response
 
 #router
-from api import router_database
-app.include_router(router_database)
+from api import router_list
+for item in router_list
+app.include_router(item)
