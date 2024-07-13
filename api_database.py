@@ -2,77 +2,7 @@
 
 
 
-@router.get("/{x}/database-alter")
-async def function_api_database_alter(x:str,request:Request):
-    #token check
-    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #read schema column
-    query="select * from information_schema.columns where table_schema='public';"
-    response=await function_query_runner(postgres_object[x],"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    schema_column=response["message"]
-    #read schema constraint
-    query="select constraint_name from information_schema.constraint_column_usage;"
-    response=await function_query_runner(postgres_object[x],"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #column default
-    config_column_default={
-    "created_at":["now()",config_table],
-    "last_active_at":["now()",["users"]],
-    "is_active":[1,["atom","users","post","comment","workseeker"]],
-    "is_verified":[0,["atom","users","post","comment","workseeker"]],
-    "is_pinned":[0,["post"]],
-    }
-    for column in schema_column:
-        for k,v in config_column_default.items():
-            for table in v[1]:
-                if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
-                    query=f"alter table {table} alter column {k} set default {v[0]};"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column checkin
-    config_column_checkin={
-    "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
-    "is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
-    "is_working":[(0,1),["workseeker"]],
-    "is_pinned":[(0,1),["post"]],
-    }
-    for k,v in config_column_checkin.items():
-        for table in v[1]:
-            constraint_name=f"checkin_{k}_{table}"
-            if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column nullable
-    config_column_nullable={
-    "created_by_id":["message"],
-    "received_by_id":["message"],
-    "parent_table":["likes","comment","bookmark","report","rating","block"],
-    "parent_id":["likes","comment","bookmark","report","rating","block"],
-    }
-    for column in schema_column:
-        for k,v in config_column_nullable.items():
-            for table in v:
-                if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
-                    query=f"alter table {table} alter column {k} set not null;"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column unique
-    config_column_unique={
-    "username":["users"],
-    "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
-    }
-    for k,v in config_column_unique.items():
-        for table in v:
-            constraint_name=f"unique_{k.replace(',','_')}_{table}".replace(",","_")
-            if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {table} add constraint {constraint_name} unique ({k});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")    
-    #finally
-    return {"status":1,"message":"alter done"}
+
 
 @router.get("/{x}/database-index")
 async def function_api_database_index(x:str,request:Request):
