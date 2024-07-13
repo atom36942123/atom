@@ -39,5 +39,5 @@ app.include_router(router)
 
 #root api
 @app.get("/")
-async def api_func_root():
+async def function_api_root():
    return {"status":1,"message":"welcome to atom"}
