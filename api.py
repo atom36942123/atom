@@ -76,7 +76,7 @@ async def function_api_database_alter(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} unique ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")    
-    #finally
+    #final response
     return {"status":1,"message":"database alter done"}
 
 
