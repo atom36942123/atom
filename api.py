@@ -10,7 +10,7 @@ import hashlib
 
 #router
 from fastapi import APIRouter
-router=APIRouter()
+router=APIRouter(tags=["api","xxx"])
 
 #root
 @router.get("/")
