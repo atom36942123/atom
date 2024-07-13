@@ -44,14 +44,7 @@ async def function_api_database_alter(x:str,request:Request):
     response=await function_query_runner(postgres_object[x],"read",schema_constraint,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #column default
-    config_column_default={
-    "created_at":["now()",config_table],
-    "last_active_at":["now()",["users"]],
-    "is_active":[1,["atom","users","post","comment","workseeker"]],
-    "is_verified":[0,["atom","users","post","comment","workseeker"]],
-    "is_pinned":[0,["post"]],
-    }
+    #default
     for column in schema_column:
         for k,v in config_column_default.items():
             for table in v[1]:
@@ -59,13 +52,7 @@ async def function_api_database_alter(x:str,request:Request):
                     query=f"alter table {table} alter column {k} set default {v[0]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column checkin
-    config_column_checkin={
-    "is_active":[(0,1),["atom","users","post","comment","workseeker"]],
-    "is_verified":[(0,1),["atom","users","post","comment","workseeker"]],
-    "is_working":[(0,1),["workseeker"]],
-    "is_pinned":[(0,1),["post"]],
-    }
+    #checkin
     for k,v in config_column_checkin.items():
         for table in v[1]:
             constraint_name=f"checkin_{k}_{table}"
@@ -73,13 +60,7 @@ async def function_api_database_alter(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column nullable
-    config_column_nullable={
-    "created_by_id":["message"],
-    "received_by_id":["message"],
-    "parent_table":["likes","comment","bookmark","report","rating","block"],
-    "parent_id":["likes","comment","bookmark","report","rating","block"],
-    }
+    #nullable
     for column in schema_column:
         for k,v in config_column_nullable.items():
             for table in v:
@@ -87,11 +68,7 @@ async def function_api_database_alter(x:str,request:Request):
                     query=f"alter table {table} alter column {k} set not null;"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #column unique
-    config_column_unique={
-    "username":["users"],
-    "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
-    }
+    #unique
     for k,v in config_column_unique.items():
         for table in v:
             constraint_name=f"unique_{k.replace(',','_')}_{table}".replace(",","_")
@@ -100,6 +77,6 @@ async def function_api_database_alter(x:str,request:Request):
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")    
     #finally
-    return {"status":1,"message":"alter done"}
+    return {"status":1,"message":"database alter done"}
 
 
