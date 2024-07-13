@@ -60,9 +60,9 @@ async def function_api_database_alter(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #nullable
+    #not nullable
     for column in schema_column:
-        for k,v in config_column_nullable.items():
+        for k,v in config_column_not_nullable.items():
             for table in v:
                 if column["table_name"]==table and column["column_name"]==k and column["is_nullable"]=="YES":
                     query=f"alter table {table} alter column {k} set not null;"
