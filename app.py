@@ -21,11 +21,6 @@ async def middleware(request:Request,api_function):
    #finally
    return response
 
-#api
-@app.get("/")
-async def api_func_root():
-   return {"status":1,"message":"welcome to atom"}
-
 #router
 from api_database import router
 app.include_router(router)
@@ -41,3 +36,8 @@ from api_admin import router
 app.include_router(router)
 from api_zzz import router
 app.include_router(router)
+
+#api
+@app.get("/")
+async def api_func_root():
+   return {"status":1,"message":"welcome to atom"}
