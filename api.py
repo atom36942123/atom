@@ -6,7 +6,13 @@ from fastapi import Request
 
 #router
 from fastapi import APIRouter
+router=APIRouter(tags=["root"])
 router_database=APIRouter(tags=["database"])
+
+#root api
+@router.get("/")
+async def function_api_root():
+   return {"status":1,"message":"welcome to atom"}
 
 #database
 @router_database.get("/{x}/database-create")
