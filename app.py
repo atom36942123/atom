@@ -3,6 +3,10 @@ from fastapi import FastAPI
 from lifespan import lifespan
 app=FastAPI(lifespan=lifespan)
 
+#cors
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
+
 #middleware
 from fastapi import Request
 from config import config_x
@@ -16,10 +20,6 @@ async def middleware(request:Request,api_function):
    except Exception as e:return function_http_response(400,0,e.args)
    #finally
    return response
-
-#cors
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
 #api
 @app.get("/")
