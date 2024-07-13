@@ -2,20 +2,6 @@
 
 
 
-#schema
-class schema_signup(BaseModel):
-   username:str
-   password:str
-   
-class schema_login(BaseModel):
-   mode:Literal["username","firebase","email","mobile"]="username"
-   username:str|None=None
-   password:str|None=None
-   firebase_id:str|None=None
-   email:str|None=None
-   mobile:str|None=None
-   otp:int|None=None
-
 #api
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request,body:schema_signup):
