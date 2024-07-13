@@ -1,17 +1,6 @@
-#import
-from config import *
-from function import *
-from object import postgres_object
-from fastapi import Request
-from fastapi import Depends
-from fastapi_limiter.depends import RateLimiter
-import hashlib
-from pydantic import BaseModel
-from typing import Literal
 
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["login"])
+
+
 
 #schema
 class schema_signup(BaseModel):
