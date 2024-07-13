@@ -19,7 +19,9 @@ Atom can save development time by ~ >50% as all the generic big/hard modules are
 With atom, launching a scalable prototype is super easy and the best part is that it's not low code no code. It can be easily scaled as per need.
 
 My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.
+
 Primary motivation  is to build as many applications using atom code and help startup founders.
+
 If you are an aspiring founder, then you can email me to build your tech using atom.
 
 1. Sample project = www.atom.wiki
