@@ -22,17 +22,5 @@ async def middleware(request:Request,api_function):
    return response
 
 #router
-from api_database import router
-app.include_router(router)
-from api_login import router
-app.include_router(router)
-from api_my import router
-app.include_router(router)
-from api_crud import router
-app.include_router(router)
-from api_utility import router
-app.include_router(router)
-from api_admin import router
-app.include_router(router)
-from api_zzz import router
-app.include_router(router)
+from api import router_root
+app.include_router(router_root)
