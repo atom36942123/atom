@@ -104,7 +104,7 @@ async def function_api_database_query(x:str,request:Request):
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #logic
     for item in [query_create_root_user,query_rule_delete_disable_users_root]:
-        response=await function_query_runner(postgres_object[x],"write",v,{})
+        response=await function_query_runner(postgres_object[x],"write",item,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #finally
     return {"status":1,"message":"database query done"}
