@@ -30,3 +30,6 @@ config_jwt_secret_key=env("jwt_secret_key")
 config_jwt_expire_day=env.int("jwt_expire_day")
 config_token_root=env("token_root")
 config_x=env.list("x")
+
+#hardcoded
+config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
