@@ -1,7 +1,7 @@
 #app
 from fastapi import FastAPI
 from lifespan import lifespan
-app=FastAPI(lifespan=lifespan)
+app=FastAPI(lifespan=lifespan,title="atom")
 
 #cors
 from fastapi.middleware.cors import CORSMiddleware
