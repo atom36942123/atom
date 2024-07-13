@@ -37,11 +37,11 @@ async def function_api_database_alter(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #read schema column
-    response=await function_query_runner(postgres_object[x],"read",query,{})
+    response=await function_query_runner(postgres_object[x],"read",schema_column,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
     #read schema constraint
-    response=await function_query_runner(postgres_object[x],"read",query,{})
+    response=await function_query_runner(postgres_object[x],"read",schema_constraint,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
     #column default
