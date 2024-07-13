@@ -3,7 +3,9 @@ from config import *
 from query import *
 from function import *
 from object import postgres_object
-from fastapi import Request
+from fastapi import Request,Depends
+from fastapi_limiter.depends import RateLimiter
+import hashlib
 
 #router
 from fastapi import APIRouter
