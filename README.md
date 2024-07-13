@@ -21,5 +21,7 @@ My vision for atom is to help aspiring entrepreneurs with their technology part 
 If you are an aspiring founder, then you can email me to build your tech using atom.
 
 Sample project = www.atom.wiki
+
 Codebase = https://github.com/atom36942123/atom
+
 Email = atom36942@gmail.com
