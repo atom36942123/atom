@@ -6,4 +6,9 @@ from fastapi import Request
 
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["root"])
+router_root=APIRouter(tags=["root"])
+
+#root
+@router_root.get("/")
+async def function_api_root():
+   return {"status":1,"message":"welcome to atom"}
