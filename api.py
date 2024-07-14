@@ -1,4 +1,4 @@
- #import
+#import
 from config import *
 from database import *
 from schema import *
