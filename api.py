@@ -103,13 +103,13 @@ async def function_api_database_index(x:str,request:Request):
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #create index
     for k,v in config_column.items():
-        for table in v[0]:
-            if v[4]==1:
+        if v[4]==1:
+            for table in v[0]:
                 index_name=f"index_{k}_{table}"
                 query=f"create index if not exists {index_name} on {table}({k});"
                 if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")        
     #create index misc
     query_dict={
     "index_likes_multiple":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
