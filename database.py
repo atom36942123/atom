@@ -99,8 +99,9 @@ config_column_index={
 "email":["default",["otp"]],
 "mobile":["default",["otp"]],
 "tag":["array",["atom","users","post"]],
-"parent_table,parent_id":["default",["likes","comment","bookmark","report","rating","block"]],
 "is_active":["default",["atom","users","post","comment","workseeker"]],
 "is_verified":["default",["atom","users","post","comment","workseeker"]],
 "is_pinned":["default",["post"]],
 }
+
+
