@@ -290,7 +290,7 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #if user not exist
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
-    #background task
+    #background task (last active set)
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":response["message"][0]["id"]}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
@@ -326,15 +326,17 @@ async def function_api_my_action_check(x:str,request:Request,action:str,table:st
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #check
+    #if ids null
     if not ids:return function_http_response(400,0,f"dont call action check api if feed null")
-    #logic
+    #ids split
     try:ids=[int(x) for x in ids.split(',')]
     except Exception as e:return function_http_response(400,0,e.args)
+    #logic
     query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
     values={"parent_table":table,"created_by_id":request_user["id"]}
     response=await function_query_runner(postgres_object[x],"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
+    #parent ids join
     try:ids_filtered=list(set([item["parent_id"] for item in response["message"] if item["parent_id"]]))
     except Exception as e:return function_http_response(400,0,e.args)
     #finally
@@ -346,7 +348,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #get parent ids
+    #read parent ids
     limit=30
     offset=(page-1)*limit
     query=f"select parent_id from {table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc offset {offset} limit {limit};"
@@ -354,7 +356,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
     response=await function_query_runner(postgres_object[x],"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     parent_ids=[x["parent_id"] for x in response["message"]]
-    #read parent ids
+     #read parent ids objects
     query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -429,7 +431,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     #add user key
     response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"received_by_id")
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #background task
+    #background task (set message status read)
     query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;"
     values={"status":"read","updated_by_id":request_user['id'],"updated_at":datetime.now(),"received_by_id":request_user['id'],"created_by_id":user_id}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
@@ -509,6 +511,4 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     #finally
     return {"status":1,"message":"done"}
     
-
-
 
