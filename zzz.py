@@ -1,14 +1,13 @@
-#impport
-from object import mongo_object,elasticsearch_object
-from function import function_http_response
-from bson import ObjectId
-from fastapi import Body
-
 #router
 from fastapi import APIRouter
 router=APIRouter(tags=["zzz"])
 
 #mongo
+from object import mongo_object
+from function import function_http_response
+from bson import ObjectId
+from fastapi import Body
+
 @router.post("/{x}/mongo-create-object")
 async def function_api(x:str,database:str,table:str,body:dict=Body(...)):
     if database=="test" and table=="users":
@@ -40,6 +39,9 @@ async def function_api(x:str,database:str,table:str,id:str):
 
 
 #elasticsearch
+from object import elasticsearch_object
+from function import function_http_response
+from fastapi import Body
 @router.post("/{x}/elasticsearch-create-object")
 async def function_api(x:str,table:str,id:int,body:dict=Body(...)):
     try:response=elasticsearch_object.index(index=table,id=id,document=body)
