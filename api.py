@@ -59,7 +59,7 @@ async def function_api_database_init(x:str,request:Request):
     for k,v in config_column.items():
         for table in v[0]:
             constraint_name=f"checkin_{k}_{table}"
-            if constraint_name not in schema_constraint_name_list:
+            if constraint_name not in schema_constraint_name_list and v[3]:
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
@@ -96,7 +96,7 @@ async def function_api_database_query(x:str,request:Request):
     for item in [query_create_root_user,query_rule_delete_disable_users_root,query_index_likes,query_index_bookmark,query_index_comment]:
         response=await function_query_runner(postgres_object[x],"write",item,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    #finally
+    #final response
     return {"status":1,"message":"database query done"}
 
 @router.get("/{x}/database-index")
@@ -109,12 +109,13 @@ async def function_api_database_index(x:str,request:Request):
     #create index
     for k,v in config_column.items():
         for table in v[0]:
-            index_name=f"index_{k.replace(',','_')}_{table}"
-            query=f"create index if not exists {index_name} on {table}({k});"
-            if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
-            response=await function_query_runner(postgres_object[x],"write",query,{})
-            if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #finally
+            if v[4]==1:
+                index_name=f"index_{k.replace(',','_')}_{table}"
+                query=f"create index if not exists {index_name} on {table}({k});"
+                if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
+                response=await function_query_runner(postgres_object[x],"write",query,{})
+                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+    #final response
     return {"status":1,"message":"database index done"}
 
 #signup
@@ -135,7 +136,7 @@ async def function_api_signup(x:str,request:Request,body:schema_signup):
    values={"username":body.username,"password":hashlib.sha256(body.password.encode()).hexdigest()}
    response=await function_query_runner(postgres_object[x],"write",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.post("/{x}/login")
@@ -253,7 +254,7 @@ async def function_api_login(x:str,request:Request,body:schema_login):
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.get("/{x}/token-refresh")
@@ -275,7 +276,7 @@ async def function_api_token_refresh(x:str,request:Request):
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    response=await function_token_encode(data,config_jwt_expire_day,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 #my
@@ -296,7 +297,7 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":response["message"][0]["id"]}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
-    #finally
+    #final response
     return {"status":1,"message":response["message"][0]}
 
 @router.get("/{x}/my-profile-misc")
@@ -319,7 +320,7 @@ async def function_api_my_profile_misc(x:str,request:Request):
         response=await function_query_runner(postgres_object[x],"read",v,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         user[k]=response["message"][0]["number"]
-    #finally
+    #final response
     return {"status":1,"message":user}
     
 @router.get("/{x}/my-action-check")
@@ -341,7 +342,7 @@ async def function_api_my_action_check(x:str,request:Request,action:str,table:st
     #parent ids join
     try:ids_filtered=list(set([item["parent_id"] for item in response["message"] if item["parent_id"]]))
     except Exception as e:return function_http_response(400,0,e.args)
-    #finally
+    #final response
     return {"status":1,"message":ids_filtered}
 
 @router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
@@ -371,7 +372,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
     #add comment count
     response=await function_add_comment_count(postgres_object[x],function_query_runner,parent_table,response["message"])
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return response
 
 @router.get("/{x}/my-message-inbox/{page}")
@@ -411,7 +412,7 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
     #add user key
     response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"received_by_id")
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return response
 
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
@@ -437,7 +438,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;"
     values={"status":"read","updated_by_id":request_user['id'],"updated_at":datetime.now(),"received_by_id":request_user['id'],"created_by_id":user_id}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
-    #finally
+    #final response
     return response
 
 @router.delete("/{x}/my-delete")
@@ -482,7 +483,7 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     #query run
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return {"status":1,"message":"object deleted"}
 
 @router.delete("/{x}/my-delete-account")
@@ -510,7 +511,7 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     "report_parent":f"delete from report where parent_table='users' and parent_id={request_user['id']};",
     }
     for k,v in query_dict.items():background_tasks.add_task(function_query_runner,postgres_object[x],"write",v,{})
-    #finally
+    #final response
     return {"status":1,"message":"done"}
 
 #crud
@@ -553,7 +554,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    query=f'''insert into {table} ({key_1}) values ({key_2}) returning *;'''
    response=await function_query_runner(postgres_object[x],"write",query,param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.put("/{x}/object-update/{table}/{id}")
@@ -597,7 +598,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    values=param|{"id":id,"created_by_id":created_by_id}
    response=await function_query_runner(postgres_object[x],"write",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.delete("/{x}/object-delete/{table}/{id}")
@@ -639,7 +640,7 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
       for url in object["file_url"].split(","):
          if config_aws_s3_bucket_name in url:
             background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
-   #finally
+   #final response
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
@@ -676,7 +677,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    if table in ["post"]:
       response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.get("/{x}/object-read-public/{table}/{page}")
@@ -701,7 +702,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    if table in ["post"]:
       response=await function_add_comment_count(postgres_object[x],function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
@@ -720,7 +721,7 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 #utility
@@ -759,7 +760,7 @@ async def function_api_pcache(x:str,request:Request):
         response=await function_query_runner(postgres_object[x],"read",v,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         output[k]=response["message"]
-    #finally
+    #final response
     return {"status":1,"message":output}
     
 @router.get("/{x}/create-s3-url")
@@ -779,7 +780,7 @@ async def function_api_create_s3_url(x:str,request:Request,filename:str,backgrou
     query="insert into s3 (created_by_id,file_url) values (:created_by_id,:file_url) returning *;"
     values={"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']}
     background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
-    #finally
+    #final response
     return response
 
 @router.get("/{x}/send-email")
@@ -795,7 +796,7 @@ async def function_api_send_email(x:str,request:Request,to:str,title:str,descrip
     #logic
     response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,to,title,description)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return response
 
 @router.get("/{x}/send-otp")
@@ -818,7 +819,7 @@ async def function_api_send_otp(x:str,request:Request,email:str=None,mobile:str=
     values={"created_by_id":None,"otp":otp,"email":email,"mobile":mobile}
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return {"status":1,"message":"opt sent"}
 
 @router.put("/{x}/update-cell")
@@ -859,7 +860,7 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
     response=await function_query_runner(postgres_object[x],"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #finally
+    #final response
     return response
 
 #admin
@@ -906,7 +907,7 @@ async def function_api_checklist(x:str,request:Request):
    for k,v in query_dict.items():
       response=await function_query_runner(postgres_object[x],"write",v,{})
       if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return {"status":1,"message":"checklist done"}
    
 @router.delete("/{x}/delete-s3-url")
@@ -927,7 +928,7 @@ async def function_api_delete_s3_url(x:str,request:Request,url:str,background_ta
    query="delete from s3 where file_url=:file_url;"
    values={"file_url":url}
    background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
-   #finally
+   #final response
    return response
 
 @router.post("/{x}/insert-csv")
@@ -960,7 +961,7 @@ async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","po
       if response["status"]==0:return function_http_response(400,0,response["message"])
       count+=1
    file.file.close
-   #finally
+   #final response
    return {"status":1,"message":f"rows inserted={count}"}
 
 @router.get("/{x}/query-runner")
@@ -975,7 +976,7 @@ async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
    #logic
    response=await function_query_runner(postgres_object[x],mode,query,{})
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #finally
+   #final response
    return response
 
 
