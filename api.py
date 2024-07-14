@@ -49,20 +49,22 @@ async def function_api_database_init(x:str,request:Request):
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
     #alter column default
     for k,v in config_column.items():
-        for column in schema_column:
+        if v[2]:
             for table in v[0]:
-                if v[2] and column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
-                    query=f"alter table {table} alter column {k} set default {v[2]};"
-                    response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")              
+                for column in schema_column:
+                    if column["column_name"]==k and column["table_name"]==table and not column["column_default"]:
+                        query=f"alter table {table} alter column {k} set default {v[2]};"
+                        response=await function_query_runner(postgres_object[x],"write",query,{})
+                        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")                
     #alter column checkin
     for k,v in config_column.items():
-        for table in v[0]:
-            constraint_name=f"checkin_{k}_{table}"
-            if v[3] and constraint_name not in schema_constraint_name_list:
-                query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+        if v[3]:
+            for table in v[0]:
+                constraint_name=f"checkin_{k}_{table}"
+                if constraint_name not in schema_constraint_name_list:
+                    query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
+                    response=await function_query_runner(postgres_object[x],"write",query,{})
+                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}") 
     #add constraint
     query_dict={
     "unique_username_users":"alter table users add constraint unique_username_users unique (username);",
@@ -104,9 +106,9 @@ async def function_api_database_index(x:str,request:Request):
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")        
     #create index misc
     query_dict={
-    "index_likes_multiple":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
-    "index_bookmark_multiple":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
-    "index_comment_multiple":"create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);",
+    "index_parent_table_parent_id_likes":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
+    "index_parent_table_parent_id_bookmark":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
+    "index_parent_table_parent_id_comment":"create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);",
     }
     for k,v in query_dict.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
