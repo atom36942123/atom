@@ -73,16 +73,3 @@ config_column={
 "project":[["workseeker"],"text",None,None,0],
 "is_founder":[["workseeker"],"int",None,(0,1),1],
 }
-
-config_column_not_nullable={
-"created_by_id":["message"],
-"received_by_id":["message"],
-"parent_table":["likes","comment","bookmark","report","rating","block"],
-"parent_id":["likes","comment","bookmark","report","rating","block"],
-}
-
-config_column_unique={
-"username":["users"],
-"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
-}
-
