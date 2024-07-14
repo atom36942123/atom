@@ -45,11 +45,13 @@ async def function_api_database_alter(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #read schema column
-    response=await function_query_runner(postgres_object[x],"read",query_schema_column,{})
+    query="select * from information_schema.columns where table_schema='public';"
+    response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_column=response["message"]
     #read schema constraint
-    response=await function_query_runner(postgres_object[x],"read",query_schema_constraint,{})
+    query="select constraint_name from information_schema.constraint_column_usage;"
+    response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
     #default
@@ -109,13 +111,16 @@ async def function_api_database_index(x:str,request:Request):
 async def function_api_database_query(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #logic
+    #query define
+    query_create_root_user="insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;"
+    query_rule_delete_disable_users_root="create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;"
+    #query run
     for item in [query_create_root_user,query_rule_delete_disable_users_root]:
         response=await function_query_runner(postgres_object[x],"write",item,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #finally
     return {"status":1,"message":"database query done"}
-
+    
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request,body:schema_signup):
