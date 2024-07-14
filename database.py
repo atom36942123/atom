@@ -55,7 +55,7 @@ config_column={
 "location_current":[["workseeker"],"text",None,None,1],
 "location_expected":[["workseeker"],"text",None,None,1],
 "currency":[["workseeker"],"text",None,None,0],
-"salary_frequency":[["workseeker"],"text",,None,None,0],
+"salary_frequency":[["workseeker"],"text",None,None,0],
 "salary_current":[["workseeker"],"int",None,None,0],
 "salary_expected":[["workseeker"],"int",None,None,0],
 "sector":[["workseeker"],"text",None,None,0],
