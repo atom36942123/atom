@@ -540,6 +540,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    if table=="atom" and "type" not in param:return function_http_response(400,0,"type is must")
    if table=="comment" and "description" not in param:return function_http_response(400,0,"description is must")
    if table=="message" and "description" not in param:return function_http_response(400,0,"description is must")
+   if table=="message" and "received_by_id" not in param:return function_http_response(400,0,"received_by_id is must")
    if table=="helpdesk" and "description" not in param:return function_http_response(400,0,"description is must")
    if table=="rating" and "rating" not in param:return function_http_response(400,0,"rating is must")
    if table in ["likes","comment","bookmark","report","rating","block"] and "parent_table" not in param:return function_http_response(400,0,"parent_table is must")
