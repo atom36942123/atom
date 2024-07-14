@@ -1,9 +1,9 @@
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 
-#key:table,datatype,default,checkin
+#key:table,datatype,default,checkin,index
 config_column={
-"created_at":[config_table,"timestamptz","now()",None],
-"created_by_id":[config_table,"bigint",None,None],
+"created_at":[config_table,"timestamptz","now()",None,1],
+"created_by_id":[config_table,"bigint",None,None,1],
 "updated_at":[["atom","users","post","comment","report","message","helpdesk","workseeker"],"timestamptz",None,None],
 "updated_by_id":[["atom","users","post","comment","report","message","helpdesk","workseeker"],"bigint",None,None],
 "is_active":[["atom","users","post","comment","workseeker"],"int",1,(0,1)],
@@ -85,23 +85,4 @@ config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
-
-config_column_index={
-"created_at":["default",["atom","users","post","message"]],
-"created_by_id":["default",["atom","post","likes","comment","bookmark","report","rating","message"]],
-"parent_table":["default",["likes","comment","bookmark","report","rating","block"]],
-"parent_id":["default",["likes","comment","bookmark","report","rating","block"]],
-"received_by_id":["default",["message"]],
-"description":["default",["comment","message","helpdesk"]],
-"type":["default",["atom","post","helpdesk","users"]],
-"password":["default",["users"]],
-"firebase_id":["default",["users"]],
-"email":["default",["otp"]],
-"mobile":["default",["otp"]],
-"tag":["array",["atom","users","post"]],
-"is_active":["default",["atom","users","post","comment","workseeker"]],
-"is_verified":["default",["atom","users","post","comment","workseeker"]],
-"is_pinned":["default",["post"]],
-}
-
 
