@@ -49,7 +49,7 @@ async def function_api_database_init(x:str,request:Request):
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
     #default
     for column in schema_column:
-        for k,v in config_column_default.items():
+        for k,v in config_column.items():
             for table in v[1]:
                 if column["table_name"]==table and column["column_name"]==k and not column["column_default"]:
                     query=f"alter table {table} alter column {k} set default {v[0]};"
