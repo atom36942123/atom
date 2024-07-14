@@ -74,10 +74,6 @@ config_column={
 "is_founder":[["workseeker"],"int",None,(0,1)],
 }
 
-
-
-
-
 config_column_not_nullable={
 "created_by_id":["message"],
 "received_by_id":["message"],
@@ -89,7 +85,6 @@ config_column_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"],
 }
-
 
 config_column_index={
 "created_at":["default",["atom","users","post","message"]],
