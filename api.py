@@ -33,8 +33,8 @@ async def function_api_database_init(x:str,request:Request):
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #create column
     for k,v in config_column.items():
-        for table in v[1]:
-            query=f"alter table {table} add column if not exists {k} {v[0]};"
+        for table in v[0]:
+            query=f"alter table {table} add column if not exists {k} {v[1]};"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #read schema column
