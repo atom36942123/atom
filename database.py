@@ -1,6 +1,6 @@
 config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
 
-#key:table,datatype,default,checkin,index
+#column:table,datatype,default,checkin,index
 config_column={
 "created_at":[config_table,"timestamptz","now()",None,1],
 "created_by_id":[config_table,"bigint",None,None,1],
