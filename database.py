@@ -20,7 +20,7 @@ config_column={
 "password":[["users"],"text",None,None,1],
 "profile_pic_url":[["users"],"text",None,None,0],
 "date_of_birth":[["users"],"date",None,None,0],
-"name":[["users","workseeker"],"text",None,None],0,
+"name":[["users","workseeker"],"text",None,None,0],
 "gender":[["users","workseeker"],"text",None,None,0],
 "email":[["users","post","otp","helpdesk","workseeker"],"text",None,None,1],
 "mobile":[["users","post","otp","helpdesk","workseeker"],"text",None,None,1],
