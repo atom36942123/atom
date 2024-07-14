@@ -1,5 +1,5 @@
 #impport
-from object import *
+from object import mongo_object,elasticsearch_object
 from function import function_http_response
 from bson import ObjectId
 from fastapi import Body
