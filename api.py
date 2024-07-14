@@ -47,7 +47,7 @@ async def function_api_database_init(x:str,request:Request):
     response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     schema_constraint_name_list=[item["constraint_name"] for item in response["message"]]
-    #default
+    #alter column default
     for k,v in config_column.items():
         for column in schema_column:
             for table in v[0]:
@@ -55,7 +55,7 @@ async def function_api_database_init(x:str,request:Request):
                     query=f"alter table {table} alter column {k} set default {v[2]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
                     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")              
-    #checkin
+    #alter column checkin
     for k,v in config_column.items():
         for table in v[0]:
             constraint_name=f"checkin_{k}_{table}"
@@ -63,6 +63,9 @@ async def function_api_database_init(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+    #query
+
+    
     #unique
     for k,v in config_column_unique.items():
         for table in v:
