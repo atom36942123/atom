@@ -100,7 +100,7 @@ async def function_api_database_query(x:str,request:Request):
 async def function_api_database_index(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #drop all index
+    #delete index
     response=await function_drop_all_index(postgres_object[x],function_query_runner)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #create index
