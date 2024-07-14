@@ -51,21 +51,16 @@ async def function_api_database_init(x:str,request:Request):
     for k,v in config_column.items():
         for column in schema_column:
             for table in v[0]:
-                if column["table_name"]==table and column["column_name"]==k and not column["column_default"] and v[1]:
-                    query=f"alter table {table} alter column {k} set default {v[1]};"
+                if column["table_name"]==table and column["column_name"]==k and not column["column_default"] and v[2]:
+                    query=f"alter table {table} alter column {k} set default {v[2]};"
                     response=await function_query_runner(postgres_object[x],"write",query,{})
-                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    
-        
-            
-                
-                    
+                    if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")              
     #checkin
-    for k,v in config_column_checkin.items():
-        for table in v[1]:
+    for k,v in config_column.items():
+        for table in v[0]:
             constraint_name=f"checkin_{k}_{table}"
             if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[0]});"
+                query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #not nullable
