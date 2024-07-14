@@ -1,4 +1,4 @@
-#import
+ #import
 from config import *
 from database import *
 from schema import *
@@ -63,6 +63,18 @@ async def function_api_database_init(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
+    #add constraint
+    query_dict={
+    "unique_username_users":"alter table users add constraint unique_username_users unique (username);",
+    "unique_created_by_id_parent_table_parent_id_likes":"alter table likes add constraint unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);",
+    "unique_created_by_id_parent_table_parent_id_bookmark":"alter table bookmark add constraint unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);",
+    "unique_created_by_id_parent_table_parent_id_report":"alter table report add constraint unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);",
+    "unique_created_by_id_parent_table_parent_id_block":"alter table block add constraint unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);",
+    }
+    for k,v in query_dict.items():
+        if k not in schema_constraint_name_list:
+            response=await function_query_runner(postgres_object[x],"write",v,{})
+            if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #misc query
     query_dict={
     "create_root_user":"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;",
@@ -71,20 +83,8 @@ async def function_api_database_init(x:str,request:Request):
     for k,v in query_dict.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-   
-
-    
-    #unique
-    for k,v in config_column_unique.items():
-        for table in v:
-            constraint_name=f"unique_{k.replace(',','_')}_{table}".replace(",","_")
-            if constraint_name not in schema_constraint_name_list:
-                query=f"alter table {table} add constraint {constraint_name} unique ({k});"
-                response=await function_query_runner(postgres_object[x],"write",query,{})
-                if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")    
     #final response
     return {"status":1,"message":"database init done"}
-
 
 @router.get("/{x}/database-index")
 async def function_api_database_index(x:str,request:Request):
