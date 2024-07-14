@@ -1,18 +1,4 @@
-#import
-from config import *
-from function import *
-from object import postgres_object
-from fastapi import Request
-from datetime import datetime
-from fastapi_cache.decorator import cache
-from fastapi import BackgroundTasks
-import json
-import uuid
-import random
 
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["utility"])
 
 #api
 @router.get("/{x}/pcache")
