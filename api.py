@@ -63,7 +63,7 @@ async def function_api_database_init(x:str,request:Request):
                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #misc query check not needed
+    #misc query
     query_dict={
     "create_root_user":"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;",
     "rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;",
@@ -71,15 +71,7 @@ async def function_api_database_init(x:str,request:Request):
     for k,v in query_dict.items():
         response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    #misc query check needed
-    query_dict={
-    "not_null_message_creator":"alter table message alter column created_by_id set not null;",
-    "not_null_message_receiver":"alter table message alter column received_by_id set not null;",
-    }
-    for k,v in query_dict.items():
-        response=await function_query_runner(postgres_object[x],"write",v,{})
-        if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-
+   
 
     
     #unique
