@@ -2,11 +2,12 @@
 from pydantic import BaseModel
 from typing import Literal
 
-#schema
+#signup
 class schema_signup(BaseModel):
    username:str
    password:str
-   
+
+#login
 class schema_login(BaseModel):
    mode:Literal["username","firebase","email","mobile"]="username"
    username:str|None=None
