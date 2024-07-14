@@ -102,7 +102,7 @@ async def function_api_database_index(x:str,request:Request):
     for k,v in config_column.items():
         for table in v[0]:
             if v[4]==1:
-                index_name=f"index_{k.replace(',','_')}_{table}"
+                index_name=f"index_{k}_{table}"
                 query=f"create index if not exists {index_name} on {table}({k});"
                 if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
