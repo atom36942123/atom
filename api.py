@@ -112,13 +112,14 @@ async def function_api_database_index(x:str,request:Request):
                 if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
                 response=await function_query_runner(postgres_object[x],"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
-    #misc
-    query_index_likes_multiple="create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);"
-    query_index_bookmark_multiple="create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);"
-    query_index_comment_multiple="create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);"
-    #query run
-    for item in [query_index_likes_multiple,query_index_bookmark_multiple,query_index_comment_multiple]:
-        response=await function_query_runner(postgres_object[x],"write",item,{})
+    #create index misc
+    query_dict={
+    "index_likes_multiple":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
+    "index_bookmark_multiple":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
+    "index_comment_multiple":"create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);",
+    }
+    for k,v in query_dict.items():
+        response=await function_query_runner(postgres_object[x],"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #final response
     return {"status":1,"message":"database index done"}
