@@ -1,6 +1,7 @@
 #import
 from pydantic import BaseModel
 from typing import Literal
+from datetime import datetime
 
 #signup
 class schema_signup(BaseModel):
@@ -16,3 +17,50 @@ class schema_login(BaseModel):
    email:str|None=None
    mobile:str|None=None
    otp:int|None=None
+
+#atom
+class schema_atom(BaseModel):
+   created_by_id:int|None=None
+   received_by_id:int|None=None
+   is_active:int|None=None
+   is_verified:int|None=None
+   parent_table:str|None=None
+   parent_id:int|None=None
+   username:str|None=None
+   profile_pic_url:str|None=None
+   name:str|None=None
+   gender:str|None=None
+   date_of_birth:datetime|None=None
+   type:str|None=None
+   title:str|None=None
+   description:str|None=None
+   file_url:str|None=None
+   link_url:str|None=None
+   tag:list|None=None
+   number:float|None=None
+   date:datetime|None=None
+   status:str|None=None
+   remark:str|None=None
+   email:str|None=None
+   mobile:str|None=None
+   whatsapp:str|None=None
+   phone:str|None=None
+   country:str|None=None
+   state:str|None=None
+   city:str|None=None
+   rating:int|None=None
+   metadata:dict|None=None
+   work_profile:str|None=None
+   experience:int|None=None
+   sector:str|None=None
+   college:str|None=None
+   linkedin_url:str|None=None
+   portfolio_url:str|None=None
+   location_current:str|None=None
+   location_expected:str|None=None
+   salary_type:str|None=None
+   salary_current:int|None=None
+   salary_expected:int|None=None
+   past_company_count:int|None=None
+   is_working:int|None=None
+   joining_days:int|None=None
