@@ -1,17 +1,6 @@
-#import
-from config import *
-from function import *
-from object import postgres_object
-from fastapi import Request
-from fastapi import BackgroundTasks
-from datetime import datetime
-from typing import Literal
-from fastapi import Body
-from fastapi_cache.decorator import cache
 
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["crud"])
+
+
 
 #schema
 from pydantic import BaseModel
