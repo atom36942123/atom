@@ -90,11 +90,11 @@ async def function_api_database_index(x:str,request:Request):
     response=await function_drop_all_index(postgres_object[x],function_query_runner)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #create index
-    for k,v in config_column_index.items():
-        for table in v[1]:
+    for k,v in config_column.items():
+        for table in v[0]:
             index_name=f"index_{k.replace(',','_')}_{table}"
             query=f"create index if not exists {index_name} on {table}({k});"
-            if v[0]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
+            if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
             response=await function_query_runner(postgres_object[x],"write",query,{})
             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")
     #finally
