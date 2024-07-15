@@ -696,7 +696,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    param=vars(schema_atom(**param))
    #operator
    operator={}
-   for k,v in dict(request.query_params):
+   for k,v in dict(request.query_params).items():
        if "operator" in k:operator[k.split("_")[0]]=v
    #object read
    limit=30
