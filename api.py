@@ -664,8 +664,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
       response=await function_query_runner(postgres_object[x],"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"no user for token passed")
-      user=response["message"][0]
-      return {"status":1,"message":user}
+      return {"status":1,"message":response["message"][0]}
    #table!=users
    limit=30
    offset=(page-1)*limit
