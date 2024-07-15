@@ -11,7 +11,7 @@ config_column={
 "parent_table":[["likes","comment","bookmark","report","rating","block"],"text",None,None,1],
 "parent_id":[["likes","comment","bookmark","report","rating","block"],"bigint",None,None,1],
 "received_by_id":[["message"],"bigint",None,None,1],
-"last_active_at":[["users"],"timestamptz","now()",None,None,0],
+"last_active_at":[["users"],"timestamptz","now()",None,0],
 "firebase_id":[["users"],"text",None,None,1],
 "otp":[["otp"],"int",None,None,1],
 "metadata":[["post"],"jsonb",None,None,0],
