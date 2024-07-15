@@ -19,20 +19,20 @@ async def function_query_runner(postgres_object,mode,query,values):
    #final response
    return {"status":1,"message":output}
 
-async def function_object_read(postgres_object,function_query_runner,table,param,operator,order,limit,offset,schema_atom):
+async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
    #param
-   param=dict(request.query_params)
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param=vars(schema_atom(**param))
+   param_schema_atom=vars(schema_atom(**param))
+   param_schema_atom={k:v for k,v in param_schema_atom.items() if v not in [None,""," "]}
    #operator
    operator={}
-   for k,v in param.items():
-       if f"{k}_operator" in dict(request.query_params):operator[k]=v
-   #param set
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
+   for k,v in param_schema_atom.items():
+       operator_name=f"{k}_operator"
+       if operator_name in param:operator[k]=param[operator_name]
    #where set
    where="where "
-   for k,v in param.items():
+   for k,v in param_schema_atom.items():
       if k in operator:where=where+f"({k} {operator[k]} :{k} or :{k} is null) and "
       elif k=="tag":where=where+f"({k} @> :{k} or :{k} is null) and "
       else:where=where+f"({k} = :{k} or :{k} is null) and "
@@ -40,7 +40,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    if where=="where":where=""
    #logic
    query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
-   response=await function_query_runner(postgres_object,"read",query,param)
+   response=await function_query_runner(postgres_object,"read",query,param_schema_atom)
    if response["status"]==0:return response
    #final response
    return response
