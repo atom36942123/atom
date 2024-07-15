@@ -36,6 +36,7 @@ class schema_atom(BaseModel):
     metadata:dict|None=None
 
     username:str|None=None
+    password:str|None=None
     profile_pic_url:str|None=None
     date_of_birth:datetime|None=None
     name:str|None=None
