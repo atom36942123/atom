@@ -689,7 +689,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    return response
 
 @router.get("/{x}/object-read-public/{table}/{page}")
-@cache(expire=60)
+@cache(expire=60,key_builder=request_key_builder)
 async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int):
    #param
    param=dict(request.query_params)
