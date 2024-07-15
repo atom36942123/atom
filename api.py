@@ -693,7 +693,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    #param
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   # param=vars(schema_atom(**param))
+   param=vars(schema_atom(**param))
    #operator
    operator={}
    #object read
