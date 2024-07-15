@@ -686,7 +686,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
-async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None,is_pinned:int=None):
+async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int):
    #param
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
