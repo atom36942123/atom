@@ -41,7 +41,7 @@ config_column={
 "status":[["post","report","message","helpdesk"],"text",None,None,1],
 "remark":[["post","report","helpdesk"],"text",None,None,0],
 "rating":[["post","rating","helpdesk"],"int",None,None,0],
-"is_pinned":[["post"],"int",0,(0,1),1],
+"is_pinned":[["post"],"int",0,None,(0,1),1],
 
 "work_type":[["workseeker"],"text",None,None,1],
 "work_profile":[["workseeker"],"text",None,None,1],
