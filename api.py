@@ -942,7 +942,7 @@ async def function_api_metric(x:str,request:Request):
     output={}
     #column count
     query="select column_name,count(*) from information_schema.columns where table_schema='public' group by column_name order by count desc;"
-    response=await function_query_runner(postgres_object[x],"read",v,{})
+    response=await function_query_runner(postgres_object[x],"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     output["database_column_count"]=len(response["message"])
     #final response
