@@ -26,6 +26,9 @@ async def function_api_root():
 async def function_api_database_init(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    #config_column length validation
+    for k,v in config_column.items():
+        if len(v)!=5:return function_http_response(400,0,f"config_column value length error={k}")
     #create table
     for item in config_table:
         query=f"create table if not exists {item} (id bigint primary key generated always as identity);"
