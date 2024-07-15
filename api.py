@@ -693,11 +693,13 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    #param
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param=vars(schema_atom(**param))
-   #function call
+   # param=vars(schema_atom(**param))
+   #operator
+   operator={}
+   #object read
    limit=30
    offset=(page-1)*limit
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,operator,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
    if table in ["post","comment"]:
