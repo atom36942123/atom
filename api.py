@@ -684,13 +684,13 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60)
 async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None,is_pinned:int=None):
-   #conversion
+   #param
+   param=dict(request.query_params)
    if tag:tag=tag.split(",")
-   #logic
+   #param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag,"is_pinned":is_pinned}
+   #function object read call
    limit=30
    offset=(page-1)*limit
-   param=dict(request.query_params)
-   #param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag,"is_pinned":is_pinned}
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
