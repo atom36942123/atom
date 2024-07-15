@@ -841,13 +841,9 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     response=await function_token_decode(request,config_jwt_secret_key)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #column not allowed based on permission
+    #column not allowed based on user type
     if request_user["type"] not in ["root","admin"]:
         if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
-    #param validation
-    param={column:value}
-    response=await function_param_validation(param)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
     #read datatype
     query="select data_type from information_schema.columns where column_name=:column_name limit 1;"
     values={"column_name":column}
@@ -863,6 +859,10 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
         if column_datatype=="jsonb":value=json.dumps(value,default=str)
         if column_datatype=="integer":value=int(value)
     except Exception as e:return function_http_response(400,0,e.args)
+    #param validation
+    param={column:value}
+    response=await function_param_validation(param)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
     #permission set
     if request_user["type"] in ["root","admin"]:created_by_id=None
     else:
