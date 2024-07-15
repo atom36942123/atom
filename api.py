@@ -691,9 +691,8 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
    param=schema_atom(**param)
-   return param
    #param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag,"is_pinned":is_pinned}
-   #function object read call
+   #function call
    limit=30
    offset=(page-1)*limit
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
