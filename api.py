@@ -312,7 +312,7 @@ async def function_api_my_profile_misc(x:str,request:Request):
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #output
-    user={}
+    output={}
     #count key
     query_dict={
     "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
@@ -324,9 +324,9 @@ async def function_api_my_profile_misc(x:str,request:Request):
     for k,v in query_dict.items():
         response=await function_query_runner(postgres_object[x],"read",v,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
-        user[k]=response["message"][0]["number"]
+        output[k]=response["message"][0]["number"]
     #final response
-    return {"status":1,"message":user}
+    return {"status":1,"message":output}
     
 @router.get("/{x}/my-action-check")
 async def function_api_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
@@ -935,6 +935,18 @@ async def function_api_delete_s3_url(x:str,request:Request,url:str,background_ta
    background_tasks.add_task(function_query_runner,postgres_object[x],"write",query,values)
    #final response
    return response
+
+@router.get("/{x}/metric")
+async def function_api_metric(x:str,request:Request):
+    #output
+    output={}
+    #column count
+    query="select column_name,count(*) from information_schema.columns where table_schema='public' group by column_name order by count desc;"
+    response=await function_query_runner(postgres_object[x],"read",v,{})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    output["database_column_count"]=len(response["message"])
+    #final response
+    return {"status":1,"message":output}
 
 @router.post("/{x}/insert-csv")
 async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
