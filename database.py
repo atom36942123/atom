@@ -76,4 +76,4 @@ config_column={
 "soft_skill":[["workseeker"],"text",None,None,0],
 "tool":[["workseeker"],"text",None,None,0],
 "achievement_work":[["workseeker"],"text",None,None,0],
-f
+}
