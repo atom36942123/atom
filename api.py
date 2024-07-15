@@ -21,6 +21,10 @@ router=APIRouter(tags=["api"])
 async def function_api_root():
    return {"status":1,"message":"welcome to atom"}
 
+@router.get("/{x}")
+async def function_api_root(x:str):
+   return {"status":1,"message":f"welcome to {x}"}
+
 #database
 @router.get("/{x}/database-init")
 async def function_api_database_init(x:str,request:Request):
