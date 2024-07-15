@@ -696,6 +696,8 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    param=vars(schema_atom(**param))
    #operator
    operator={}
+   for k,v in dict(request.query_params):
+       if "operator" in k:operator[k.split("_")[0]]=v
    #object read
    limit=30
    offset=(page-1)*limit
@@ -729,10 +731,10 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
    param=vars(schema_atom(**param))
-   #function call
+   #object read
    limit=30
    offset=(page-1)*limit
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,operator,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
