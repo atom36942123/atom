@@ -731,6 +731,10 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    param=dict(request.query_params)
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
    param=vars(schema_atom(**param))
+   #operator
+   operator={}
+   for k,v in dict(request.query_params).items():
+       if "operator" in k:operator[k.split("_")[0]]=v
    #object read
    limit=30
    offset=(page-1)*limit
