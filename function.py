@@ -18,7 +18,6 @@ async def function_query_runner(postgres_object,mode,query,values):
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset):
    #param set
    param={k:v for k,v in param.items() if v not in [None,""," "]}
-   return param
    #where set
    where="where "
    for k,v in param.items():
