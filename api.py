@@ -947,7 +947,7 @@ async def function_api_metric(x:str,request:Request):
     output["database_unique_column_count"]=len(response["message"])
     #misc
     output["config_column_key_count"]=len(config_column)
-      
+    output["schema_atom_key_count"]=len(vars(schema_atom()))
     #final response
     return {"status":1,"message":output}
 
