@@ -715,7 +715,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
-async def function_api_object_read_admin(x:str,request:Request,table:str,page:int,id:int=None,created_by_id:int=None,type:str=None,username:str=None,parent_table:str=None,parent_id:int=None,tag:str=None):
+async def function_api_object_read_admin(x:str,request:Request,table:str,page:int):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -723,11 +723,13 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #logic
+   #param
+   param=dict(request.query_params)
+   if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
+   param=vars(schema_atom(**param))
+   #function call
    limit=30
    offset=(page-1)*limit
-   if tag:tag=tag.split(",")
-   param={"id":id,"created_by_id":created_by_id,"type":type,"username":username,"parent_table":parent_table,"parent_id":parent_id,"tag":tag}
    response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
