@@ -19,14 +19,14 @@ async def function_query_runner(postgres_object,mode,query,values):
    #final response
    return {"status":1,"message":output}
 
-async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset):
+async def function_object_read(postgres_object,function_query_runner,table,param,operator,order,limit,offset):
    #param set
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    #where set
    where="where "
    for k,v in param.items():
       if k=="tag":where=where+f"({k} @> :{k} or :{k} is null) and "
-      elif k=="rating":where=where+f"({k} >= :{k} or :{k} is null) and "
+      elif k in operator:where=where+f"({k} {operator['k']} :{k} or :{k} is null) and "
       else:where=where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
    if where=="where":where=""
