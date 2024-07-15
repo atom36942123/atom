@@ -21,7 +21,6 @@ class schema_login(BaseModel):
 #atom
 class schema_atom(BaseModel):
     id:int|None=None
-    
     created_by_id:int|None=None
     is_active:int|None=None
     is_verified:int|None=None
