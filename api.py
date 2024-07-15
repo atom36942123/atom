@@ -690,18 +690,10 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=request_key_builder)
 async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int):
-   #param
-   param=dict(request.query_params)
-   if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param=vars(schema_atom(**param))
-   #operator
-   operator={}
-   for k,v in param.items():
-       if f"{k}_operator" in dict(request.query_params):operator[k]=v
-   #object read
+   #logic
    limit=30
    offset=(page-1)*limit
-   response=await function_object_read(postgres_object[x],function_query_runner,table,param,operator,["id","desc"],limit,offset)
+   response=await function_object_read(postgres_object[x],function_query_runner,table,param,["id","desc"],limit,offset,schema_atom)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
    if table in ["post","comment"]:
