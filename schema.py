@@ -91,5 +91,8 @@ class schema_atom(BaseModel):
     certificate:str|None=None
     project:str|None=None
     is_founder:int|None=None
+    soft_skill:str|None=None
+    tool:str|None=None
+    achievement_work:str|None=None
 
 
