@@ -1,3 +1,4 @@
+from fastapi import Request
 def request_key_builder(
     func,
     namespace: str = "",
