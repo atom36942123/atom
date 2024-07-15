@@ -72,4 +72,8 @@ config_column={
 "certificate":[["workseeker"],"text",None,None,0],
 "project":[["workseeker"],"text",None,None,0],
 "is_founder":[["workseeker"],"int",None,(0,1),1],
-}
+  
+"soft_skill":[["workseeker"],"text",None,None,0],
+"tool":[["workseeker"],"text",None,None,0],
+"achievement_work":[["workseeker"],"text",None,None,0],
+f
