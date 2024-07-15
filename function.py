@@ -4,7 +4,6 @@ def request_key_builder(
     *,
     request: Request = None,
     response: Response = None,
-    *args,
     **kwargs,
 ):
     return ":".join([
