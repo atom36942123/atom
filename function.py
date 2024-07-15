@@ -19,7 +19,7 @@ async def function_query_runner(postgres_object,mode,query,values):
    #final response
    return {"status":1,"message":output}
 
-async def function_object_read(postgres_object,function_query_runner,table,param,operator,order,limit,offset):
+async def function_object_read(postgres_object,function_query_runner,table,param,operator,order,limit,offset,schema_atom):
    #param set
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    #where set
