@@ -17,16 +17,22 @@ class schema_login(BaseModel):
     email:str|None=None
     mobile:str|None=None
     otp:int|None=None
-
+    
 #atom
 class schema_atom(BaseModel):
     id:int|None=None
+    created_at:datetime|None=None
     created_by_id:int|None=None
+    updated_at:datetime|None=None
+    updated_by_id:int|None=None
     is_active:int|None=None
     is_verified:int|None=None
     parent_table:str|None=None
     parent_id:int|None=None
     received_by_id:int|None=None
+    last_active_at:datetime|None=None
+    firebase_id:str|None=None
+    otp:int|None=None
     metadata:dict|None=None
 
     username:str|None=None
