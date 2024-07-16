@@ -652,7 +652,7 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
-async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None):
+async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None):
    #token check
    response=await function_token_decode(request,config_jwt_secret_key)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -665,15 +665,23 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"no user for token passed")
       return {"status":1,"message":response["message"][0]}
-   #table!=users
+   #pagination set
    limit=30
    offset=(page-1)*limit
+   #query set
    query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
    values={"created_by_id":request_user['id'],"id":id}
+   if mode=="receiver":
+       query=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+       values={"received_by_id":request_user['id'],"id":id}
+   if mode=="all":
+       query=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+       values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
+   #query run
    response=await function_query_runner(postgres_object[x],"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   if table in ["post","comment"]:
+   if table in ["post","comment","message"]:
       response=await function_add_user_key(postgres_object[x],function_query_runner,response["message"],"created_by_id")
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
