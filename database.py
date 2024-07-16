@@ -13,6 +13,7 @@ config_column={
 "received_by_id":[["message"],"bigint",None,None,1],
 "last_active_at":[["users"],"timestamptz","now()",None,0],
 "firebase_id":[["users"],"text",None,None,1],
+"google_id":[["users"],"text",None,None,1],
 "otp":[["otp"],"int",None,None,1],
 "metadata":[["post"],"jsonb",None,None,0],
 
