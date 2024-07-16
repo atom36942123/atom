@@ -32,6 +32,7 @@ class schema_atom(BaseModel):
     received_by_id:int|None=None
     last_active_at:datetime|None=None
     firebase_id:str|None=None
+    google_id:str|None=None
     otp:int|None=None
     metadata:dict|None=None
 
