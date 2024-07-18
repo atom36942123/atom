@@ -5,7 +5,7 @@ env.read_env()
 
 #config
 config_redis_url=env("redis_url")
-from config import config_x
+config_x=env.list("x")
 
 #lifespan
 from fastapi import FastAPI
