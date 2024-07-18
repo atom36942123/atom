@@ -391,7 +391,7 @@ async def function_api_login(x:str,request:Request,body:schema_atom):
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
-
+    
 @router.get("/{x}/token-refresh")
 async def function_api_token_refresh(x:str,request:Request):
    #token check
@@ -409,7 +409,7 @@ async def function_api_token_refresh(x:str,request:Request):
    user=response["message"][0]
    #token encode
    data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   response=await function_token_encode(config_jwt_secret_key,data)
+   response=await function_token_encode(data,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
