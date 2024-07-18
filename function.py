@@ -163,21 +163,6 @@ async def function_ses_send_email(aws_ses_region,aws_access_key_id,aws_secret_ac
    except Exception as e:response={"status":0,"message":e.args}
    return {"status":1,"message":output}
 
-async def function_add_cloudfront_url(aws_s3_bucket_name,aws_cloudfront_url,object_list):
-   #check
-   if not object_list:return {"status":1,"message":object_list}
-   #logic
-   url_list=[]
-   for index,item in enumerate(object_list):
-      if item["file_url"]:
-         for url in item["file_url"].split(","):
-            if aws_s3_bucket_name in url:url_list.append(aws_cloudfront_url+url.split("/")[-1])
-            else:url_list.append(url)
-      object_list[index]["file_url"]=",".join(url_list)
-      url_list=[]
-   #final response
-   return {"status":1,"message":object_list}
-
 async def function_update_mat_all(postgres_object,function_query_runner):
    #logic
    read_mat_all="select string_agg(oid::regclass::text,', ') as output from pg_class where relkind='m';"
