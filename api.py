@@ -1007,9 +1007,7 @@ async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
 import motor.motor_asyncio
 from bson import ObjectId
 from fastapi import Body
-if False:
-    try:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-    except Exception as e:print(e)
+if False:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
 @router.post("/{x}/mongo-create-object")
 async def function_api(x:str,database:str,table:str,body:dict=Body(...)):
     if database=="test" and table=="users":
