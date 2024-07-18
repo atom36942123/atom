@@ -3,21 +3,9 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#config
-config_redis_url=env("redis_url")
-config_postgres_instance=env("postgres_instance")
-config_x=env.list("x")
-
 #postgres
-
 from databases import Database
-postgres_object={}
-for item in config_x:
-   try:postgres_object[item]=Database(config_postgres_instance+"/"+item,min_size=1,max_size=100)
-   except Exception as e:print(e)
-
-from object import postgres_object
-
+postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres_url")}
 
 #lifespan
 from fastapi import FastAPI
@@ -30,7 +18,7 @@ from fastapi_limiter import FastAPILimiter
 async def lifespan(app:FastAPI):
    try:
       #redis
-      redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
+      redis_object=aioredis.from_url(redis://127.0.0.1,encoding="utf-8",decode_responses=True)
       FastAPICache.init(RedisBackend(redis_object))
       await FastAPILimiter.init(redis_object)
       #postgres
@@ -53,7 +41,7 @@ from function import function_http_response
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    #x check
-   if str(request.url).split("/")[3] not in ["","docs","redoc","openapi.json"]+config_x:return function_http_response(400,0,f"allowed x={str(config_x)}")
+   if str(request.url).split("/")[3] not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return function_http_response(400,0,f"allowed x={str(config_x)}")
    #api response
    try:response=await api_function(request)
    except Exception as e:return function_http_response(400,0,e.args)
