@@ -3,9 +3,6 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#url
-config_mongo_url=env("mongo_url")
-
 #aws
 config_aws_access_key_id=env("aws_access_key_id")
 config_aws_secret_access_key=env("aws_secret_access_key")
