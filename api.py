@@ -262,9 +262,6 @@ async def function_api_database(x:str,request:Request):
 async def function_api_signup(x:str,request:Request,body:schema_atom):
    #check body must
    if not body.username or not body.password:return function_http_response(400,0,"username/password must")
-   #param validaton
-   response=await function_param_validation(vars(body))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #read user
    query="select * from users where username=:username;"
    values={"username":body.username}
