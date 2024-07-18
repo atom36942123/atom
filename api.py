@@ -1,6 +1,5 @@
 #import
 from config import *
-from database import *
 from schema import *
 from function import *
 from fastapi import Request,Depends,Body,File,UploadFile
