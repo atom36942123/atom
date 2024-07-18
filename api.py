@@ -281,7 +281,7 @@ async def function_api_signup(x:str,request:Request,body:schema_atom):
 @router.post("/{x}/login")
 async def function_api_login(x:str,request:Request,body:schema_atom):
    #mode
-   if body.mode and body.mode not in ["firebase","email","mobile"]="username"]:return function_http_response(400,0,"wrong mode")
+   if body.mode and body.mode not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
    #param validation
    response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
