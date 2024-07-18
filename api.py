@@ -15,8 +15,6 @@ import hashlib,json,uuid,random,csv,codecs
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-
-
 #database
 @router.get("/{x}/database-init")
 async def function_api_database_init(x:str,request:Request):
@@ -84,17 +82,9 @@ async def function_api_database_init(x:str,request:Request):
     for k,v in query_dict.items():
         response=await function_query_runner(request.state.postgres_object,"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    #final response
-    return {"status":1,"message":"database init done"}
-
-@router.get("/{x}/database-index")
-async def function_api_database_index(x:str,request:Request):
-    #token check
-    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
-    #delete index
+    #index
     response=await function_drop_all_index(request.state.postgres_object,function_query_runner)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #create index
     for k,v in config_column.items():
         if v[4]==1:
             for table in v[0]:
@@ -103,7 +93,6 @@ async def function_api_database_index(x:str,request:Request):
                 if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
                 response=await function_query_runner(request.state.postgres_object,"write",query,{})
                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")        
-    #create index misc
     query_dict={
     "index_parent_table_parent_id_likes":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
     "index_parent_table_parent_id_bookmark":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
@@ -113,7 +102,7 @@ async def function_api_database_index(x:str,request:Request):
         response=await function_query_runner(request.state.postgres_object,"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #final response
-    return {"status":1,"message":"database index done"}
+    return {"status":1,"message":"database init done"}
 
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
