@@ -15,11 +15,6 @@ from datetime import datetime
 from function import *
 from config import *
 
-#signup
-class schema_signup(BaseModel):
-    username:str
-    password:str
-   
 #login
 class schema_login(BaseModel):
     mode:Literal["username","firebase","email","mobile"]="username"
@@ -274,7 +269,7 @@ async def function_api_database(x:str,request:Request):
 
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
-async def function_api_signup(x:str,request:Request,body:schema_signup):
+async def function_api_signup(x:str,request:Request,body:schema_atom):
    #param validaton
    response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
