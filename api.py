@@ -597,9 +597,13 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     "bookmark":f"delete from bookmark where created_by_id=:user_id;",
     "report":f"delete from report where created_by_id=:user_id;",
     "rating":f"delete from rating where created_by_id=:user_id;",
+    "comment":f"delete from comment where created_by_id=:user_id;",
     "message":f"delete from message where created_by_id=:user_id or received_by_id=:user_id;",
+    "likes_parent":f"delete from likes where parent_table='users' and parent_id=:user_id;",
+    "bookmark_parent":f"delete from bookmark where parent_table='users' and parent_id=:user_id;",
     "rating_parent":f"delete from rating where parent_table='users' and parent_id=:user_id;",
     "report_parent":f"delete from report where parent_table='users' and parent_id=:user_id;",
+    "block_parent":f"delete from block where parent_table='users' and parent_id=:user_id;",
     }
     for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{"user_id":request_user['id']})
     #final response
