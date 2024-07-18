@@ -140,19 +140,13 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
    #final response
    return {"status":1,"message":object_list}
 
-import uvicorn
-import asyncio
+import uvicorn,asyncio
 def function_server_start(app,host,port):
-   #start
    uvicorn_config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")
    uvicorn_web_server_object=uvicorn.Server(config=uvicorn_config)
    loop=asyncio.new_event_loop()
    asyncio.set_event_loop(loop)
-   #logic
-   try:
-      loop.run_until_complete(uvicorn_web_server_object.serve())
-   except Exception as e:print(e.args)
-   #final response
+   loop.run_until_complete(uvicorn_web_server_object.serve())
    return None
 
 from fastapi.responses import JSONResponse
