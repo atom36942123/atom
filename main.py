@@ -18,7 +18,7 @@ from fastapi_limiter import FastAPILimiter
 async def lifespan(app:FastAPI):
    try:
       #redis
-      redis_object=aioredis.from_url(redis://127.0.0.1,encoding="utf-8",decode_responses=True)
+      redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
       FastAPICache.init(RedisBackend(redis_object))
       await FastAPILimiter.init(redis_object)
       #postgres
