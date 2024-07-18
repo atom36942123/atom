@@ -5,11 +5,11 @@ env.read_env()
 
 #config
 config_redis_url=env("redis_url")
+config_postgres_instance=env("postgres_instance")
 config_x=env.list("x")
 
 #postgres
-from config import config_postgres_instance
-from config import config_x
+
 from databases import Database
 postgres_object={}
 for item in config_x:
