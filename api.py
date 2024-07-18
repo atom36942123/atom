@@ -3,7 +3,6 @@ from config import *
 from database import *
 from schema import *
 from function import *
-from object import postgres_object
 from fastapi import Request,Depends,Body,File,UploadFile
 from fastapi import BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
