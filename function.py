@@ -159,15 +159,15 @@ def function_http_response(status_code,status,message):
    #final response
    return response
 
-import jwt,json,time
+import jwt,time
 from datetime import datetime,timedelta
 async def function_token_encode(jwt_secret_key,data):
-   payload={"data":json.dumps(data,default=str)}|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
+   payload={"data":data}|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
    try:token=jwt.encode(payload,jwt_secret_key)
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":token}
 
-import jwt,json
+import jwt,jso n
 async def function_token_decode(request,jwt_secret_key):
    #start
    token=request.headers.get("token")
