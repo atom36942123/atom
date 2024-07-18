@@ -395,7 +395,7 @@ async def function_api_login(x:str,request:Request,body:schema_atom):
 @router.get("/{x}/token-refresh")
 async def function_api_token_refresh(x:str,request:Request):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #read user
@@ -418,7 +418,7 @@ async def function_api_token_refresh(x:str,request:Request):
 @router.get("/{x}/my-profile")
 async def function_api_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #read user
@@ -438,7 +438,7 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
 @router.get("/{x}/my-profile-misc")
 async def function_api_my_profile_misc(x:str,request:Request):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #output
@@ -461,7 +461,7 @@ async def function_api_my_profile_misc(x:str,request:Request):
 @router.get("/{x}/my-action-check")
 async def function_api_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #if ids null
@@ -483,7 +483,7 @@ async def function_api_my_action_check(x:str,request:Request,action:str,table:st
 @router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
 async def function_api_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #read parent ids
@@ -513,7 +513,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
 @router.get("/{x}/my-message-inbox/{page}")
 async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #pagination set
@@ -553,7 +553,7 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
 async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #logic
@@ -579,7 +579,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
 @router.delete("/{x}/my-delete")
 async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #query set
@@ -624,7 +624,7 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
 @router.delete("/{x}/my-delete-account")
 async def function_api_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #permission check
@@ -657,7 +657,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    request_user["id"]=None
    #token check
    if request.headers.get("token") or table not in ["helpdesk","workseeker"]:
-      response=await function_token_decode(request,config_jwt_secret_key)
+      response=await function_token_decode(request,env("token"))
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
    #param define
@@ -698,7 +698,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
 @router.put("/{x}/object-update/{table}/{id}")
 async def function_api_object_update(x:str,request:Request,table:str,id:int,body:schema_atom):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #param define
@@ -742,7 +742,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
 @router.delete("/{x}/object-delete/{table}/{id}")
 async def function_api_object_delete(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #check table
@@ -784,7 +784,7 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
 @router.get("/{x}/object-read-self/{table}/{page}")
 async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #table=users
@@ -852,7 +852,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
 @router.get("/{x}/object-read-admin/{table}/{page}")
 async def function_api_object_read_admin(x:str,request:Request,table:str,page:int):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #permission check
@@ -909,7 +909,7 @@ async def function_api_pcache(x:str,request:Request):
 @router.get("/{x}/create-s3-url")
 async def function_api_create_s3_url(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #param validation
@@ -929,7 +929,7 @@ async def function_api_create_s3_url(x:str,request:Request,filename:str,backgrou
 @router.get("/{x}/send-email")
 async def function_api_send_email(x:str,request:Request,to:str,title:str,description:str):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #param validation
@@ -968,7 +968,7 @@ async def function_api_send_otp(x:str,request:Request,email:str=None,mobile:str=
 @router.put("/{x}/update-cell")
 async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
     #token check
-    response=await function_token_decode(request,config_jwt_secret_key)
+    response=await function_token_decode(request,env("token"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #column not allowed based on user type
@@ -1010,7 +1010,7 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
 @router.get("/{x}/checklist")
 async def function_api_checklist(x:str,request:Request):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #read user
@@ -1056,7 +1056,7 @@ async def function_api_checklist(x:str,request:Request):
 @router.delete("/{x}/delete-s3-url")
 async def function_api_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #permission check
@@ -1077,7 +1077,7 @@ async def function_api_delete_s3_url(x:str,request:Request,url:str,background_ta
 @router.post("/{x}/insert-csv")
 async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #permission check
@@ -1110,7 +1110,7 @@ async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","po
 @router.get("/{x}/query-runner")
 async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
    #token check
-   response=await function_token_decode(request,config_jwt_secret_key)
+   response=await function_token_decode(request,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #permission check
