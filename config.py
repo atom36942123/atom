@@ -3,10 +3,16 @@ from environs import Env
 env=Env()
 env.read_env()
 
+#x
+config_postgres_instance=env("postgres_instance")
+config_x=env.list("x")
+
+
+
+
 #url
 config_redis_url=env("redis_url")
 config_mongo_url=env("mongo_url")
-config_postgres_instance=env("postgres_instance")
 
 #aws
 config_aws_access_key_id=env("aws_access_key_id")
@@ -25,4 +31,4 @@ config_elasticsearch_password=env("elasticsearch_password")
 config_jwt_secret_key=env("jwt_secret_key")
 config_jwt_expire_day=env.int("jwt_expire_day")
 config_token_root=env("token_root")
-config_x=env.list("x")
+
