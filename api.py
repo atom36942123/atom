@@ -97,7 +97,7 @@ class schema_atom(BaseModel):
 @router.get("/{x}/database")
 async def function_api_database(x:str,request:Request):
     #token check
-    if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
+    if request.headers.get("token")!=env("token"):return function_http_response(400,0,"token mismatch")
     #config
     config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
     config_column={
