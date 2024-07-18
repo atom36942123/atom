@@ -552,22 +552,14 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #query set
+    if mode=="comment_all":query,values="delete from comment where created_by_id=:created_by_id;",{"created_by_id":request_user['id']}
+    if mode=="message_all":query,values="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']}
+    if mode=="like_post_all":query,values="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
+    if mode=="bookmark_post_all":query,values="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
     if mode=="post_all":
         if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
         query="delete from post where created_by_id=:created_by_id;"
         values={"created_by_id":request_user['id']}
-    if mode=="comment_all":
-        query="delete from comment where created_by_id=:created_by_id;"
-        values={"created_by_id":request_user['id']}
-    if mode=="message_all":
-        query="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;"
-        values={"created_by_id":request_user['id'],"received_by_id":request_user['id']}
-    if mode=="like_post_all":
-        query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;"
-        values={"created_by_id":request_user['id'],"parent_table":"post"}
-    if mode=="bookmark_post_all":
-        query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;"
-        values={"created_by_id":request_user['id'],"parent_table":"post"}
     if mode=="message_mutual":
         if not message_id:return function_http_response(400,0,"message_id must")
         query=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);"
@@ -597,7 +589,7 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #permission check
-    if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"admin user cant be deleted")
+    if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
     #logic
     query="delete from users where id=:id;"
     values={"id":request_user["id"]}
