@@ -5,13 +5,13 @@ env.read_env()
 
 #x
 config_postgres_instance=env("postgres_instance")
+
 config_x=env.list("x")
 
 
 
 
 #url
-config_redis_url=env("redis_url")
 config_mongo_url=env("mongo_url")
 
 #aws
