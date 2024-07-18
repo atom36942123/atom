@@ -405,7 +405,6 @@ async def function_api_token_refresh(x:str,request:Request):
    #final response
    return response
 
-#my
 @router.get("/{x}/my-profile")
 async def function_api_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
@@ -431,9 +430,8 @@ async def function_api_my_profile_misc(x:str,request:Request):
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #output
+    #logic
     output={}
-    #count key
     query_dict={
     "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
     "comment_count":f"select count(*) as number from comment where created_by_id={request_user['id']};",
@@ -454,9 +452,8 @@ async def function_api_my_action_check(x:str,request:Request,action:str,table:st
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #if ids null
-    if not ids:return function_http_response(400,0,f"dont call action check api if feed null")
-    #ids split
+    #ids into list
+    if not ids:return function_http_response(400,0,f"ids cant be null")
     try:ids=[int(x) for x in ids.split(',')]
     except Exception as e:return function_http_response(400,0,e.args)
     #logic
@@ -484,7 +481,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
     response=await function_query_runner(request.state.postgres_object,"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     parent_ids=[x["parent_id"] for x in response["message"]]
-     #read parent ids objects
+    #read parent ids objects
     query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
     response=await function_query_runner(request.state.postgres_object,"read",query,{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -506,29 +503,12 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #pagination set
+    #logic
     limit=30
     offset=(page-1)*limit
-    #query set default
-    query='''
-    with
-    mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),
-    x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),
-    y as (select m.* from x left join message as m on x.id=m.id)
-    select * from y order by id desc;
-    '''
+    query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;'''
+    if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
     values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
-    #query set is unread
-    if is_unread==1:
-        query='''
-        with
-        mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),
-        x as (select owner_id,max(id) as id from mcr group by owner_id),
-        y as (select m.* from x left join message as m on x.id=m.id)
-        select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;
-        '''
-        values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
-    #query run
     response=await function_query_runner(request.state.postgres_object,"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #add user key
@@ -556,10 +536,9 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     #add user key
     response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add user key
     response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"received_by_id")
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #background task (set message status read)
+    #background task
     query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;"
     values={"status":"read","updated_by_id":request_user['id'],"updated_at":datetime.now(),"received_by_id":request_user['id'],"created_by_id":user_id}
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
