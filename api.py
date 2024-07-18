@@ -621,6 +621,11 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    #param define
    param=vars(body)
    param={k: v for k, v in param.items() if v not in [None,""," "]}
+      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
+      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
+      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
+      if "number" in param:param["number"]=round(param["number"],5)
    if not param:return function_http_response(400,0,"all body keys cant be null")
    #param conversion
    response=await function_param_conversion(param)
