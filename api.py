@@ -592,18 +592,18 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #background task
     query_dict={
-    "post":f"delete from post where created_by_id={request_user['id']};",
-    "likes":f"delete from likes where created_by_id={request_user['id']};",
-    "bookmark":f"delete from bookmark where created_by_id={request_user['id']};",
-    "report":f"delete from report where created_by_id={request_user['id']};",
-    "rating":f"delete from rating where created_by_id={request_user['id']};",
-    "message":f"delete from message where created_by_id={request_user['id']} or received_by_id={request_user['id']};",
-    "rating_parent":f"delete from rating where parent_table='users' and parent_id={request_user['id']};",
-    "report_parent":f"delete from report where parent_table='users' and parent_id={request_user['id']};",
+    "post":f"delete from post where created_by_id=:user_id;",
+    "likes":f"delete from likes where created_by_id=:user_id;",
+    "bookmark":f"delete from bookmark where created_by_id=:user_id;",
+    "report":f"delete from report where created_by_id=:user_id;",
+    "rating":f"delete from rating where created_by_id=:user_id;",
+    "message":f"delete from message where created_by_id=:user_id or received_by_id=:user_id;",
+    "rating_parent":f"delete from rating where parent_table='users' and parent_id=:user_id;",
+    "report_parent":f"delete from report where parent_table='users' and parent_id=:user_id;",
     }
-    for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{})
+    for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{"user_id":request_user['id']})
     #final response
-    return {"status":1,"message":"done"}
+    return {"status":1,"message":"user deleted"}
 
 #crud
 @router.post("/{x}/object-create/{table}")
