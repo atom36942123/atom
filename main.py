@@ -4,6 +4,8 @@ env=Env()
 env.read_env()
 
 #config
+config_redis_url=env("redis_url")
+
 
 
 #lifespan
