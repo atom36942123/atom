@@ -618,29 +618,15 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
    else:request_user,request_user["id"]={},None
-   #param define
-   param=vars(body)
-   param={k: v for k, v in param.items() if v not in [None,""," "]}
-      if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-      if "tag" in param:param["tag"]=[x.strip(' ').lower() for x in param["tag"]]
-      if "tag" in param:param["tag"]=[x[1:] if x[0]=="#" else x for x in param["tag"]]
-      if "tag" in param:param["tag"]=list(dict.fromkeys(param["tag"]))
-      if "number" in param:param["number"]=round(param["number"],5)
-   if not param:return function_http_response(400,0,"all body keys cant be null")
-   #param conversion
-   response=await function_param_conversion(param)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   param=response["message"]
-   #param key default set
+   #param
+   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
+   if not param:return function_http_response(400,0,"body cant be null")
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   if "number" in param:param["number"]=round(param["number"],5)
    param["created_by_id"]=request_user["id"]
-   if table in ["message"]:param["status"]="unread"
-   #query key set
-   try:
-      key_1=",".join([*param])
-      key_2=",".join([":"+item for item in [*param]])
-   except Exception as e:return function_http_response(400,0,e.args)
+   if table=="message":param["status"]="unread"
    #logic
-   query=f'''insert into {table} ({key_1}) values ({key_2}) returning *;'''
+   query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
    response=await function_query_runner(request.state.postgres_object,"write",query,param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
