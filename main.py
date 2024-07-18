@@ -44,7 +44,7 @@ async def middleware(request:Request,api_function):
    x=str(request.url).split("/")[3]
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return function_http_response(400,0,f"allowed x={[*postgres_object]}")
    #api response
-   request.state.postgres_object=postgres_object[x]
+   if x in postgres_object:request.state.postgres_object=postgres_object[x]
    try:response=await api_function(request)
    except Exception as e:return function_http_response(400,0,e.args)
    #final response
