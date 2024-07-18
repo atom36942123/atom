@@ -163,13 +163,11 @@ import jwt
 import json
 import time
 from datetime import datetime,timedelta
-async def function_token_encode(data,jwt_expire_day,jwt_secret_key):
-   #logic
+async def function_token_encode(data,jwt_secret_key):
    try:
-      payload={"data":json.dumps(data,default=str),"exp":time.mktime((datetime.now()+timedelta(days=int(jwt_expire_day))).timetuple())}
+      payload={"data":json.dumps(data,default=str),"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
       token=jwt.encode(payload,jwt_secret_key)
    except Exception as e:return {"status":0,"message":e.args}
-   #final response
    return {"status":1,"message":token}
 
 import jwt,json
