@@ -15,18 +15,9 @@ from datetime import datetime
 from function import *
 from config import *
 
-#login
-class schema_login(BaseModel):
-    mode:Literal["username","firebase","email","mobile"]="username"
-    username:str|None=None
-    password:str|None=None
-    firebase_id:str|None=None
-    email:str|None=None
-    mobile:str|None=None
-    otp:int|None=None
-
-#atom
+#schema
 class schema_atom(BaseModel):
+    mode:str|None=None
     id:int|None=None
     created_at:datetime|None=None
     created_by_id:int|None=None
@@ -42,7 +33,6 @@ class schema_atom(BaseModel):
     google_id:str|None=None
     otp:int|None=None
     metadata:dict|None=None
-
     username:str|None=None
     password:str|None=None
     profile_pic_url:str|None=None
@@ -56,7 +46,6 @@ class schema_atom(BaseModel):
     country:str|None=None
     state:str|None=None
     city:str|None=None
-
     type:str|None=None
     title:str|None=None
     description:str|None=None
@@ -69,7 +58,6 @@ class schema_atom(BaseModel):
     remark:str|None=None
     rating:int|None=None
     is_pinned:int|None=None
-
     work_type:str|None=None
     work_profile:str|None=None
     degree:str|None=None
@@ -291,26 +279,27 @@ async def function_api_signup(x:str,request:Request,body:schema_atom):
    return response
 
 @router.post("/{x}/login")
-async def function_api_login(x:str,request:Request,body:schema_login):
+async def function_api_login(x:str,request:Request,body:schema_atom):
+   #mode
+   if body.mode and body.mode not in ["firebase","email","mobile"]="username"]:return function_http_response(400,0,"wrong mode")
    #param validation
    response=await function_param_validation(vars(body))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #username
-   if body.mode=="username":
-      #check body must
+   if not body.mode:
+      #body check
       if not body.username or not body.password:return function_http_response(400,0,"username/password must")
       #read user
       query="select * from users where username=:username and password=:password;"
       values={"username":body.username,"password":hashlib.sha256(body.password.encode()).hexdigest()}
       response=await function_query_runner(request.state.postgres_object,"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
-      #check user if not exist
       if not response["message"]:return function_http_response(400,0,"no such user")
       #user define
       user=response["message"][0]
    #firebase
    if body.mode=="firebase":
-      #check body must
+      #body check
       if not body.firebase:return function_http_response(400,0,"firebase_id must")
       #read user
       query="select * from users where firebase_id=:firebase_id order by id desc limit 1;"
@@ -319,7 +308,6 @@ async def function_api_login(x:str,request:Request,body:schema_login):
       if response["status"]==0:return function_http_response(400,0,response["message"])
       #user define
       if response["message"]:user=response["message"][0]
-      #user define if not exist
       else:
          #user create
          query="insert into users (firebase_id) values (:firebase_id) returning *;"
@@ -335,16 +323,14 @@ async def function_api_login(x:str,request:Request,body:schema_login):
          user=response["message"][0]
    #email
    if body.mode=="email":
-      #check body must
+      #body check
       if not body.email or not body.otp:return function_http_response(400,0,"email is must")
-      #read otp
+      #otp verify
       query="select * from otp where email=:email order by id desc limit 1;"
       values={"email":body.email}
       response=await function_query_runner(request.state.postgres_object,"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
-      #check if otp exist
       if not response["message"]:return function_http_response(400,0,"otp not exist")
-      #verify otp
       if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
       #read user
       query="select * from users where email=:email order by id desc limit 1;"
@@ -353,7 +339,6 @@ async def function_api_login(x:str,request:Request,body:schema_login):
       if response["status"]==0:return function_http_response(400,0,response["message"])
       #user define
       if response["message"]:user=response["message"][0]
-      #user define if not exist
       else:
          #user create
          query="insert into users (email) values (:email) returning *;"
@@ -369,16 +354,14 @@ async def function_api_login(x:str,request:Request,body:schema_login):
          user=response["message"][0]
    #mobile
    if body.mode=="mobile":
-      #check body must
+      #body check
       if not body.mobile or not body.otp:return function_http_response(400,0,"mobile is must")
-      #read otp
+      #otp verify
       query="select * from otp where mobile=:mobile order by id desc limit 1;"
       values={"mobile":body.mobile}
       response=await function_query_runner(request.state.postgres_object,"read",query,values)
       if response["status"]==0:return function_http_response(400,0,response["message"])
-      #check if otp exist
       if not response["message"]:return function_http_response(400,0,"otp not exist")
-      #verify otp
       if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
       #read user
       query="select * from users where mobile=:mobile order by id desc limit 1;"
@@ -387,7 +370,6 @@ async def function_api_login(x:str,request:Request,body:schema_login):
       if response["status"]==0:return function_http_response(400,0,response["message"])
       #user define
       if response["message"]:user=response["message"][0]
-      #user define if not exist
       else:
          #user create
          query="insert into users (mobile) values (:mobile) returning *;"
