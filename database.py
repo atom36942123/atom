@@ -64,7 +64,7 @@ config_column={
 "physical_disability":[["workseeker"],"text",None,None,0],
 "hobby":[["workseeker"],"text",None,None,0],
 "language":[["workseeker"],"text",None,None,0],
-"joining_days":[["workseeker"],"int",None,None,0],
+"joining_days":[["workseeker"],"int",None,None,1],
 "career_break_month":[["workseeker"],"int",None,None,0],
 "resume_url":[["workseeker"],"text",None,None,0],
 "achievement":[["workseeker"],"text",None,None,0],
