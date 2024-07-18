@@ -53,8 +53,6 @@ async def middleware(request:Request,api_function):
 #router
 from api import router
 app.include_router(router)
-from zzz import router
-app.include_router(router)
 
 #server start
 from function import function_server_start
