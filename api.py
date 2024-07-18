@@ -384,8 +384,8 @@ async def function_api_login(x:str,request:Request,body:schema_atom):
          #user define
          user=response["message"][0]
    #token encode
-   data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   response=await function_token_encode(config_jwt_secret_key,json.dumps(data,default=str))
+   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   response=await function_token_encode(config_jwt_secret_key,data)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
@@ -406,8 +406,8 @@ async def function_api_token_refresh(x:str,request:Request):
    #user define
    user=response["message"][0]
    #token encode
-   data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   response=await function_token_encode(config_jwt_secret_key,json.dumps(data,default=str))
+   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   response=await function_token_encode(config_jwt_secret_key,data)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
