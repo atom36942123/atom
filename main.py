@@ -1,3 +1,8 @@
+#env
+from environs import Env
+env=Env()
+env.read_env()
+
 #app
 from fastapi import FastAPI
 from lifespan import lifespan
