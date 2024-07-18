@@ -15,6 +15,13 @@ from datetime import datetime
 from function import *
 from config import *
 
+from environs import Env
+env=Env()
+env.read_env()
+
+config_token_root=env("token_root")
+
+
 #schema
 class schema_atom(BaseModel):
     mode:str|None=None
