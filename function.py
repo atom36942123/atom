@@ -168,20 +168,14 @@ async def function_token_encode(data,secret_key):
    return {"status":1,"message":token}
 
 import jwt,json
-async def function_token_decode(request,jwt_secret_key):
-   #start
-   token=request.headers.get("token")
-   request_user={}
-   x=str(request.url).split("/")[3]
-   #logic
-   if not token:return {"status":0,"message":"token is must"}
-   try:payload=jwt.decode(token,jwt_secret_key,algorithms="HS256")
+async def function_token_decode(request,secret_key):
+   if not request.headers.get("token"):return {"status":0,"message":"token is must"}
+   try:payload=jwt.decode(request.headers.get("token"),secret_key,algorithms="HS256")
    except Exception as e:return {"status":0,"message":e.args}
-   request_user=json.loads(payload["data"])
-   if "x" not in request_user:return {"status":0,"message":"x was not set in token encode while login"}
-   if request_user["x"]!=x:return {"status":0,"message":"token x mismatch"}
+   data=json.loads(payload["data"])
+   if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
    #final response
-   return {"status":1,"message":request_user}
+   return {"status":1,"message":data}
 
 import boto3
 async def function_s3_create_url(aws_s3_bucket_region,aws_access_key_id,aws_secret_access_key,aws_s3_bucket_name,key):
