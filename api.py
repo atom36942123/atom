@@ -15,6 +15,11 @@ import hashlib,json,uuid,random,csv,codecs
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
+#root
+@router.get("/")
+async def function_api_root():
+   return {"status":1,"message":"welcome to atom"}
+
 #database
 @router.get("/{x}/database-init")
 async def function_api_database_init(x:str,request:Request):
@@ -1063,9 +1068,3 @@ async def function_api(x:str,table:str,column:str,keyword:str):
     try:response=elasticsearch_object.search(index=table,body=query)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
-
-
-
-
-    
-
