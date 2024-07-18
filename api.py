@@ -612,30 +612,16 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
 #crud
 @router.post("/{x}/object-create/{table}")
 async def function_api_object_create(x:str,table:str,request:Request,body:schema_atom):
-   #variable define
-   request_user={}
-   request_user["id"]=None
    #token check
-   if request.headers.get("token") or table not in ["helpdesk","workseeker"]:
+   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
       response=await function_token_decode(request,env("key"))
       if response["status"]==0:return function_http_response(400,0,response["message"])
       request_user=response["message"]
+   else:request_user,request_user["id"]={},None
    #param define
    param=vars(body)
    param={k: v for k, v in param.items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"all body keys cant be null")
-   #param validation
-   response=await function_param_validation(param)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #param table validation
-   if table=="atom" and "type" not in param:return function_http_response(400,0,"type is must")
-   if table=="comment" and "description" not in param:return function_http_response(400,0,"description is must")
-   if table=="message" and "description" not in param:return function_http_response(400,0,"description is must")
-   if table=="message" and "received_by_id" not in param:return function_http_response(400,0,"received_by_id is must")
-   if table=="helpdesk" and "description" not in param:return function_http_response(400,0,"description is must")
-   if table=="rating" and "rating" not in param:return function_http_response(400,0,"rating is must")
-   if table in ["likes","comment","bookmark","report","rating","block"] and "parent_table" not in param:return function_http_response(400,0,"parent_table is must")
-   if table in ["likes","comment","bookmark","report","rating","block"] and "parent_id" not in param:return function_http_response(400,0,"parent_id is must")
    #param conversion
    response=await function_param_conversion(param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
