@@ -2,7 +2,13 @@
 from fastapi import APIRouter
 router=APIRouter()
 
-#package
+#env
+from environs import Env
+env=Env()
+env.read_env()
+
+#import
+from function import *
 from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
@@ -10,17 +16,6 @@ import hashlib,json,uuid,random,csv,codecs
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
-
-#atom
-from function import *
-from config import *
-
-from environs import Env
-env=Env()
-env.read_env()
-
-config_token_root=env("token_root")
-
 
 #schema
 class schema_atom(BaseModel):
@@ -392,7 +387,7 @@ async def function_api_login(x:str,request:Request,body:schema_atom):
          user=response["message"][0]
    #token encode
    data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   response=await function_token_encode(config_jwt_secret_key,data)
+   response=await function_token_encode(data,env("token"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
