@@ -569,7 +569,6 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
         query="delete from message where (created_by_id=:a and received_by_id=:b) or (created_by_id=:b and received_by_id=:a);"
         values={"a":request_user['id'],"b":user_id}   
     if mode=="like_post":
-        if not post_id:return function_http_response(400,0,"post_id must")
         query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;"
         values={"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
     if mode=="bookmark_post":
