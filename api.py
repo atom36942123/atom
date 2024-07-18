@@ -1,15 +1,19 @@
+#router
+from fastapi import APIRouter
+router=APIRouter()
+
 #package
 from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
-from typing import Literal
-from datetime import datetime
 import hashlib,json,uuid,random,csv,codecs
-
-#import
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
+
+#atom
+from function import *
+from config import *
 
 #signup
 class schema_signup(BaseModel):
@@ -25,7 +29,7 @@ class schema_login(BaseModel):
     email:str|None=None
     mobile:str|None=None
     otp:int|None=None
-    
+
 #atom
 class schema_atom(BaseModel):
     id:int|None=None
@@ -103,18 +107,6 @@ class schema_atom(BaseModel):
     soft_skill:str|None=None
     tool:str|None=None
     achievement_work:str|None=None
-
-
-
-
-#custom
-from function import *
-from config import *
-from schema import *
-
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["api"])
 
 #database
 @router.get("/{x}/database")
