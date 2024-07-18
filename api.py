@@ -16,8 +16,8 @@ from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
 #database
-@router.get("/{x}/database-init")
-async def function_api_database_init(x:str,request:Request):
+@router.get("/{x}/database")
+async def function_api_database(x:str,request:Request):
     #token check
     if request.headers.get("token")!=config_token_root:return function_http_response(400,0,"token mismatch")
     #config_column length validation
@@ -102,7 +102,7 @@ async def function_api_database_init(x:str,request:Request):
         response=await function_query_runner(request.state.postgres_object,"write",v,{})
         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #final response
-    return {"status":1,"message":"database init done"}
+    return {"status":1,"message":"done"}
 
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
