@@ -5,6 +5,7 @@ env.read_env()
 
 #config
 config_redis_url=env("redis_url")
+from config import config_x
 
 #lifespan
 from fastapi import FastAPI
@@ -32,10 +33,6 @@ async def lifespan(app:FastAPI):
       try:await v.disconnect()
       except Exception as e:print(e.args)
 
-
-
-
-
 #app
 from fastapi import FastAPI
 app=FastAPI(lifespan=lifespan,title="atom")
@@ -47,7 +44,6 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 #middleware
 from fastapi import Request
 from function import function_http_response
-from config import config_x
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    #x check
