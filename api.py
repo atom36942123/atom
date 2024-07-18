@@ -551,6 +551,11 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
+    #token refresh
+    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return function_http_response(400,0,"no user for token passed")
+    request_user=response["message"][0]
     #query set
     if mode=="comment_all":query,values="delete from comment where created_by_id=:created_by_id;",{"created_by_id":request_user['id']}
     if mode=="message_all":query,values="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']}
@@ -575,14 +580,17 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
+    #token refresh
+    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return function_http_response(400,0,"no user for token passed")
+    request_user=response["message"][0]
     #permission check
     if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
     #logic
-    query="delete from users where id=:id;"
-    values={"id":request_user["id"]}
-    response=await function_query_runner(request.state.postgres_object,"write",query,values)
+    response=await function_query_runner(request.state.postgres_object,"write","delete from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #delete abandon object
+    #background task
     query_dict={
     "post":f"delete from post where created_by_id={request_user['id']};",
     "likes":f"delete from likes where created_by_id={request_user['id']};",
