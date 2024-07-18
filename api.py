@@ -260,14 +260,13 @@ async def function_api_database(x:str,request:Request):
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request,body:schema_atom):
-   #check body must
+   #body check
    if not body.username or not body.password:return function_http_response(400,0,"username/password must")
    #read user
    query="select * from users where username=:username;"
    values={"username":body.username}
    response=await function_query_runner(request.state.postgres_object,"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #check username if exist
    if response["message"]:return function_http_response(400,0,"username already exist")
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
@@ -279,11 +278,8 @@ async def function_api_signup(x:str,request:Request,body:schema_atom):
 
 @router.post("/{x}/login")
 async def function_api_login(x:str,request:Request,body:schema_atom):
-   #mode
+   #mode check
    if body.mode and body.mode not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
-   #param validation
-   response=await function_param_validation(vars(body))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #username
    if not body.mode:
       #body check
@@ -400,9 +396,7 @@ async def function_api_token_refresh(x:str,request:Request):
    values={"id":request_user["id"]}
    response=await function_query_runner(request.state.postgres_object,"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #if user not exist
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   #user define
    user=response["message"][0]
    #token encode
    data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
@@ -423,9 +417,8 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     values={"id":request_user["id"]}
     response=await function_query_runner(request.state.postgres_object,"read",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #if user not exist
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
-    #background task (last active set)
+    #background task
     query=f"update users set last_active_at=:last_active_at where id=:id;"
     values={"last_active_at":datetime.now(),"id":response["message"][0]["id"]}
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
