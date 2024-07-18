@@ -385,7 +385,7 @@ async def function_api_login(x:str,request:Request,body:schema_atom):
          user=response["message"][0]
    #token encode
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   response=await function_token_encode(data,config_jwt_secret_key)
+   response=await function_token_encode(config_jwt_secret_key,data)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
@@ -407,7 +407,7 @@ async def function_api_token_refresh(x:str,request:Request):
    user=response["message"][0]
    #token encode
    data={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   response=await function_token_encode(data,config_jwt_secret_key)
+   response=await function_token_encode(config_jwt_secret_key,data)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
