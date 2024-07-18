@@ -167,7 +167,7 @@ async def function_token_encode(data,secret_key):
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":token}
 
-import jwt,jso n
+import jwt,json
 async def function_token_decode(request,jwt_secret_key):
    #start
    token=request.headers.get("token")
