@@ -4,7 +4,6 @@ env=Env()
 env.read_env()
 
 #x
-config_postgres_instance=env("postgres_instance")
 
 
 
