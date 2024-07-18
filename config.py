@@ -3,10 +3,6 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#backend
-config_backend_host=env("backend_host")
-config_backend_port=env.int("backend_port")
-
 #url
 config_redis_url=env("redis_url")
 config_mongo_url=env("mongo_url")
