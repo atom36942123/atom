@@ -1,8 +1,3 @@
-#redis
-from config import config_redis_url
-from redis import asyncio as aioredis
-try:redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
-except Exception as e:print(e)
 
 #postgres
 from config import config_postgres_instance
