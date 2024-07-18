@@ -925,21 +925,6 @@ async def function_api_delete_s3_url(x:str,request:Request,url:str,background_ta
    #final response
    return response
 
-@router.get("/{x}/metric")
-async def function_api_metric(x:str,request:Request):
-    #output
-    output={}
-    #column count
-    query="select column_name,count(*) from information_schema.columns where table_schema='public' group by column_name order by count desc;"
-    response=await function_query_runner(request.state.postgres_object,"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    output["database_unique_column_count"]=len(response["message"])
-    #misc
-    output["config_column_key_count"]=len(config_column)
-    output["schema_atom_key_count"]=len(vars(schema_atom()))
-    #final response
-    return {"status":1,"message":output}
-
 @router.post("/{x}/insert-csv")
 async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
    #token check
