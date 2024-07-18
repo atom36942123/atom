@@ -6,13 +6,6 @@ env.read_env()
 #config
 config_redis_url=env("redis_url")
 
-#redis
-try:redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
-except Exception as e:print(e)
-
-
-
-
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
@@ -20,15 +13,14 @@ from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
-from object import redis_object
 from object import postgres_object
 @asynccontextmanager
 async def lifespan(app:FastAPI):
-   #redis cache
-   try:FastAPICache.init(RedisBackend(redis_object))
-   except Exception as e:print(e.args)
-   #rate limiter
-   try:await FastAPILimiter.init(redis_object)
+   #redis
+   try:
+      redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
+      FastAPICache.init(RedisBackend(redis_object))
+      await FastAPILimiter.init(redis_object)
    except Exception as e:print(e.args)
    #postgres connect
    for k,v in postgres_object.items():
@@ -39,6 +31,10 @@ async def lifespan(app:FastAPI):
    for k,v in postgres_object.items():
       try:await v.disconnect()
       except Exception as e:print(e.args)
+
+
+
+
 
 #app
 from fastapi import FastAPI
