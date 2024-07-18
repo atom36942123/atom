@@ -1003,6 +1003,39 @@ async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
    #final response
    return response
 
+#mongo
+import motor.motor_asyncio
+from bson import ObjectId
+from fastapi import Body
+if False:
+    try:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+    except Exception as e:print(e)
+@router.post("/{x}/mongo-create-object")
+async def function_api(x:str,database:str,table:str,body:dict=Body(...)):
+    if database=="test" and table=="users":
+        try:response=await mongo_object.test.users.insert_one(body)
+        except Exception as e:return function_http_response(400,0,e.args)
+    return {"status":1,"message":str((response.inserted_id))}
+@router.get("/{x}/mongo-read-object")
+async def function_api(x:str,database:str,table:str,id:str):
+    if database=="test" and table=="users":
+        try:response=await mongo_object.test.users.find_one({"_id": ObjectId(id)})
+        except Exception as e:return function_http_response(400,0,e.args)
+        if response:response['_id']=str(response['_id'])
+    return response
+@router.put("/{x}/mongo-update-object")
+async def function_api(x:str,database:str,table:str,id:str,body:dict=Body(...)):
+    if database=="test" and table=="users":
+        try:response=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
+        except Exception as e:return function_http_response(400,0,e.args)
+    return response.modified_count
+@router.delete("/{x}/mongo-delete-object")
+async def function_api(x:str,database:str,table:str,id:str):
+    if database=="test" and table=="users":
+        try:response=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
+        except Exception as e:return function_http_response(400,0,e.args)
+    return response.deleted_count
+
 
     
 
