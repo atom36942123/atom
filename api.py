@@ -638,40 +638,27 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #param define
-   param=vars(body)
-   param={k: v for k, v in param.items() if v not in [None,""," "]}
-   if not param:return function_http_response(400,0,"body null issue")
-   #param validation
-   response=await function_param_validation(param)
+   #token refresh
+   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #param conversion
-   response=await function_param_conversion(param)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   param=response["message"]
-   #param key delete
+   if not response["message"]:return function_http_response(400,0,"no user for token passed")
+   request_user=response["message"][0]
+   #param
+   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
+   if not param:return function_http_response(400,0,"body cant be null")
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   if "number" in param:param["number"]=round(param["number"],5)
+   param["id"],param["created_by_id"],param["updated_at"],param["updated_by_id"]=id,None,datetime.now(),request_user["id"]
+   #non admin case
    if request_user["type"] not in ["root","admin"]:
-      for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:
-         if item in param:del param[item]
-   if not param:return function_http_response(400,0,"body null issue after not allowed keys remove")
-   #permission set
-   if request_user["type"] in ["root","admin"]:created_by_id=None
-   else:
-      if table=="users":created_by_id,id=None,request_user['id']
-      if table!="users":created_by_id=request_user['id']
-   #param keys default set
-   param["updated_at"]=datetime.now()
-   param["updated_by_id"]=request_user["id"]
-   #query key set
-   try:
-      key=""
-      for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-      key=key.strip().rsplit(',', 1)[0]
-   except Exception as e:return function_http_response(400,0,e.args)
+      if table=="users":param["id"],param["created_by_id"]=request_user['id'],None
+      else:param["created_by_id"]=request_user['id']
+      for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
    #logic
-   query=f"update {table} set {key} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   values=param|{"id":id,"created_by_id":created_by_id}
-   response=await function_query_runner(request.state.postgres_object,"write",query,values)
+   key=""
+   for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+   query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   response=await function_query_runner(request.state.postgres_object,"write",query,param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
