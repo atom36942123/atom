@@ -546,7 +546,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     return response
 
 @router.delete("/{x}/my-delete")
-async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message_mutual","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -556,25 +556,13 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     if mode=="message_all":query,values="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']}
     if mode=="like_post_all":query,values="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
     if mode=="bookmark_post_all":query,values="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
+    if mode=="message_thread":query,values="delete from message where (created_by_id=:a and received_by_id=:b) or (created_by_id=:b and received_by_id=:a);",{"a":request_user['id'],"b":user_id}   
+    if mode=="like_post":query,values="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",{"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
+    if mode=="bookmark_post":query,values="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",{"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
+    if mode=="message":query,values=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);",{"id":message_id,"created_by_id":request_user['id'],"received_by_id":request_user['id']}
     if mode=="post_all":
         if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
-        query="delete from post where created_by_id=:created_by_id;"
-        values={"created_by_id":request_user['id']}
-    if mode=="message_mutual":
-        if not message_id:return function_http_response(400,0,"message_id must")
-        query=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);"
-        values={"id":message_id,"created_by_id":request_user['id'],"received_by_id":request_user['id']}
-    if mode=="message_thread":
-        if not user_id:return function_http_response(400,0,"user_id must")
-        query="delete from message where (created_by_id=:a and received_by_id=:b) or (created_by_id=:b and received_by_id=:a);"
-        values={"a":request_user['id'],"b":user_id}   
-    if mode=="like_post":
-        query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;"
-        values={"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
-    if mode=="bookmark_post":
-        if not post_id:return function_http_response(400,0,"post_id must")
-        query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;"
-        values={"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
+        query,values="delete from post where created_by_id=:created_by_id;",{"created_by_id":request_user['id']}
     #query run
     response=await function_query_runner(request.state.postgres_object,"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
