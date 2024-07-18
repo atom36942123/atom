@@ -13,6 +13,5 @@ config_aws_ses_sender=env("aws_ses_sender")
 
 #misc
 config_jwt_secret_key=env("jwt_secret_key")
-config_jwt_expire_day=env.int("jwt_expire_day")
 config_token_root=env("token_root")
 
