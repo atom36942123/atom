@@ -36,7 +36,6 @@ async def function_api_database(x:str,request:Request):
     "google_id":[["users"],"text",None,None,1],
     "otp":[["otp"],"int",None,None,1],
     "metadata":[["post"],"jsonb",None,None,0],
-    
     "username":[["users"],"text",None,None,1],
     "password":[["users"],"text",None,None,1],
     "profile_pic_url":[["users"],"text",None,None,0],
@@ -50,7 +49,6 @@ async def function_api_database(x:str,request:Request):
     "country":[["users","post",],"text",None,None,1],
     "state":[["users","post"],"text",None,None,1],
     "city":[["users","post"],"text",None,None,1],
-      
     "type":[["post","atom","users","helpdesk"],"text",None,None,1],
     "title":[["post","atom","users"],"text",None,None,0],
     "description":[["post","atom","users","comment","report","rating","block","message","helpdesk","workseeker"],"text",None,None,0],
@@ -63,7 +61,6 @@ async def function_api_database(x:str,request:Request):
     "remark":[["post","report","helpdesk"],"text",None,None,0],
     "rating":[["post","rating","helpdesk"],"int",None,None,0],
     "is_pinned":[["post"],"int",0,(0,1),1],
-    
     "work_type":[["workseeker"],"text",None,None,1],
     "work_profile":[["workseeker"],"text",None,None,1],
     "degree":[["workseeker"],"text",None,None,0],
