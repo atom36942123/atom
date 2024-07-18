@@ -15,11 +15,6 @@ import hashlib,json,uuid,random,csv,codecs
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#root
-@router.get("/")
-async def function_api_root():
-   return {"status":1,"message":"welcome to atom"}
-
 #database
 @router.get("/{x}/database-init")
 async def function_api_database_init(x:str,request:Request):
