@@ -3,6 +3,9 @@ from environs import Env
 env=Env()
 env.read_env()
 
+#config
+
+
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
