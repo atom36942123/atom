@@ -696,10 +696,10 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
    values={"created_by_id":request_user['id'],"id":id}
    if mode=="receiver":
-       query=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+       query=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
        values={"received_by_id":request_user['id'],"id":id}
    if mode=="all":
-       query=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+       query=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
        values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
    response=await function_query_runner(request.state.postgres_object,"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
