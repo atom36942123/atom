@@ -261,17 +261,14 @@ async def function_api_database(x:str,request:Request):
 async def function_api_signup(x:str,request:Request):
    #body check
    body=await request.json()
-   return body
-   if not body.username or not body.password:return function_http_response(400,0,"username/password must")
+   if not body["username"] or not body["password"]:return function_http_response(400,0,"username/password must")
    #read user
-   query="select * from users where username=:username;"
-   values={"username":body.username}
-   response=await function_query_runner(request.state.postgres_object,"read",query,values)
+   response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username;",{"username":body["username"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if response["message"]:return function_http_response(400,0,"username already exist")
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
-   values={"username":body.username,"password":hashlib.sha256(body.password.encode()).hexdigest()}
+   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
    response=await function_query_runner(request.state.postgres_object,"write",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
