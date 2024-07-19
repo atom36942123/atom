@@ -23,8 +23,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    #param
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param_schema_atom=vars(schema_atom(**param))
-   param_schema_atom={k:v for k,v in param_schema_atom.items() if v not in [None,""," "]}
+   param_schema_atom={k:v for k,v in vars(schema_atom(**param)).items() if v not in [None,""," "]}
    #operator
    operator={}
    for k,v in param_schema_atom.items():
