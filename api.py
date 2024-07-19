@@ -717,7 +717,8 @@ async def function_api_file_upload(x:str,request:Request,filename:str,background
     response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #background task
-    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']})
+    file_url=response["message"]['url']+response["message"]['fields']['key']
+    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     #final response
     return response
 
