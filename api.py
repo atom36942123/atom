@@ -706,12 +706,10 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    #add user key
    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
    if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add like count
+   #add count key
    if table in ["post"]:
       response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add comment count
-   if table in ["post"]:
       response=await function_add_comment_count(request.state.postgres_object,function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
@@ -719,23 +717,17 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=request_key_builder)
-async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int):
+async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
    #logic
-   limit=30
-   offset=(page-1)*limit
-   param=dict(request.query_params)
-   response=await function_object_read(request.state.postgres_object,function_query_runner,table,param,["id","desc"],limit,offset,schema_atom)
+   response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   if table in ["post","comment"]:
-      response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add like count
+   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add count key
    if table in ["post"]:
       response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add comment count
-   if table in ["post"]:
       response=await function_add_comment_count(request.state.postgres_object,function_query_runner,table,response["message"])
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
