@@ -746,7 +746,7 @@ async def function_api_pcache(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,filename:str=None,background_tasks:BackgroundTasks):
+async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
