@@ -279,7 +279,6 @@ async def function_api_login(x:str,request:Request):
    #body
    body=await request.json()
    if "mode" in body and body["mode"] not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
-   if "mode" not in if not body["username"] or not body["password"]:return function_http_response(400,0,"username/password cant be null")
    #username
    if "mode" not in body:
       #body check
