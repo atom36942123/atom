@@ -724,10 +724,6 @@ async def function_api_file_upload(x:str,request:Request,filename:str,background
 
 @router.get("/{x}/send-email")
 async def function_api_send_email(x:str,request:Request,to:str,title:str,description:str):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
     #logic
     response=await function_ses_send_email(env.list("ses")[1],env.list("aws")[0],env.list("aws")[0],env.list("ses")[0],to,title,description)
     if response["status"]==0:return function_http_response(400,0,response["message"])
