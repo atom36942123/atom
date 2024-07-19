@@ -648,17 +648,18 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    if not param:return function_http_response(400,0,"body cant be null")
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
    if "number" in param:param["number"]=round(param["number"],5)
-   param["id"],param["created_by_id"],param["updated_at"],param["updated_by_id"]=id,None,datetime.now(),request_user["id"]
+   param["updated_at"],param["updated_by_id"]=datetime.now(),request_user["id"]
    #non admin case
+   id,created_by_id=id,None
    if request_user["type"] not in ["root","admin"]:
-      if table=="users":param["id"],param["created_by_id"]=request_user['id'],None
-      else:param["created_by_id"]=request_user['id']
+      if table=="users":id,created_by_id=request_user['id'],None
+      else:id,created_by_id=id,request_user['id']
       for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
    #logic
    key=""
-   for k,v in param.items() if k not in ["created_by_id","id"]:key=key+f"{k}=coalesce(:{k},{k}) ,"
+   for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
    query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   response=await function_query_runner(request.state.postgres_object,"write",query,param)
+   response=await function_query_runner(request.state.postgres_object,"write",query,param|{"id":id,"created_by_id":created_by_id})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
