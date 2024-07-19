@@ -59,9 +59,5 @@ from api import router
 app.include_router(router)
 
 #server start
-import uvicorn,asyncio
-if __name__=="__main__":
-   uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-   loop=asyncio.new_event_loop()
-   asyncio.set_event_loop(loop)
-   loop.run_until_complete(uvicorn_object.serve())
+from function import function_server_start
+if __name__=="__main__":function_server_start(app,"0.0.0.0",8000)
