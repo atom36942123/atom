@@ -130,7 +130,7 @@ async def function_api_database(x:str,request:Request):
     "type":[["post","atom","users","helpdesk"],"text",None,None,1],
     "title":[["post","atom","users"],"text",None,None,0],
     "description":[["post","atom","users","comment","report","rating","block","message","helpdesk","workseeker"],"text",None,None,0],
-    "file_url":[["post","atom","s3"],"text",None,None,0],
+    "file_url":[["post","atom","file"],"text",None,None,0],
     "link_url":[["post","atom"],"text",None,None,0],
     "tag":[["post","atom","users","workseeker"],"text[]",None,None,1],
     "number":[["post"],"numeric",None,None,0],
