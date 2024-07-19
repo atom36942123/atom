@@ -591,21 +591,9 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     response=await function_query_runner(request.state.postgres_object,"write","delete from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #background task
-    query_dict={
-    "post":f"delete from post where created_by_id=:user_id;",
-    "likes":f"delete from likes where created_by_id=:user_id;",
-    "bookmark":f"delete from bookmark where created_by_id=:user_id;",
-    "report":f"delete from report where created_by_id=:user_id;",
-    "rating":f"delete from rating where created_by_id=:user_id;",
-    "comment":f"delete from comment where created_by_id=:user_id;",
-    "message":f"delete from message where created_by_id=:user_id or received_by_id=:user_id;",
-    "likes_parent":f"delete from likes where parent_table='users' and parent_id=:user_id;",
-    "bookmark_parent":f"delete from bookmark where parent_table='users' and parent_id=:user_id;",
-    "rating_parent":f"delete from rating where parent_table='users' and parent_id=:user_id;",
-    "report_parent":f"delete from report where parent_table='users' and parent_id=:user_id;",
-    "block_parent":f"delete from block where parent_table='users' and parent_id=:user_id;",
-    }
-    for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{"user_id":request_user['id']})
+    for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id;",{"created_by_id":request_user['id']})
+    for item in ["message"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id and received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']})
+    for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where parent_table='users' and parent_id=:parent_id;",{"parent_id":request_user['id']})
     #final response
     return {"status":1,"message":"user deleted"}
 
