@@ -60,4 +60,4 @@ app.include_router(router)
 
 #server start
 import uvicorn,asyncio
-if __name__=="__main__":asyncio.set_event_loop(asyncio.new_event_loop()).run_until_complete(uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")).serve())
+if __name__=="__main__":asyncio.set_event_loop(asyncio.new_event_loop()).run_until_complete(uvicorn.Server(uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")).serve())
