@@ -225,6 +225,6 @@ async def function_delete_object_abandon(postgres_object,function_query_runner):
    "delete_message_old":"delete from message where created_at<now()-interval '30 days';",
    }
    for k,v in query_dict.items():
-      response=await function_query_runner(request.state.postgres_object,"write",v,{})
+      response=await function_query_runner(postgres_object,"write",v,{})
       if response["status"]==0:return response
    return {"status":1,"message":"done"}
