@@ -278,9 +278,9 @@ async def function_api_signup(x:str,request:Request,body:dict=Body(...)):
 @router.post("/{x}/login")
 async def function_api_login(x:str,request:Request,body:dict=Body(...)):
    #mode check
-   if body.mode and body.mode not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
+   if hasattr(body,'mode') and body.mode not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
    #username
-   if not body.mode:
+   if not hasattr(body,'mode'):
       #body check
       if not body.username or not body.password:return function_http_response(400,0,"username/password must")
       #read user
