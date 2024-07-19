@@ -260,7 +260,7 @@ async def function_api_database(x:str,request:Request):
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request):
    #body check
-   body=await request.json()
+   body=await request.body()
    return type(body)
    if not body.username or not body.password:return function_http_response(400,0,"username/password must")
    #read user
