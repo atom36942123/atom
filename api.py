@@ -746,7 +746,7 @@ async def function_api_pcache(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None):    
+async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,email:str=None,title:str=None,description:str=None):    
     #logic
     if function=="create-s3-url":
         response=await function_token_decode(request,env("key"))
@@ -757,8 +757,8 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if response["status"]==0:return function_http_response(400,0,response["message"])
         file_url=response["message"]['url']+response["message"]['fields']['key']
         background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
-    if function=="send-email":
-        response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],to,title,description)
+    if function=="send-email-ses":
+        response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
         if response["status"]==0:return function_http_response(400,0,response["message"])
         
         
