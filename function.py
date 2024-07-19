@@ -138,9 +138,8 @@ async def function_s3_delete_url(access_key_id,secret_access_key,bucket_name,url
    return {"status":1,"message":output}
 
 import boto3
-async def function_ses_send_email(aws_ses_region,aws_access_key_id,aws_secret_access_key,aws_ses_sender,to,title,description):
-   boto3_client_ses=boto3.client("ses",region_name=aws_ses_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-   try:output=boto3_client_ses.send_email(Source=aws_ses_sender,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+async def function_ses_send_email(ses_region,access_key_id,secret_access_key,ses_sender,to,title,description):
+   try:output=boto3.client("ses",region_name=ses_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).send_email(Source=ses_sender,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
 
