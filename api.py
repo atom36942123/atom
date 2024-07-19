@@ -756,6 +756,14 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if response["status"]==0:return function_http_response(400,0,response["message"])
         file_url=response["message"]['url']+response["message"]['fields']['key']
         background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
+     if function=="delete-s3-url":
+        response=await function_token_decode(request,env("key"))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        request_user=response["message"]
+        if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+        if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
+        response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
+        if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-email-ses":
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
         if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -768,14 +776,7 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     if function=="delete-object-abandon":
         response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    if function=="delete-s3-url":
-        response=await function_token_decode(request,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
-        if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-        if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-        response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
+
 
             
 
