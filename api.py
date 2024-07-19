@@ -681,24 +681,19 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
-async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None):
+async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
    #table=users
    if table=="users":
-      query="select * from users where id=:id;"
-      values={"id":request_user["id"]}
-      response=await function_query_runner(request.state.postgres_object,"read",query,values)
+      response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
       if response["status"]==0:return function_http_response(400,0,response["message"])
       if not response["message"]:return function_http_response(400,0,"no user for token passed")
       return {"status":1,"message":response["message"][0]}
-   #pagination set
-   limit=30
-   offset=(page-1)*limit
-   #query set
-   query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
+   #table!=users
+   query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
    values={"created_by_id":request_user['id'],"id":id}
    if mode=="receiver":
        query=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
@@ -706,13 +701,11 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
    if mode=="all":
        query=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {offset} limit {limit};"
        values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
-   #query run
    response=await function_query_runner(request.state.postgres_object,"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
-   if table in ["post","comment","message"]:
-      response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-      if response["status"]==0:return function_http_response(400,0,response["message"])
+   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
+   if response["status"]==0:return function_http_response(400,0,response["message"])
    #add like count
    if table in ["post"]:
       response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
