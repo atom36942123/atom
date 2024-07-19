@@ -19,7 +19,6 @@ from datetime import datetime
 
 #schema
 class schema_atom(BaseModel):
-    mode:str|None=None
     id:int|None=None
     created_at:datetime|None=None
     created_by_id:int|None=None
