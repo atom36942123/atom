@@ -592,7 +592,7 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #background task
     for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id;",{"created_by_id":request_user['id']})
-    for item in ["message"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id and received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']})
+    for item in ["message"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']})
     for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where parent_table='users' and parent_id=:parent_id;",{"parent_id":request_user['id']})
     #final response
     return {"status":1,"message":"user deleted"}
