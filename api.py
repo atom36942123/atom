@@ -656,7 +656,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
       for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
    #logic
    key=""
-   for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+   for k,v in param.items() if k not in ["created_by_id","id"]:key=key+f"{k}=coalesce(:{k},{k}) ,"
    query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    response=await function_query_runner(request.state.postgres_object,"write",query,param)
    if response["status"]==0:return function_http_response(400,0,response["message"])
