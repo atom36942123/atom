@@ -670,39 +670,37 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #check table
-   if table=="users":return function_http_response(400,0,"users table not allowed")
+   #table check
+   if table in ["users"]:return function_http_response(400,0,"table not allowed")
    #read object
-   query=f"select * from {table} where id={id};"
-   response=await function_query_runner(request.state.postgres_object,"read",query,{})
+   response=await function_query_runner(request.state.postgres_object,"read",f"select * from {table} where id={id};",{})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no such object")
    object=response["message"][0]
-   #permission set
-   if request_user["type"] in ["root"]:created_by_id=None
-   else:
-      if table=="users":created_by_id,id=None,request_user['id']
-      if table!="users":created_by_id=request_user['id']
+   #non admin case
+   id,created_by_id=id,None
+   if request_user["type"] not in ["root"]:
+      if table=="users":id,created_by_id=request_user['id'],None
+      else:id,created_by_id=id,request_user['id']
    #logic
    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-   values={"id":id,"created_by_id":created_by_id}
-   response=await function_query_runner(request.state.postgres_object,"write",query,values)
+   response=await function_query_runner(request.state.postgres_object,"write",query,{"id":id,"created_by_id":created_by_id})
    if response["status"]==0:return function_http_response(400,0,response["message"])
+   #background task
    #delete post child
+   query_dict={
+   "likes":f"delete from likes where parent_table='post' and parent_id={id};",
+   "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
+   "report":f"delete from report where parent_table='post' and parent_id={id};",
+   "rating":f"delete from rating where parent_table='post' and parent_id={id};",
+   "comment":f"delete from comment where parent_table='post' and parent_id={id};",
+   }
    if table in ["post"]:
-      query_dict={
-      "likes":f"delete from likes where parent_table='post' and parent_id={id};",
-      "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
-      "report":f"delete from report where parent_table='post' and parent_id={id};",
-      "rating":f"delete from rating where parent_table='post' and parent_id={id};",
-      "comment":f"delete from comment where parent_table='post' and parent_id={id};",
-      }
       for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{})
    #delete s3
    if "file_url" in object and object["file_url"]:
       for url in object["file_url"].split(","):
-         if config_aws_s3_bucket_name in url:
-            background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+         if config_aws_s3_bucket_name in url:background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
    #final response
    return {"status":1,"message":"object deleted"}
 
