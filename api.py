@@ -673,22 +673,19 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
 #utility
 @router.get("/{x}/pcache")
 @cache(expire=60)
-async def function_api_pcache(x:str,request:Request):
-    #output define
+async def function_api_pcache(x:str,request:Request):    
+    #logic
     output={}
-    #custom
     output["mapping_post_type"]={"funding123":"startup idea"}
     output["switch"]={"listing":0}
     output["admin_type"]=["root","admin"]
     #post type tag
     output["post_tag_type"]={}
-    query="select distinct(type) from post where type is not null;"
-    response=await function_query_runner(request.state.postgres_object,"read",query,{})
+    response=await function_query_runner(request.state.postgres_object,"read","select distinct(type) from post where type is not null;",{})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     type_list=[item["type"] for item in response["message"] if item["type"]]
     for item in type_list:
-        query=f"with x as (select unnest(tag) as tag from post where type='{item}' and tag is not null) select tag,count(*) from x group by tag order by count desc limit 1000;"
-        response=await function_query_runner(request.state.postgres_object,"read",query,{})
+        response=await function_query_runner(request.state.postgres_object,"read",f"with x as (select unnest(tag) as tag from post where type='{item}' and tag is not null) select tag,count(*) from x group by tag order by count desc limit 1000;",{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         output["post_tag_type"][item]=response["message"]
     #query
