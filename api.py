@@ -787,14 +787,8 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     #final response
     return response
     
-  
-
-
-            
-
-    
 @router.post("/{x}/insert-csv")
-async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
+async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)=None):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
