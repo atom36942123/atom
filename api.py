@@ -721,7 +721,7 @@ async def function_api_file_upload(x:str,request:Request,filename:str,background
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     #final response
     return response
-
+    
 @router.get("/{x}/send-email")
 async def function_api_send_email(x:str,request:Request,to:str,title:str,description:str):
     #logic
