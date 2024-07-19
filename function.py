@@ -134,12 +134,10 @@ async def function_s3_create_url(aws_s3_bucket_region,aws_access_key_id,aws_secr
 
 import boto3
 async def function_s3_delete_url(access_key_id,secret_access_key,bucket_name,url):
-   for item in url.split(","):
-      key=item.split("/")[-1]
-      if not key:continue
-      try:output=boto3.resource("s3",aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).Object(bucket_name,key).delete()
-      except Exception as e:
-         response={"status":0,"message":e.args}
+   if not url:return {"status":1,"message":"url null"}
+   key_list=[item.split("/")[-1] for item in url.split(",") if bucket_name in item]
+   try:output=list(map(lambda x:boto3.resource("s3",aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).Object(bucket_name,x).delete(),key_list))
+   except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
 
 import boto3
