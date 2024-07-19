@@ -524,7 +524,6 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     #final response
     return {"status":1,"message":"user deleted"}
 
-#crud
 @router.post("/{x}/object-create/{table}")
 async def function_api_object_create(x:str,table:str,request:Request,body:schema_atom):
    #token check
@@ -746,7 +745,7 @@ async def function_api_pcache(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,email:str=None,title:str=None,description:str=None):    
+async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,,email:str=None,title:str=None,description:str=None):    
     #logic
     if function=="create-s3-url":
         response=await function_token_decode(request,env("key"))
@@ -769,43 +768,18 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     if function=="delete-object-abandon":
         response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
+    if function=="delete-s3-url":
+        response=await function_token_decode(request,env("key"))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        request_user=response["message"]
+        if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+        if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
+        response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
+        if response["status"]==0:return function_http_response(400,0,response["message"])
 
-        
             
 
     
-
-        
-        
-    #final response
-    return response
-    
-
-
-
-
-   
-@router.delete("/{x}/delete-s3-url")
-async def function_api_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #param validation
-   if config_aws_s3_bucket_name not in url:return function_http_response(400,0,"invalid url")
-   #logic
-   response=await function_s3_delete_url(config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #background task (delete saved url)
-   query="delete from s3 where file_url=:file_url;"
-   values={"file_url":url}
-   background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
-   #final response
-   return response
-
 @router.post("/{x}/insert-csv")
 async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=File(...)):
    #token check
