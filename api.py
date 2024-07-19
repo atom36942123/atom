@@ -98,7 +98,7 @@ async def function_api_database(x:str,request:Request):
     #token check
     if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token mismatch")
     #config
-    config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","s3","otp","workseeker"]
+    config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"]
     config_column={
     "created_at":[config_table,"timestamptz","now()",None,1],
     "created_by_id":[config_table,"bigint",None,None,1],
@@ -712,17 +712,12 @@ async def function_api_file_upload(x:str,request:Request,filename:str,background
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #param validation
+    #key
     if "." not in filename:return function_http_response(400,0,"file extenstion is must")
-    #key generate
-    key=str(uuid.uuid4())+"."+filename.split(".")[-1]
-    #loggic
-    response=await function_s3_create_url(config_aws_s3_bucket_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,key)
+    response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    #background task (save s3 url)
-    query="insert into s3 (created_by_id,file_url) values (:created_by_id,:file_url) returning *;"
-    values={"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']}
-    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
+    #background task
+    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']})
     #final response
     return response
 
