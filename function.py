@@ -124,11 +124,9 @@ async def function_token_decode(request,secret_key):
    return {"status":1,"message":data}
 
 import boto3
-async def function_s3_create_url(aws_s3_bucket_region,aws_access_key_id,aws_secret_access_key,aws_s3_bucket_name,key):
-   limit_size_kb=1000
-   boto3_client_s3=boto3.client("s3",region_name=aws_s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-   try:output=boto3_client_s3.generate_presigned_post(Bucket=aws_s3_bucket_name,Key=key,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*limit_size_kb]])
-   except Exception as e:response={"status":0,"message":e.args}
+async def function_s3_create_url(bucket_region,access_key_id,secret_access_key,bucket_name,key):
+   try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=aws_s3_bucket_name,Key=key,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
+   except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
 
 import boto3
@@ -143,7 +141,7 @@ import boto3
 async def function_ses_send_email(aws_ses_region,aws_access_key_id,aws_secret_access_key,aws_ses_sender,to,title,description):
    boto3_client_ses=boto3.client("ses",region_name=aws_ses_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
    try:output=boto3_client_ses.send_email(Source=aws_ses_sender,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
-   except Exception as e:response={"status":0,"message":e.args}
+   except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
 
 async def function_update_mat_all(postgres_object,function_query_runner):
