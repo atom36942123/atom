@@ -734,16 +734,11 @@ async def function_api_send_email(x:str,request:Request,to:str,title:str,descrip
 async def function_api_send_otp(x:str,request:Request,email:str=None,mobile:str=None):
     #prework
     if not email and not mobile:return function_http_response(400,0,"email/mobile any one is must")
-    otp=random.randint(100000,999999)
-    #logic email
-    if email:
-        response=await function_ses_send_email(config_aws_ses_region,config_aws_access_key_id,config_aws_secret_access_key,config_aws_ses_sender,email,"otp from atom",str(otp))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-    #logic mobile
+    #logic
+    if email:response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,"otp from atom",str(random.randint(100000,999999)))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
     #save otp
-    query="insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;"
-    values={"created_by_id":None,"otp":otp,"email":email,"mobile":mobile}
-    response=await function_query_runner(request.state.postgres_object,"write",query,values)
+    response=await function_query_runner(request.state.postgres_object,"write","insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;",{"created_by_id":None,"otp":otp,"email":email,"mobile":mobile})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
     return {"status":1,"message":"opt sent"}
