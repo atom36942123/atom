@@ -261,7 +261,7 @@ async def function_api_database(x:str,request:Request):
 async def function_api_signup(x:str,request:Request):
    #body check
    body=await request.json()
-   if not body["username"] or not body["password"]:return function_http_response(400,0,"username/password must")
+   if "username" not in body or "password" not in body:return function_http_response(400,0,"username/password must")
    #read user
    response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username;",{"username":body["username"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
