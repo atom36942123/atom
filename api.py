@@ -654,7 +654,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    if request_user["type"] not in ["root","admin"]:
       if table=="users":id,created_by_id=request_user['id'],None
       else:id,created_by_id=id,request_user['id']
-      for item in ["created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
+      for item in ["created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
    #logic
    key=""
    for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
