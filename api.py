@@ -706,8 +706,8 @@ async def function_api_pcache(x:str,request:Request):
     #final response
     return {"status":1,"message":output}
     
-@router.get("/{x}/create-s3-url")
-async def function_api_create_s3_url(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
+@router.get("/{x}/file-upload")
+async def function_api_file_upload(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
