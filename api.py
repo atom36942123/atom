@@ -585,6 +585,11 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
+   #token refresh
+   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if not response["message"]:return function_http_response(400,0,"no user for token passed")
+   request_user=response["message"][0]
    #table check
    if table in ["users"]:return function_http_response(400,0,"table not allowed")
    #read object
@@ -670,7 +675,41 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    #final response
    return response
 
-#utility
+@router.put("/{x}/update-cell")
+async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
+    #token check
+    response=await function_token_decode(request,env("key"))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #token refresh
+    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return function_http_response(400,0,"no user for token passed")
+    request_user=response["message"][0]
+    #datatype conversion
+    response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return {"status":0,"message":"no such column"}
+    column_datatype=response["message"][0]["data_type"]
+    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+    if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
+    if column_datatype=="ARRAY":value=value.split(",")
+    if column_datatype=="jsonb":value=json.dumps(value,default=str)
+    if column_datatype=="integer":value=int(value)
+    #non admin case
+    id,created_by_id=id,None
+    if request_user["type"] not in ["root","admin"]:
+        if table=="users":id,created_by_id=request_user['id'],None
+        else:id,created_by_id=id,request_user['id']
+        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
+    #logic
+    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+    values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
+    response=await function_query_runner(request.state.postgres_object,"write",query,values)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #final response
+    return response
+    
 @router.get("/{x}/pcache")
 @cache(expire=60)
 async def function_api_pcache(x:str,request:Request):    
@@ -743,36 +782,6 @@ async def function_api_send_otp(x:str,request:Request,email:str=None,mobile:str=
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
     return {"status":1,"message":"opt sent"}
-
-@router.put("/{x}/update-cell")
-async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #datatype conversion
-    response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return {"status":0,"message":"no such column"}
-    column_datatype=response["message"][0]["data_type"]
-    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
-    if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
-    if column_datatype=="ARRAY":value=value.split(",")
-    if column_datatype=="jsonb":value=json.dumps(value,default=str)
-    if column_datatype=="integer":value=int(value)
-    #non admin case
-    id,created_by_id=id,None
-    if request_user["type"] not in ["root","admin"]:
-        if table=="users":id,created_by_id=request_user['id'],None
-        else:id,created_by_id=id,request_user['id']
-        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
-    #logic
-    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-    values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
-    response=await function_query_runner(request.state.postgres_object,"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #final response
-    return response
 
 #admin
 @router.get("/{x}/checklist")
