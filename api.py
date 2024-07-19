@@ -756,7 +756,7 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if response["status"]==0:return function_http_response(400,0,response["message"])
         file_url=response["message"]['url']+response["message"]['fields']['key']
         background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
-     if function=="delete-s3-url":
+    if function=="delete-s3-url":
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
@@ -776,7 +776,10 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     if function=="delete-object-abandon":
         response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
-
+    #final response
+    return response
+    
+  
 
             
 
