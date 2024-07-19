@@ -280,8 +280,8 @@ async def function_api_login(x:str,request:Request):
    body=await request.json()
    #opt verify
    response=None
-   if all(k in body for k in ["otp","email"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where email=:email order by id desc limit 1;",{"email":body["email"}})
-   if all(k in body for k in ["otp","mobile"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where mobile=:mobile order by id desc limit 1;",{"mobile":body["mobile"}})
+   if all(k in body for k in ["otp","email"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where email=:email order by id desc limit 1;",{"email":body["email"})
+   if all(k in body for k in ["otp","mobile"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where mobile=:mobile order by id desc limit 1;",{"mobile":body["mobile"})
    if response:
        if response["status"]==0:return function_http_response(400,0,response["message"])
        if not response["message"]:return function_http_response(400,0,"otp not exist")
