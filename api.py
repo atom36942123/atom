@@ -745,7 +745,7 @@ async def function_api_pcache(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,,email:str=None,title:str=None,description:str=None):    
+async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None):    
     #logic
     if function=="create-s3-url":
         response=await function_token_decode(request,env("key"))
