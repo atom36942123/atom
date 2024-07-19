@@ -259,9 +259,10 @@ async def function_api_database(x:str,request:Request):
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_api_signup(x:str,request:Request):
-   #body check
+   #body
    body=await request.json()
    if "username" not in body or "password" not in body:return function_http_response(400,0,"username/password must")
+   if not body["username"] or not body["password"]:return function_http_response(400,0,"username/password cant be null")
    #read user
    response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username;",{"username":body["username"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -275,11 +276,13 @@ async def function_api_signup(x:str,request:Request):
    return response
 
 @router.post("/{x}/login")
-async def function_api_login(x:str,request:Request,body:dict=Body(...)):
-   #mode check
-   if hasattr(body,'mode') and body.mode not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
+async def function_api_login(x:str,request:Request):
+   #body define
+   body=await request.json()
+   #body check
+   if "mode" in body and body["mode"] not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
    #username
-   if not hasattr(body,'mode'):
+   if "mode" not in body:
       #body check
       if not body.username or not body.password:return function_http_response(400,0,"username/password must")
       #read user
