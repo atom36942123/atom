@@ -734,7 +734,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
-async def function_api_object_read_admin(x:str,request:Request,table:str,page:int):
+async def function_api_object_read_admin(x:str,request:Request,table:str,page:int,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -743,10 +743,7 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #logic
-   limit=30
-   offset=(page-1)*limit
-   param=dict(request.query_params)
-   response=await function_object_read(request.state.postgres_object,function_query_runner,table,param,["id","desc"],limit,offset,schema_atom)
+   response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
