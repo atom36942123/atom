@@ -766,7 +766,14 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if response["status"]==0:return function_http_response(400,0,response["message"])
         response=await function_query_runner(request.state.postgres_object,"write","insert into otp (created_by_id,otp,email) values (:created_by_id,:otp,:email) returning *;",{"created_by_id":None,"otp":otp,"email":email})
         if response["status"]==0:return function_http_response(400,0,response["message"])
+    if function=="delete-object-abandon":
+        response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
+        if response["status"]==0:return function_http_response(400,0,response["message"])
 
+        
+            
+
+    
 
         
         
@@ -776,32 +783,7 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
 
 
 
-#admin
-@router.get("/{x}/checklist")
-async def function_api_checklist(x:str,request:Request):
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #query
-   query_dict={
-   "delete_post_creator_null":"delete from post where id in (select x.id from post as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_likes_creator_null":"delete from likes where id in (select x.id from likes as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_bookmark_creator_null":"delete from bookmark where id in (select x.id from bookmark as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_report_creator_null":"delete from report where id in (select x.id from report as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_comment_creator_null":"delete from comment where id in (select x.id from comment as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_rating_creator_null":"delete from rating where id in (select x.id from rating as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_block_creator_null":"delete from block where id in (select x.id from block as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
-   "delete_likes_parent_null_post":"delete from likes where id in (select x.id from likes as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
-   "delete_bookmark_parent_null_post":"delete from bookmark where id in (select x.id from bookmark as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
-   "delete_comment_parent_null_post":"delete from comment where id in (select x.id from comment as x left join post as y on x.parent_id=y.id where x.parent_table='post' and y.id is null);",
-   "delete_duplicate_tag":"delete from atom as a1 using atom as a2 where a1.type='tag' and a2.type='tag' and a1.ctid>a2.ctid and a1.title=a2.title;",
-   "delete_message_old":"delete from message where created_at<now()-interval '30 days';",
-   }
-   for k,v in query_dict.items():
-      response=await function_query_runner(request.state.postgres_object,"write",v,{})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return {"status":1,"message":"checklist done"}
+
    
 @router.delete("/{x}/delete-s3-url")
 async def function_api_delete_s3_url(x:str,request:Request,url:str,background_tasks:BackgroundTasks):
