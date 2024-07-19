@@ -678,9 +678,9 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    #delete child
    for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":table,"parent_id":id})
    #delete s3
-   if "file_url" in object and object["file_url"]:
-      for url in object["file_url"].split(","):
-         if config_aws_s3_bucket_name in url:background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
+   # if "file_url" in object and object["file_url"]:
+   #    for url in object["file_url"].split(","):
+   #       if config_aws_s3_bucket_name in url:background_tasks.add_task(function_s3_delete_url,config_aws_access_key_id,config_aws_secret_access_key,config_aws_s3_bucket_name,url)
    #final response
    return {"status":1,"message":"object deleted"}
 
