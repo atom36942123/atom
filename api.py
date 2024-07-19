@@ -750,33 +750,22 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #column not allowed based on user type
-    if request_user["type"] not in ["root","admin"]:
-        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
-    #read datatype
-    query="select data_type from information_schema.columns where column_name=:column_name limit 1;"
-    values={"column_name":column}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
+    #datatype conversion
+    response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return {"status":0,"message":"no such column"}
     column_datatype=response["message"][0]["data_type"]
-    #conversion
-    try:
-        if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
-        if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
-        if column_datatype=="ARRAY":value=value.split(",")
-        if column_datatype=="jsonb":value=json.dumps(value,default=str)
-        if column_datatype=="integer":value=int(value)
-    except Exception as e:return function_http_response(400,0,e.args)
-    #param validation
-    param={column:value}
-    response=await function_param_validation(param)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #permission set
-    if request_user["type"] in ["root","admin"]:created_by_id=None
-    else:
-        if table=="users":created_by_id,id=None,request_user['id']
-        if table!="users":created_by_id=request_user['id']
+    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+    if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
+    if column_datatype=="ARRAY":value=value.split(",")
+    if column_datatype=="jsonb":value=json.dumps(value,default=str)
+    if column_datatype=="integer":value=int(value)
+    #non admin case
+    id,created_by_id=id,None
+    if request_user["type"] not in ["root","admin"]:
+        if table=="users":id,created_by_id=request_user['id'],None
+        else:id,created_by_id=id,request_user['id']
+        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
     #logic
     query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
     values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
