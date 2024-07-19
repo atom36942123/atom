@@ -776,10 +776,19 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     if function=="delete-object-abandon":
         response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
+    if function=="query-runner":
+        response=await function_token_decode(request,env("key"))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        request_user=response["message"]
+        if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+        if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
+        response=await function_query_runner(request.state.postgres_object,mode,query,{})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
     return response
     
   
+
 
             
 
@@ -817,20 +826,7 @@ async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","po
    #final response
    return {"status":1,"message":f"rows inserted={count}"}
 
-@router.get("/{x}/query-runner")
-async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #logic
-   response=await function_query_runner(request.state.postgres_object,mode,query,{})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+
 
 #mongo
 import motor.motor_asyncio
