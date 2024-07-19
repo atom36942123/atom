@@ -620,14 +620,9 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
       if not response["message"]:return function_http_response(400,0,"no user for token passed")
       return {"status":1,"message":response["message"][0]}
    #table!=users
-   query=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
-   values={"created_by_id":request_user['id'],"id":id}
-   if mode=="receiver":
-       query=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
-       values={"received_by_id":request_user['id'],"id":id}
-   if mode=="all":
-       query=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};"
-       values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
+   query,values=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"id":id}
+   if mode=="receiver":query,values=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"received_by_id":request_user['id'],"id":id}
+   if mode=="all":query,values=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
    response=await function_query_runner(request.state.postgres_object,"read",query,values)
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #add user key
