@@ -103,11 +103,8 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 def function_http_response(status_code,status,message):
-   #message change
    if "unique_action_tcpp" in str(message):message="action alredy performed"
-   #logic
    response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   #final response
    return response
 
 import jwt,time
@@ -125,7 +122,6 @@ async def function_token_decode(request,secret_key):
    except Exception as e:return {"status":0,"message":e.args}
    data=json.loads(payload["data"])
    if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
-   #final response
    return {"status":1,"message":data}
 
 import boto3
@@ -137,12 +133,11 @@ async def function_s3_create_url(aws_s3_bucket_region,aws_access_key_id,aws_secr
    return {"status":1,"message":output}
 
 import boto3
-async def function_s3_delete_url(aws_access_key_id,aws_secret_access_key,aws_s3_bucket_name,url):
-   boto3_resource_s3=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+async def function_s3_delete_url(access_key_id,secret_access_key,bucket_name,url):
    for item in url.split(","):
       key=item.split("/")[-1]
       if not key:continue
-      try:output=boto3_resource_s3.Object(aws_s3_bucket_name,key).delete()
+      try:output=boto3.resource("s3",aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).Object(bucket_name,key).delete()
       except Exception as e:
          response={"status":0,"message":e.args}
    return {"status":1,"message":output}
