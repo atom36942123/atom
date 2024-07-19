@@ -779,19 +779,9 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
 #admin
 @router.get("/{x}/checklist")
 async def function_api_checklist(x:str,request:Request):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #root user check
-   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=1;",{})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if not response["message"]:return function_http_response(400,0,"root user null issue")
-   object=response["message"][0]
-   if object["type"]!="root" or object["username"]!="root" or object["is_active"]!=1:return function_http_response(400,0,"root user issue")
    #query
    query_dict={
    "delete_post_creator_null":"delete from post where id in (select x.id from post as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
