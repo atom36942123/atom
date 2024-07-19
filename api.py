@@ -687,16 +687,8 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    response=await function_query_runner(request.state.postgres_object,"write",query,{"id":id,"created_by_id":created_by_id})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    #background task
-   #delete post child
-   query_dict={
-   "likes":f"delete from likes where parent_table='post' and parent_id={id};",
-   "bookmark":f"delete from bookmark where parent_table='post' and parent_id={id};",
-   "report":f"delete from report where parent_table='post' and parent_id={id};",
-   "rating":f"delete from rating where parent_table='post' and parent_id={id};",
-   "comment":f"delete from comment where parent_table='post' and parent_id={id};",
-   }
-   if table in ["post"]:
-      for k,v in query_dict.items():background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",v,{})
+   #delete child
+   for table in ["likes","bookmark","comment","rating","block","report"]::background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {table} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":table,"parent_id":id})
    #delete s3
    if "file_url" in object and object["file_url"]:
       for url in object["file_url"].split(","):
