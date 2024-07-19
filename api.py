@@ -278,27 +278,22 @@ async def function_api_signup(x:str,request:Request):
 async def function_api_login(x:str,request:Request):
    #body
    body=await request.json()
-   if "mode" in body and body["mode"] not in ["firebase","email","mobile"]:return function_http_response(400,0,"wrong mode")
-   #username
-   if "mode" not in body:
-      #body check
-      #read user
-      query="select * from users where username=:username and password=:password;"
-      values={"username":body.username,"password":hashlib.sha256(body.password.encode()).hexdigest()}
-      response=await function_query_runner(request.state.postgres_object,"read",query,values)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #opt verify
+   response=None
+   if all(k in body for k in ["otp","email"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where email=:email order by id desc limit 1;",{"email":body["email"}})
+   if all(k in body for k in ["otp","mobile"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where mobile=:mobile order by id desc limit 1;",{"mobile":body["mobile"}})
+   if response:
+       if response["status"]==0:return function_http_response(400,0,response["message"])
+       if not response["message"]:return function_http_response(400,0,"otp not exist")
+       if response["message"][0]["otp"]!=body["otp"]:return function_http_response(400,0,"otp mismatched")
+   #read user
+   if "mode" not in body:query=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username and password=:password;",{"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
+   if "mode" in body and body["mode"]=="firebase":query=await function_query_runner(request.state.postgres_object,"read","select * from users where firebase_id=:firebase_id order by id desc limit 1;",{"firebase_id":hashlib.sha256(body["firebase_id"].encode()).hexdigest()})
+
+      
       if not response["message"]:return function_http_response(400,0,"no such user")
-      #user define
       user=response["message"][0]
    #firebase
-   if body.mode=="firebase":
-      #body check
-      if not body.firebase:return function_http_response(400,0,"firebase_id must")
-      #read user
-      query="select * from users where firebase_id=:firebase_id order by id desc limit 1;"
-      values={"firebase_id":hashlib.sha256(body.firebase_id.encode()).hexdigest()}
-      response=await function_query_runner(request.state.postgres_object,"read",query,values)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
       #user define
       if response["message"]:user=response["message"][0]
       else:
@@ -316,15 +311,7 @@ async def function_api_login(x:str,request:Request):
          user=response["message"][0]
    #email
    if body.mode=="email":
-      #body check
-      if not body.email or not body.otp:return function_http_response(400,0,"email is must")
-      #otp verify
-      query="select * from otp where email=:email order by id desc limit 1;"
-      values={"email":body.email}
-      response=await function_query_runner(request.state.postgres_object,"read",query,values)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      if not response["message"]:return function_http_response(400,0,"otp not exist")
-      if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
+  
       #read user
       query="select * from users where email=:email order by id desc limit 1;"
       values={"email":body.email}
@@ -347,15 +334,6 @@ async def function_api_login(x:str,request:Request):
          user=response["message"][0]
    #mobile
    if body.mode=="mobile":
-      #body check
-      if not body.mobile or not body.otp:return function_http_response(400,0,"mobile is must")
-      #otp verify
-      query="select * from otp where mobile=:mobile order by id desc limit 1;"
-      values={"mobile":body.mobile}
-      response=await function_query_runner(request.state.postgres_object,"read",query,values)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      if not response["message"]:return function_http_response(400,0,"otp not exist")
-      if response["message"][0]["otp"]!=body.otp:return function_http_response(400,0,"otp mismatched")
       #read user
       query="select * from users where mobile=:mobile order by id desc limit 1;"
       values={"mobile":body.mobile}
