@@ -597,7 +597,7 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no such object")
    object=response["message"][0]
-   #non admin case
+   #permission check
    id,created_by_id=id,None
    if request_user["type"] not in ["root"]:
       if table=="users":id,created_by_id=request_user['id'],None
@@ -696,7 +696,7 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     if column_datatype=="ARRAY":value=value.split(",")
     if column_datatype=="jsonb":value=json.dumps(value,default=str)
     if column_datatype=="integer":value=int(value)
-    #non admin case
+    #permission check
     id,created_by_id=id,None
     if request_user["type"] not in ["root","admin"]:
         if table=="users":id,created_by_id=request_user['id'],None
@@ -745,19 +745,19 @@ async def function_api_pcache(x:str,request:Request):
     #final response
     return {"status":1,"message":output}
     
-@router.get("/{x}/file-upload")
-async def function_api_file_upload(x:str,request:Request,filename:str,background_tasks:BackgroundTasks):
+@router.get("/{x}/{function}")
+async def function_api_function(x:str,request:Request,function:str,filename:str=None,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #key
-    if "." not in filename:return function_http_response(400,0,"file extenstion is must")
-    response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #background task
-    file_url=response["message"]['url']+response["message"]['fields']['key']
-    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
+    #logic
+    if function=="create-s3-url":
+        if "." not in filename:return function_http_response(400,0,"file extenstion is must")
+        response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        file_url=response["message"]['url']+response["message"]['fields']['key']
+        background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     #final response
     return response
     
@@ -790,25 +790,15 @@ async def function_api_checklist(x:str,request:Request):
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   values={"id":request_user["id"]}
-   response=await function_query_runner(request.state.postgres_object,"read",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
-   user=response["message"][0]
-   #refresh request user
-   request_user=user
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
    #root user check
-   query="select * from users where id=1;"
-   response=await function_query_runner(request.state.postgres_object,"read",query,{})
+   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=1;",{})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"root user null issue")
    object=response["message"][0]
-   if object["username"]!="root" or object["is_active"]!=1 or object["type"]!="root":return function_http_response(400,0,"root user data issue")
+   if object["type"]!="root" or object["username"]!="root" or object["is_active"]!=1:return function_http_response(400,0,"root user issue")
    #query
    query_dict={
    "delete_post_creator_null":"delete from post where id in (select x.id from post as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",
