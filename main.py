@@ -5,7 +5,7 @@ env.read_env()
 
 #postgres
 from databases import Database
-postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres_url")}
+postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres")}
 
 #lifespan
 from fastapi import FastAPI
