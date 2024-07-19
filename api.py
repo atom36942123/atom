@@ -764,7 +764,7 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         otp=random.randint(100000,999999)
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,"otp from atom",str(otp))
         if response["status"]==0:return function_http_response(400,0,response["message"])
-        response=await function_query_runner(request.state.postgres_object,"write","insert into otp (created_by_id,otp,email,mobile) values (:created_by_id,:otp,:email,:mobile) returning *;",{"created_by_id":None,"otp":otp,"email":email,"mobile":mobile})
+        response=await function_query_runner(request.state.postgres_object,"write","insert into otp (created_by_id,otp,email) values (:created_by_id,:otp,:email) returning *;",{"created_by_id":None,"otp":otp,"email":email})
         if response["status"]==0:return function_http_response(400,0,response["message"])
 
 
