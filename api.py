@@ -312,26 +312,6 @@ async def function_api_login(x:str,request:Request):
    #final response
    return response
     
-@router.get("/{x}/token-refresh")
-async def function_api_token_refresh(x:str,request:Request):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   values={"id":request_user["id"]}
-   response=await function_query_runner(request.state.postgres_object,"read",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   user=response["message"][0]
-   #token encode
-   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   response=await function_token_encode(data,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
-
 @router.get("/{x}/my-profile")
 async def function_api_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
@@ -784,9 +764,20 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
         response=await function_query_runner(request.state.postgres_object,mode,query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
+     if function=="token-refresh":
+        response=await function_token_decode(request,env("key"))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        request_user=response["message"]
+        response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        if not response["message"]:return function_http_response(400,0,"no user for token passed")
+        user=response["message"][0]
+        data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+        response=await function_token_encode(data,env("key"))
+        if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
     return response
-    
+
 @router.post("/{x}/insert-csv")
 async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=None):
    #token check
