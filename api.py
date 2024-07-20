@@ -595,7 +595,7 @@ async def function_object_read_self(request:Request,table:str,page:int,id:int=No
    return response
 
 @router.get("/{x}/object-read-public/{table}/{page}")
-@cache(expire=60,key_builder=function_redis_key)
+@cache(expire=60,key_builder=function_redis_key_builder)
 async def function_object_read_public(request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
    #logic
    response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
