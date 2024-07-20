@@ -717,6 +717,10 @@ async def function_update_cell(request:Request,table:str,id:int,column:str,value
 
 @router.get("/{x}/aws")
 async def function_aws(request:Request,background_tasks:BackgroundTasks,mode:str,filename:str=None):
+    #token check
+    response=await function_token_decode(request,env("key"))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
     #logic
     if mode=="create-s3-url":
         boto_client=boto3.client("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1],region_name=env.list("s3")[1])
