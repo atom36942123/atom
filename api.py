@@ -319,20 +319,17 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
     #read user
-    query="select * from users where id=:id;"
-    values={"id":request_user["id"]}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
+    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
-    return 2
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
     user=response["message"][0]
     #extra key
     query_dict={
-    "post_count":f"select count(*) as number from post where created_by_id=:user_id;",
-    "comment_count":f"select count(*) as number from comment where created_by_id=:user_id;",
-    "message_unread_count":f"select count(*) as number from message where received_by_id=:user_id and status='unread';",
-    "like_post_count":f"select count(*) as number from likes where created_by_id=:user_id and parent_table='post';",
-    "bookmark_post_count":f"select count(*) as number from bookmark where created_by_id=:user_id and parent_table='post';",
+    "post_count":"select count(*) as number from post where created_by_id=:user_id;",
+    "comment_count":"select count(*) as number from comment where created_by_id=:user_id;",
+    "message_unread_count":"select count(*) as number from message where received_by_id=:user_id and status='unread';",
+    "like_post_count":"select count(*) as number from likes where created_by_id=:user_id and parent_table='post';",
+    "bookmark_post_count":"select count(*) as number from bookmark where created_by_id=:user_id and parent_table='post';",
     }
     for k,v in query_dict.items():
         response=await function_query_runner(request.state.postgres_object,"read",v,{"user_id":request_user["id"]})
