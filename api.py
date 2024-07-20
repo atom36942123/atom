@@ -323,7 +323,6 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
     user=response["message"][0]
-    return user
     #extra key
     query_dict={
     "post_count":"select count(*) as number from post where created_by_id=:user_id;",
