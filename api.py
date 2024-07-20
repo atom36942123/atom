@@ -707,6 +707,7 @@ async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFil
    if set(file_object.fieldnames)!=set(["type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
    count=0
    for row in file_object:
+       row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
        response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (type,title,description,file_url,link_url,tag) values (:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
        if response["status"]==0:return function_http_response(400,0,response["message"])
        count+=1
