@@ -338,7 +338,7 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     #background task
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":user["id"]})
     #final response
-    return {"status":1,"message":output}
+    return {"status":1,"message":user}
 
 @router.get("/{x}/my-action-check")
 async def function_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
