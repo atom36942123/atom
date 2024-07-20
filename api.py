@@ -754,6 +754,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-otp-email":
+        if not email:return function_http_response(400,0,"email must")
         otp=random.randint(100000,999999)
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,"otp from atom",str(otp))
         if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -763,6 +764,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="query-runner":
+        if any(not item for item in [mode,query]):return function_http_response(400,0,"mode/query must")
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
