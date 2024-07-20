@@ -133,6 +133,7 @@ async def function_token_decode(request,secret_key):
 
 import boto3
 async def function_s3_create_url(bucket_region,access_key_id,secret_access_key,bucket_name,key):
+   if "." not in key:return {"status":0,"message":"filename extension must"}
    try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=bucket_name,Key=key,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
