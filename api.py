@@ -260,7 +260,7 @@ async def function_database(x:str,request:Request):
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(x:str,request:Request):
    #body
-   body=await request.json()
+   body=await request.body()
    if any(item not in body for item in ["username","password"]):return function_http_response(400,0,"username/password must")
    if any(not body[item] for item in ["username","password"]):return function_http_response(400,0,"username/password cant be null")
    #read user
@@ -278,7 +278,7 @@ async def function_signup(x:str,request:Request):
 @router.post("/{x}/login")
 async def function_login(x:str,request:Request):
    #body
-   body=await request.json()
+   body=await request.body()
    #opt verify
    response=None
    if all(item in body for item in ["otp","email"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where email=:email order by id desc limit 1;",{"email":body["email"]})
@@ -785,9 +785,11 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
 import motor.motor_asyncio
 from bson import ObjectId
 from fastapi import Body
+
 if False:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+    
 @router.post("/{x}/mongo-create-object")
-async def function(x:str,database:str,table:str,body:dict=Body(...)):
+async def function(x:str,database:str,table:str):
     if database=="test" and table=="users":
         try:response=await mongo_object.test.users.insert_one(body)
         except Exception as e:return function_http_response(400,0,e.args)
