@@ -124,7 +124,7 @@ async def function_token_encode(data,secret_key):
 
 import jwt,json
 async def function_token_decode(request,secret_key):
-   if not request.headers.get("token"):return {"status":0,"message":"token is must"}
+   if not request.headers.get("token"):return {"status":0,"message":"token missing"}
    try:payload=jwt.decode(request.headers.get("token"),secret_key,algorithms="HS256")
    except Exception as e:return {"status":0,"message":e.args}
    data=json.loads(payload["data"])
