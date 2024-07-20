@@ -94,7 +94,7 @@ class schema_atom(BaseModel):
 
 #database
 @router.get("/{x}/database")
-async def function_api_database(x:str,request:Request):
+async def function_database(x:str,request:Request):
     #token check
     if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env mismatch")
     #config
@@ -258,7 +258,7 @@ async def function_api_database(x:str,request:Request):
 
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
-async def function_api_signup(x:str,request:Request):
+async def function_signup(x:str,request:Request):
    #body
    body=await request.json()
    if any(item not in body for item in ["username","password"]):return function_http_response(400,0,"username/password must")
@@ -276,7 +276,7 @@ async def function_api_signup(x:str,request:Request):
    return response
 
 @router.post("/{x}/login")
-async def function_api_login(x:str,request:Request):
+async def function_login(x:str,request:Request):
    #body
    body=await request.json()
    #opt verify
@@ -313,7 +313,7 @@ async def function_api_login(x:str,request:Request):
    return response
     
 @router.get("/{x}/my-profile")
-async def function_api_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -332,7 +332,7 @@ async def function_api_my_profile(x:str,request:Request,background_tasks:Backgro
     return {"status":1,"message":response["message"][0]}
 
 @router.get("/{x}/my-profile-misc")
-async def function_api_my_profile_misc(x:str,request:Request):
+async def function_my_profile_misc(x:str,request:Request):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -354,7 +354,7 @@ async def function_api_my_profile_misc(x:str,request:Request):
     return {"status":1,"message":output}
     
 @router.get("/{x}/my-action-check")
-async def function_api_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
+async def function_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -375,7 +375,7 @@ async def function_api_my_action_check(x:str,request:Request,action:str,table:st
     return {"status":1,"message":ids_filtered}
 
 @router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
-async def function_api_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
+async def function_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -405,7 +405,7 @@ async def function_api_my_read_parent(x:str,request:Request,table:str,parent_tab
     return response
 
 @router.get("/{x}/my-message-inbox/{page}")
-async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
+async def function_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -428,7 +428,7 @@ async def function_api_my_message_inbox(x:str,request:Request,page:int,is_unread
     return response
 
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
-async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
+async def function_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -453,7 +453,7 @@ async def function_api_my_message_thread(x:str,request:Request,user_id:int,page:
     return response
 
 @router.delete("/{x}/my-delete")
-async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
+async def function_my_delete(request:Request,x:str,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message","message_thread","like_post","bookmark_post"],user_id:int=None,post_id:int=None,message_id:int=None):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -482,7 +482,7 @@ async def function_api_my_delete(request:Request,x:str,mode:Literal["post_all","
     return {"status":1,"message":"object deleted"}
 
 @router.delete("/{x}/my-delete-account")
-async def function_api_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -505,7 +505,7 @@ async def function_api_my_delete_account(x:str,request:Request,background_tasks:
     return {"status":1,"message":"user deleted"}
 
 @router.post("/{x}/object-create/{table}")
-async def function_api_object_create(x:str,table:str,request:Request,body:schema_atom):
+async def function_object_create(x:str,table:str,request:Request,body:schema_atom):
    #token check
    if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
       response=await function_token_decode(request,env("key"))
@@ -527,7 +527,7 @@ async def function_api_object_create(x:str,table:str,request:Request,body:schema
    return response
 
 @router.put("/{x}/object-update/{table}/{id}")
-async def function_api_object_update(x:str,request:Request,table:str,id:int,body:schema_atom):
+async def function_object_update(x:str,request:Request,table:str,id:int,body:schema_atom):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -559,7 +559,7 @@ async def function_api_object_update(x:str,request:Request,table:str,id:int,body
    return response
 
 @router.delete("/{x}/object-delete/{table}/{id}")
-async def function_api_object_delete(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
+async def function_object_delete(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -592,7 +592,7 @@ async def function_api_object_delete(x:str,request:Request,table:str,id:int,back
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
-async def function_api_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
+async def function_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -623,7 +623,7 @@ async def function_api_object_read_self(x:str,request:Request,table:str,page:int
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=request_key_builder)
-async def function_api_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
+async def function_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
    #logic
    response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -640,7 +640,7 @@ async def function_api_object_read_public(x:str,request:Request,table:Literal["u
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
-async def function_api_object_read_admin(x:str,request:Request,table:str,page:int,limit:int=30):
+async def function_object_read_admin(x:str,request:Request,table:str,page:int,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -656,7 +656,7 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
 
 @router.get("/{x}/pcache")
 @cache(expire=60)
-async def function_api_pcache(x:str,request:Request):    
+async def function_pcache(x:str,request:Request):    
     #logic
     output={}
     output["mapping_post_type"]={"funding123":"startup idea"}
@@ -690,7 +690,7 @@ async def function_api_pcache(x:str,request:Request):
     return {"status":1,"message":output}
 
 @router.put("/{x}/update-cell")
-async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
+async def function_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -725,7 +725,7 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     return response
 
 @router.get("/{x}/insert-csv")
-async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFile):
+async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
     if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env mismatch")
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
@@ -741,7 +741,7 @@ async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFil
     return response
         
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):    
+async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):    
     #logic
     if function=="create-s3-url":
         response=await function_token_decode(request,env("key"))
@@ -805,26 +805,26 @@ from bson import ObjectId
 from fastapi import Body
 if False:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
 @router.post("/{x}/mongo-create-object")
-async def function_api(x:str,database:str,table:str,body:dict=Body(...)):
+async def function(x:str,database:str,table:str,body:dict=Body(...)):
     if database=="test" and table=="users":
         try:response=await mongo_object.test.users.insert_one(body)
         except Exception as e:return function_http_response(400,0,e.args)
     return {"status":1,"message":str((response.inserted_id))}
 @router.get("/{x}/mongo-read-object")
-async def function_api(x:str,database:str,table:str,id:str):
+async def function(x:str,database:str,table:str,id:str):
     if database=="test" and table=="users":
         try:response=await mongo_object.test.users.find_one({"_id": ObjectId(id)})
         except Exception as e:return function_http_response(400,0,e.args)
         if response:response['_id']=str(response['_id'])
     return response
 @router.put("/{x}/mongo-update-object")
-async def function_api(x:str,database:str,table:str,id:str,body:dict=Body(...)):
+async def function(x:str,database:str,table:str,id:str,body:dict=Body(...)):
     if database=="test" and table=="users":
         try:response=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
         except Exception as e:return function_http_response(400,0,e.args)
     return response.modified_count
 @router.delete("/{x}/mongo-delete-object")
-async def function_api(x:str,database:str,table:str,id:str):
+async def function(x:str,database:str,table:str,id:str):
     if database=="test" and table=="users":
         try:response=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
         except Exception as e:return function_http_response(400,0,e.args)
@@ -835,32 +835,32 @@ from fastapi import Body
 from elasticsearch import Elasticsearch
 if False:elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
 @router.post("/{x}/elasticsearch-create-object")
-async def function_api(x:str,table:str,id:int,body:dict=Body(...)):
+async def function(x:str,table:str,id:int,body:dict=Body(...)):
     try:response=elasticsearch_object.index(index=table,id=id,document=body)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
 @router.get("/{x}/elasticsearch-read-object")
-async def function_api(x:str,table:str,id:int):
+async def function(x:str,table:str,id:int):
     try:response=elasticsearch_object.get(index=table,id=id)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
 @router.put("/{x}/elasticsearch-update-object")
-async def function_api(x:str,table:str,id:int,body:dict=Body(...)):
+async def function(x:str,table:str,id:int,body:dict=Body(...)):
     try:response=elasticsearch_object.update(index=table,id=id,doc=body)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
 @router.delete("/{x}/elasticsearch-delete-object")
-async def function_api(x:str,table:str,id:int):
+async def function(x:str,table:str,id:int):
     try:response=elasticsearch_object.delete(index=table,id=id)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
 @router.get("/{x}/elasticsearch-refresh-table")
-async def function_api(x:str,table:str):
+async def function(x:str,table:str):
     try:response=elasticsearch_object.indices.refresh(index=table)
     except Exception as e:return function_http_response(400,0,e.args)
     return response
 @router.get("/{x}/elasticsearch-search")
-async def function_api(x:str,table:str,column:str,keyword:str):
+async def function(x:str,table:str,column:str,keyword:str):
     query={"query":{"match":{column:keyword}},"size":30}
     try:response=elasticsearch_object.search(index=table,body=query)
     except Exception as e:return function_http_response(400,0,e.args)
