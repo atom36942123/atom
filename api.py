@@ -322,7 +322,7 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
-    user=response["message"][0]
+    output=response["message"][0]
     #extra key
     query_dict={
     "post_count":"select count(*) as number from post where created_by_id=:user_id;",
@@ -334,12 +334,12 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     for k,v in query_dict.items():
         response=await function_query_runner(request.state.postgres_object,"read",v,{"user_id":request_user["id"]})
         if response["status"]==0:return function_http_response(400,0,response["message"])
-        user[k]=response["message"][0]["number"]
+        output[k]=response["message"][0]["number"]
     #background task
     query,values="update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":response["message"][0]["id"]}
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
     #final response
-    return {"status":1,"message":user}
+    return {"status":1,"message":output}
 
 @router.get("/{x}/my-action-check")
 async def function_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
