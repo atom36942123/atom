@@ -4,11 +4,24 @@ def request_key_builder(func,namespace:str="",*,request:Request=None,response:Re
 
 import uvicorn,asyncio
 def function_server_start(app,host,port):
-   uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-   loop=asyncio.new_event_loop()
-   asyncio.set_event_loop(loop)
-   loop.run_until_complete(uvicorn_object.serve())
-   return None
+    uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+    loop=asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(uvicorn_object.serve())
+    return None
+    
+import boto3,uuid
+async def function_create_s3_url(access_key_id,secret_access_key,bucket_name,bucket_region,filename):
+    if not filename:return {"status":0,"message":"filename must"}
+    try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=bucket_name,Key=str(uuid.uuid4())+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
+    except Exception as e:return {"status":0,"message":e.args}
+    return {"status":1,"message":output}
+
+
+
+
+
+
 
 async def function_query_runner(postgres_object,mode,query,values):
    #start
@@ -130,13 +143,6 @@ async def function_token_decode(request,secret_key):
    data=json.loads(payload["data"])
    if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
    return {"status":1,"message":data}
-
-import boto3
-async def function_s3_create_url(bucket_region,access_key_id,secret_access_key,bucket_name,key):
-   if "." not in key:return {"status":0,"message":"filename extension must"}
-   try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=bucket_name,Key=key,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":output}
 
 import boto3
 async def function_s3_delete_url(access_key_id,secret_access_key,bucket_name,url):
