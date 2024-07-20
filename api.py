@@ -279,7 +279,7 @@ async def function_signup(request:Request):
    return response
 
 @router.post("/{x}/login")
-async def function_login(request:Request):
+async def function_login(x:str,request:Request):
    #body
    body=await request.json()
    #opt verify
