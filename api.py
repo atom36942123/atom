@@ -96,7 +96,7 @@ class schema_atom(BaseModel):
 @router.get("/{x}/database")
 async def function_database(x:str,request:Request):
     #token check
-    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env issue")
+    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"env key issue")
     #config
     config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"]
     config_column={
@@ -713,7 +713,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
 
 @router.get("/{x}/insert-csv")
 async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
-    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env issue")
+    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"env key issue")
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
     file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -728,13 +728,15 @@ async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
     return response
         
 @router.get("/{x}/{function}")
-async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):    
-    #logic
-    if function=="create-s3-url":
-        if not filename:return function_http_response(400,0,"filename must")
+async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
+    #token check
+    if function in ["create-s3-url","delete-s3-url","query-runner""token-refresh"]:
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
+    #logic
+    if function=="create-s3-url":
+        if not filename:return function_http_response(400,0,"filename must")
         if "." not in filename:return function_http_response(400,0,"file extenstion is must")
         response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
         if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -742,9 +744,6 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     if function=="delete-s3-url":
         if not url:return function_http_response(400,0,"url must")
-        response=await function_token_decode(request,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
         if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
         if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
         response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
@@ -765,17 +764,11 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="query-runner":
         if any(not item for item in [mode,query]):return function_http_response(400,0,"mode/query must")
-        response=await function_token_decode(request,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
         if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
         if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
         response=await function_query_runner(request.state.postgres_object,mode,query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="token-refresh":
-        response=await function_token_decode(request,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
         response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         if not response["message"]:return function_http_response(400,0,"no user for token passed")
