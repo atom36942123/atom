@@ -56,6 +56,7 @@ async def function_root():return {"status":1,"message":f"welcome to {[*postgres_
 
 #router
 from api import router
+for item in router:print("xxx")
 app.include_router(router)
 
 #server start
