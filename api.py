@@ -747,7 +747,6 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
         response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="query-runner":
-        if any(not item for item in [mode,query]):return function_http_response(400,0,"mode/query must")
         if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
         response=await function_query_runner(request.state.postgres_object,mode,query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
