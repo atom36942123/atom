@@ -707,7 +707,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
     request_user=response["message"][0]
     #schema atom
-    param=vars(schema_atom(**{column:value})
+    param=vars(schema_atom(**{column:value}))
     param={k:v for k,v in param.items() if v not in [None,""," "]}
     # #datatype conversion
     # response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
