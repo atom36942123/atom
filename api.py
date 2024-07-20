@@ -654,41 +654,6 @@ async def function_api_object_read_admin(x:str,request:Request,table:str,page:in
    #final response
    return response
 
-@router.put("/{x}/update-cell")
-async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #token refresh
-    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return function_http_response(400,0,"no user for token passed")
-    request_user=response["message"][0]
-    #datatype conversion
-    response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return {"status":0,"message":"no such column"}
-    column_datatype=response["message"][0]["data_type"]
-    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
-    if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
-    if column_datatype=="ARRAY":value=value.split(",")
-    if column_datatype=="jsonb":value=json.dumps(value,default=str)
-    if column_datatype=="integer":value=int(value)
-    #permission check
-    id,created_by_id=id,None
-    if request_user["type"] not in ["root","admin"]:
-        if table=="users":id,created_by_id=request_user['id'],None
-        else:id,created_by_id=id,request_user['id']
-        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
-    #logic
-    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-    values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
-    response=await function_query_runner(request.state.postgres_object,"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #final response
-    return response
-    
 @router.get("/{x}/pcache")
 @cache(expire=60)
 async def function_api_pcache(x:str,request:Request):    
@@ -723,7 +688,76 @@ async def function_api_pcache(x:str,request:Request):
         output[k]=response["message"]
     #final response
     return {"status":1,"message":output}
-    
+
+
+@router.post("/{x}/insert-csv")
+async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=None):
+   #token check
+   response=await function_token_decode(request,env("key"))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #permission check
+   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
+   #param validation
+   if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
+   if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
+   #file object
+   file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   #column allowed check
+   column_allowed=["created_by_id","type","title","description","file_url","link_url","tag"]
+   csv_column=file_object.fieldnames
+   if set(csv_column)!=set(column_allowed):return function_http_response(400,0,"column mismatch")
+   #logic
+   count=0
+   query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
+   for row in file_object:
+      try:
+         row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
+         row["tag"]=row["tag"].split(",") if row["tag"] else None
+      except Exception as e:return function_http_response(400,0,e.args)
+      response=await function_query_runner(request.state.postgres_object,"write",query,row)
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      count+=1
+   file.file.close
+   #final response
+   return {"status":1,"message":f"rows inserted={count}"}
+
+@router.put("/{x}/update-cell")
+async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
+    #token check
+    response=await function_token_decode(request,env("key"))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    #token refresh
+    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return function_http_response(400,0,"no user for token passed")
+    request_user=response["message"][0]
+    #datatype conversion
+    response=await function_query_runner(request.state.postgres_object,"read","select data_type from information_schema.columns where column_name=:column_name limit 1;",{"column_name":column})
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    if not response["message"]:return {"status":0,"message":"no such column"}
+    column_datatype=response["message"][0]["data_type"]
+    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+    if column_datatype in ["decimal","numeric","real","double precision"]:value=round(float(value),2)
+    if column_datatype=="ARRAY":value=value.split(",")
+    if column_datatype=="jsonb":value=json.dumps(value,default=str)
+    if column_datatype=="integer":value=int(value)
+    #permission check
+    id,created_by_id=id,None
+    if request_user["type"] not in ["root","admin"]:
+        if table=="users":id,created_by_id=request_user['id'],None
+        else:id,created_by_id=id,request_user['id']
+        if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
+    #logic
+    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+    values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
+    response=await function_query_runner(request.state.postgres_object,"write",query,values)
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #final response
+    return response
+        
 @router.get("/{x}/{function}")
 async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):    
     #logic
@@ -778,38 +812,9 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
     #final response
     return response
 
-@router.post("/{x}/insert-csv")
-async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=None):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #param validation
-   if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
-   if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
-   #file object
-   file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   #column allowed check
-   column_allowed=["created_by_id","type","title","description","file_url","link_url","tag"]
-   csv_column=file_object.fieldnames
-   if set(csv_column)!=set(column_allowed):return function_http_response(400,0,"column mismatch")
-   #logic
-   count=0
-   query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
-   for row in file_object:
-      try:
-         row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
-         row["tag"]=row["tag"].split(",") if row["tag"] else None
-      except Exception as e:return function_http_response(400,0,e.args)
-      response=await function_query_runner(request.state.postgres_object,"write",query,row)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      count+=1
-   file.file.close
-   #final response
-   return {"status":1,"message":f"rows inserted={count}"}
+
+
+
 
 
 
