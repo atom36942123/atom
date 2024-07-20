@@ -334,7 +334,8 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     for k,v in query_dict.items():
         response=await function_query_runner(request.state.postgres_object,"read",v,{"user_id":request_user["id"]})
         if response["status"]==0:return function_http_response(400,0,response["message"])
-        # user[k]=response["message"][0]["number"]
+        return 1
+        user[k]=response["message"][0]["number"]
     #background task
     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":response["message"][0]["id"]})
     #final response
