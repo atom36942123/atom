@@ -725,10 +725,10 @@ async def function_aws(request:Request,background_tasks:BackgroundTasks,mode:str
     if mode=="create-s3-url":
         boto_client=boto3.client("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1],region_name=env.list("s3")[1])
         output=boto_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
-        background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']})
+        background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":output['url']+output['fields']['key']})
         return {"status":1,"message":output}
     #final response
-    return response
+    return None
 
 
 
