@@ -691,7 +691,7 @@ async def function_api_pcache(x:str,request:Request):
 
 
 @router.post("/{x}/insert-csv")
-async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","post"],file:UploadFile=None):
+async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFile=None):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -699,29 +699,20 @@ async def function_api_insert_csv(x:str,request:Request,table:Literal["atom","po
    #permission check
    if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #param validation
+   #logic
+   if table not in ["atom","post"]:return function_http_response(400,0,"table not allowed")
    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
-   #file object
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   #column allowed check
-   column_allowed=["created_by_id","type","title","description","file_url","link_url","tag"]
-   csv_column=file_object.fieldnames
-   if set(csv_column)!=set(column_allowed):return function_http_response(400,0,"column mismatch")
-   #logic
+   if set(file_object.fieldnames)!=set(["type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
    count=0
-   query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
    for row in file_object:
-      try:
-         row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
-         row["tag"]=row["tag"].split(",") if row["tag"] else None
-      except Exception as e:return function_http_response(400,0,e.args)
-      response=await function_query_runner(request.state.postgres_object,"write",query,row)
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      count+=1
+       response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (type,title,description,file_url,link_url,tag) values (:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
+       if response["status"]==0:return function_http_response(400,0,response["message"])
+       count+=1
    file.file.close
    #final response
-   return {"status":1,"message":f"rows inserted={count}"}
+   return {"status":1,"message":"done"}
 
 @router.put("/{x}/update-cell")
 async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
