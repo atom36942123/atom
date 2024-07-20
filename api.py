@@ -731,6 +731,7 @@ async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
 async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):    
     #logic
     if function=="create-s3-url":
+        if not filename:return function_http_response(400,0,"filename must")
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
