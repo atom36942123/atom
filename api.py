@@ -756,8 +756,8 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         if response["status"]==0:return function_http_response(400,0,response["message"])
         response=await function_query_runner(request.state.postgres_object,"write","insert into otp (created_by_id,otp,email) values (:created_by_id,:otp,:email) returning *;",{"created_by_id":None,"otp":otp,"email":email})
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    if function=="delete-object-abandon":
-        response=await function_delete_object_abandon(request.state.postgres_object,function_query_runner)
+    if function=="database-clean":
+        response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="query-runner":
         response=await function_token_decode(request,env("key"))
