@@ -1,7 +1,6 @@
 from fastapi import Request,Response
-def function_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
-
 
 import boto3,uuid
 async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_bucket_name,s3_bucket_region,filename):
