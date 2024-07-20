@@ -741,6 +741,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         file_url=response["message"]['url']+response["message"]['fields']['key']
         background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     if function=="delete-s3-url":
+        if not url:return function_http_response(400,0,"url must")
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
@@ -749,6 +750,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-email-ses":
+        if any(item not in body for item in ["email","title","description"]):return function_http_response(400,0,"email/title/description must")
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-otp-email":
