@@ -1,13 +1,15 @@
 from fastapi import Request,Response
-def function_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs,):
+def function_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
 import uvicorn,asyncio
 def function_server_start(app,host,port):
-    uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-    loop=asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(uvicorn_object.serve())
+    try:
+        uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+        loop=asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(uvicorn_object.serve())
+    except Exception as e:return {"status":0,"message":e.args}
     return None
     
 import boto3,uuid
