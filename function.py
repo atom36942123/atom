@@ -2,12 +2,6 @@ from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
-import boto3,uuid
-async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_bucket_name,s3_bucket_region,filename):
-    try:output=boto3.client("s3",region_name=s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key).generate_presigned_post(Bucket=s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
-    except Exception as e:return {"status":0,"message":e.args}
-    return {"status":1,"message":output}
-
 async def function_query_runner(postgres_object,mode,query,values):
     if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
     try:
