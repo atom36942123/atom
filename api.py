@@ -712,7 +712,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
     if datatype=="integer":value=int(value)
     if datatype=="integer":value=int(value)
     if datatype=="timestamp with time zone":value=datetime.strptime(value,'%Y-%m-%d')
-    if column in ["password","firebase_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+    if column in ["password","firebase_id","google_id"]:value=hashlib.sha256(value.encode()).hexdigest()
     #admin check
     id,created_by_id=id,None
     if request_user["type"] not in ["root","admin"]:
