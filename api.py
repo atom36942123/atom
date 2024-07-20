@@ -730,7 +730,7 @@ async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
 @router.get("/{x}/{function}")
 async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
     #token check
-    if function in ["create-s3-url","delete-s3-url","query-runner""token-refresh"]:
+    if function in ["create-s3-url","delete-s3-url","query-runner","token-refresh"]:
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
