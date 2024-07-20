@@ -14,16 +14,16 @@ def function_server_start(app,host,port):
     
 import boto3,uuid
 async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_bucket_name,s3_bucket_region,filename):
-    if not filename:return {"status":0,"message":"filename must"}
     try:output=boto3.client("s3",region_name=s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key).generate_presigned_post(Bucket=s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
     except Exception as e:return {"status":0,"message":e.args}
     return {"status":1,"message":output}
 
 async def function_query_runner(postgres_object,mode,query,values):
-   if not mode or not query or mode not in ["read","write"]:return {"status":0,"message":"mode/query/param must"}
-   if mode=="read":output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
-   if mode=="write":output=await postgres_object.execute(query=query,values=values)
-   return {"status":1,"message":output}
+    try:
+        if mode=="read":output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
+        if mode=="write":output=await postgres_object.execute(query=query,values=values)
+    except Exception as e:return {"status":0,"message":e.args}
+    return {"status":1,"message":output}
 
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
    #param
