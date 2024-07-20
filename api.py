@@ -12,7 +12,7 @@ from function import *
 from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
-import hashlib,json,uuid,random,csv,codecs
+import hashlib,json,random,csv,codecs
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
