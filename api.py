@@ -258,7 +258,7 @@ async def function_database(request:Request):
 
 #signup
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
-async def function_signup(x:str,request:Request):
+async def function_signup(request:Request):
    #body
    body=await request.json()
    if any(item not in body for item in ["username","password"]):return function_http_response(400,0,"username/password must")
@@ -276,7 +276,7 @@ async def function_signup(x:str,request:Request):
    return response
 
 @router.post("/{x}/login")
-async def function_login(x:str,request:Request):
+async def function_login(request:Request):
    #body
    body=await request.json()
    #opt verify
@@ -313,7 +313,7 @@ async def function_login(x:str,request:Request):
    return response
     
 @router.get("/{x}/my-profile")
-async def function_my_profile(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -341,7 +341,7 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     return {"status":1,"message":user}
 
 @router.get("/{x}/my-action-check")
-async def function_my_action_check(x:str,request:Request,action:str,table:str,ids:str):
+async def function_my_action_check(request:Request,action:str,table:str,ids:str):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -362,7 +362,7 @@ async def function_my_action_check(x:str,request:Request,action:str,table:str,id
     return {"status":1,"message":ids_filtered}
 
 @router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
-async def function_my_read_parent(x:str,request:Request,table:str,parent_table:str,page:int):
+async def function_my_read_parent(request:Request,table:str,parent_table:str,page:int):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -392,7 +392,7 @@ async def function_my_read_parent(x:str,request:Request,table:str,parent_table:s
     return response
 
 @router.get("/{x}/my-message-inbox/{page}")
-async def function_my_message_inbox(x:str,request:Request,page:int,is_unread:int=None):
+async def function_my_message_inbox(request:Request,page:int,is_unread:int=None):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -415,7 +415,7 @@ async def function_my_message_inbox(x:str,request:Request,page:int,is_unread:int
     return response
 
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
-async def function_my_message_thread(x:str,request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
+async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -469,7 +469,7 @@ async def function_my_delete(request:Request,x:str,mode:Literal["post_all","comm
     return {"status":1,"message":"object deleted"}
 
 @router.delete("/{x}/my-delete-account")
-async def function_my_delete_account(x:str,request:Request,background_tasks:BackgroundTasks):
+async def function_my_delete_account(request:Request,background_tasks:BackgroundTasks):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -514,7 +514,7 @@ async def function_object_create(x:str,table:str,request:Request,body:schema_ato
    return response
 
 @router.put("/{x}/object-update/{table}/{id}")
-async def function_object_update(x:str,request:Request,table:str,id:int,body:schema_atom):
+async def function_object_update(request:Request,table:str,id:int,body:schema_atom):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -546,7 +546,7 @@ async def function_object_update(x:str,request:Request,table:str,id:int,body:sch
    return response
 
 @router.delete("/{x}/object-delete/{table}/{id}")
-async def function_object_delete(x:str,request:Request,table:str,id:int,background_tasks:BackgroundTasks):
+async def function_object_delete(request:Request,table:str,id:int,background_tasks:BackgroundTasks):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -579,7 +579,7 @@ async def function_object_delete(x:str,request:Request,table:str,id:int,backgrou
    return {"status":1,"message":"object deleted"}
 
 @router.get("/{x}/object-read-self/{table}/{page}")
-async def function_object_read_self(x:str,request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
+async def function_object_read_self(request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -610,7 +610,7 @@ async def function_object_read_self(x:str,request:Request,table:str,page:int,id:
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=request_key_builder)
-async def function_object_read_public(x:str,request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
+async def function_object_read_public(request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
    #logic
    response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -627,7 +627,7 @@ async def function_object_read_public(x:str,request:Request,table:Literal["users
    return response
 
 @router.get("/{x}/object-read-admin/{table}/{page}")
-async def function_object_read_admin(x:str,request:Request,table:str,page:int,limit:int=30):
+async def function_object_read_admin(request:Request,table:str,page:int,limit:int=30):
    #token check
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -643,7 +643,7 @@ async def function_object_read_admin(x:str,request:Request,table:str,page:int,li
 
 @router.get("/{x}/pcache")
 @cache(expire=60)
-async def function_pcache(x:str,request:Request):    
+async def function_pcache(request:Request):    
     #logic
     output={}
     output["mapping_post_type"]={"funding123":"startup idea"}
@@ -677,7 +677,7 @@ async def function_pcache(x:str,request:Request):
     return {"status":1,"message":output}
 
 @router.get("/{x}/insert-csv")
-async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
+async def function_insert_csv(request:Request,table:str,file:UploadFile):
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
@@ -696,7 +696,7 @@ async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
     return response
 
 @router.put("/{x}/update-cell")
-async def function_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
+async def function_update_cell(request:Request,table:str,id:int,column:str,value:str):
     #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -728,7 +728,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
     return response
         
 @router.get("/{x}/{function}")
-async def function_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
+async def function_function(request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
     #token check
     if function in ["create-s3-url","delete-s3-url","query-runner","token-refresh"]:
         response=await function_token_decode(request,env("key"))
