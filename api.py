@@ -260,7 +260,7 @@ async def function_database(x:str,request:Request):
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(x:str,request:Request):
    #body
-   body=await request.body()
+   body=await request.json()
    if any(item not in body for item in ["username","password"]):return function_http_response(400,0,"username/password must")
    if any(not body[item] for item in ["username","password"]):return function_http_response(400,0,"username/password cant be null")
    #read user
@@ -278,7 +278,7 @@ async def function_signup(x:str,request:Request):
 @router.post("/{x}/login")
 async def function_login(x:str,request:Request):
    #body
-   body=await request.body()
+   body=await request.json()
    #opt verify
    response=None
    if all(item in body for item in ["otp","email"]):response=await function_query_runner(request.state.postgres_object,"read","select * from otp where email=:email order by id desc limit 1;",{"email":body["email"]})
