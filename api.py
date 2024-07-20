@@ -16,6 +16,9 @@ import hashlib,json,random,csv,codecs
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
+import motor.motor_asyncio
+from bson import ObjectId
+from elasticsearch import Elasticsearch
 
 #schema
 class schema_atom(BaseModel):
@@ -276,7 +279,7 @@ async def function_signup(request:Request):
    return response
 
 @router.post("/{x}/login")
-async def function_login(x:str,request:Request):
+async def function_login(request:Request):
    #body
    body=await request.json()
    #opt verify
@@ -492,7 +495,7 @@ async def function_my_delete_account(request:Request,background_tasks:Background
     return {"status":1,"message":"user deleted"}
 
 @router.post("/{x}/object-create/{table}")
-async def function_object_create(x:str,table:str,request:Request,body:schema_atom):
+async def function_object_create(table:str,request:Request,body:schema_atom):
    #token check
    if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
       response=await function_token_decode(request,env("key"))
@@ -676,7 +679,7 @@ async def function_pcache(request:Request):
     #final response
     return {"status":1,"message":output}
 
-@router.get("/{x}/insert-csv")
+@router.post("/{x}/insert-csv")
 async def function_insert_csv(request:Request,table:str,file:UploadFile):
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
@@ -773,79 +776,23 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
         data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
         response=await function_token_encode(data,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
+    if function=="mongo":
+        if not mode:return function_http_response(400,0,"mode must")
+        body=await request.json()
+        mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+        if mode=="create":response=await mongo_object.test.users.insert_one(body)
+        if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+        if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
+        if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+    if function=="elasticsearch":
+        if not mode:return function_http_response(400,0,"mode must")
+        body=await request.json()
+        elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
+        if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
+        if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
+        if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
+        if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
+        if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
+        if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
     #final response
-    return response
-
-
-
-
-
-
-#mongo
-import motor.motor_asyncio
-from bson import ObjectId
-from fastapi import Body
-
-if False:mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-    
-@router.post("/{x}/mongo-create-object")
-async def function(x:str,database:str,table:str):
-    if database=="test" and table=="users":
-        try:response=await mongo_object.test.users.insert_one(body)
-        except Exception as e:return function_http_response(400,0,e.args)
-    return {"status":1,"message":str((response.inserted_id))}
-@router.get("/{x}/mongo-read-object")
-async def function(x:str,database:str,table:str,id:str):
-    if database=="test" and table=="users":
-        try:response=await mongo_object.test.users.find_one({"_id": ObjectId(id)})
-        except Exception as e:return function_http_response(400,0,e.args)
-        if response:response['_id']=str(response['_id'])
-    return response
-@router.put("/{x}/mongo-update-object")
-async def function(x:str,database:str,table:str,id:str,body:dict=Body(...)):
-    if database=="test" and table=="users":
-        try:response=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
-        except Exception as e:return function_http_response(400,0,e.args)
-    return response.modified_count
-@router.delete("/{x}/mongo-delete-object")
-async def function(x:str,database:str,table:str,id:str):
-    if database=="test" and table=="users":
-        try:response=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
-        except Exception as e:return function_http_response(400,0,e.args)
-    return response.deleted_count
-
-#elasticsearch
-from fastapi import Body
-from elasticsearch import Elasticsearch
-if False:elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
-@router.post("/{x}/elasticsearch-create-object")
-async def function(x:str,table:str,id:int,body:dict=Body(...)):
-    try:response=elasticsearch_object.index(index=table,id=id,document=body)
-    except Exception as e:return function_http_response(400,0,e.args)
-    return response
-@router.get("/{x}/elasticsearch-read-object")
-async def function(x:str,table:str,id:int):
-    try:response=elasticsearch_object.get(index=table,id=id)
-    except Exception as e:return function_http_response(400,0,e.args)
-    return response
-@router.put("/{x}/elasticsearch-update-object")
-async def function(x:str,table:str,id:int,body:dict=Body(...)):
-    try:response=elasticsearch_object.update(index=table,id=id,doc=body)
-    except Exception as e:return function_http_response(400,0,e.args)
-    return response
-@router.delete("/{x}/elasticsearch-delete-object")
-async def function(x:str,table:str,id:int):
-    try:response=elasticsearch_object.delete(index=table,id=id)
-    except Exception as e:return function_http_response(400,0,e.args)
-    return response
-@router.get("/{x}/elasticsearch-refresh-table")
-async def function(x:str,table:str):
-    try:response=elasticsearch_object.indices.refresh(index=table)
-    except Exception as e:return function_http_response(400,0,e.args)
-    return response
-@router.get("/{x}/elasticsearch-search")
-async def function(x:str,table:str,column:str,keyword:str):
-    query={"query":{"match":{column:keyword}},"size":30}
-    try:response=elasticsearch_object.search(index=table,body=query)
-    except Exception as e:return function_http_response(400,0,e.args)
     return response
