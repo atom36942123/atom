@@ -750,7 +750,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         response=await function_s3_delete_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],url)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-email-ses":
-        if any(item not in body for item in ["email","title","description"]):return function_http_response(400,0,"email/title/description must")
+        if any(not item for item in ["email","title","description"]):return function_http_response(400,0,"email/title/description must")
         response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-otp-email":
