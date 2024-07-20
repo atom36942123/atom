@@ -777,16 +777,16 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
         response=await function_token_encode(data,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="mongo":
-        if not mode:return function_http_response(400,0,"mode must")
         body=await request.json()
+        if not mode:return function_http_response(400,0,"mode must")
         mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
         if mode=="create":response=await mongo_object.test.users.insert_one(body)
         if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
         if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
         if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
     if function=="elasticsearch":
-        if not mode:return function_http_response(400,0,"mode must")
         body=await request.json()
+        if not mode:return function_http_response(400,0,"mode must")
         elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
         if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
         if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
