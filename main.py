@@ -40,14 +40,11 @@ from fastapi import Request
 from function import function_http_response
 @app.middleware("http")
 async def middleware(request:Request,api_function):
-   #x check
    x=str(request.url).split("/")[3]
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return function_http_response(400,0,f"allowed x={[*postgres_object]}")
-   #api response
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    try:response=await api_function(request)
    except Exception as e:return function_http_response(400,0,e.args)
-   #final response
    return response
 
 #root
