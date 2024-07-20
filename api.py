@@ -445,7 +445,7 @@ async def function_my_delete(request:Request,x:str,mode:Literal["post_all","comm
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #token refresh
+    #refresh request_user
     response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
@@ -474,7 +474,7 @@ async def function_my_delete_account(x:str,request:Request,background_tasks:Back
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #token refresh
+    #refresh request_user
     response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
@@ -519,7 +519,7 @@ async def function_object_update(x:str,request:Request,table:str,id:int,body:sch
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #token refresh
+   #refresh request_user
    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
@@ -551,7 +551,7 @@ async def function_object_delete(x:str,request:Request,table:str,id:int,backgrou
    response=await function_token_decode(request,env("key"))
    if response["status"]==0:return function_http_response(400,0,response["message"])
    request_user=response["message"]
-   #token refresh
+   #refresh request_user
    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
    if response["status"]==0:return function_http_response(400,0,response["message"])
    if not response["message"]:return function_http_response(400,0,"no user for token passed")
@@ -701,7 +701,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
-    #token refresh
+    #refresh request_user
     response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
     if response["status"]==0:return function_http_response(400,0,response["message"])
     if not response["message"]:return function_http_response(400,0,"no user for token passed")
