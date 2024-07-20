@@ -737,7 +737,6 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
     #logic
     if function=="create-s3-url":
         if not filename:return function_http_response(400,0,"filename must")
-        if "." not in filename:return function_http_response(400,0,"file extenstion is must")
         response=await function_s3_create_url(env.list("s3")[1],env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],str(uuid.uuid4())+"."+filename.split(".")[-1])
         if response["status"]==0:return function_http_response(400,0,response["message"])
         file_url=response["message"]['url']+response["message"]['fields']['key']
