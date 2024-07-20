@@ -13,7 +13,7 @@ def function_server_start(app,host,port):
 import boto3,uuid
 async def function_create_s3_url(access_key_id,secret_access_key,bucket_name,bucket_region,filename):
     if not filename:return {"status":0,"message":"filename must"}
-    try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=bucket_name,Key=str(uuid.uuid4())+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
+    try:output=boto3.client("s3",region_name=bucket_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).generate_presigned_post(Bucket=bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
     except Exception as e:return {"status":0,"message":e.args}
     return {"status":1,"message":output}
 
