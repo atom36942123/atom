@@ -764,7 +764,7 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
         response=await function_query_runner(request.state.postgres_object,mode,query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
-     if function=="token-refresh":
+    if function=="token-refresh":
         response=await function_token_decode(request,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
         request_user=response["message"]
