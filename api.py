@@ -322,7 +322,9 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     query="select * from users where id=:id;"
     values={"id":request_user["id"]}
     response=await function_query_runner(request.state.postgres_object,"read",query,values)
+    return 1
     if response["status"]==0:return function_http_response(400,0,response["message"])
+    return 2
     if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
     user=response["message"][0]
     #extra key
