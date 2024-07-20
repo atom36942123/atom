@@ -325,14 +325,14 @@ async def function_my_profile(x:str,request:Request,background_tasks:BackgroundT
     user=response["message"][0]
     #extra key
     query_dict={
-    "post_count":f"select count(*) as number from post where created_by_id={request_user['id']};",
-    "comment_count":f"select count(*) as number from comment where created_by_id={request_user['id']};",
-    "message_unread_count":f"select count(*) as number from message where received_by_id={request_user['id']} and status='unread';",
-    "like_post_count":f"select count(*) as number from likes where created_by_id={request_user['id']} and parent_table='post';",
-    "bookmark_post_count":f"select count(*) as number from bookmark where created_by_id={request_user['id']} and parent_table='post';",
+    "post_count":f"select count(*) as number from post where created_by_id=:user_id;",
+    "comment_count":f"select count(*) as number from comment where created_by_id=:user_id;",
+    "message_unread_count":f"select count(*) as number from message where received_by_id=:user_id and status='unread';",
+    "like_post_count":f"select count(*) as number from likes where created_by_id=:user_id and parent_table='post';",
+    "bookmark_post_count":f"select count(*) as number from bookmark where created_by_id=:user_id and parent_table='post';",
     }
     for k,v in query_dict.items():
-        response=await function_query_runner(request.state.postgres_object,"read",v,{})
+        response=await function_query_runner(request.state.postgres_object,"read",v,{"user_id":request_user["id"]})
         if response["status"]==0:return function_http_response(400,0,response["message"])
         user[k]=response["message"][0]["number"]
     #background task
