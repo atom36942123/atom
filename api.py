@@ -96,7 +96,7 @@ class schema_atom(BaseModel):
 @router.get("/{x}/database")
 async def function_database(x:str,request:Request):
     #token check
-    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env mismatch")
+    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env issue")
     #config
     config_table=["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"]
     config_column={
@@ -713,7 +713,7 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
 
 @router.get("/{x}/insert-csv")
 async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
-    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env mismatch")
+    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token env issue")
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
     file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
