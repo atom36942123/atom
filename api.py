@@ -724,8 +724,8 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     #final response
     return response
 
-@router.get("/{x}/file-upload")
-async def function_api_file_upload(x:str,request:Request,table:str,file:UploadFile):
+@router.get("/{x}/insert-csv")
+async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFile):
     if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token mismatch")
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
