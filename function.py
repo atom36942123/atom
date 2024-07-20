@@ -2,16 +2,7 @@ from fastapi import Request,Response
 def function_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
-import uvicorn,asyncio
-def function_server_start(app,host,port):
-    try:
-        uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,host,port,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-        loop=asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(uvicorn_object.serve())
-    except Exception as e:return {"status":0,"message":e.args}
-    return None
-    
+
 import boto3,uuid
 async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_bucket_name,s3_bucket_region,filename):
     try:output=boto3.client("s3",region_name=s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key).generate_presigned_post(Bucket=s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
