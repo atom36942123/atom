@@ -676,6 +676,25 @@ async def function_pcache(x:str,request:Request):
     #final response
     return {"status":1,"message":output}
 
+@router.get("/{x}/insert-csv")
+async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
+    response=await function_token_decode(request,env("key"))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
+    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
+    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
+    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+    if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
+    count=0
+    for row in file_object:
+        row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
+        response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
+        if response["status"]==0:return function_http_response(400,0,response["message"])
+        count+=1
+    file.file.close
+    return response
+
 @router.put("/{x}/update-cell")
 async def function_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
     #token check
@@ -709,25 +728,6 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
     response=await function_query_runner(request.state.postgres_object,"write",query,values)
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
-    return response
-
-@router.get("/{x}/insert-csv")
-async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
-    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
-    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
-    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-    if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
-    count=0
-    for row in file_object:
-        row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
-        response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        count+=1
-    file.file.close
     return response
         
 @router.get("/{x}/{function}")
