@@ -19,6 +19,7 @@ from datetime import datetime
 import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
+import boto3,uuid
 
 #schema
 class schema_atom(BaseModel):
@@ -712,20 +713,24 @@ async def function_update_cell(request:Request,table:str,id:int,column:str,value
     if response["status"]==0:return function_http_response(400,0,response["message"])
     #final response
     return response
-        
+
+
+@router.get("/{x}/aws")
+async def function_aws(request:Request,background_tasks:BackgroundTasks,mode:str,filename:str=None):
+    #logic
+    if mode=="create-s3-url":
+        boto_client=boto3.client("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1],region_name=env.list("s3")[1])
+        output=boto_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
+        background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":response["message"]['url']+response["message"]['fields']['key']})
+        return {"status":1,"message":output}
+    #final response
+    return response
+
+
+
 @router.get("/{x}/{function}")
 async def function_function(request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
-    #token check
-    if function in ["create-s3-url","delete-s3-url","query-runner","token-refresh"]:
-        response=await function_token_decode(request,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        request_user=response["message"]
     #logic
-    if function=="create-s3-url":
-        response=await function_create_s3_url(env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],env.list("s3")[1],filename)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        file_url=response["message"]['url']+response["message"]['fields']['key']
-        background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","insert into file (created_by_id,file_url) values (:created_by_id,:file_url) returning *;",{"created_by_id":request_user["id"],"file_url":file_url})
     if function=="delete-s3-url":
         if not url:return function_http_response(400,0,"url must")
         if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
