@@ -94,7 +94,7 @@ class schema_atom(BaseModel):
 
 #database
 @router.get("/{x}/database")
-async def function_database(x:str,request:Request):
+async def function_database(request:Request):
     #token check
     if request.headers.get("token")!=env("key"):return function_http_response(400,0,"env key issue")
     #config
