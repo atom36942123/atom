@@ -689,32 +689,6 @@ async def function_api_pcache(x:str,request:Request):
     #final response
     return {"status":1,"message":output}
 
-
-@router.post("/{x}/insert-csv")
-async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFile=None):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #logic
-   if table not in ["atom","post"]:return function_http_response(400,0,"table not allowed")
-   if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
-   if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
-   file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
-   count=0
-   for row in file_object:
-       row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
-       response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
-       if response["status"]==0:return function_http_response(400,0,response["message"])
-       count+=1
-   file.file.close
-   #final response
-   return {"status":1,"message":"done"}
-
 @router.put("/{x}/update-cell")
 async def function_api_update_cell(x:str,request:Request,table:str,id:int,column:str,value:str):
     #token check
@@ -801,9 +775,21 @@ async def function_api_function(x:str,request:Request,function:str,background_ta
         data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
         response=await function_token_encode(data,env("key"))
         if response["status"]==0:return function_http_response(400,0,response["message"])
+    if function=="csv-upload":
+       if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token mismatch")
+       if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
+       if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
+       file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+       if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
+       count=0
+       for row in file_object:
+           row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
+           response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
+           if response["status"]==0:return function_http_response(400,0,response["message"])
+           count+=1
+       file.file.close
     #final response
     return response
-
 
 
 
