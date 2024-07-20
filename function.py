@@ -14,10 +14,8 @@ def function_server_start(app,host,port):
     
 import boto3,uuid
 async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_bucket_name,s3_bucket_region,filename):
-    try:
-        if not filename:return {"status":0,"message":"filename must"}
-        boto_object=boto3.client("s3",region_name=s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-        output=boto_object.generate_presigned_post(Bucket=s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
+    if not filename:return {"status":0,"message":"filename must"}
+    try:output=boto3.client("s3",region_name=s3_bucket_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key).generate_presigned_post(Bucket=s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
     except Exception as e:return {"status":0,"message":e.args}
     return {"status":1,"message":output}
 
