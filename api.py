@@ -713,7 +713,10 @@ async def function_update_cell(x:str,request:Request,table:str,id:int,column:str
 
 @router.get("/{x}/insert-csv")
 async def function_insert_csv(x:str,request:Request,table:str,file:UploadFile):
-    if request.headers.get("token")!=env("key"):return function_http_response(400,0,"env key issue")
+    response=await function_token_decode(request,env("key"))
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    request_user=response["message"]
+    if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
     file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -762,8 +765,7 @@ async def function_function(x:str,request:Request,function:str,background_tasks:
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="query-runner":
         if any(not item for item in [mode,query]):return function_http_response(400,0,"mode/query must")
-        if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-        if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
+        if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
         response=await function_query_runner(request.state.postgres_object,mode,query,{})
         if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="token-refresh":
