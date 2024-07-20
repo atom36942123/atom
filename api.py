@@ -704,11 +704,11 @@ async def function_api_insert_csv(x:str,request:Request,table:str,file:UploadFil
    if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
    if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   if set(file_object.fieldnames)!=set(["type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
+   if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
    count=0
    for row in file_object:
        row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
-       response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (type,title,description,file_url,link_url,tag) values (:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
+       response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
        if response["status"]==0:return function_http_response(400,0,response["message"])
        count+=1
    file.file.close
