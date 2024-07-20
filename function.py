@@ -19,20 +19,9 @@ async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_buck
     return {"status":1,"message":output}
 
 async def function_query_runner(postgres_object,mode,query,values):
-   #start
    if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
-   #logic
-   if mode=="read":
-      try:output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
-      except Exception as e:
-         print(query)
-         return {"status":0,"message":e.args}
-   if mode=="write":
-      try:output=await postgres_object.execute(query=query,values=values)
-      except Exception as e:
-         print(query)
-         return {"status":0,"message":e.args}
-   #final response
+   if mode=="read":output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
+   if mode=="write":output=await postgres_object.execute(query=query,values=values)
    return {"status":1,"message":output}
 
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
