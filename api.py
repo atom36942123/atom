@@ -725,7 +725,7 @@ async def function_api_update_cell(x:str,request:Request,table:str,id:int,column
     return response
         
 @router.get("/{x}/{function}")
-async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None,file:UploadFile=None):    
+async def function_api_function(x:str,request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None,table:str=None,file:UploadFile=None):    
     #logic
     if function=="create-s3-url":
         response=await function_token_decode(request,env("key"))
