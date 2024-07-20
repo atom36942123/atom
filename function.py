@@ -36,7 +36,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    for k,v in param_schema_atom.items():
        operator_name=f"{k}_operator"
        if operator_name in param:operator[k]=param[operator_name]
-   #where set
+   #where
    where="where "
    for k,v in param_schema_atom.items():
       if k in operator:where=where+f"({k} {operator[k]} :{k} or :{k} is null) and "
