@@ -19,6 +19,7 @@ async def function_create_s3_url(aws_access_key_id,aws_secret_access_key,s3_buck
     return {"status":1,"message":output}
 
 async def function_query_runner(postgres_object,mode,query,values):
+    if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
     try:
         if mode=="read":output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
         if mode=="write":output=await postgres_object.execute(query=query,values=values)
