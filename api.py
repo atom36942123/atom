@@ -22,6 +22,7 @@ import boto3,uuid
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
+#config
 config_database={
 "created_at":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"timestamptz","now()",None,1],"created_by_id":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"bigint",None,None,1],"received_by_id":[["message"],"bigint",None,None,1],
 "updated_at":[["atom","users","post","comment","report","message","helpdesk","workseeker"],"timestamptz",None,None,0],"updated_by_id":[["atom","users","post","comment","report","message","helpdesk","workseeker"],"bigint",None,None,0],"is_pinned":[["post"],"int",0,(0,1),1],
