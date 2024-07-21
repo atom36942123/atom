@@ -66,6 +66,7 @@ async def function_database_init(request:Request):
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    #default
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={}) for k,v in config_database.items() for table in v[0] for column in schema_column if v[2] and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
+   return {"status":1,"message":"done"}
 
     # #alter column checkin
     # for k,v in config_column.items():
@@ -116,7 +117,7 @@ async def function_database_init(request:Request):
     #     response=await function_query_runner(request.state.postgres_object,"write",v,{})
     #     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
     #final response
-    return {"status":1,"message":"done"}
+    
 
    
    
