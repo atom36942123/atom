@@ -24,7 +24,8 @@ import boto3,uuid
 #api
 @router.get("/{x}/query-runner")
 async def function_api_query_runner(request:Request,query:str):
-   if request.headers.get("token")!=env("key"):return function_http_response(400,0,"env key issue")
+   if request.headers.get("token")!=env("key"):return function_http_response(400,0,"token issue")
+   response=await database.execute(query=query, values=values)
 
    
    response=await function_query_runner(request.state.postgres_object,mode,query,{})
