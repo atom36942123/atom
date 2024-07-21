@@ -20,3 +20,12 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 import boto3,uuid
+
+#api
+@router.get("/{x}/query-runner")
+async def function_api_query_runner(request:Request,query:str):
+   #logic
+   response=await function_query_runner(request.state.postgres_object,mode,query,{})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
