@@ -37,14 +37,15 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 
 #middleware
 from fastapi import Request
-from function import function_http_response
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    x=str(request.url).split("/")[3]
-   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return function_http_response(400,0,f"allowed x={[*postgres_object]}")
+   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"allowed x={[*postgres_object]}"}))
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    try:response=await api_function(request)
-   except Exception as e:return function_http_response(400,0,e.args)
+   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
    return response
 
 #root
