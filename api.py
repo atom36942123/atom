@@ -682,7 +682,7 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
         row["tag"]=row["tag"].split(",") if row["tag"] else None
         values.append(row)
     query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
-    await request.state.postgres_object.execute_many(query=query,values=values)
+    response=await request.state.postgres_object.execute_many(query=query,values=values)
     file.file.close
     #final response
     return response
