@@ -2,6 +2,13 @@ from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+def function_http_response(status_code,status,message):
+   if "unique_action_tcpp" in str(message):message="action alredy performed"
+   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
+   return response
+
 async def function_query_runner(postgres_object,mode,query,values):
     if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
     try:
@@ -90,12 +97,7 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
    #final response
    return {"status":1,"message":object_list}
 
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-def function_http_response(status_code,status,message):
-   if "unique_action_tcpp" in str(message):message="action alredy performed"
-   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   return response
+
 
 import jwt,time
 from datetime import datetime,timedelta
