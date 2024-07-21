@@ -2,6 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter()
 
+#env
+from environs import Env
+env=Env()
+env.read_env()
+
 #import
 from function import *
 from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
