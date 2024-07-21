@@ -1,7 +1,3 @@
-#router
-from fastapi import APIRouter
-router=APIRouter()
-
 #env
 from environs import Env
 env=Env()
