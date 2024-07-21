@@ -26,7 +26,7 @@ from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   response=await request.state.postgres_object.execute(query=query,values={})
+   response=await request.state.postgres_object.fetch_all(query=query,values={})
    return response
 
    
