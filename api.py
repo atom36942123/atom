@@ -1,101 +1,21 @@
-#router
-from fastapi import APIRouter
-router=APIRouter()
+from helper import *
 
-#env
-from environs import Env
-env=Env()
-env.read_env()
+@router.get("/{x}/query-runner")
+async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
+   #token check
+   response=await function_token_decode(request,env("key"))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #permission check
+   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
+   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
+   #logic
+   response=await function_query_runner(request.state.postgres_object,mode,query,{})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
 
-#import
-from function import *
-from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
-from fastapi_cache.decorator import cache
-from fastapi_limiter.depends import RateLimiter
-import hashlib,json,random,csv,codecs
-from pydantic import BaseModel
-from typing import Literal
-from datetime import datetime
-import motor.motor_asyncio
-from bson import ObjectId
-from elasticsearch import Elasticsearch
-import boto3,uuid
-
-#schema
-class schema_atom(BaseModel):
-    id:int|None=None
-    created_at:datetime|None=None
-    created_by_id:int|None=None
-    updated_at:datetime|None=None
-    updated_by_id:int|None=None
-    is_active:int|None=None
-    is_verified:int|None=None
-    parent_table:str|None=None
-    parent_id:int|None=None
-    received_by_id:int|None=None
-    last_active_at:datetime|None=None
-    firebase_id:str|None=None
-    google_id:str|None=None
-    otp:int|None=None
-    metadata:dict|None=None
-    username:str|None=None
-    password:str|None=None
-    profile_pic_url:str|None=None
-    date_of_birth:datetime|None=None
-    name:str|None=None
-    gender:str|None=None
-    email:str|None=None
-    mobile:str|None=None
-    whatsapp:str|None=None
-    phone:str|None=None
-    country:str|None=None
-    state:str|None=None
-    city:str|None=None
-    type:str|None=None
-    title:str|None=None
-    description:str|None=None
-    file_url:str|None=None
-    link_url:str|None=None
-    tag:list|None=None
-    number:float|None=None
-    date:datetime|None=None
-    status:str|None=None
-    remark:str|None=None
-    rating:int|None=None
-    is_pinned:int|None=None
-    work_type:str|None=None
-    work_profile:str|None=None
-    degree:str|None=None
-    college:str|None=None
-    linkedin_url:str|None=None
-    portfolio_url:str|None=None
-    experience:int|None=None
-    experience_work_profile:int|None=None
-    is_working:int|None=None
-    location_current:str|None=None
-    location_expected:str|None=None
-    currency:str|None=None
-    salary_frequency:str|None=None
-    salary_current:int|None=None
-    salary_expected:int|None=None
-    sector:str|None=None
-    past_company_count:int|None=None
-    past_company_name:str|None=None
-    marital_status:str|None=None
-    physical_disability:str|None=None
-    hobby:str|None=None
-    language:str|None=None
-    joining_days:int|None=None
-    career_break_month:int|None=None
-    resume_url:str|None=None
-    achievement:str|None=None
-    certificate:str|None=None
-    project:str|None=None
-    is_founder:int|None=None
-    soft_skill:str|None=None
-    tool:str|None=None
-    achievement_work:str|None=None
-
+ 
 #database
 @router.get("/{x}/database")
 async def function_database(request:Request):
