@@ -19,6 +19,8 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 import boto3,uuid
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 #api
 @router.get("/{x}/query-runner")
