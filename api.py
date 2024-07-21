@@ -762,10 +762,6 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
     if function=="database-clean":
         response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    if function=="query-runner":
-        if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
-        response=await function_query_runner(request.state.postgres_object,mode,query,{})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="token-refresh":
         response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
         if response["status"]==0:return function_http_response(400,0,response["message"])
