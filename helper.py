@@ -1,3 +1,7 @@
+#router
+from fastapi import APIRouter
+router=APIRouter()
+
 #env
 from environs import Env
 env=Env()
@@ -91,8 +95,6 @@ class schema_atom(BaseModel):
     soft_skill:str|None=None
     tool:str|None=None
     achievement_work:str|None=None
-
-
 
 #function
 from fastapi import Request,Response
