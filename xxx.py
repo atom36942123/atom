@@ -1,7 +1,3 @@
-
-
-
-
 #schema
 class schema_atom(BaseModel):
     id:int|None=None
@@ -77,24 +73,6 @@ class schema_atom(BaseModel):
     tool:str|None=None
     achievement_work:str|None=None
 
-from helper import *
-
-@router.get("/{x}/query-runner")
-async def function_api_query_runner(x:str,request:Request,mode:str,query:str):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root admin allowed")
-   #logic
-   response=await function_query_runner(request.state.postgres_object,mode,query,{})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
-
- 
 #database
 @router.get("/{x}/database")
 async def function_database(request:Request):
