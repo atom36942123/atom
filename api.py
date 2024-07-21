@@ -64,34 +64,15 @@ async def function_database_init(request:Request):
    #helper
    schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
-   #default
+   #alter
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={}) for k,v in config_database.items() for table in v[0] for column in schema_column if v[2] and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={}) for k,v in config_database.items() for table in v[0] if v[3] and f'checkin_{k}_{table}' not in schema_constraint_name_list]
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in ["alter table users add constraint constraint_unique_username_users unique (username);","alter table likes add constraint constraint_unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);","alter table bookmark add constraint constraint_unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);","alter table report add constraint constraint_unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);","alter table block add constraint constraint_unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);","insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;"] for constraint in schema_constraint_name_list if constraint not in query]
    #final response
    return {"status":1,"message":"done"}
 
-  
-      
-    # #add constraint
-    # query_dict={
-    # "unique_username_users":"alter table users add constraint unique_username_users unique (username);",
-    # "unique_created_by_id_parent_table_parent_id_likes":"alter table likes add constraint unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);",
-    # "unique_created_by_id_parent_table_parent_id_bookmark":"alter table bookmark add constraint unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);",
-    # "unique_created_by_id_parent_table_parent_id_report":"alter table report add constraint unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);",
-    # "unique_created_by_id_parent_table_parent_id_block":"alter table block add constraint unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);",
-    # }
-    # for k,v in query_dict.items():
-    #     if k not in schema_constraint_name_list:
-    #         response=await function_query_runner(request.state.postgres_object,"write",v,{})
-    #         if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    # #misc query
-    # query_dict={
-    # "create_root_user":"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;",
-    # "rule_delete_disable_users_root":"create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;",
-    # }
-    # for k,v in query_dict.items():
-    #     response=await function_query_runner(request.state.postgres_object,"write",v,{})
-    #     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
+
+   
     # #index
     # response=await function_drop_all_index(request.state.postgres_object,function_query_runner)
     # if response["status"]==0:return function_http_response(400,0,response["message"])
