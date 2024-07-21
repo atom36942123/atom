@@ -5,9 +5,9 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 def function_http_response(status_code,status,message):
-   if "unique_action_tcpp" in str(message):message="action alredy performed"
-   response=JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-   return response
+    return JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
+    
+   
 
 async def function_query_runner(postgres_object,mode,query,values):
     if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
