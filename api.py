@@ -53,30 +53,25 @@ async def function_query_runner(request:Request,query:str):
 
 @router.get("/{x}/database-init")
 async def function_database_init(request:Request):
-   #token
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #table
+   #create table
    for item in config_database["created_at"][0]:await request.state.postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint primary key generated always as identity);",values={})
-   #column
-   [return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"})) for k,v in config_database.items() if len(v)!=5]
-      
+   #create column
+   for k,v in config_database.items():
+      if len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"}))
       for item in v[0]:await request.state.postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[1]};",values={})
    #helper
    schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    #default
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={}) for k,v in config_database.items() for table in v[0] for column in schema_column if v[2] and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});",values={}) for k,v in config_database.items() for table in v[0] if v[3] and f"checkin_{k}_{table}" not in schema_constraint_name_list]
+   #final response
    return {"status":1,"message":"done"}
 
-    # #alter column checkin
-    # for k,v in config_column.items():
-    #     if v[3]:
-    #         for table in v[0]:
-    #             constraint_name=f"checkin_{k}_{table}"
-    #             if constraint_name not in schema_constraint_name_list:
-    #                 query=f"alter table {table} add constraint {constraint_name} check ({k} in {v[3]});"
-    #                 response=await function_query_runner(request.state.postgres_object,"write",query,{})
-    #                 if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}") 
+  
+      
     # #add constraint
     # query_dict={
     # "unique_username_users":"alter table users add constraint unique_username_users unique (username);",
@@ -116,7 +111,6 @@ async def function_database_init(request:Request):
     # for k,v in query_dict.items():
     #     response=await function_query_runner(request.state.postgres_object,"write",v,{})
     #     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
-    #final response
     
 
    
