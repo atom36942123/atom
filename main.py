@@ -41,19 +41,24 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @app.middleware("http")
 async def middleware(request:Request,api_function):
+   #x check
    x=str(request.url).split("/")[3]
-   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"x={[*postgres_object]}"}))
+   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
+   #database assgin
+   request.state.postgres_object=None
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
+   #api response
    try:response=await api_function(request)
    except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+   #final response
    return response
 
 #root
-@app.get("/")
+@app.get("/")4
 async def function_root():return {"status":1,"message":f"welcome to {[*postgres_object]}"}
 
 #router
-from helper import router
+from api import router
 app.include_router(router)
 
 #server start
