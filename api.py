@@ -665,21 +665,26 @@ async def function_pcache(request:Request):
 
 @router.post("/{x}/insert-csv")
 async def function_insert_csv(request:Request,table:str,file:UploadFile):
+    #token check
     response=await function_token_decode(request,env("key"))
     if response["status"]==0:return function_http_response(400,0,response["message"])
     request_user=response["message"]
+    #admin check
     if request_user["type"] not in ["root"]:return function_http_response(400,0,"only root user allowed")
+    #logic
     if file.content_type!="text/csv":return function_http_response(400,0,"only csv allowed")
     if file.size>=100000:return function_http_response(400,0,"file size should be<=100000 bytes")
     file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
     if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return function_http_response(400,0,"column mismatch")
-    count=0
+    values=[]
     for row in file_object:
-        row["created_by_id"],row["tag"]=int(row["created_by_id"]) if row["created_by_id"] else None,row["tag"].split(",") if row["tag"] else None
-        response=await function_query_runner(request.state.postgres_object,"write",f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",row)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        count+=1
+        row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
+        row["tag"]=row["tag"].split(",") if row["tag"] else None
+        values.append(row)
+    query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
+    await request.state.postgres_object.execute_many(query=query,values=values)
     file.file.close
+    #final response
     return response
 
 @router.put("/{x}/update-cell")
