@@ -58,8 +58,8 @@ async def function_database_init(request:Request):
    #table
    for item in config_database["created_at"][0]:await request.state.postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint primary key generated always as identity);",values={})
    #column
-   for k,v in config_database.items():
-      if len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"}))
+   return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"})) for k,v in config_database.items() if len(v)!=5
+      
       for item in v[0]:await request.state.postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[1]};",values={})
    #helper
    schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
