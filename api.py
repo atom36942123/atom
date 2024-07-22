@@ -41,6 +41,7 @@ async def function_database_init(request:Request):
          if k not in ["alter_query"] and v[3] is not None and f'checkin_{k}_{table}' not in schema_constraint_name_list:await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={})
          if k not in ["alter_query"] and v[4]==1 and v[1]=="array":await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
          if k not in ["alter_query"] and v[4]==1 and v[1] not in ["array"]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
+         if k in ["alter_query"]:return [ item.split()[5] for item in v]
          if k in ["alter_query"]:[await request.state.postgres_object.fetch_all(query=item,values={}) for item in v if item.split()[5] not in schema_constraint_name_list]
    return {"status":1,"message":"done"}
 
