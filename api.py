@@ -78,19 +78,9 @@ async def function_login(x:str,request:Request):
       if "username" in body:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
       output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k,v for k,v in body.items() if k not in ["username","password"]})
       user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})[0]
-   #token encode
-   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   response=await function_token_encode(data,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
-   return response
+   return {"status":1,"message":jwt.encode(json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())},env("key"))}
 
-
-async def function_token_encode(data,secret_key):
-   payload={"data":data}|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
-   try:token=jwt.encode(payload,secret_key)
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":token}
 
 
                    
