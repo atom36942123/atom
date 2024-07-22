@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 #function
-error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":message}))
+error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
 
 #database
 config_database={
