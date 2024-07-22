@@ -39,6 +39,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+import traceback
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    #x check
@@ -49,7 +50,7 @@ async def middleware(request:Request,api_function):
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc(),e.args}))
    #final response
    return response
 
