@@ -8,7 +8,7 @@ from helper import *
 #api
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=env("key"):return 
    return await request.state.postgres_object.fetch_all(query=query,values={})
 
 @router.get("/{x}/database-init")
