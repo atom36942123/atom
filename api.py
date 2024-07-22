@@ -56,22 +56,19 @@ async def function_signup(request:Request):
  
 @router.post("/{x}/login")
 async def function_login(x:str,request:Request):
-   #start
-   body=await request.json()
-   if len(body)>2:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
-   #otp verify
-   if "otp" in body:
-      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
-      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
    #values
-   values={}
+   body,values=await request.json(),{}
    values["username"]=body["username"] if "username" in body else None
    values["password"]=hashlib.sha256(body["password"].encode()).hexdigest() if "password" in body else None
    values["email"]=body["email"] if "email" in body else None
    values["mobile"]=body["mobile"] if "mobile" in body else None
    values["firebase_id"]=hashlib.sha256(body["firebase_id"].encode()).hexdigest() if "firebase_id" in body else None
    values["google_id"]=hashlib.sha256(body["google_id"].encode()).hexdigest() if "google_id" in body else None
+   #otp verify
+   if "otp" in body:
+      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":values["email"],"mobile":values["mobile"]})
+      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
+      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
    #read user
    output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values=values)
    user=output[0] if output else None
