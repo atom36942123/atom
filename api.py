@@ -59,7 +59,40 @@ async def function_signup(request:Request):
       
 
       
+@router.post("/{x}/login")
+async def function_login(x:str,request:Request):
+   body=await request.json()
+   #opt verify
+   await request.state.postgres_object.fetch_all(query=query,values={})}
    
+   if response:
+       if response["status"]==0:return function_http_response(400,0,response["message"])
+       if not response["message"]:return function_http_response(400,0,"otp not exist")
+       if response["message"][0]["otp"]!=body["otp"]:return function_http_response(400,0,"otp mismatched")
+   #read user
+   if all(item in body for item in ["username","password"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username and password=:password;",{"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
+   if all(item in body for item in ["firebase_id"]):respomse=await function_query_runner(request.state.postgres_object,"read","select * from users where firebase_id=:firebase_id order by id desc limit 1;",{"firebase_id":hashlib.sha256(body["firebase_id"].encode()).hexdigest()})
+   if all(item in body for item in ["email","otp"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where email=:email order by id desc limit 1;",{"email":body["email"]})
+   if all(item in body for item in ["mobile","otp"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where mobile=:mobile order by id desc limit 1;",{"mobile":body["mobile"]})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   user=None if not response["message"] else response["message"][0]
+   #not user
+   if all(item in body for item in ["username","password"]) and not user:return function_http_response(400,0,"no such user")
+   if all(item in body for item in ["firebase_id"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (firebase_id) values (:firebase_id) returning *;",{"firebase_id":hashlib.sha256(body["firebase_id"].encode()).hexdigest()})
+   if all(item in body for item in ["email","otp"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (email) values (:email) returning *;",{"email":body["email"]})
+   if all(item in body for item in ["mobile","otp"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (mobile) values (:mobile) returning *;",{"mobile":body["mobile"]})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #read user
+   if not user:
+       response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":response["message"]})
+       if response["status"]==0:return function_http_response(400,0,response["message"])
+       user=response["message"][0]
+   #token encode
+   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   response=await function_token_encode(data,env("key"))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
 
 
 
