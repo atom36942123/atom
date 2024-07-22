@@ -502,14 +502,6 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
     if function=="database-clean":
         response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    if function=="token-refresh":
-        response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        if not response["message"]:return function_http_response(400,0,"no user for token passed")
-        user=response["message"][0]
-        data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-        response=await function_token_encode(data,env("key"))
-        if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="mongo":
         body=await request.json()
         if not mode:return function_http_response(400,0,"mode must")
