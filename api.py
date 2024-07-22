@@ -71,6 +71,7 @@ async def function_database_init(request:Request):
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in ["insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;"]]
    for query in ["alter table users add constraint constraint_unique_username_users unique (username);","alter table likes add constraint constraint_unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);","alter table bookmark add constraint constraint_unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);","alter table report add constraint constraint_unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);","alter table block add constraint constraint_unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);"]:
       for constraint in schema_constraint_name_list:
+         return constraint
          if constraint not in query:await request.state.postgres_object.fetch_all(query=query,values={})
          
    
