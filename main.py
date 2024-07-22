@@ -58,7 +58,7 @@ async def middleware(request:Request,api_function):
 async def function_root():return {"status":1,"message":f"welcome to {[*postgres_object]}"}
 
 #router
-from helper import router
+from api import router
 app.include_router(router)
 
 #server start
