@@ -9,7 +9,7 @@ from helper import *
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
    if request.headers.get("token")!=env("key"):return error("token issue")
-   return await request.state.postgres_object.fetch_all(query=query,values={})
+   return response(query_runner(query,{}))
 
 @router.get("/{x}/database-init")
 async def function_database_init(request:Request):
