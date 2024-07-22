@@ -57,6 +57,13 @@ async def function_database_init(request:Request):
    #final response
    return {"status":1,"message":"done"}
 
+@router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
+async def function_signup(request:Request):
+   body=await request.json()
+   if not body["username"] or not body["password"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
+   return {"status":1,"message":await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})}
+   
+
 
       
 
