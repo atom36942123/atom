@@ -28,6 +28,10 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
    file.file.close   
    return {"status":1,"message":await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)}
 
+@router.get("/{x}/metric")
+async def function_metric(request:Request):
+   return {"status":1,"message":{"config_database_length":len(config_database)}}
+
 @router.get("/{x}/database-init")
 async def function_database_init(request:Request):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -43,10 +47,6 @@ async def function_database_init(request:Request):
          if k!="alter_query" and v[4]==1 and v[1] not in ["array"]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
       if k=="alter_query":[await request.state.postgres_object.fetch_all(query=item,values={}) for item in v if item.split()[5] not in schema_constraint_name_list]
    return {"status":1,"message":"done"}
-
-@router.get("/{x}/metric")
-async def function_metric(request:Request):
-   return {"status":1,"message":{"config_database_length":len(config_database)}}
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
