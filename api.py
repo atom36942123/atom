@@ -32,13 +32,40 @@ async def function_database_init(request:Request):
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
    for k,v in config_database.items():
-      for table in v[0]:
+      for table in v[0]:https://github.com/atom36942123/atom/blob/main/api.py
          if v[4]==1:
             if v[1]=="array":await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
             else:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
    [await request.state.postgres_object.fetch_all(query=item,values={}) for item in ["create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);","create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);","create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);"]]
    #final response
    return {"status":1,"message":"done"}
+
+@router.post("/{x}/insert-csv")
+async def function_insert_csv(request:Request,table:str,file:UploadFile):
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"only csv allowed"}))
+   if file.size>=100000:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file size should be<=100000 bytes"}))
+   file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"csv column mismatch-ct2t"}))
+   values=[row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None for row in file_object]
+
+
+
+
+
+    
+    
+    
+    
+     
+        row["tag"]=row["tag"].split(",") if row["tag"] else None
+        values.append(row)
+    query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
+    response=await request.state.postgres_object.execute_many(query=query,values=values)
+    file.file.close
+    #final response
+    return response
+
 
 
                    
