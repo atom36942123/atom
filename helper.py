@@ -20,7 +20,7 @@ from fastapi.encoders import jsonable_encoder
 
 #function
 error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
-output=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
+query_runner=lambda x,y:await request.state.postgres_object.fetch_all(query=x,values=y)
 
 #database
 config_database={
