@@ -76,7 +76,7 @@ async def function_login(x:str,request:Request):
    user=output[0] if output else None
    #create user
    if not user:
-      if body["username"] not None:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+      if body["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
       output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in body.items() if k not in ["username","password"]})
       user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})[0]
    #final response
