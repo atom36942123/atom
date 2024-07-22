@@ -83,7 +83,11 @@ async def function_login(x:str,request:Request):
    #final response
    return {"status":1,"message":jwt.encode(payload,env("key"))}
 
-
+@router.get("/{x}/token-refresh")
+async def function_token_refresh(request:Request,query:str):
+   
+   
+   return {"status":1,"message":}
 
                    
 
