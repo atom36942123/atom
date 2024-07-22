@@ -32,26 +32,23 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
 async def function_database_init(request:Request):
    #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #create table
-   for item in config_database["created_at"][0]:await request.state.postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint primary key generated always as identity);",values={})
-   #create column
-   for k,v in config_database.items():
-      if k not in ["alter_query"]:
-         if len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"}))
-         for item in v[0]:await request.state.postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[1]};",values={})
-   #helper
-   schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
-   #alter
+   #logic
    for k,v in config_database.items():
       for table in v[0]:
-         if v[2]
+         if len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"config_databae length issue"}))
+         if k=="created_at":await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
+         if k not in ["alter_query"]:await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[1]};",values={})
+         if k not in ["alter_query"] and v[2] is not None:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={})
+         if k not in ["alter_query"] and v[3] is not None and f'checkin_{k}_{table}' not in schema_constraint_name_list:await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={})
+         
+         if k in ["alter_query"]    await request.state.postgres_object.fetch_all(query=item,values={}) for item in alter_query if item.split()[5] not in schema_constraint_name_list
          
          
       
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={})    is not None and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={})  if v[3] and f'checkin_{k}_{table}' not in schema_constraint_name_list]
-   [await request.state.postgres_object.fetch_all(query=item,values={}) for item in alter_query if item.split()[5] not in schema_constraint_name_list]
+   
+   
+   
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
