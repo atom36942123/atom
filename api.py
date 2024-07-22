@@ -1,5 +1,5 @@
 from helper import *
-from main import app
+# from main import app
 
 @app.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
