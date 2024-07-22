@@ -35,19 +35,19 @@ async def function_database_init(request:Request):
    for k,v in config_database.items():
       for table in v[0]:
          if k=="created_at":await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
-         print(1)
+         return (1)
          if k not in ["alter_query"] and len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"config_databae length issue {k}"}))
-         print(2)
+         return (2)
          if k not in ["alter_query"]:await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[1]};",values={})
-         print(3)
+         return (3)
          if k not in ["alter_query"] and v[2] is not None:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={})
-         print(4)
+         return (4)
          if k not in ["alter_query"] and v[3] is not None and f'checkin_{k}_{table}' not in schema_constraint_name_list:await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={})
-         print(5)
+         return (5)
          if k not in ["alter_query"] and v[4]==1 and v[1]=="array":await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
-         print(6)
+         return (6)
          if k not in ["alter_query"] and v[4]==1 and v[1] not in ["array"]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
-         print(7)
+         return (7)
          if k in ["alter_query"]:[await request.state.postgres_object.fetch_all(query=item,values={}) for item in alter_query if item.split()[5] not in schema_constraint_name_list]
    return {"status":1,"message":"done"}
 
