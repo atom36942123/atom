@@ -76,24 +76,7 @@ class schema_atom(BaseModel):
 
 
 
-#signup
-@router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
-async def function_signup(request:Request):
-   #body
-   body=await request.json()
-   if any(item not in body for item in ["username","password"]):return function_http_response(400,0,"username/password must")
-   if any(not body[item] for item in ["username","password"]):return function_http_response(400,0,"username/password cant be null")
-   #read user
-   response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username;",{"username":body["username"]})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if response["message"]:return function_http_response(400,0,"username already exist")
-   #logic
-   query="insert into users (username,password) values (:username,:password) returning *;"
-   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
-   response=await function_query_runner(request.state.postgres_object,"write",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+
 
 @router.post("/{x}/login")
 async def function_login(x:str,request:Request):
