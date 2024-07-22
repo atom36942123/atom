@@ -612,14 +612,7 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
 
 
 
-import jwt,json
-async def function_token_decode(request,secret_key):
-   if not request.headers.get("token"):return {"status":0,"message":"token missing"}
-   try:payload=jwt.decode(request.headers.get("token"),secret_key,algorithms="HS256")
-   except Exception as e:return {"status":0,"message":e.args}
-   data=json.loads(payload["data"])
-   if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
-   return {"status":1,"message":data}
+
 
 import boto3
 async def function_s3_delete_url(access_key_id,secret_access_key,bucket_name,url):
