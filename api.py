@@ -44,10 +44,9 @@ async def function_database_init(request:Request):
          if k in ["alter_query"]:[await request.state.postgres_object.fetch_all(query=item,values={}) for item in v if item.split()[5] not in schema_constraint_name_list]
    return {"status":1,"message":"done"}
 
-# @router.get("/{x}/metric")
-# async def function_metric(request:Request,query:str):
-#    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-#    return {"status":1,"message":await request.state.postgres_object.fetch_all(query=query,values={})}
+@router.get("/{x}/metric")
+async def function_metric(request:Request):
+   return {"status":1,"message":{"config_database_length":len(config_database)}}
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
