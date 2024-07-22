@@ -44,10 +44,10 @@ async def function_database_init(request:Request):
          if k not in ["alter_query"] and v[4]==1 and v[1] not in ["array"]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
    return {"status":1,"message":"done"}
 
-@router.get("/{x}/metric")
-async def function_metric(request:Request,query:str):
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   return {"status":1,"message":await request.state.postgres_object.fetch_all(query=query,values={})}
+# @router.get("/{x}/metric")
+# async def function_metric(request:Request,query:str):
+#    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+#    return {"status":1,"message":await request.state.postgres_object.fetch_all(query=query,values={})}
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
