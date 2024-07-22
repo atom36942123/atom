@@ -86,15 +86,11 @@ async def function_login(x:str,request:Request):
    return response
 
 
-
-
-    
-    
-    
-    
-     
-
-
+async def function_token_encode(data,secret_key):
+   payload={"data":data}|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
+   try:token=jwt.encode(payload,secret_key)
+   except Exception as e:return {"status":0,"message":e.args}
+   return {"status":1,"message":token}
 
 
                    
