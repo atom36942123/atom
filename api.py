@@ -79,17 +79,27 @@ async def function_login(x:str,request:Request):
       outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=outout[0]
    #token
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)}
+   user=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":user},env("key"))
    #final response
-   return {"status":1,"message":jwt.encode(payload,env("key"))}
+   return {"status":1,"message":token}
 
 @router.get("/{x}/token-refresh")
 async def function_token_refresh(request:Request,query:str):
+   if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token missing"}))
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   
    
    
    return {"status":1,"message":}
 
-                   
+
+import jwt,json
+async def function_token_decode(request,secret_key):
+   
+   
+   if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
+   return {"status":1,"message":data} 
 
     
 
