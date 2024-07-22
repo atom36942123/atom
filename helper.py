@@ -18,11 +18,6 @@ import boto3,uuid
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-#function
-error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
-response=lambda x:JSONResponse(status_code=200,content=jsonable_encoder({"status":1,"message":x}))
-query_runner=lambda x,y:await request.state.postgres_object.fetch_all(query=x,values=y)
-
 #database
 config_database={
 "created_at":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"timestamptz","now()",None,1],"created_by_id":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"bigint",None,None,1],"received_by_id":[["message"],"bigint",None,None,1],
