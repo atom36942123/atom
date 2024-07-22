@@ -74,11 +74,13 @@ async def function_login(x:str,request:Request):
    user=output[0] if output else None
    #create user
    if not user:
-      if body["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in body.items() if k not in ["username","password"]})
+      if values["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in values.items() if k not in ["username","password"]})
       user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})[0]
+   #token
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)}
    #final response
-   return {"status":1,"message":jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)},env("key"))}
+   return {"status":1,"message":jwt.encode(payload,env("key"))}
 
 
 
