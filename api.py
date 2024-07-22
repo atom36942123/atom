@@ -62,7 +62,7 @@ async def function_login(x:str,request:Request):
    #otp verify
    if "otp" in body:
       output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
-      if not output:return function_http_response(400,0,"otp not exist")
+      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
    #values
    body["username"]=body["username"] if "username" in body else None
