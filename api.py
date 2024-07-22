@@ -53,46 +53,37 @@ async def function_signup(request:Request):
    body=await request.json()
    if not body["username"] or not body["password"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
    return {"status":1,"message":await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})}
-   
-
-
-      
-
-      
-# @router.post("/{x}/login")
-# async def function_login(x:str,request:Request):
-#    body=await request.json()
-#    #opt verify
-#    await request.state.postgres_object.fetch_all(query=query,values={})}
-   
-#    if response:
-#        if response["status"]==0:return function_http_response(400,0,response["message"])
-#        if not response["message"]:return function_http_response(400,0,"otp not exist")
-#        if response["message"][0]["otp"]!=body["otp"]:return function_http_response(400,0,"otp mismatched")
-#    #read user
-#    if all(item in body for item in ["username","password"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where username=:username and password=:password;",{"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
-#    if all(item in body for item in ["firebase_id"]):respomse=await function_query_runner(request.state.postgres_object,"read","select * from users where firebase_id=:firebase_id order by id desc limit 1;",{"firebase_id":hashlib.sha256(body["firebase_id"].encode()).hexdigest()})
-#    if all(item in body for item in ["email","otp"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where email=:email order by id desc limit 1;",{"email":body["email"]})
-#    if all(item in body for item in ["mobile","otp"]):response=await function_query_runner(request.state.postgres_object,"read","select * from users where mobile=:mobile order by id desc limit 1;",{"mobile":body["mobile"]})
-#    if response["status"]==0:return function_http_response(400,0,response["message"])
-#    user=None if not response["message"] else response["message"][0]
-#    #not user
-#    if all(item in body for item in ["username","password"]) and not user:return function_http_response(400,0,"no such user")
-#    if all(item in body for item in ["firebase_id"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (firebase_id) values (:firebase_id) returning *;",{"firebase_id":hashlib.sha256(body["firebase_id"].encode()).hexdigest()})
-#    if all(item in body for item in ["email","otp"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (email) values (:email) returning *;",{"email":body["email"]})
-#    if all(item in body for item in ["mobile","otp"]) and not user:response=await function_query_runner(request.state.postgres_object,"write","insert into users (mobile) values (:mobile) returning *;",{"mobile":body["mobile"]})
-#    if response["status"]==0:return function_http_response(400,0,response["message"])
-#    #read user
-#    if not user:
-#        response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":response["message"]})
-#        if response["status"]==0:return function_http_response(400,0,response["message"])
-#        user=response["message"][0]
-#    #token encode
-#    data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-#    response=await function_token_encode(data,env("key"))
-#    if response["status"]==0:return function_http_response(400,0,response["message"])
-#    #final response
-#    return response
+ 
+@router.post("/{x}/login")
+async def function_login(x:str,request:Request):
+   body=await request.json()
+   if len(body)>2:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
+   #otp verify
+   if otp in body:
+      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
+      if not output:return function_http_response(400,0,"otp not exist")
+      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
+   #values
+   body["username"]=body["username"] if "username" in body else None
+   body["password"]=hashlib.sha256(body["password"].encode()).hexdigest() if "password" in body else None
+   body["email"]=body["email"] if "email" in body else None
+   body["mobile"]=body["mobile"] if "mobile" in body else None
+   body["firebase_id"]=hashlib.sha256(body["firebase_id"].encode()).hexdigest() if "firebase_id" in body else None
+   body["google_id"]=hashlib.sha256(body["google_id"].encode()).hexdigest() if "google_id" in body else None
+   #read user
+   output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values=body)
+   user=output[0] if output else None
+   #create user
+   if not user:
+      if "username" in body:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k,v for k,v in body.items() if k not in ["username","password"]})
+      user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})[0]
+   #token encode
+   data=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   response=await function_token_encode(data,env("key"))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
 
 
 
