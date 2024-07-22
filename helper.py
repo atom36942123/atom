@@ -22,7 +22,6 @@ from fastapi.encoders import jsonable_encoder
 error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
 output=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
 
-
 #database
 config_database={
 "created_at":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"timestamptz","now()",None,1],"created_by_id":[["atom","users","post","likes","comment","bookmark","report","rating","block","message","helpdesk","file","otp","workseeker"],"bigint",None,None,1],"received_by_id":[["message"],"bigint",None,None,1],
