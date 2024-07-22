@@ -43,8 +43,14 @@ async def function_database_init(request:Request):
    schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    #alter
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={}) for k,v in config_database.items() for table in v[0] for column in schema_column if v[2] is not None and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={}) for k,v in config_database.items() for table in v[0] if v[3] and f'checkin_{k}_{table}' not in schema_constraint_name_list]
+   for k,v in config_database.items():
+      for table in v[0]:
+         if v[2]
+         
+         
+      
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={})    is not None and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={})  if v[3] and f'checkin_{k}_{table}' not in schema_constraint_name_list]
    [await request.state.postgres_object.fetch_all(query=item,values={}) for item in alter_query if item.split()[5] not in schema_constraint_name_list]
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
