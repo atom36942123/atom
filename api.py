@@ -75,8 +75,9 @@ async def function_login(x:str,request:Request):
    #create user
    if not user:
       if values["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in values.items() if k not in ["username","password"]})
-      user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})[0]
+      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={"firebase_id":values["firebase_id"],"google_id":values["google_id"],"email":values["email"],"mobile":values["mobile"]})
+      outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
+      user=outout[0]
    #token
    payload={"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)}
    #final response
