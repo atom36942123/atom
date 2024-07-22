@@ -76,20 +76,15 @@ async def function_database_init(request:Request):
          if v[4]==1:
             if v[1]=="array":await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
             else:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
+   [await request.state.postgres_object.fetch_all(query=item,values={}) for item in ["create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);","create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);","create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);"]]
    #final response
    return {"status":1,"message":"done"}
 
 
                    
-    # query_dict={
-    # "index_parent_table_parent_id_likes":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
-    # "index_parent_table_parent_id_bookmark":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
-    # "index_parent_table_parent_id_comment":"create index if not exists index_parent_table_parent_id_comment on comment(parent_table,parent_id);",
-    # }
-    # for k,v in query_dict.items():
-    #     response=await function_query_runner(request.state.postgres_object,"write",v,{})
-    #     if response["status"]==0:return function_http_response(400,0,f"error={response['message']}")
+
     
+
 
    
    
