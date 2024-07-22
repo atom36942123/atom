@@ -42,14 +42,25 @@ async def function_database_init(request:Request):
 
 @router.post("/{x}/insert-csv")
 async def function_insert_csv(request:Request,table:str,file:UploadFile):
+   #check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"only csv allowed"}))
    if file.size>=100000:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file size should be<=100000 bytes"}))
+   #logic
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    if set(file_object.fieldnames)!=set(["created_by_id","type","title","description","file_url","link_url","tag"]):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"csv column mismatch-ct2t"}))
-   return [row for row in file_object]
-   # values=[row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None for row in file_object]
+   values=[]
+   for row in file_object:
+      row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
+      row["tag"]=row["tag"].split(",") if row["tag"] else None
+      values.append(row)
+   file.file.close   
+   return {"status":1,"message":await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)}
 
+      
+
+      
+   
 
 
 
@@ -60,12 +71,6 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
     
      
 
-# values.append(row)
-#  query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
-#  response=await request.state.postgres_object.execute_many(query=query,values=values)
-#  file.file.close
-#  #final response
-#  return response
 
 
 
