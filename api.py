@@ -68,22 +68,17 @@ async def function_database_init(request:Request):
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[2]};",values={}) for k,v in config_database.items() for table in v[0] for column in schema_column if v[2] and column["column_name"]==k and column["table_name"]==table and not column["column_default"]]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint {f'checkin_{k}_{table}'} check ({k} in {v[3]});",values={}) for k,v in config_database.items() for table in v[0] if v[3] and f'checkin_{k}_{table}' not in schema_constraint_name_list]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in ["alter table users add constraint constraint_unique_username_users unique (username);","alter table likes add constraint constraint_unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);","alter table bookmark add constraint constraint_unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);","alter table report add constraint constraint_unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);","alter table block add constraint constraint_unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);","insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;"] if query.split()[5] not in schema_constraint_name_list]
+   #index
+   output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
+   if output:await request.state.postgres_object.fetch_all(query=output[0],values={})
+   for k,v in config_database.items() for table in v[0] if v[4]==1:
+      if v[1]=="array":await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
+      else:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
    #final response
    return {"status":1,"message":"done"}
 
 
-   
-    # #index
-    # response=await function_drop_all_index(request.state.postgres_object,function_query_runner)
-    # if response["status"]==0:return function_http_response(400,0,response["message"])
-    # for k,v in config_column.items():
-    #     if v[4]==1:
-    #         for table in v[0]:
-    #             index_name=f"index_{k}_{table}"
-    #             query=f"create index if not exists {index_name} on {table}({k});"
-    #             if v[1]=="array":query=f"create index if not exists {index_name} on {table} using gin ({k});"
-    #             response=await function_query_runner(request.state.postgres_object,"write",query,{})
-    #             if response["status"]==0:return function_http_response(400,0,f"error={response['message']}+{query}")        
+                   
     # query_dict={
     # "index_parent_table_parent_id_likes":"create index if not exists index_parent_table_parent_id_likes on likes(parent_table,parent_id);",
     # "index_parent_table_parent_id_bookmark":"create index if not exists index_parent_table_parent_id_bookmark on bookmark(parent_table,parent_id);",
