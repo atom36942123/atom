@@ -40,3 +40,15 @@ config_database={
 "marital_status":[["workseeker"],"text",None,None,0],"physical_disability":[["workseeker"],"text",None,None,0],"hobby":[["workseeker"],"text",None,None,0],"language":[["workseeker"],"text",None,None,0],
 "joining_days":[["workseeker"],"int",None,None,1],"career_break_month":[["workseeker"],"int",None,None,0],"resume_url":[["workseeker"],"text",None,None,0],"achievement":[["workseeker"],"text",None,None,0],"certificate":[["workseeker"],"text",None,None,0],"project":[["workseeker"],"text",None,None,0],"is_founder":[["workseeker"],"int",None,(0,1),1],"soft_skill":[["workseeker"],"text",None,None,0],"tool":[["workseeker"],"text",None,None,0],"achievement_work":[["workseeker"],"text",None,None,0],
 }
+
+alter_query=[
+"alter table users add constraint constraint_unique_username_users unique (username);",
+"alter table likes add constraint constraint_unique_created_by_id_parent_table_parent_id_likes unique (created_by_id,parent_table,parent_id);",
+"alter table bookmark add constraint constraint_unique_created_by_id_parent_table_parent_id_bookmark unique (created_by_id,parent_table,parent_id);",
+"alter table report add constraint constraint_unique_created_by_id_parent_table_parent_id_report unique (created_by_id,parent_table,parent_id);",
+"alter table block add constraint constraint_unique_created_by_id_parent_table_parent_id_block unique (created_by_id,parent_table,parent_id);",
+"insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;",
+"create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;"
+]
+
+
