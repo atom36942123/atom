@@ -35,7 +35,6 @@ async def function_database_init(request:Request):
    for k,v in config_database.items():
       for table in v[0]:
          if k=="created_at":await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
-         return (1)
          if k not in ["alter_query"] and len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"config_databae length issue {k}"}))
          return (2)
          if k not in ["alter_query"]:await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[1]};",values={})
