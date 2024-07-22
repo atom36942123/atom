@@ -538,19 +538,6 @@ from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-def function_http_response(status_code,status,message):
-    return JSONResponse(status_code=status_code,content=jsonable_encoder({"status":status,"message":message}))
-
-async def function_query_runner(postgres_object,mode,query,values):
-    if mode not in ["read","write"]:return {"status":0,"message":"wrong mode"}
-    try:
-        if mode=="read":output=list(map(lambda x:dict(x),await postgres_object.fetch_all(query=query,values=values)))
-        if mode=="write":output=await postgres_object.execute(query=query,values=values)
-    except Exception as e:return {"status":0,"message":e.args}
-    return {"status":1,"message":output}
-
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
    #param
    param={k:v for k,v in param.items() if v not in [None,""," "]}
@@ -631,13 +618,7 @@ async def function_add_comment_count(postgres_object,function_query_runner,table
    #final response
    return {"status":1,"message":object_list}
 
-import jwt,time
-from datetime import datetime,timedelta
-async def function_token_encode(data,secret_key):
-   payload={"data":data}|{"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple())}
-   try:token=jwt.encode(payload,secret_key)
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":token}
+
 
 import jwt,json
 async def function_token_decode(request,secret_key):
