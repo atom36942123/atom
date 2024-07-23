@@ -43,9 +43,12 @@ async def function_database_init(request:Request):
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint constraint_unique_{k.replace(',','_')+'_'+table} unique ({k});",values={}) for k,v in {"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","block","report"]}.items() for table in v if f"constraint_unique_{k.replace(',','_')+'_'+table}" not in schema_constraint_name_list]
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in alter_query if query.split()[5] not in schema_constraint_name_list]
+   #index
+   output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
+   if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
    [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table}({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] not in ["text[]","jsonb"]]
    [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using gin({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] in ["text[]","jsonb"]]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in alter_query if query.split()[5] not in schema_constraint_name_list]
    #response
    return {"status":1,"message":"done"}
 
