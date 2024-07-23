@@ -71,7 +71,7 @@ async def function_signup(request:Request):
    return {"status":1,"message":output}
  
 @router.post("/{x}/login")
-async def function_login(x:str,request:Request):
+async def function_login(request:Request):
    #prework
    body,values=await request.json(),{}
    values["username"]=body["username"] if "username" in body else None
@@ -94,7 +94,7 @@ async def function_login(x:str,request:Request):
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
    user=output[0]
    #token encode
-   user=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   user=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":user},env("key"))
    #response
    return {"status":1,"message":token}
@@ -108,7 +108,7 @@ async def function_token_refresh(request:Request):
    outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=outout[0]
    #token encode
-   user=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   user=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":user},env("key"))
    #final response
    return {"status":1,"message":token}
