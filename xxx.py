@@ -35,11 +35,10 @@ class schema_atom(BaseModel):
     file_url:str|None=None
     link_url:str|None=None
     tag:list|None=None
-    number:float|None=None
     date:datetime|None=None
     status:str|None=None
     remark:str|None=None
-    rating:int|None=None
+    rating:float|None=None
     is_pinned:int|None=None
     work_type:str|None=None
     work_profile:str|None=None
