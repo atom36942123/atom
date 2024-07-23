@@ -8,12 +8,16 @@ from helper import *
 #api
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
+   #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   return {"status":1,"message":await request.state.postgres_object.fetch_all(query=query,values={})}
+   #logic
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
+   #response
+   return {"status":1,"message":output}
 
 @router.post("/{x}/insert-csv")
 async def function_insert_csv(request:Request,table:str,file:UploadFile):
-   #check
+   #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"only csv allowed"}))
    if file.size>=100000:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file size should be<=100000 bytes"}))
@@ -25,17 +29,24 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
       row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
       row["tag"]=row["tag"].split(",") if row["tag"] else None
       values.append(row)
-   file.file.close   
-   return {"status":1,"message":await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)}
+   await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)
+   file.file.close
+   #response
+   return {"status":1,"message":"done"}
 
 @router.get("/{x}/metric")
 async def function_metric(request:Request):
-   return {"status":1,"message":{"config_database_length":len(config_database)}}
+   #logic
+   output={"config_database_length":len(config_database)}
+   #response
+   return {"status":1,"message":output}
 
 @router.get("/{x}/database-init")
 async def function_database_init(request:Request):
+   #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
+   #logic
    for k,v in config_database.items():
       if k!="alter_query" and len(v)!=5:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"config_databae length issue {k}"}))
       if k=="created_at":[await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in v[0]]
@@ -46,17 +57,22 @@ async def function_database_init(request:Request):
          if k!="alter_query" and v[4]==1 and "[]" in v[1]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
          if k!="alter_query" and v[4]==1 and "[]" not in v[1]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
       if k=="alter_query":[await request.state.postgres_object.fetch_all(query=item,values={}) for item in v if item.split()[5] not in schema_constraint_name_list]
+   #final response
    return {"status":1,"message":"done"}
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
+   #prework
    body=await request.json()
    if not body["username"] or not body["password"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
-   return {"status":1,"message":await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})}
+   #logic
+   output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
+   #final response
+   return {"status":1,"message":output}
  
 @router.post("/{x}/login")
 async def function_login(x:str,request:Request):
-   #values
+   #prework
    body,values=await request.json(),{}
    values["username"]=body["username"] if "username" in body else None
    values["password"]=hashlib.sha256(body["password"].encode()).hexdigest() if "password" in body else None
@@ -73,35 +89,32 @@ async def function_login(x:str,request:Request):
    output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values=values)
    user=output[0] if output else None
    #create user
-   if not user:
-      if values["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-      output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={"firebase_id":values["firebase_id"],"google_id":values["google_id"],"email":values["email"],"mobile":values["mobile"]})
-      outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
-      user=outout[0]
-   #token
+   if not user and values["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={"firebase_id":values["firebase_id"],"google_id":values["google_id"],"email":values["email"],"mobile":values["mobile"]})
+   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
+   user=output[0]
+   #token encode
+   user=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":user},env("key"))
+   #response
+   return {"status":1,"message":token}
+
+@router.get("/{x}/token-refresh")
+async def function_token_refresh(x:str,request:Request):
+   #token check
+   if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token missing"}))
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"x mismatch"}))
+   user=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
+   #read user
+   outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
+   user=outout[0]
+   #token encode
    user=json.dumps({"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":user},env("key"))
    #final response
    return {"status":1,"message":token}
 
-@router.get("/{x}/token-refresh")
-async def function_token_refresh(request:Request,query:str):
-   if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token missing"}))
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   
-   
-   
-   return {"status":1,"message":}
-
-
-import jwt,json
-async def function_token_decode(request,secret_key):
-   
-   
-   if "x" not in data or data["x"]!=str(request.url).split("/")[3]:return {"status":0,"message":"x encoded in token mismatch"}
-   return {"status":1,"message":data} 
-
-    
 
 
    
