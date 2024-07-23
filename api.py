@@ -100,10 +100,10 @@ async def function_login(x:str,request:Request):
    return {"status":1,"message":token}
 
 @router.get("/{x}/token-refresh")
-async def function_token_refresh(x:str,request:Request):
+async def function_token_refresh(request:Request):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
    outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=outout[0]
