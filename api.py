@@ -36,6 +36,7 @@ async def function_database_init(request:Request):
    alter_query=["insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;",]
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
+   index_mapping={"timestamptz":"brin","date":"brin","text[]":"gin","jsonb":"gin","int":"btree","numeric":"btree","bigint":"btree","text":"btree"}
    for k,v in config_database.items():
       if len(v)!=3:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"{k} length issue"}))
    #logic
@@ -47,8 +48,7 @@ async def function_database_init(request:Request):
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using btree ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] not in ["text[]","jsonb"]]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using gin ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] in ["text[]","jsonb"]]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {index_mapping[v[0]]} ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1]
    #response
    return {"status":1,"message":"done"}
 
