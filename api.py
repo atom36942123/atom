@@ -33,9 +33,7 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
 
 @router.get("/{x}/metric")
 async def function_metric(request:Request):
-   #logic
    output={"config_database_length":len(config_database)}
-   #response
    return {"status":1,"message":output}
 
 @router.get("/{x}/database-init")
@@ -59,12 +57,8 @@ async def function_database_init(request:Request):
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
-   #prework
    body=await request.json()
-   if not body["username"] or not body["password"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
-   #logic
    output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
-   #response
    return {"status":1,"message":output}
  
 @router.post("/{x}/login")
@@ -91,23 +85,10 @@ async def function_login(request:Request):
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
    user=output[0]
    #token encode
-   data=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":data},env("key"))
+   user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   data=json.dumps(user,default=str)
+   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":data,env("key"))
    #response
-   return {"status":1,"message":token}
-
-@router.get("/{x}/token-refresh")
-async def function_token_refresh(request:Request):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #read user
-   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-   user=output[0]
-   #token encode
-   data=123
-   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":data},env("key"))
-   #final response
    return {"status":1,"message":token}
 
 @router.get("/{x}/my-profile")
