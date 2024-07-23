@@ -2,8 +2,12 @@
 from fastapi import APIRouter
 router=APIRouter()
 
-#helper
-from helper import *
+#env
+from environs import Env
+env=Env()
+env.read_env()
+
+
 
 #api
 @router.get("/{x}/query-runner")
