@@ -54,8 +54,8 @@ async def function_database_init(request:Request):
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][2].split(',')]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in alter_query if query.split()[5] not in schema_constraint_name_list]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={}) if v[1]==1 and v[0] not in ["text[]","jsonb"] else await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})  for k,v in config_database.items() for table in v[2].split(',')]
-   # [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] in ["text[]","jsonb"]]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] not in ["text[]","jsonb"]]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[0] in ["text[]","jsonb"]]
    #response
    return {"status":1,"message":"done"}
 
