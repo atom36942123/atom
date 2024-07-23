@@ -63,13 +63,6 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
    #response    
    return {"status":1,"message":"done"}
 
-@router.get("/{x}/metric")
-async def function_metric(request:Request):
-   output={"config_database_length":len(config_database)}
-   return {"status":1,"message":output}
-
-
-
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
    body=await request.json()
