@@ -8,11 +8,8 @@ from helper import *
 #api
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
-   #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #logic
    output=await request.state.postgres_object.fetch_all(query=query,values={})
-   #response
    return {"status":1,"message":output}
 
 @router.post("/{x}/insert-csv")
@@ -31,7 +28,7 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)
    file.file.close
-   #response
+   #response    
    return {"status":1,"message":"done"}
 
 @router.get("/{x}/metric")
@@ -57,7 +54,7 @@ async def function_database_init(request:Request):
          if k!="alter_query" and v[4]==1 and "[]" in v[1]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={})
          if k!="alter_query" and v[4]==1 and "[]" not in v[1]:await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={})
       if k=="alter_query":[await request.state.postgres_object.fetch_all(query=item,values={}) for item in v if item.split()[5] not in schema_constraint_name_list]
-   #final response
+   #response
    return {"status":1,"message":"done"}
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
@@ -67,7 +64,7 @@ async def function_signup(request:Request):
    if not body["username"] or not body["password"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"body issue"}))
    #logic
    output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
-   #final response
+   #response
    return {"status":1,"message":output}
  
 @router.post("/{x}/login")
@@ -113,24 +110,23 @@ async def function_token_refresh(request:Request):
    #final response
    return {"status":1,"message":token}
 
-# @router.get("/{x}/my-profile")
-# async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
-#    #token check
-#    if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-#    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-#    if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-#    #read user
-#    outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-#    user=outout[0]
-#    #logic
-#    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
-#    for k,v in query_dict.items():
-#       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
-#       user[k]=output[0]["count"]
-#     #background task
-#     background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":user["id"]})
-#     #final response
-#     return {"status":1,"message":user}
+@router.get("/{x}/my-profile")
+async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
+   #token check
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #read user
+   outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
+   user=outout[0]
+   #count key
+   query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
+   for k,v in query_dict.items():
+      output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
+      user[k]=output[0]["count"]
+   #background task
+   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={{"id":user["id"],"last_active_at":datetime.now()}))
+   #response
+   return {"status":1,"message":user}
 
 
    
