@@ -118,6 +118,7 @@ async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    #read user
    outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=outout[0]
+   return user
    #count key
    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
    for k,v in query_dict.items():
