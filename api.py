@@ -102,7 +102,6 @@ async def function_login(x:str,request:Request):
 @router.get("/{x}/token-refresh")
 async def function_token_refresh(x:str,request:Request):
    #token check
-   # if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
