@@ -22,8 +22,6 @@ import boto3,uuid
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-
-
 #api
 @router.get("/{x}/query-runner")
 async def function_query_runner(request:Request,query:str):
