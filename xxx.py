@@ -80,33 +80,7 @@ class schema_atom(BaseModel):
 
 
     
-@router.get("/{x}/my-profile")
-async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #read user
-    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return function_http_response(400,0,"no user exist for token passed")
-    user=response["message"][0]
-    #extra key
-    query_dict={
-    "post_count":"select count(*) as number from post where created_by_id=:user_id;",
-    "comment_count":"select count(*) as number from comment where created_by_id=:user_id;",
-    "message_unread_count":"select count(*) as number from message where received_by_id=:user_id and status='unread';",
-    "like_post_count":"select count(*) as number from likes where created_by_id=:user_id and parent_table='post';",
-    "bookmark_post_count":"select count(*) as number from bookmark where created_by_id=:user_id and parent_table='post';",
-    }
-    for k,v in query_dict.items():
-        response=await function_query_runner(request.state.postgres_object,"read",v,{"user_id":request_user["id"]})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        user[k]=response["message"][0]["number"]
-    #background task
-    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":user["id"]})
-    #final response
-    return {"status":1,"message":user}
+
 
 @router.get("/{x}/my-action-check")
 async def function_my_action_check(request:Request,action:str,table:str,ids:str):
