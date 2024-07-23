@@ -58,9 +58,7 @@ async def function_query_runner(request:Request,query:str):
 async def function_database_init(request:Request):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   for k,v in config_database.items():
-      del v[2:4]
-      return {k:v}
+   return {k:del v[2:4] for k,v in config_database.items()}
    schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    #logic
    for k,v in config_database.items():
