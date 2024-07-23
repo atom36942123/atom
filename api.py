@@ -119,15 +119,15 @@ async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=outout[0]
    #count key
+   output={}
    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
    for k,v in query_dict.items():
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
-      return output
-      user[k]=output[0]["count"]
+      output[k]=output[0]["count"]
    #background task
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    #response
-   return {"status":1,"message":user}
+   return {"status":1,"message":user|output}
 
 
    
