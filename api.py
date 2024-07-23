@@ -105,7 +105,7 @@ async def function_token_refresh(request:Request):
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=output[0]
    #token encode
-   data=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   data=123
    token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(36500))).timetuple()),"data":data},env("key"))
    #final response
    return {"status":1,"message":token}
