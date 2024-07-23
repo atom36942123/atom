@@ -86,8 +86,8 @@ async def function_login(request:Request):
    user=output[0]
    #token encode
    user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   token=jwt.encode({"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":data,env("key"))
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
+   token=jwt.encode(payload,env("key"))
    #response
    return {"status":1,"message":token}
 
