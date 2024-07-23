@@ -41,10 +41,10 @@ async def function_database_init(request:Request):
    for k,v in config_database.items():
       if len(v)!=3:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"{k} length issue"}))
    #logic
-   [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][2]]
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2]]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={}) for k,v in config_database.items() for table in v[2] if v[1]==1 and "[]" in v[1]]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={}) for k,v in config_database.items() for table in v[2] if v[1]==1 and "[]" not in v[1]]
+   [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][2].split(',')]
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2].split(',')]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table}({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[1] not in ["text[]","jsonb"]]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists {f'index_{k}_{table}'} on {table} using gin ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1 and v[1] in ["text[]","jsonb"]]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in alter_query if query.split()[5] not in schema_constraint_name_list]
    #response
    return {"status":1,"message":"done"}
