@@ -102,7 +102,7 @@ async def function_login(x:str,request:Request):
 @router.get("/{x}/token-refresh")
 async def function_token_refresh(x:str,request:Request):
    #token check
-   if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   # if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
@@ -114,6 +114,24 @@ async def function_token_refresh(x:str,request:Request):
    #final response
    return {"status":1,"message":token}
 
+@router.get("/{x}/my-profile")
+async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
+   #token check
+   if not request.headers.get("token"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=x:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #read user
+   outout=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
+   user=outout[0]
+   #logic
+   query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
+   for k,v in query_dict.items():
+      output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
+      user[k]=output[0]["count"]
+    #background task
+    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write","update users set last_active_at=:last_active_at where id=:id;",{"last_active_at":datetime.now(),"id":user["id"]})
+    #final response
+    return {"status":1,"message":user}
 
 
    
