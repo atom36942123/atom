@@ -121,9 +121,8 @@ async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    for k,v in query_dict.items():
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
       count[k]=output[0]["count"]
-   #background task
-   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    #response
+   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":dict(user)|count}
 
 
