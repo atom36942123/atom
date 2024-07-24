@@ -507,26 +507,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
    #final response
    return response
 
-async def function_add_user_key(postgres_object,function_query_runner,object_list,user_column):
-   #check
-   if not object_list:return {"status":1,"message":object_list}
-   if user_column not in ["created_by_id","received_by_id"]:return {"status":0,"message":"wrong user_column"}
-   #select users
-   user_ids=list(set([item[user_column] for item in object_list if item[user_column]]))
-   query=f"select * from users join unnest(array{user_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-   response=await function_query_runner(postgres_object,"read",query,{})
-   if response["status"]==0:return response
-   object_list_user=response["message"]
-   #set extra key
-   for object in object_list:
-      for user in object_list_user:
-         if object[user_column]==user["id"]:
-            if user_column=="created_by_id":
-               object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
-            if user_column=="received_by_id":
-               object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
-   #final response
-   return {"status":1,"message":object_list}
+
 
 async def function_add_like_count(postgres_object,function_query_runner,table,object_list):
    #check
