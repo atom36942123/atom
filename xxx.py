@@ -103,35 +103,7 @@ async def function_my_action_check(request:Request,action:str,table:str,ids:str)
     #final response
     return {"status":1,"message":ids_filtered}
 
-@router.get("/{x}/my-read-parent/{table}/{parent_table}/{page}")
-async def function_my_read_parent(request:Request,table:str,parent_table:str,page:int):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #read parent ids
-    limit=30
-    offset=(page-1)*limit
-    query=f"select parent_id from {table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc offset {offset} limit {limit};"
-    values={"created_by_id":request_user["id"],"parent_table":parent_table}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    parent_ids=[x["parent_id"] for x in response["message"]]
-    #read parent ids objects
-    query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-    response=await function_query_runner(request.state.postgres_object,"read",query,{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add user key
-    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add like count
-    response=await function_add_like_count(request.state.postgres_object,function_query_runner,parent_table,response["message"])
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add comment count
-    response=await function_add_comment_count(request.state.postgres_object,function_query_runner,parent_table,response["message"])
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #final response
-    return response
+
 
 
 
