@@ -215,7 +215,7 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
          for object_comment in object_comment_list:
             if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
     #final response
-    return response
+    return {"status":1,"message":output}
 
 
 
