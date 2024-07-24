@@ -134,30 +134,7 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
     return response
 
 
-@router.get("/{x}/my-message-thread/{user_id}/{page}")
-async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #logic
-    limit=30
-    offset=(page-1)*limit
-    query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {offset} limit {limit}"
-    values={"user_1":request_user["id"],"user_2":user_id}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add user key
-    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"received_by_id")
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #background task
-    query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;"
-    values={"status":"read","updated_by_id":request_user['id'],"updated_at":datetime.now(),"received_by_id":request_user['id'],"created_by_id":user_id}
-    background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",query,values)
-    #final response
-    return response
+
 
 @router.delete("/{x}/my-delete")
 async def function_my_delete(request:Request,x:str,background_tasks:BackgroundTasks,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message","message_thread","like_post","bookmark_post","account"],user_id:int=None,post_id:int=None,message_id:int=None):
