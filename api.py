@@ -81,6 +81,32 @@ async def function_signup(request:Request):
    output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
    return {"status":1,"message":output}
 
+@router.post("/{x}/login")
+async def function_login(request:Request):
+   #prework
+   body=await request.json()
+   for item in ["username","email","mobile","otp"]:body[item]=body[item] if item in body else None
+   for item in ["password","firebase_id","google_id"]:body[item]=hashlib.sha256(body[item].encode()).hexdigest() if item in body else None
+   #otp verify
+   if body["otp"]:
+      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
+      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
+      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
+   #read user
+   output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values={k:v for k,v in body.items() if k not in ["otp"]})
+   user=output[0] if output else None
+   #create user
+   if not user and body["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in body.items() if k not in ["otp","username","password"]})
+   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
+   user=output[0]
+   #token encode
+   user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
+   token=jwt.encode(payload,env("key"))
+   #response
+   return {"status":1,"message":token}
+
          
       
    
@@ -97,35 +123,7 @@ async def function_signup(request:Request):
 
 
  
-@router.post("/{x}/login")
-async def function_login(request:Request):
-   #prework
-   body,values=await request.json(),{}
-   values["username"]=body["username"] if "username" in body else None
-   values["password"]=hashlib.sha256(body["password"].encode()).hexdigest() if "password" in body else None
-   values["email"]=body["email"] if "email" in body else None
-   values["mobile"]=body["mobile"] if "mobile" in body else None
-   values["firebase_id"]=hashlib.sha256(body["firebase_id"].encode()).hexdigest() if "firebase_id" in body else None
-   values["google_id"]=hashlib.sha256(body["google_id"].encode()).hexdigest() if "google_id" in body else None
-   #otp verify
-   if "otp" in body:
-      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":values["email"],"mobile":values["mobile"]})
-      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
-   #read user
-   output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values=values)
-   user=output[0] if output else None
-   #create user
-   if not user and values["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={"firebase_id":values["firebase_id"],"google_id":values["google_id"],"email":values["email"],"mobile":values["mobile"]})
-   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
-   user=output[0]
-   #token encode
-   user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
-   token=jwt.encode(payload,env("key"))
-   #response
-   return {"status":1,"message":token}
+
 
 @router.get("/{x}/my-profile")
 async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
