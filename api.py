@@ -57,24 +57,36 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    mapping_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
-   return mapping_column_datatype
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_name_list=list(set(file_object.fieldnames))
-   values=[]
-   query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
    #logic
-   for column in file_column_name_list:
-      datatype=mapping_column_datatype[column]
-      
-      
+   values=[]
    for row in file_object:
-      row["created_by_id"]=int(row["created_by_id"]) if row["created_by_id"] else None
-      row["tag"]=row["tag"].split(",") if row["tag"] else None
-      values.append(row)
-   await request.state.postgres_object.execute_many(query=f"insert into {table} (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;",values=values)
+      for column in file_column_name_list:
+         if mapping_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
+         if mapping_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
+         if mapping_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
+         if mapping_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
+         if mapping_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
+         values.append(row)
+   await request.state.postgres_object.execute_many(query=f"insert into {table} ({",".join(file_column_name_list)}) values ({",".join([":"+item for item in file_column_name_list])}) returning *;",values=values)
    file.file.close
    #response    
    return {"status":1,"message":"done"}
+
+         
+      
+   
+      
+      
+      
+      
+   
+      
+      
+      
+   
+  
 
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
