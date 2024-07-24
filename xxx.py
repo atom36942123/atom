@@ -82,26 +82,6 @@ class schema_atom(BaseModel):
     
 
 
-@router.get("/{x}/my-action-check")
-async def function_my_action_check(request:Request,action:str,table:str,ids:str):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #ids into list
-    if not ids:return function_http_response(400,0,f"ids cant be null")
-    try:ids=[int(x) for x in ids.split(',')]
-    except Exception as e:return function_http_response(400,0,e.args)
-    #logic
-    query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
-    values={"parent_table":table,"created_by_id":request_user["id"]}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #parent ids join
-    try:ids_filtered=list(set([item["parent_id"] for item in response["message"] if item["parent_id"]]))
-    except Exception as e:return function_http_response(400,0,e.args)
-    #final response
-    return {"status":1,"message":ids_filtered}
 
 
 
