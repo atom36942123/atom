@@ -72,7 +72,6 @@ async def function_insert_csv(request:Request,table:str,file:UploadFile):
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
    file.file.close
-   return values
    #response    
    return {"status":1,"message":"done"}
 
