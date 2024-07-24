@@ -144,7 +144,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
             for key in user_key:object[f"{column}_{key}"]=None
             for user in output_user:
                if object[column]==user["id"]:
-                  for key in :
+                  for key in user_key:
                      object[f"{column}_{key}"]=user[key]
                   break
    #response
