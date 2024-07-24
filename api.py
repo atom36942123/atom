@@ -135,15 +135,17 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
    output=[dict(item) for item in output]
    #add user key
+   user_column=["created_by_id","received_by_id"]
+   user_key=["username","profile_pic_url"]
    if output:
-      for user_column in ["created_by_id","received_by_id"]:
-         output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[user_column]) for item in output if item[user_column]])});",values={})
+      for column in user_column:
+         output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
-            for key in ["username","profile_pic_url"]:object[f"{user_column}_{key}"]=None
+            for key in user_key:object[f"{column}_{key}"]=None
             for user in output_user:
-               if object[user_column]==user["id"]:
-                  for key in ["username","profile_pic_url"]:
-                     object[f"{user_column}_{key}"]=user[key]
+               if object[column]==user["id"]:
+                  for key in :
+                     object[f"{column}_{key}"]=user[key]
                   break
    #response
    return {"status":1,"message":output}
