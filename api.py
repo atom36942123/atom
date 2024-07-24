@@ -107,25 +107,7 @@ async def function_login(request:Request):
    #response
    return {"status":1,"message":token}
 
-         
-      
-   
-      
-      
-      
-      
-   
-      
-      
-      
-   
-  
-
-
- 
-
-
-@router.get("/{x}/my-profile")
+ @router.get("/{x}/my-profile")
 async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
