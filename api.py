@@ -171,7 +171,7 @@ async def function_my_message_thread(request:Request,background_tasks:Background
                   for key in user_key:
                      object[f"{column}_{key}"]=object_user[key]
                   break
-   #final response
+   #response
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
    return {"status":1,"message":output}
 
@@ -214,7 +214,7 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
          object["comment_count"]=0
          for object_comment in object_comment_list:
             if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-   #final response
+   #response
    return {"status":1,"message":output}
 
 @router.get("/{x}/my-action-check")
@@ -226,7 +226,7 @@ async def function_my_action_check(request:Request,action:str,table:str,ids:str)
    ids=[int(x) for x in ids.split(',')]
    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;",values={"parent_table":table,"created_by_id":user["id"]})
    ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   #final response
+   #response
    return {"status":1,"message":ids_filtered}
 
 
