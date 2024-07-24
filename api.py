@@ -142,10 +142,10 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
             for key in user_key:object[f"{column}_{key}"]=None
-            for user in output_user:
-               if object[column]==user["id"]:
+            for object_user in output_user:
+               if object[column]==object_user["id"]:
                   for key in user_key:
-                     object[f"{column}_{key}"]=user[key]
+                     object[f"{column}_{key}"]=object_user[key]
                   break
    #response
    return {"status":1,"message":output}
@@ -155,7 +155,6 @@ async def function_my_message_thread(request:Request,background_tasks:Background
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   return user
    #logic
    output=await request.state.postgres_object.fetch_all(query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {(page-1)*limit} limit {limit}",values={"user_1":user["id"],"user_2":user_id})
    output=[dict(item) for item in output]
@@ -167,15 +166,13 @@ async def function_my_message_thread(request:Request,background_tasks:Background
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
             for key in user_key:object[f"{column}_{key}"]=None
-            for user in output_user:
-               if object[column]==user["id"]:
+            for object_user in output_user:
+               if object[column]==object_user["id"]:
                   for key in user_key:
-                     object[f"{column}_{key}"]=user[key]
+                     object[f"{column}_{key}"]=object_user[key]
                   break
    #final response
-   await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']})
-   # return {"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}
-   #background_tasks.add_task()
+   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
    return {"status":1,"message":output}
 
    
