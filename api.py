@@ -173,7 +173,8 @@ async def function_my_message_thread(request:Request,user_id:int,page:int,backgr
                   break
    #final response
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"received_by_id":user['id'],"created_by_id":user_id}))
-   return response
+   return {"status":1,"message":output}
+
    
    
     
