@@ -141,8 +141,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       for column in user_column:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
-            for key in user_key:
-               object[f"{column}_{key}"]=None
+            for key in user_key:object[f"{column}_{key}"]=None
             for user in output_user:
                if object[column]==user["id"]:
                   for key in user_key:
@@ -158,6 +157,7 @@ async def function_my_message_thread(request:Request,user_id:int,page:int,backgr
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #logic
    output=await request.state.postgres_object.fetch_all(query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {(page-1)*limit} limit {limit}",values={"user_1":user["id"],"user_2":user_id})
+   output=[dict(item) for item in output]
    #add user key
    user_column=["created_by_id","received_by_id"]
    user_key=["username","profile_pic_url"]
@@ -165,8 +165,7 @@ async def function_my_message_thread(request:Request,user_id:int,page:int,backgr
       for column in user_column:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
-            for key in user_key:
-               object[f"{column}_{key}"]=None
+            for key in user_key:object[f"{column}_{key}"]=None
             for user in output_user:
                if object[column]==user["id"]:
                   for key in user_key:
