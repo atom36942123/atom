@@ -141,7 +141,8 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       for column in user_column:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
-            for key in user_key:object[f"{column}_{key}"]=None
+            for key in user_key:
+               object[f"{column}_{key}"]=None
             for user in output_user:
                if object[column]==user["id"]:
                   for key in user_key:
@@ -164,7 +165,8 @@ async def function_my_message_thread(request:Request,user_id:int,page:int,backgr
       for column in user_column:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
-            for key in user_key:object[f"{column}_{key}"]=None
+            for key in user_key:
+               object[f"{column}_{key}"]=None
             for user in output_user:
                if object[column]==user["id"]:
                   for key in user_key:
