@@ -51,7 +51,7 @@ async def middleware(request:Request,api_function):
    #api response
    try:response=await api_function(request)
    # except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
+   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":dict(traceback.format_exc())}))
    traceback.format_exc()
 
    #final response
