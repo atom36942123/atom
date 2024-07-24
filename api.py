@@ -175,6 +175,42 @@ async def function_my_message_thread(request:Request,background_tasks:Background
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
    return {"status":1,"message":output}
 
+@router.get("/{x}/my-read-parent")
+async def function_my_read_parent(request:Request,table:str,parent_table:str,page:int,limit:int=30):
+   #token check
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #logic
+   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc offset {(page-1)*limit} limit {limit};",values={"created_by_id":user["id"],"parent_table":parent_table})
+   parent_ids=[x["parent_id"] for x in output]
+   output=await request.state.postgres_object.fetch_all(query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   #add user key
+   user_column=["created_by_id"]
+   user_key=["username","profile_pic_url"]
+   if output:
+      for column in user_column:
+         output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
+         for object in output:
+            for key in user_key:object[f"{column}_{key}"]=None
+            for object_user in output_user:
+               if object[column]==object_user["id"]:
+                  for key in user_key:
+                     object[f"{column}_{key}"]=object_user[key]
+                  break
+
+   
+   
+    
+    
+    #add like count
+    response=await function_add_like_count(request.state.postgres_object,function_query_runner,parent_table,response["message"])
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #add comment count
+    response=await function_add_comment_count(request.state.postgres_object,function_query_runner,parent_table,response["message"])
+    if response["status"]==0:return function_http_response(400,0,response["message"])
+    #final response
+    return response
+
    
    
     
