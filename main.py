@@ -50,8 +50,8 @@ async def middleware(request:Request,api_function):
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
-   # except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
+   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+   #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
    traceback.format_exc()
 
    #final response
