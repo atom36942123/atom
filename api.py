@@ -204,14 +204,16 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
       object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from likes join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
       for object in output:
          object["like_count"]=0
-         for object_like in object_like_list:if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+         for object_like in object_like_list:
+            if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
     #add comment count
    if output:
       ids=list(set([item["id"] for item in output if item["id"]]))
       object_comment_list=await request.state.postgres_object.fetch_all(query=   f"select parent_id,count(*) from comment join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
       for object in output:
          object["comment_count"]=0
-         for object_comment in object_comment_list:if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
+         for object_comment in object_comment_list:
+            if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
     #final response
     return response
 
