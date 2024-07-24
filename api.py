@@ -114,16 +114,15 @@ async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-   user=output[0]
+   user=[dict(item) for item in output][0]
    #count key
-   count={}
    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';",}
    for k,v in query_dict.items():
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
-      count[k]=output[0]["count"]
+      user[k]=output[0]["count"]
    #response
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
-   return {"status":1,"message":dict(user)|count}
+   return {"status":1,"message":user}
 
 @router.get("/{x}/my-message-inbox")
 async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,limit:int=30):
@@ -135,16 +134,18 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
    output=[dict(item) for item in output]
-   #add user key creator
-   user_column="created_by_id"
-   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-   for object in output for user in  output_user if user["id"]==object[user_column]:object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
-   #add user key receiver
-   user_column="received_by_id"
-   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   #add user key
+   for user_column in ["created_by_id","received_by_id"]:
+      output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+      for object in output:
+         for user in  output_user:
+            if user["id"]==object[user_column]:
+               if user_column=="created_by_id":object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
+               if user_column=="received_by_id":object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
    #response
-   for object in output for user in  output_user if user["id"]==object[user_column]:object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
    return {"status":1,"message":output}
+   
+
 
 
 
