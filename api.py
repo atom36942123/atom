@@ -134,16 +134,17 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;'''
    if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
-   
-
-   #add user key
-   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add user key
-   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"received_by_id")
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+   output=[dict(item) for item in output]
+   #add user key creator
+   user_column="created_by_id"
+   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   for object in output for user in  output_user if user["id"]==object[user_column]:object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
+   #add user key receiver
+   user_column="received_by_id"
+   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   #response
+   for object in output for user in  output_user if user["id"]==object[user_column]:object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
+   return {"status":1,"message":output}
 
 
 
