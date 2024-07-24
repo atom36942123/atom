@@ -458,22 +458,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
 
 
 
-async def function_add_like_count(postgres_object,function_query_runner,table,object_list):
-   #check
-   if not object_list:return {"status":1,"message":object_list}
-   #fetch count
-   ids=list(set([item["id"] for item in object_list if item["id"]]))
-   query=f"select parent_id,count(*) from likes join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;"
-   response=await function_query_runner(postgres_object,"read",query,{})
-   if response["status"]==0:return response
-   object_like_list=response["message"]
-   #set count
-   for object in object_list:
-      object["like_count"]=0
-      for object_like in object_like_list:
-         if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-   #final response
-   return {"status":1,"message":object_list}
+
 
 async def function_add_comment_count(postgres_object,function_query_runner,table,object_list):
    #check
@@ -510,62 +495,7 @@ async def function_ses_send_email(access_key_id,secret_access_key,ses_sender,ses
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":output}
 
-async def function_update_mat_all(postgres_object,function_query_runner):
-   #logic
-   read_mat_all="select string_agg(oid::regclass::text,', ') as output from pg_class where relkind='m';"
-   response=await function_query_runner(postgres_object,"read",read_mat_all,{})
-   if response["status"]==0:return response
-   mat_all_list=response["message"][0]["output"].split(",")
-   for item in mat_all_list:
-      query=f"refresh materialized view {item};"
-      response=await function_query_runner(postgres_object,"write",query,{})
-      if response["status"]==0:return response
-   #final response
-   return {"status":1,"message":"done"}
 
-async def function_drop_all_mat(postgres_object,function_query_runner):
-   #logic
-   drop_all_mat_get_query="select 'drop materialized view ' || string_agg(oid::regclass::text, ', ') || ' cascade;' as output from pg_class where relkind='m';"
-   response=await function_query_runner(postgres_object,"read",drop_all_mat_get_query,{})
-   if response["status"]==0:return response
-   drop_all_query=response["message"][0]["output"]
-   if drop_all_query:
-      response=await function_query_runner(postgres_object,"write",drop_all_query,{})
-      if response["status"]==0:return response
-   #final response
-   return {"status":1,"message":"done"}
-
-async def function_drop_all_index(postgres_object,function_query_runner):
-   #logic
-   drop_all_index_get_query='''
-   select 'drop index ' || string_agg(i.indexrelid::regclass::text, ', ' order by n.nspname, 
-   i.indrelid::regclass::text, cl.relname) as output
-   from pg_index i
-   join pg_class cl ON cl.oid = i.indexrelid
-   join   pg_namespace n ON n.oid = cl.relnamespace
-   left join pg_constraint co ON co.conindid = i.indexrelid
-   where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null
-   and not i.indisprimary and not i.indisunique and not i.indisexclusion 
-   and not i.indisclustered and not i.indisreplident;
-   '''
-   response=await function_query_runner(postgres_object,"read",drop_all_index_get_query,{})
-   if response["status"]==0:return response
-   drop_all_query=response["message"][0]["output"]
-   if drop_all_query:
-      response=await function_query_runner(postgres_object,"write",drop_all_query,{})
-      if response["status"]==0:return response
-   #final response
-   return {"status":1,"message":"done"}
-
-async def function_drop_all_view(postgres_object,function_query_runner):
-   drop_all_view_get_query='''select 'drop view if exists ' || string_agg (table_name, ', ') || ' cascade;' as output from information_schema.views where table_schema not in ('pg_catalog', 'information_schema') and table_name !~ '^pg_';'''
-   response=await function_query_runner(postgres_object,"read",drop_all_view_get_query,{})
-   if response["status"]==0:return response
-   drop_all_query=response["message"][0]["output"]
-   if drop_all_query:
-      response=await function_query_runner(postgres_object,"write",drop_all_query,{})
-      if response["status"]==0:return response
-   return {"status":1,"message":"done"}
 
 async def function_database_clean(postgres_object,function_query_runner):
    #logic
