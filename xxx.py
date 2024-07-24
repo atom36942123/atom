@@ -460,22 +460,6 @@ async def function_object_read(postgres_object,function_query_runner,table,param
 
 
 
-async def function_add_comment_count(postgres_object,function_query_runner,table,object_list):
-   #check
-   if not object_list:return {"status":1,"message":object_list}
-   #fetch count
-   ids=list(set([item["id"] for item in object_list if item["id"]]))
-   query=f"select parent_id,count(*) from comment join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;"
-   response=await function_query_runner(postgres_object,"read",query,{})
-   if response["status"]==0:return response
-   object_comment_list=response["message"]
-   #set count
-   for object in object_list:
-      object["comment_count"]=0
-      for object_comment in object_comment_list:
-         if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-   #final response
-   return {"status":1,"message":object_list}
 
 
 
