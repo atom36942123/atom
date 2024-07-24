@@ -139,9 +139,9 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
       for object in output:
          for user in  output_user:
-            if user["id"]==object[user_column]:
-               if user_column=="created_by_id":object["created_by_username"],object["created_by_profile_pic_url"],object["created_by_type"]=user["username"],user["profile_pic_url"],user["type"]
-               if user_column=="received_by_id":object["received_by_username"],object["received_by_profile_pic_url"],object["received_by_type"]=user["username"],user["profile_pic_url"],user["type"]
+            if object[user_column]==user["id"]:
+               for key in ["username","profile_pic_url","type"]:object[user_column.replace("id","key")]=user[key]
+            else:object[user_column.replace("id","key")]=None       
    #response
    return {"status":1,"message":output}
    
