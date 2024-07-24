@@ -136,7 +136,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    output=[dict(item) for item in output]
    #add user key
    for user_column in ["created_by_id","received_by_id"]:
-      return ','.join([str(item[user_column]) for item in output if item[user_column]]
+      return ','.join([str(item[user_column]) for item in output if item[user_column]])
       output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({});",values={})
       return output_user
       for object in output:
