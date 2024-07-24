@@ -140,8 +140,8 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       for object in output:
          for user in  output_user:
             if object[user_column]==user["id"]:
-               for key in ["username","profile_pic_url","type"]:object[user_column.replace("id","key")]=user[key]
-            else:object[user_column.replace("id","key")]=None       
+               for key in ["username","profile_pic_url","type"]:object[user_column.replace("id",key)]=user[key]
+            else:object[user_column.replace("id",key)]=None       
    #response
    return {"status":1,"message":output}
    
