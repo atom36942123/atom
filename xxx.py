@@ -73,56 +73,6 @@ class schema_atom(BaseModel):
     tool:str|None=None
     achievement_work:str|None=None
 
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-@router.delete("/{x}/my-delete")
-async def function_my_delete(request:Request,x:str,background_tasks:BackgroundTasks,mode:Literal["post_all","comment_all","message_all","like_post_all","bookmark_post_all","message","message_thread","like_post","bookmark_post","account"],user_id:int=None,post_id:int=None,message_id:int=None):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #refresh request_user
-    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    if not response["message"]:return function_http_response(400,0,"no user for token passed")
-    request_user=response["message"][0]
-    #query set
-    if mode=="comment_all":query,values="delete from comment where created_by_id=:created_by_id;",{"created_by_id":request_user['id']}
-    if mode=="message_all":query,values="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']}
-    if mode=="like_post_all":query,values="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
-    if mode=="bookmark_post_all":query,values="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;",{"created_by_id":request_user['id'],"parent_table":"post"}
-    if mode=="message_thread":query,values="delete from message where (created_by_id=:a and received_by_id=:b) or (created_by_id=:b and received_by_id=:a);",{"a":request_user['id'],"b":user_id}   
-    if mode=="like_post":query,values="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",{"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
-    if mode=="bookmark_post":query,values="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",{"created_by_id":request_user['id'],"parent_table":"post","parent_id":post_id}
-    if mode=="message":query,values=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);",{"id":message_id,"created_by_id":request_user['id'],"received_by_id":request_user['id']}
-    if mode=="post_all":
-        if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"user type not allowed")
-        query,values="delete from post where created_by_id=:created_by_id;",{"created_by_id":request_user['id']}
-    if mode=="account":
-        if request_user["type"] in ["root","admin"]:return function_http_response(400,0,"not allowed")
-        query,values="delete from users where id=:id;",{"id":request_user['id']}
-        for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id;",{"created_by_id":request_user['id']})
-        for item in ["message"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where created_by_id=:created_by_id or received_by_id=:received_by_id;",{"created_by_id":request_user['id'],"received_by_id":request_user['id']})
-        for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where parent_table='users' and parent_id=:parent_id;",{"parent_id":request_user['id']})
-    #query run
-    response=await function_query_runner(request.state.postgres_object,"write",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #final response
-    return {"status":1,"message":"object deleted"}
-
 @router.post("/{x}/object-create/{table}")
 async def function_object_create(table:str,request:Request,body:schema_atom):
    #token check
