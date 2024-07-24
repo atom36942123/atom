@@ -139,7 +139,8 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       for user_column in ["created_by_id","received_by_id"]:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[user_column]) for item in output if item[user_column]])});",values={})
          for object in output:
-            object[f"{user_column}_username"],object[f"{user_column}_profile_pic_url"]=None,None
+            [lambda x=object[f"{user_column}_{key}"]=None for key in ["username","profile_pic_url"]]
+            #object[f"{user_column}_username"],object[f"{user_column}_profile_pic_url"]=None,None
             for user in output_user:
                if object[user_column]==user["id"]:
                   object[f"{user_column}_username"],object[f"{user_column}_profile_pic_url"]=user["username"],user["profile_pic_url"]
@@ -154,15 +155,15 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
 
 
 # @router.get("/{x}/my-message-thread")
-# async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks,l):
+# async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks,limit:int=30):
 #    #token check
 #    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
 #    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#       #logic
 
  
 
-#     #logic
-#     limit=30
+    
 #     offset=(page-1)*limit
 #     query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {offset} limit {limit}"
 #     values={"user_1":request_user["id"],"user_2":user_id}
