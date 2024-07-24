@@ -124,7 +124,7 @@ async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
    #background task
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    #response
-   return {"status":1,"message":user|count}
+   return {"status":1,"message":dict(user)|count}
 
 
    
