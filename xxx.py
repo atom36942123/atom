@@ -133,28 +133,6 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
     #final response
     return response
 
-@router.get("/{x}/my-message-inbox/{page}")
-async def function_my_message_inbox(request:Request,page:int,is_unread:int=None):
-    #token check
-    response=await function_token_decode(request,env("key"))
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    request_user=response["message"]
-    #logic
-    limit=30
-    offset=(page-1)*limit
-    query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;'''
-    if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
-    values={"created_by_id":request_user['id'],"received_by_id":request_user['id'],"offset":offset,"limit":limit}
-    response=await function_query_runner(request.state.postgres_object,"read",query,values)
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add user key
-    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #add user key
-    response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"received_by_id")
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    #final response
-    return response
 
 @router.get("/{x}/my-message-thread/{user_id}/{page}")
 async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks):
