@@ -139,12 +139,12 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
       for user_column in ["created_by_id","received_by_id"]:
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[user_column]) for item in output if item[user_column]])});",values={})
          for object in output:
-            [object[f"{user_column}_{key}"]:=None for key in ["username","profile_pic_url"]]
-            #object[f"{user_column}_username"],object[f"{user_column}_profile_pic_url"]=None,None
             for user in output_user:
                if object[user_column]==user["id"]:
-                  object[f"{user_column}_username"],object[f"{user_column}_profile_pic_url"]=user["username"],user["profile_pic_url"]
+                  for key in ["username","profile_pic_url"]:
+                     object[f"{user_column}_{key}"]=user[key]
                   break
+            for key in ["username","profile_pic_url"]:object[f"{user_column}_{key}"]=None
    #response
    return {"status":1,"message":output}
 
