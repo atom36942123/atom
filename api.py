@@ -151,7 +151,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    return {"status":1,"message":output}
 
 @router.get("/{x}/my-message-thread")
-async def function_my_message_thread(request:Request,user_id:int,page:int,background_tasks:BackgroundTasks,limit:int=30):
+async def function_my_message_thread(request:Request,background_tasks:BackgroundTasks,user_id:int,page:int,limit:int=30):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
@@ -172,7 +172,8 @@ async def function_my_message_thread(request:Request,user_id:int,page:int,backgr
                      object[f"{column}_{key}"]=user[key]
                   break
    #final response
-   background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
+   await request.state.postgres_object.fetch_all(query=f"update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']})
+   background_tasks.add_task()
    return {"status":1,"message":output}
 
    
