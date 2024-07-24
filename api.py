@@ -134,6 +134,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
    output=[dict(item) for item in output]
+   return output
    #add user key
    for user_column in ["created_by_id","received_by_id"]:
       output_user=await request.state.postgres_object.fetch_all(query=f"select * from users join unnest(array{list(set([item[user_column] for item in output if item[user_column]]))}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
