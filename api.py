@@ -225,7 +225,7 @@ async def function_my_action_check(request:Request,action:str,table:str,ids:str)
    #logic
    ids=[int(x) for x in ids.split(',')]
    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;",values={"parent_table":table,"created_by_id":user["id"]})
-   ids_filtered=list(set([item["parent_id"] for item in response["message"] if item["parent_id"]]))
+   ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final response
    return {"status":1,"message":ids_filtered}
 
