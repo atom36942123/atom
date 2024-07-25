@@ -257,10 +257,8 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
 @router.post("/{x}/object-create")
 async def function_object_create(request:Request):
    #token check
-   user,user["id"]={},None
-   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
-      user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-      if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
    body=await request.json()
    return body
