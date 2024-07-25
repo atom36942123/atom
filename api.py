@@ -131,7 +131,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #logic
    query="with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
-   if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status='unread' order by id desc offset :offset limit :limit;'''
+   if is_unread==1:query='''with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status is null order by id desc offset :offset limit :limit;'''
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
    output=[dict(item) for item in output]
    #add user key
@@ -256,25 +256,25 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
    #response
    return {"status":1,"message":"done"}
 
-@router.post("/{x}/object-create")
-async def function_object_create(request:Request):
-   #token check
-   user,user["id"]={},None
-   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
-      user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-      if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #param
-   param=vars(request.state.schema_database(**await request.json()))
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "rating" in param:param["rating"]=round(param["number"],5)
-   param["created_by_id"]=user["id"]
-   #logic
-   query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
-   response=await function_query_runner(request.state.postgres_object,"write",query,param)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+# @router.post("/{x}/object-create")
+# async def function_object_create(request:Request):
+#    #token check
+#    user,user["id"]={},None
+#    if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
+#       user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+#       if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#    #param
+#    param=vars(request.state.schema_database(**await request.json()))
+#    param={k:v for k,v in param.items() if v not in [None,""," "]}
+#    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+#    if "rating" in param:param["rating"]=round(param["number"],5)
+#    param["created_by_id"]=user["id"]
+#    #logic
+#    query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
+#    response=await function_query_runner(request.state.postgres_object,"write",query,param)
+#    if response["status"]==0:return function_http_response(400,0,response["message"])
+#    #final response
+#    return response
 
 
 
