@@ -119,7 +119,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
       user[k]=output[0]["count"]
    #response
-   background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
+   #background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
 
 @router.post("/{x}/object")
