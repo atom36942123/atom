@@ -261,7 +261,6 @@ async def function_object_create(request:Request):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
    body=await request.json()
-   return body
    param=vars(request.state.schema_database(**body))
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
