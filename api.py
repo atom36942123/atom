@@ -31,10 +31,15 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   config_database={"created_at":["timestamptz",1,"atom,users,post,likes,comment,bookmark,report,rating,block,message,helpdesk,file,otp,workseeker"],"created_by_id":["bigint",1,"atom,users,post,likes,comment,bookmark,report,rating,block,message,helpdesk,file,otp,workseeker"],"received_by_id":["bigint",1,"message"],"updated_at":["timestamptz",0,"atom,users,post,comment,report,message,helpdesk,workseeker"],"updated_by_id":["bigint",0,"atom,users,post,comment,report,message,helpdesk,workseeker"],"is_pinned":["int",1,"post"],"is_active":["int",1,"atom,users,post,comment,workseeker"],"is_verified":["int",1,"atom,users,post,comment,workseeker"],"parent_table":["text",1,"likes,comment,bookmark,report,rating,block"],"parent_id":["bigint",1,"likes,comment,bookmark,report,rating,block"],"firebase_id":["text",1,"users"],"google_id":["text",1,"users"],"last_active_at":["timestamptz",0,"users"],"otp":["int",1,"otp"],"username":["text",1,"users"],"password":["text",1,"users"],"profile_pic_url":["text",0,"users"],"date_of_birth":["date",0,"users"],"name":["text",0,"users,workseeker"],"gender":["text",0,"users,workseeker"],"email":["text",1,"users,post,otp,helpdesk,workseeker"],"mobile":["text",1,"users,post,otp,helpdesk,workseeker"],"whatsapp":["text",1,"users,post,workseeker"],"phone":["text",1,"users,post,workseeker"],"country":["text",1,"users,post"],"state":["text",1,"users,post"],"city":["text",1,"users,post"],"type":["text",1,"post,atom,users,helpdesk"],"title":["text",0,"post,atom,users"],"description":["text",0,"post,atom,users,comment,report,rating,block,message,helpdesk,workseeker"],"file_url":["text",0,"post,atom,file"],"link_url":["text",0,"post,atom"],"tag":["text[]",1,"post,atom,users,workseeker"],"date":["date",0,"post"],"status":["text",1,"post,report,message,helpdesk"],"remark":["text",0,"post,report,helpdesk"],"rating":["numeric",0,"post,rating,helpdesk"],"work_type":["text",1,"workseeker"],"work_profile":["text",1,"workseeker"],"degree":["text",0,"workseeker"],"college":["text",0,"workseeker"],"linkedin_url":["text",0,"workseeker"],"portfolio_url":["text",0,"workseeker"],"experience":["int",1,"workseeker"],"experience_work_profile":["int",0,"workseeker"],"is_working":["int",1,"workseeker"],"location_current":["text",1,"workseeker"],"location_expected":["text",1,"workseeker"],"currency":["text",0,"workseeker"],"salary_frequency":["text",0,"workseeker"],"salary_current":["int",0,"workseeker"],"salary_expected":["int",0,"workseeker"],"sector":["text",0,"workseeker"],"past_company_count":["int",0,"workseeker"],"past_company_name":["text",0,"workseeker"],"marital_status":["text",0,"workseeker"],"physical_disability":["text",0,"workseeker"],"hobby":["text",0,"workseeker"],"language":["text",0,"workseeker"],"joining_days":["int",1,"workseeker"],"career_break_month":["int",0,"workseeker"],"resume_url":["text",0,"workseeker"],"achievement":["text",0,"workseeker"],"certificate":["text",0,"workseeker"],"project":["text",0,"workseeker"],"is_founder":["int",1,"workseeker"],"soft_skill":["text",0,"workseeker"],"tool":["text",0,"workseeker"],"achievement_work":["text",0,"workseeker"],"metadata":["jsonb",0,"post"]}
-   alter_query=["insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users as on delete to users where old.id=1 or old.type='root' do instead nothing;",]
-   mapping_datatype_index={"timestamptz":"brin","date":"brin","text[]":"gin","jsonb":"gin","int":"btree","numeric":"btree","bigint":"btree","text":"btree"}
    constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
+   mapping_datatype_index={"timestamptz":"brin","date":"brin","text[]":"gin","jsonb":"gin","int":"btree","numeric":"btree","bigint":"btree","text":"btree"}
+   #logic
+   config_database=
+
+
+
+
+   
    for k,v in config_database.items():
       if len(v)!=3:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"{k} length issue"}))
    #logic
@@ -42,7 +47,9 @@ async def function_database(request:Request):
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint constraint_unique_{k.replace(',','_')+'_'+table} unique ({k});",values={}) for k,v in {"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","block","report"]}.items() for table in v if f"constraint_unique_{k.replace(',','_')+'_'+table}" not in constraint_name_list]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in alter_query if query.split()[5] not in constraint_name_list]
+   #zzz
+   query_zzz=["insert into users (username,password) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users as on delete to users where old.is_protected=1 do instead nothing;","create or replace rule rule_delete_disable_post as on delete to post where old.is_protected=1 do instead nothing;",]
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in constraint_name_list]
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
@@ -151,15 +158,13 @@ async def function_object(request:Request,background:BackgroundTasks):
       else:id,created_by_id=body["id"],user["id"]
       output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) ;",values={"id":id,"created_by_id":created_by_id})
       
-      #for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
+      for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
    #response
    return {"status":1,"message":output}
 
 
-   
    #background task
    
-
 # f"delete from {item} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":body['table'],"parent_id":id}
 # output=await request.state.postgres_object.fetch_all(query=query,values={})
 
