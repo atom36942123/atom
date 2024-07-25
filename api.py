@@ -141,7 +141,8 @@ async def function_object(request:Request):
    if body["mode"]=="update":
       param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
       for item in ["id","created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
-      id,created_by_id=user["id"],None if body["table"]=="users" else body["id"],user["id"]
+      if body["table"]=="users":id,created_by_id=user["id"],None
+      else:id,created_by_id=body["id"],user["id"]
       key=""
       for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
       output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {key.strip().rsplit(',', 1)[0]} where id=:id and created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
