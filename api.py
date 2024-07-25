@@ -264,7 +264,7 @@ async def function_object_create(request:Request):
       user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
       if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
-   request.state.schema_atom(*)
+   request.state.schema_atom(**)
    param=body=await request.json()
    param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
    if not param:return function_http_response(400,0,"body cant be null")
