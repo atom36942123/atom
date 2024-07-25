@@ -139,146 +139,43 @@ async def function_object(request:Request):
    #response
    return {"status":1,"message":output}
 
-
-
-
-
-@router.get("/{x}/my-message-inbox")
-async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,limit:int=30):
+@router.put("/{x}/object-update/{table}/{id}")
+async def function_object_update(request:Request,table:str,id:int,body:schema_atom):
    #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   response=await function_token_decode(request,env("key"))
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   request_user=response["message"]
+   #refresh request_user
+   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   if not response["message"]:return function_http_response(400,0,"no user for token passed")
+   request_user=response["message"][0]
+   #param
+   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
+   if not param:return function_http_response(400,0,"body cant be null")
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   if "number" in param:param["number"]=round(param["number"],5)
+   param["updated_at"],param["updated_by_id"]=datetime.now(),request_user["id"]
+   #non admin case
+   id,created_by_id=id,None
+   if request_user["type"] not in ["root","admin"]:
+      if table=="users":id,created_by_id=request_user['id'],None
+      else:id,created_by_id=id,request_user['id']
+      for item in ["created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
    #logic
-   query="with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
-   if is_unread==1:query="with mcr as (select id,created_by_id+received_by_id as owner_id from message where created_by_id=:created_by_id or received_by_id=:received_by_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where received_by_id=:received_by_id and status is null order by id desc offset :offset limit :limit;"
-   output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
-   output=[dict(item) for item in output]
-   #add user key
-   user_column=["received_by_id","created_by_id"]
-   user_key=["username","profile_pic_url"]
-   if output:
-      for column in user_column:
-         user_ids=','.join([str(item[column]) for item in output if item[column]])
-         if user_ids:output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-         for object in output:
-            for key in user_key:object[f"{column}_{key}"]=None
-            for object_user in output_user:
-               if object[column]==object_user["id"]:
-                  for key in user_key:
-                     object[f"{column}_{key}"]=object_user[key]
-                  break
-   #response
-   return {"status":1,"message":output}
+   key=""
+   for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+   query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   response=await function_query_runner(request.state.postgres_object,"write",query,param|{"id":id,"created_by_id":created_by_id})
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
 
-@router.get("/{x}/my-message-thread")
-async def function_my_message_thread(request:Request,background_tasks:BackgroundTasks,user_id:int,page:int,limit:int=30):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #logic
-   output=await request.state.postgres_object.fetch_all(query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {(page-1)*limit} limit {limit}",values={"user_1":user["id"],"user_2":user_id})
-   output=[dict(item) for item in output]
-   #add user key
-   user_column=["received_by_id","created_by_id"]
-   user_key=["username","profile_pic_url"]
-   if output:
-      for column in user_column:
-         user_ids=','.join([str(item[column]) for item in output if item[column]])
-         if user_ids:
-            output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-            for object in output:
-               for key in user_key:object[f"{column}_{key}"]=None
-               for object_user in output_user:
-                  if object[column]==object_user["id"]:
-                     for key in user_key:
-                        object[f"{column}_{key}"]=object_user[key]
-                     break
-   #response
-   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
-   return {"status":1,"message":output}
 
-@router.get("/{x}/my-read-parent")
-async def function_my_read_parent(request:Request,table:str,parent_table:str,page:int,limit:int=30):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #logic
-   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc offset {(page-1)*limit} limit {limit};",values={"created_by_id":user["id"],"parent_table":parent_table})
-   parent_ids=[x["parent_id"] for x in output]
-   output=await request.state.postgres_object.fetch_all(query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-   output=[dict(item) for item in output]
-   #add user key
-   user_column=["received_by_id","created_by_id"]
-   user_key=["username","profile_pic_url"]
-   if output:
-      for column in user_column:
-         user_ids=','.join([str(item[column]) for item in output if item[column]])
-         if user_ids:
-            output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-            for object in output:
-               for key in user_key:object[f"{column}_{key}"]=None
-               for object_user in output_user:
-                  if object[column]==object_user["id"]:
-                     for key in user_key:
-                        object[f"{column}_{key}"]=object_user[key]
-                     break
-   #add like count
-   if output:
-      ids=list(set([item["id"] for item in output if item["id"]]))
-      object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from likes join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
-      for object in output:
-         object["like_count"]=0
-         for object_like in object_like_list:
-            if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-   #add comment count
-   if output:
-      ids=list(set([item["id"] for item in output if item["id"]]))
-      object_comment_list=await request.state.postgres_object.fetch_all(query=   f"select parent_id,count(*) from comment join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
-      for object in output:
-         object["comment_count"]=0
-         for object_comment in object_comment_list:
-            if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-   #response
-   return {"status":1,"message":output}
 
-@router.get("/{x}/my-action-check")
-async def function_my_action_check(request:Request,action:str,table:str,ids:str):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #logic
-   ids=[int(x) for x in ids.split(',')]
-   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;",values={"parent_table":table,"created_by_id":user["id"]})
-   ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   #response
-   return {"status":1,"message":ids_filtered}
 
-@router.delete("/{x}/my-delete")
-async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mode:str,user_id:int=None,post_id:int=None,message_id:int=None):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #refresh user
-   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-   user=output[0]
-   #logic
-   if mode=="post_all":await request.state.postgres_object.fetch_all(query="delete from post where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   if mode=="comment_all":await request.state.postgres_object.fetch_all(query="delete from comment where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   if mode=="message_all":await request.state.postgres_object.fetch_all(query="delete from message where created_by_id=:created_by_id or received_by_id=:received_by_id;",values={"created_by_id":user['id'],"received_by_id":user['id']})
-   if mode=="like_post_all":await request.state.postgres_object.fetch_all(query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table;",values={"created_by_id":user['id'],"parent_table":"post"})
-   if mode=="bookmark_post_all":await request.state.postgres_object.fetch_all(query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table;",values={"created_by_id":user['id'],"parent_table":"post"})
-   if mode=="message_thread":await request.state.postgres_object.fetch_all(query="delete from message where (created_by_id=:a and received_by_id=:b) or (created_by_id=:b and received_by_id=:a);",values={"a":user['id'],"b":user_id})
-   if mode=="like_post":await request.state.postgres_object.fetch_all(query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",values={"created_by_id":user['id'],"parent_table":"post","parent_id":post_id})
-   if mode=="bookmark_post":await request.state.postgres_object.fetch_all(query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",values={"created_by_id":user['id'],"parent_table":"post","parent_id":post_id})
-   if mode=="message":query,values=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);",{"id":message_id,"created_by_id":user['id'],"received_by_id":user['id']}
-   if mode=="account":await request.state.postgres_object.fetch_all(query="delete from users where id=:id;",values={"id":user['id']})
-   #clean data
-   if mode=="account":
-      for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
-      for item in ["message"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id or received_by_id=:received_by_id;",values={"created_by_id":user['id'],"received_by_id":user['id']}))
-      for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
-   #response
-   return {"status":1,"message":"done"}
+
+
 
 
 
