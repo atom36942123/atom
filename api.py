@@ -132,7 +132,7 @@ async def function_object(request:Request):
    param=vars(request.state.schema_database(**body))
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "rating" in param:param["rating"]=round(param["number"],5)
+   if "rating" in param:param["rating"]=round(param["rating"],5)
    param["created_by_id"]=user["id"]
    #logic
    if body["mode"]=="create":output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
