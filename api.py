@@ -112,7 +112,9 @@ async def function_profile(request:Request,background_tasks:BackgroundTasks):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-   user=[dict(item) for item in output][0]
+   user=output[0] if output else None
+   
+   #user=[dict(item) for item in output][0]
    #count key
    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from comment where created_by_id=:user_id;","message_unread_count":"select count(*) from message where received_by_id=:user_id and status='unread';","like_post_count":"select count(*) from likes where created_by_id=:user_id and parent_table='post';","bookmark_post_count":"select count(*) from bookmark where created_by_id=:user_id and parent_table='post';"}
    for k,v in query_dict.items():
