@@ -163,14 +163,15 @@ async def function_my_message_thread(request:Request,background_tasks:Background
    if output:
       for column in user_column:
          user_ids=','.join([str(item[column]) for item in output if item[column]])
-         if user_ids:output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-         for object in output:
-            for key in user_key:object[f"{column}_{key}"]=None
-            for object_user in output_user:
-               if object[column]==object_user["id"]:
-                  for key in user_key:
-                     object[f"{column}_{key}"]=object_user[key]
-                  break
+         if user_ids:
+            output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+            for object in output:
+               for key in user_key:object[f"{column}_{key}"]=None
+               for object_user in output_user:
+                  if object[column]==object_user["id"]:
+                     for key in user_key:
+                        object[f"{column}_{key}"]=object_user[key]
+                     break
    #response
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
    return {"status":1,"message":output}
@@ -186,18 +187,20 @@ async def function_my_read_parent(request:Request,table:str,parent_table:str,pag
    output=await request.state.postgres_object.fetch_all(query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
    output=[dict(item) for item in output]
    #add user key
-   user_column=["created_by_id"]
+   user_column=["received_by_id","created_by_id"]
    user_key=["username","profile_pic_url"]
    if output:
       for column in user_column:
-         output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
-         for object in output:
-            for key in user_key:object[f"{column}_{key}"]=None
-            for object_user in output_user:
-               if object[column]==object_user["id"]:
-                  for key in user_key:
-                     object[f"{column}_{key}"]=object_user[key]
-                  break
+         user_ids=','.join([str(item[column]) for item in output if item[column]])
+         if user_ids:
+            output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+            for object in output:
+               for key in user_key:object[f"{column}_{key}"]=None
+               for object_user in output_user:
+                  if object[column]==object_user["id"]:
+                     for key in user_key:
+                        object[f"{column}_{key}"]=object_user[key]
+                     break
    #add like count
    if output:
       ids=list(set([item["id"] for item in output if item["id"]]))
