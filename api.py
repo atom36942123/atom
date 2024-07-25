@@ -105,8 +105,8 @@ async def function_login(request:Request):
    #response
    return {"status":1,"message":token}
 
-@router.get("/{x}/my-profile")
-async def function_my_profile(request:Request,background_tasks:BackgroundTasks):
+@router.get("/{x}/profile")
+async def function_profile(request:Request,background_tasks:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
