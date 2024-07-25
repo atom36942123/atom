@@ -268,7 +268,6 @@ async def function_object_create(request:Request):
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
    if "rating" in param:param["rating"]=round(param["number"],5)
-   if table=="message":param["status"]="unread"
    param["created_by_id"]=user["id"]
    #logic
    query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
