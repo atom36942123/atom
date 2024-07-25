@@ -133,38 +133,36 @@ async def function_object(request:Request):
    param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
    if "rating" in param:param["rating"]=round(param["rating"],5)
-   param["created_by_id"]=user["id"]
    #logic
-   if body["mode"]=="create":output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+   if body["mode"]=="create":
+      param["created_by_id"]=user["id"]
+      output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+   if body["mode"]=="update":
+      param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
+      for item in ["created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
+      
    #response
    return {"status":1,"message":output}
 
-@router.put("/{x}/object-update/{table}/{id}")
-async def function_object_update(request:Request,table:str,id:int,body:schema_atom):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #refresh request_user
-   response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   if not response["message"]:return function_http_response(400,0,"no user for token passed")
-   request_user=response["message"][0]
-   #param
-   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
-   if not param:return function_http_response(400,0,"body cant be null")
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "number" in param:param["number"]=round(param["number"],5)
-   param["updated_at"],param["updated_by_id"]=datetime.now(),request_user["id"]
+ 
+   
+   
    #non admin case
    id,created_by_id=id,None
+   if table=="users":id,created_by_id=request_user['id'],None
+   
+   
    if request_user["type"] not in ["root","admin"]:
-      if table=="users":id,created_by_id=request_user['id'],None
+      
       else:id,created_by_id=id,request_user['id']
-      for item in ["created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
+         
+      
+   
    #logic
+
    key=""
    for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+      
    query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    response=await function_query_runner(request.state.postgres_object,"write",query,param|{"id":id,"created_by_id":created_by_id})
    if response["status"]==0:return function_http_response(400,0,response["message"])
