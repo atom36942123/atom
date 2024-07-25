@@ -4,6 +4,8 @@ env=Env()
 env.read_env()
 
 #schema
+from pydantic import BaseModel
+from typing import Literal
 class schema_database(BaseModel):
     id:int|None=None
     created_at:datetime|None=None
