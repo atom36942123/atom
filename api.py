@@ -33,16 +33,16 @@ async def function_database(request:Request):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    #logic
-   config_database=
+   config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity"],"remark":["text","action,activity"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"]}
+   [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][1].split(',')]
+
+
 
 
 
 
    
-   for k,v in config_database.items():
-      if len(v)!=3:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"{k} length issue"}))
    #logic
-   [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][2].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add constraint constraint_unique_{k.replace(',','_')+'_'+table} unique ({k});",values={}) for k,v in {"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","block","report"]}.items() for table in v if f"constraint_unique_{k.replace(',','_')+'_'+table}" not in constraint_name_list]
@@ -73,7 +73,7 @@ async def function_insert(request:Request,table:str,file:UploadFile):
          if mapping_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
          if mapping_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
          if mapping_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
-         if column in ["password","firebase_id","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
+         if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
    file.file.close
@@ -91,18 +91,18 @@ async def function_login(request:Request):
    #prework
    body=await request.json()
    for item in ["username","email","mobile","otp"]:body[item]=body[item] if item in body else None
-   for item in ["password","firebase_id","google_id"]:body[item]=hashlib.sha256(body[item].encode()).hexdigest() if item in body else None
+   for item in ["password","google_id"]:body[item]=hashlib.sha256(body[item].encode()).hexdigest() if item in body else None
    #otp verify
    if body["otp"]:
-      output=await request.state.postgres_object.fetch_all(query="select * from otp where (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
+      output=await request.state.postgres_object.fetch_all(query="select * from atom where type='otp' and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
    #read user
-   output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (firebase_id=:firebase_id or :firebase_id is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values={k:v for k,v in body.items() if k not in ["otp"]})
+   output=await request.state.postgres_object.fetch_all(query="select * from users where (username=:username or :username is null) and (password=:password or :password is null) and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) and (google_id=:google_id or :google_id is null) order by id desc limit 1;",values={k:v for k,v in body.items() if k not in ["otp"]})
    user=output[0] if output else None
    #create user
    if not user and body["username"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (firebase_id,google_id,email,mobile) values (:firebase_id,:google_id,:email,:mobile) returning *;",values={k:v for k,v in body.items() if k not in ["otp","username","password"]})
+   if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (email,mobile,google_id) values (:email,:mobile,:google_id) returning *;",values={"email":body["email"],"mobile":body["mobile"],"google_id":body["google_id"]})
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
    user=output[0]
    #token encode
