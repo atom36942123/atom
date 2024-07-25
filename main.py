@@ -4,7 +4,7 @@ env=Env()
 env.read_env()
 
 #schema
-class schema_atom(BaseModel):
+class schema_database(BaseModel):
     id:int|None=None
     created_at:datetime|None=None
     created_by_id:int|None=None
@@ -121,7 +121,7 @@ async def middleware(request:Request,api_function):
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
    #assgin
    request.state.postgres_object=None
-   request.state.schema_atom=schema_atom
+   request.state.schema_database=schema_database
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
