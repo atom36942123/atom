@@ -137,6 +137,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    user_key=["username","profile_pic_url"]
    if output:
       for column in user_column:
+         return ','.join([str(item[column]) for item in output if item[column]])
          output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({','.join([str(item[column]) for item in output if item[column]])});",values={})
          for object in output:
             for key in user_key:object[f"{column}_{key}"]=None
