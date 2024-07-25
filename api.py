@@ -30,10 +30,10 @@ async def function_qrunner(request:Request,query:str):
 @router.get("/{x}/database")
 async def function_database(request:Request):
    #prework
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    config_database={"created_at":["timestamptz",1,"atom,users,post,likes,comment,bookmark,report,rating,block,message,helpdesk,file,otp,workseeker"],"created_by_id":["bigint",1,"atom,users,post,likes,comment,bookmark,report,rating,block,message,helpdesk,file,otp,workseeker"],"received_by_id":["bigint",1,"message"],"updated_at":["timestamptz",0,"atom,users,post,comment,report,message,helpdesk,workseeker"],"updated_by_id":["bigint",0,"atom,users,post,comment,report,message,helpdesk,workseeker"],"is_pinned":["int",1,"post"],"is_active":["int",1,"atom,users,post,comment,workseeker"],"is_verified":["int",1,"atom,users,post,comment,workseeker"],"parent_table":["text",1,"likes,comment,bookmark,report,rating,block"],"parent_id":["bigint",1,"likes,comment,bookmark,report,rating,block"],"firebase_id":["text",1,"users"],"google_id":["text",1,"users"],"last_active_at":["timestamptz",0,"users"],"otp":["int",1,"otp"],"username":["text",1,"users"],"password":["text",1,"users"],"profile_pic_url":["text",0,"users"],"date_of_birth":["date",0,"users"],"name":["text",0,"users,workseeker"],"gender":["text",0,"users,workseeker"],"email":["text",1,"users,post,otp,helpdesk,workseeker"],"mobile":["text",1,"users,post,otp,helpdesk,workseeker"],"whatsapp":["text",1,"users,post,workseeker"],"phone":["text",1,"users,post,workseeker"],"country":["text",1,"users,post"],"state":["text",1,"users,post"],"city":["text",1,"users,post"],"type":["text",1,"post,atom,users,helpdesk"],"title":["text",0,"post,atom,users"],"description":["text",0,"post,atom,users,comment,report,rating,block,message,helpdesk,workseeker"],"file_url":["text",0,"post,atom,file"],"link_url":["text",0,"post,atom"],"tag":["text[]",1,"post,atom,users,workseeker"],"date":["date",0,"post"],"status":["text",1,"post,report,message,helpdesk"],"remark":["text",0,"post,report,helpdesk"],"rating":["numeric",0,"post,rating,helpdesk"],"work_type":["text",1,"workseeker"],"work_profile":["text",1,"workseeker"],"degree":["text",0,"workseeker"],"college":["text",0,"workseeker"],"linkedin_url":["text",0,"workseeker"],"portfolio_url":["text",0,"workseeker"],"experience":["int",1,"workseeker"],"experience_work_profile":["int",0,"workseeker"],"is_working":["int",1,"workseeker"],"location_current":["text",1,"workseeker"],"location_expected":["text",1,"workseeker"],"currency":["text",0,"workseeker"],"salary_frequency":["text",0,"workseeker"],"salary_current":["int",0,"workseeker"],"salary_expected":["int",0,"workseeker"],"sector":["text",0,"workseeker"],"past_company_count":["int",0,"workseeker"],"past_company_name":["text",0,"workseeker"],"marital_status":["text",0,"workseeker"],"physical_disability":["text",0,"workseeker"],"hobby":["text",0,"workseeker"],"language":["text",0,"workseeker"],"joining_days":["int",1,"workseeker"],"career_break_month":["int",0,"workseeker"],"resume_url":["text",0,"workseeker"],"achievement":["text",0,"workseeker"],"certificate":["text",0,"workseeker"],"project":["text",0,"workseeker"],"is_founder":["int",1,"workseeker"],"soft_skill":["text",0,"workseeker"],"tool":["text",0,"workseeker"],"achievement_work":["text",0,"workseeker"],"metadata":["jsonb",0,"post"]}
    alter_query=["insert into users (username,password,type) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','root') on conflict do nothing returning *;","create or replace rule rule_delete_disable_users_root as on delete to users where old.id=1 or old.type='root' do instead nothing;",]
    mapping_datatype_index={"timestamptz":"brin","date":"brin","text[]":"gin","jsonb":"gin","int":"btree","numeric":"btree","bigint":"btree","text":"btree"}
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    for k,v in config_database.items():
       if len(v)!=3:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":f"{k} length issue"}))
@@ -51,7 +51,7 @@ async def function_database(request:Request):
    return {"status":1,"message":"done"}
 
 @router.post("/{x}/insert")
-async def function_insert_csv(request:Request,table:str,file:UploadFile):
+async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    mapping_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
@@ -121,6 +121,27 @@ async def function_profile(request:Request,background_tasks:BackgroundTasks):
    #response
    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
+
+@router.post("/{x}/object")
+async def function_object(request:Request):
+   #token check
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #param
+   body=await request.json()
+   param=vars(request.state.schema_database(**body))
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   if "rating" in param:param["rating"]=round(param["number"],5)
+   param["created_by_id"]=user["id"]
+   #logic
+   output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+   #response
+   return {"status":1,"message":output}
+
+
+
+
 
 @router.get("/{x}/my-message-inbox")
 async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,limit:int=30):
@@ -259,22 +280,6 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
    #response
    return {"status":1,"message":"done"}
 
-@router.post("/{x}/object-create")
-async def function_object_create(request:Request):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #param
-   body=await request.json()
-   param=vars(request.state.schema_database(**body))
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "rating" in param:param["rating"]=round(param["number"],5)
-   param["created_by_id"]=user["id"]
-   #logic
-   output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
-   #response
-   return {"status":1,"message":output}
 
 
 
