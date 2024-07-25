@@ -133,7 +133,7 @@ async def function_my_message_inbox(request:Request,page:int,is_unread:int=None,
    output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"received_by_id":user['id'],"offset":(page-1)*limit,"limit":limit})
    output=[dict(item) for item in output]
    #add user key
-   user_column=["created_by_id","received_by_id"]
+   user_column=["received_by_id","created_by_id"]
    user_key=["username","profile_pic_url"]
    if output:
       for column in user_column:
