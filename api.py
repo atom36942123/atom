@@ -106,7 +106,7 @@ async def function_login(request:Request):
    return {"status":1,"message":token}
 
 @router.get("/{x}/profile")
-async def function_profile(request:Request,background_tasks:BackgroundTasks):
+async def function_profile(request:Request,background:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
@@ -119,11 +119,11 @@ async def function_profile(request:Request,background_tasks:BackgroundTasks):
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
       user[k]=output[0]["count"]
    #response
-   background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
+   background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
 
 @router.post("/{x}/object")
-async def function_object(request:Request):
+async def function_object(request:Request,background_tasks:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
@@ -149,10 +149,37 @@ async def function_object(request:Request):
    #response
    return {"status":1,"message":output}
 
-   
-   
-
- 
+# async def function_object_delete(request:Request,table:str,id:int):
+#    #token check
+#    response=await function_token_decode(request,env("key"))
+#    if response["status"]==0:return function_http_response(400,0,response["message"])
+#    request_user=response["message"]
+#    #refresh request_user
+#    response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
+#    if response["status"]==0:return function_http_response(400,0,response["message"])
+#    if not response["message"]:return function_http_response(400,0,"no user for token passed")
+#    request_user=response["message"][0]
+#    #table check
+#    if table in ["users"]:return function_http_response(400,0,"table not allowed")
+#    #read object
+#    response=await function_query_runner(request.state.postgres_object,"read",f"select * from {table} where id={id};",{})
+#    if response["status"]==0:return function_http_response(400,0,response["message"])
+#    if not response["message"]:return function_http_response(400,0,"no such object")
+#    object=response["message"][0]
+#    #permission check
+#    id,created_by_id=id,None
+#    if request_user["type"] not in ["root"]:
+#       if table=="users":id,created_by_id=request_user['id'],None
+#       else:id,created_by_id=id,request_user['id']
+#    #logic
+#    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+#    response=await function_query_runner(request.state.postgres_object,"write",query,{"id":id,"created_by_id":created_by_id})
+#    if response["status"]==0:return function_http_response(400,0,response["message"])
+#    #background task
+#    for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(function_query_runner,request.state.postgres_object,"write",f"delete from {item} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":table,"parent_id":id})
+#    if "file_url" in object:background_tasks.add_task(function_s3_delete_url,env.list("aws")[0],env.list("aws")[1],env.list("s3")[0],object["file_url"])
+#    #final response
+#    return {"status":1,"message":"object deleted"}
 
 
 
