@@ -253,8 +253,8 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
       for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
       for item in ["message"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id or received_by_id=:received_by_id;",values={"created_by_id":user['id'],"received_by_id":user['id']}))
       for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
-    #response
-    return {"status":1,"message":"object deleted"}
+   #response
+   return {"status":1,"message":"done"}
 
 
 
