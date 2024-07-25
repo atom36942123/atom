@@ -25,6 +25,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
+   return output
    return {"status":1,"message":output}
 
 @router.get("/{x}/database")
@@ -41,10 +42,15 @@ async def function_database(request:Request):
    query_zzz=["alter table users add constraint constraint_unique_users unique (username);","alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);","create or replace rule rule_delete_disable_post as on delete to post where old.is_protected=1 do instead nothing;"]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in constraint_name_list]
    #index
-   # mapping_index_datatype={"timestamptz":"brin","date":"brin","text[]":"gin","jsonb":"gin","int":"btree","numeric":"btree","bigint":"btree","text":"btree"}
-   # output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
-   # if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
-   # [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {mapping_index_datatype[v[0]]} ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1]
+   database_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
+   mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","timestamp with time zone":"brin","jsonb":"gin"}
+   index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password"]
+   output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
+   if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
+
+   for column in database_column_datatype
+   
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {mapping_index_datatype[v[0]]} ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1]
    #response
    return {"status":1,"message":"done"}
 
@@ -52,18 +58,18 @@ async def function_database(request:Request):
 async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   mapping_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
+   database_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_name_list=list(set(file_object.fieldnames))
    #logic
    values=[]
    for row in file_object:
       for column in file_column_name_list:
-         if mapping_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
-         if mapping_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
-         if mapping_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
-         if mapping_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
-         if mapping_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
+         if database_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
+         if database_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
+         if database_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
+         if database_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
+         if database_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
