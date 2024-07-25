@@ -254,25 +254,24 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
    #response
    return {"status":1,"message":"done"}
 
-# @router.post("/{x}/object-create")
-# async def function_object_create(request:Request):
-#    #token check
-#    user,user["id"]={},None
-#    if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
-#       user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-#       if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-#    #param
-#    param=vars(request.state.schema_database(**await request.json()))
-#    param={k:v for k,v in param.items() if v not in [None,""," "]}
-#    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-#    if "rating" in param:param["rating"]=round(param["number"],5)
-#    param["created_by_id"]=user["id"]
-#    #logic
-#    query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
-#    response=await function_query_runner(request.state.postgres_object,"write",query,param)
-#    if response["status"]==0:return function_http_response(400,0,response["message"])
-#    #final response
-#    return response
+@router.post("/{x}/object-create")
+async def function_object_create(request:Request):
+   #token check
+   user,user["id"]={},None
+   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
+      user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+      if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #param
+   body=await request.json()
+   param=vars(request.state.schema_database(**body))
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   if "rating" in param:param["rating"]=round(param["number"],5)
+   param["created_by_id"]=user["id"]
+   #logic
+   output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+   #response
+   return {"status":1,"message":output}
 
 
 
