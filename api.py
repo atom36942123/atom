@@ -264,14 +264,12 @@ async def function_object_create(request:Request):
       user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
       if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
-   request.state.schema_atom(**)
-   param=body=await request.json()
-   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
-   if not param:return function_http_response(400,0,"body cant be null")
+   param=vars(request.state.schema_atom(**await request.json()))
+   param={k:v for k,v in param.items() if v not in [None,""," "]}
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "number" in param:param["number"]=round(param["number"],5)
-   param["created_by_id"]=request_user["id"]
+   if "rating" in param:param["rating"]=round(param["number"],5)
    if table=="message":param["status"]="unread"
+   param["created_by_id"]=user["id"]
    #logic
    query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
    response=await function_query_runner(request.state.postgres_object,"write",query,param)
