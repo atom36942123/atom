@@ -136,41 +136,22 @@ async def function_object(request:Request):
    #logic
    if body["mode"]=="create":
       param["created_by_id"]=user["id"]
+      for item in ["id","created_at","is_active","is_verified"]:param.pop(item,None)
       output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
    if body["mode"]=="update":
       param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
-      for item in ["created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
-      
+      for item in ["id","created_at","created_by_id","received_by_id","is_active","is_verified","type"]:param.pop(item,None)
+      id,created_by_id=user["id"],None if body["table"]=="users" else body["id"],user["id"]
+      key=""
+      for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+      output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {key.strip().rsplit(',', 1)[0]} where id=:id and created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id}))
    #response
    return {"status":1,"message":output}
 
+   
+   
+
  
-   
-   
-   #non admin case
-   id,created_by_id=id,None
-   if table=="users":id,created_by_id=request_user['id'],None
-   
-   
-   if request_user["type"] not in ["root","admin"]:
-      
-      else:id,created_by_id=id,request_user['id']
-         
-      
-   
-   #logic
-
-   key=""
-   for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-      
-   query=f"update {table} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   response=await function_query_runner(request.state.postgres_object,"write",query,param|{"id":id,"created_by_id":created_by_id})
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
-
-
-
 
 
 
