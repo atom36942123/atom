@@ -50,7 +50,7 @@ async def function_database(request:Request):
    #response
    return {"status":1,"message":"done"}
 
-@router.post("/{x}/insert-csv")
+@router.post("/{x}/insert")
 async def function_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
