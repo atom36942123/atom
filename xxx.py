@@ -1,24 +1,4 @@
-@router.post("/{x}/object-create/{table}")
-async def function_object_create(table:str,request:Request,body:schema_atom):
-   #token check
-   if table not in ["helpdesk","workseeker"] or request.headers.get("token"):
-      response=await function_token_decode(request,env("key"))
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      request_user=response["message"]
-   else:request_user,request_user["id"]={},None
-   #param
-   param={k: v for k, v in vars(body).items() if v not in [None,""," "]}
-   if not param:return function_http_response(400,0,"body cant be null")
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "number" in param:param["number"]=round(param["number"],5)
-   param["created_by_id"]=request_user["id"]
-   if table=="message":param["status"]="unread"
-   #logic
-   query=f'''insert into {table} ({",".join([*param])}) values ({",".join([":"+item for item in [*param]])}) returning *;'''
-   response=await function_query_runner(request.state.postgres_object,"write",query,param)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+
 
 @router.put("/{x}/object-update/{table}/{id}")
 async def function_object_update(request:Request,table:str,id:int,body:schema_atom):
