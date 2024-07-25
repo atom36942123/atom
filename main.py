@@ -6,6 +6,7 @@ env.read_env()
 #schema
 from pydantic import BaseModel
 from typing import Literal
+from datetime import datetime
 class schema_database(BaseModel):
     id:int|None=None
     created_at:datetime|None=None
