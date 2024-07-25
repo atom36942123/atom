@@ -127,7 +127,7 @@ async def function_object(request:Request):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #param
+   #prework
    body=await request.json()
    param=vars(request.state.schema_database(**body))
    param={k:v for k,v in param.items() if v not in [None,""," "]}
@@ -135,7 +135,7 @@ async def function_object(request:Request):
    if "rating" in param:param["rating"]=round(param["number"],5)
    param["created_by_id"]=user["id"]
    #logic
-   output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+   if body["mode"]=="create":output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
    #response
    return {"status":1,"message":output}
 
