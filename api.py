@@ -179,11 +179,6 @@ async def function_object(request:Request,background:BackgroundTasks):
       else:output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={id} and created_by_id={user['id']};",values={})
    #response
    return {"status":1,"message":output}
-      
-#background task
-# f"delete from {item} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":body['table'],"parent_id":id}
-# output=await request.state.postgres_object.fetch_all(query=query,values={})
-
 
 
 
