@@ -149,41 +149,36 @@ async def function_object(request:Request,background:BackgroundTasks):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #prework
    body=await request.json()
-   body={k:v for k,v in body.items() if v not in [None,""," "]}
    mode=body["mode"]
+   body.pop("mode",None)
+   body={k:v for k,v in body.items() if v not in [None,""," "]}
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #create
    if mode=="create":
       table=body["table"]
       body["created_by_id"]=user["id"]
-      for item in ["mode","table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
+      for item in ["table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       column_1,column_2,=','.join([*body]),','.join([':'+item for item in [*body]])
       output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({column_1}) values ({column_2}) returning *;",values=body)
    #update
    if mode=="update":
       table,id=body["table"],body["id"]
       body["updated_at"],body["updated_by_id"]=datetime.now(),user["id"]
-      for item in ["mode","table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp"]:body.pop(item,None)
+      for item in ["table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp"]:body.pop(item,None)
       key=""
       for k,v in body.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
       column=key.strip().rsplit(',', 1)[0]
       if table=="users":output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id={user['id']} returning *;",values=body)
       else:output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id={id} and created_by_id={user['id']} returning *;",values=body)
+   #delete
+   if mode=="delete":
+      table,id=body["table"],body["id"]
+      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={user['id']};",values={})
+      else:output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={id} and created_by_id={user['id']} returning *;",values={}
    #response
    return {"status":1,"message":output}
-
-   
-   # if body["mode"]=="delete":
-   #    if body["table"]=="users":id,created_by_id=user["id"],None
-   #    else:id,created_by_id=body["id"],user["id"]
-   #    output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) ;",values={"id":id,"created_by_id":created_by_id})
-   #    for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
-   
- 
-
-
-   #background task
-   
+      
+#background task
 # f"delete from {item} where parent_table=:parent_table and parent_id=:parent_id;",{"parent_table":body['table'],"parent_id":id}
 # output=await request.state.postgres_object.fetch_all(query=query,values={})
 
