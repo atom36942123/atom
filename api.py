@@ -62,6 +62,7 @@ async def function_insert(request:Request,table:str,file:UploadFile):
    values=[]
    for row in file_object:
       for column in file_column_name_list:
+         if column not in database_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
          if database_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
          if database_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
          if database_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
