@@ -149,7 +149,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    #prework
    body=await request.json()
    body={k:v for k,v in body.items() if v not in [None,""," "]}
-   #if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
+   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #create
    if body["mode"]=="create":
       table=body["table"]
