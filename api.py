@@ -164,8 +164,9 @@ async def function_object(request:Request,background:BackgroundTasks):
       key=""
       for k,v in body.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
       column=key.strip().rsplit(',', 1)[0]
-      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
-      else"
+      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id={user['id']} returning *;",values=body)
+      else:output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id={id} and created_by_id={user['id']} returning *;",values=body)
+
    
    # if body["mode"]=="delete":
    #    if body["table"]=="users":id,created_by_id=user["id"],None
