@@ -161,20 +161,19 @@ async def function_object(request:Request,background:BackgroundTasks):
    
    
    
-   if body["mode"]=="update":
-      param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
-      if body["table"]=="users":id,created_by_id=user["id"],None
-      else:id,created_by_id=body["id"],user["id"]
-      for item in ["id","created_at","created_by_id","received_by_id","is_active","is_verified","type","firebase_id","google_id","otp"]:param.pop(item,None)
-      key=""
-      for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-      output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
-   if body["mode"]=="delete":
-      if body["table"]=="users":id,created_by_id=user["id"],None
-      else:id,created_by_id=body["id"],user["id"]
-      output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) ;",values={"id":id,"created_by_id":created_by_id})
-      
-      for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
+   # if body["mode"]=="update":
+   #    param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
+   #    if body["table"]=="users":id,created_by_id=user["id"],None
+   #    else:id,created_by_id=body["id"],user["id"]
+   #    for item in ["id","created_at","created_by_id","received_by_id","is_active","is_verified","type","firebase_id","google_id","otp"]:param.pop(item,None)
+   #    key=""
+   #    for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+   #    output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
+   # if body["mode"]=="delete":
+   #    if body["table"]=="users":id,created_by_id=user["id"],None
+   #    else:id,created_by_id=body["id"],user["id"]
+   #    output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) ;",values={"id":id,"created_by_id":created_by_id})
+   #    for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
    #response
    return {"status":1,"message":output}
 
