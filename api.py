@@ -24,7 +24,8 @@ from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   return await request.state.postgres_object.fetch_all(query=query,values={})
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
+   return output
 
 @router.get("/{x}/database")
 async def function_database(request:Request):
@@ -156,24 +157,22 @@ async def function_object(request:Request,background:BackgroundTasks):
       body["created_by_id"]=user["id"]
       for item in ["mode","table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({','.join([*body])}) values ({','.join([':'+item for item in [*body]])}) returning *;",values=body)
-
+   if body["mode"]=="update":
+      table,id=body["table"],body["id"]
+      body["updated_at"],body["updated_by_id"]=datetime.now(),user["id"]
+      for item in ["mode","table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp"]:body.pop(item,None)
+      key=""
+      for k,v in body.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
+      column=key.strip().rsplit(',', 1)[0]
+      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"update {table} set {column} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
+      else"
    
-   
-   
-   
-   # if body["mode"]=="update":
-   #    param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
-   #    if body["table"]=="users":id,created_by_id=user["id"],None
-   #    else:id,created_by_id=body["id"],user["id"]
-   #    for item in ["id","created_at","created_by_id","received_by_id","is_active","is_verified","type","firebase_id","google_id","otp"]:param.pop(item,None)
-   #    key=""
-   #    for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-   #    output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {key.strip().rsplit(',', 1)[0]} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values=param|{"id":id,"created_by_id":created_by_id})
    # if body["mode"]=="delete":
    #    if body["table"]=="users":id,created_by_id=user["id"],None
    #    else:id,created_by_id=body["id"],user["id"]
    #    output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) ;",values={"id":id,"created_by_id":created_by_id})
    #    for item in ["likes","bookmark","comment","rating","block","report"]:background.add_task()
+   
    #response
    return {"status":1,"message":output}
 
