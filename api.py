@@ -156,6 +156,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    #create
    if mode=="create":
       table=body["table"]
+      if table=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
       body["created_by_id"]=user["id"]
       for item in ["table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       column_1,column_2,=','.join([*body]),','.join([':'+item for item in [*body]])
