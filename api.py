@@ -31,23 +31,23 @@ async def function_database(request:Request):
    #token
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #core
-   config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"is_protected":["int","users,post,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity,atom"],"remark":["text","atom"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"]}
+   config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"is_protected":["int","users,post,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity,atom"],"remark":["text","atom"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"],"rating":["numeric","atom"]}
    [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][1].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[1].split(',')]
    #pattern
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][1].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={}) for table in config_database["is_protected"][1].split(',')]
    #zzz
-   database_constraint_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
+   schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
    query_zzz=["alter table users add constraint constraint_unique_users unique (username);","alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in database_constraint_list]
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in schema_constraint_name_list]
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
-   database_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public' order by column_name;",values={})
+   schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public' order by column_name;",values={})
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in database_column if column['column_name'] in index_column]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in schema_column if column['column_name'] in index_column]
    #response
    return {"status":1,"message":"done"}
 
@@ -55,19 +55,19 @@ async def function_database(request:Request):
 async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   database_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
+   schema_column_groupby={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_name_list=list(set(file_object.fieldnames))
    #logic
    values=[]
    for row in file_object:
       for column in file_column_name_list:
-         if column not in database_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
-         if database_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
-         if database_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
-         if database_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
-         if database_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
-         if database_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
+         if column not in schema_column_groupby:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
+         if schema_column_groupby[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
+         if schema_column_groupby[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
+         if schema_column_groupby[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
+         if schema_column_groupby[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
+         if schema_column_groupby[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
@@ -150,6 +150,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    body=await request.json()
    body={k:v for k,v in body.items() if v not in [None,""," "]}
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
+   if "rating" in param:param["rating"]=round(param["rating"],5)
    #create
    if body["mode"]=="create":
       table=body["table"]
