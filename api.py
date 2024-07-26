@@ -150,18 +150,18 @@ async def function_object(request:Request,background:BackgroundTasks):
    #prework
    body=await request.json()
    body={k:v for k,v in body.items() if v not in [None,""," "]}
+   mode=body["mode"]
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #create
-   if body["mode"]=="create":
+   if mode=="create":
       table=body["table"]
       body["created_by_id"]=user["id"]
       for item in ["mode","table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       column_1,column_2,=','.join([*body]),','.join([':'+item for item in [*body]])
       output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({column_1}) values ({column_2}) returning *;",values=body)
    #update
-   if body["mode"]=="update":
-      table=body["table"]
-      id=body["id"]
+   if mode=="update":
+      table,id=body["table"],body["id"]
       body["updated_at"],body["updated_by_id"]=datetime.now(),user["id"]
       for item in ["mode","table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp"]:body.pop(item,None)
       key=""
