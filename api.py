@@ -34,21 +34,20 @@ async def function_database(request:Request):
    config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"is_protected":["int","users,post,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity"],"remark":["text","action,activity"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"]}
    [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][1].split(',')]
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[1].split(',')]
+   #pattern
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][1].split(',')]
+   [await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={}) for table in config_database["is_protected"][1].split(',')]
    #zzz
    database_constraint_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
-   query_zzz=["alter table users add constraint constraint_unique_users unique (username);","alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);","create or replace rule rule_delete_disable_post as on delete to post where old.is_protected=1 do instead nothing;"]
+   query_zzz=["alter table users add constraint constraint_unique_users unique (username);","alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in database_constraint_list]
    #index
    output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
-   database_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
+   database_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public' order by column_name;",values={})
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password"]
-   for column in database_column_datatype:
-      
-   
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {mapping_index_datatype[v[0]]} ({k});",values={}) for k,v in config_database.items() for table in v[2].split(',') if v[1]==1]
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in database_column if column['column_name'] in index_column]
    #response
    return {"status":1,"message":"done"}
 
