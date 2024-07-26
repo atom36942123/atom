@@ -89,7 +89,7 @@ async def function_login(request:Request):
    for item in ["password","google_id"]:body[item]=hashlib.sha256(body[item].encode()).hexdigest() if item in body else None
    #otp verify
    if body["otp"]:
-      output=await request.state.postgres_object.fetch_all(query="select * from atom where type='otp' and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
+      output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and (email=:email or :email is null) and (mobile=:mobile or :mobile is null) order by id desc limit 1;",values={"email":body["email"],"mobile":body["mobile"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
    #read user
