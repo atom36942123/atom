@@ -46,7 +46,7 @@ async def function_database(request:Request):
    if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
    database_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public' order by column_name;",values={})
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-   index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password"]
+   index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in database_column if column['column_name'] in index_column]
    #response
    return {"status":1,"message":"done"}
