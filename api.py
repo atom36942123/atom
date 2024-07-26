@@ -186,9 +186,14 @@ async def function_message(request:Request,background_tasks:BackgroundTasks,mode
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #logic
-   if mode=="inbox":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by parent_id offset :offset limit :limit),y as (select a.* from x left join activity as a on x.id=a.id where a.type='message' and a.parent_table='users') select * from y order by id desc;"
-   if mode=="inbox_unread":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by parent_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc offset :offset limit :limit;"
-   output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"parent_id":user['id'],"offset":(page-1)*limit,"limit":limit})
+   #if mode=="inbox":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by parent_id offset :offset limit :limit),y as (select a.* from x left join activity as a on x.id=a.id where a.type='message' and a.parent_table='users') select * from y order by id desc;"
+   #if mode=="inbox":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by parent_id offset :offset limit :limit),y as (select a.* from x left join activity as a on x.id=a.id where a.type='message' and a.parent_table='users') select * from y order by id desc;"
+   if mode=="inbox":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=7 or parent_id=7)),x as (select max(id) as id from mcr group by parent_id offset 0 limit 30),y as (select a.* from x left join activity as a on x.id=a.id where a.type='message' and a.parent_table='users') select * from y order by id desc;"
+
+   #if mode=="inbox_unread":query="with mcr as (select id,created_by_id+parent_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by parent_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc offset :offset limit :limit;"
+   #output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"parent_id":user['id'],"offset":(page-1)*limit,"limit":limit})
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
+
    #response
    return {"status":1,"message":output}
 
