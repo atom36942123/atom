@@ -55,19 +55,19 @@ async def function_database(request:Request):
 async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   schema_column_groupby={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name;",values={})}
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as data_type from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_name_list=list(set(file_object.fieldnames))
    #logic
    values=[]
    for row in file_object:
       for column in file_column_name_list:
-         if column not in schema_column_groupby:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
-         if schema_column_groupby[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
-         if schema_column_groupby[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
-         if schema_column_groupby[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
-         if schema_column_groupby[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
-         if schema_column_groupby[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
+         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
+         if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
+         if schema_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
+         if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
+         if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
+         if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
