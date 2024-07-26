@@ -181,7 +181,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    return {"status":1,"message":output}
 
 @router.get("/{x}/message")
-async def function_message(request:Request,background_tasks:BackgroundTasks,mode:str,page:int,user_id:int=None,limit:int=30):
+async def function_message(request:Request,background_tasks:BackgroundTasks,mode:str,page:int=1,user_id:int=None,limit:int=30):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
