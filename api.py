@@ -148,15 +148,19 @@ async def function_object(request:Request,background:BackgroundTasks):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #prework
    body=await request.json()
-   param=vars(request.state.schema_database(**body))
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   if "rating" in param:param["rating"]=round(param["rating"],5)
-   #logic
+   body={k:v for k,v in body.items() if v not in [None,""," "]}
+   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
+   #create
    if body["mode"]=="create":
-      param["created_by_id"]=user["id"]
-      for item in ["id","created_at","is_active","is_verified","firebase_id","google_id","otp"]:param.pop(item,None)
-      output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({','.join([*param])}) values ({','.join([':'+item for item in [*param]])}) returning *;",values=param)
+      table=body["table"]
+      body["created_by_id"]=user["id"]
+      for item in ["table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
+      output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({','.join([*body])}) values ({','.join([':'+item for item in [*body]])}) returning *;",values=body)
+
+   
+   
+   
+   
    if body["mode"]=="update":
       param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
       if body["table"]=="users":id,created_by_id=user["id"],None
