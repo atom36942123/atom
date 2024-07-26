@@ -133,6 +133,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #read user
    output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
    user=dict(output[0]) if output else None
+   if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #count key
    query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;","message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"}
    for k,v in query_dict.items():
