@@ -156,7 +156,8 @@ async def function_object(request:Request,background:BackgroundTasks):
       table=body["table"]
       body["created_by_id"]=user["id"]
       for item in ["mode","table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
-      output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({','.join([*body])}) values ({','.join([':'+item for item in [*body]])}) returning *;",values=body)
+      column_1,column_2,=','.join([*body]),','.join([':'+item for item in [*body]])
+      output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({column_1}) values ({column_2}) returning *;",values=body)
    if body["mode"]=="update":
       table,id=body["table"],body["id"]
       body["updated_at"],body["updated_by_id"]=datetime.now(),user["id"]
