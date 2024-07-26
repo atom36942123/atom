@@ -175,7 +175,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    if mode=="delete":
       table,id=body["table"],body["id"]
       if table=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={user['id']};",values={})
-      else:output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={id} and created_by_id={user['id']} returning *;",values={})
+      else:output=await request.state.postgres_object.fetch_all(query=f"delete from {table} where id={id} and created_by_id={user['id']};",values={})
    #response
    return {"status":1,"message":output}
       
