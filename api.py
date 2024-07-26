@@ -124,10 +124,6 @@ async def function_login(request:Request):
    #response
    return {"status":1,"message":token}
 
-   
-  
-  
-
 @router.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
    #token check
