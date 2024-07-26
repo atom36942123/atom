@@ -180,6 +180,31 @@ async def function_object(request:Request,background:BackgroundTasks):
    #response
    return {"status":1,"message":output}
 
+@router.get("/{x}/message")
+async def function_message(request:Request,background_tasks:BackgroundTasks,mode:str,page:int,user_id:int=None,limit:int=30):
+   #token check
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #logic
+   if mode=="inbox":query="with mcr as (select id,created_by_id+parent_id as owner_id from activity where type='message' and parent_table='users' and created_by_id=:created_by_id or parent_id=:parent_id),x as (select owner_id,max(id) as id from mcr group by owner_id offset :offset limit :limit),y as (select m.* from x left join activity where type='message' and parent_table='users' as m on x.id=m.id) select * from y order by id desc;"
+   if mode=="inbox_unread":query="with mcr as (select id,created_by_id+parent_id as owner_id from activity where type='message' and parent_table='users' and created_by_id=:created_by_id or parent_id=:parent_id),x as (select owner_id,max(id) as id from mcr group by owner_id),y as (select m.* from x left join activity where type='message' and parent_table='users' as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc offset :offset limit :limit;"
+   output=await request.state.postgres_object.fetch_all(query=query,values={"created_by_id":user['id'],"parent_id":user['id'],"offset":(page-1)*limit,"limit":limit})
+   # output=[dict(item) for item in output]
+   #response
+   return {"status":1,"message":output}
+
+# @router.get("/{x}/my-message-thread")
+# async def function_my_message_thread(request:Request,user_id:int,page:int,limit:int=30):
+#    #token check
+#    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#    #logic
+#    output=await request.state.postgres_object.fetch_all(query=f"select * from message where (created_by_id=:user_1 and received_by_id=:user_2) or (created_by_id=:user_2 and received_by_id=:user_1) order by id desc offset {(page-1)*limit} limit {limit}",values={"user_1":user["id"],"user_2":user_id})
+#    output=[dict(item) for item in output]
+#    #response
+#    background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where received_by_id=:received_by_id and created_by_id=:created_by_id returning *;",values={"status":"read","updated_by_id":user['id'],"updated_at":datetime.now(),"created_by_id":user_id,"received_by_id":user['id']}))
+#    return {"status":1,"message":output}
+
 
 
 
