@@ -154,7 +154,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    if body["mode"]=="create":
       table=body["table"]
       body["created_by_id"]=user["id"]
-      for item in ["table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
+      for item in ["mode","table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       output=await request.state.postgres_object.fetch_all(query=f"insert into {table} ({','.join([*body])}) values ({','.join([':'+item for item in [*body]])}) returning *;",values=body)
 
    
