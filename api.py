@@ -117,8 +117,6 @@ async def function_login(request:Request):
       if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (mobile) values (:mobile) returning *;",values={"mobile":body["mobile"]})
       output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=output[0]
-   #else
-   #else:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong body"}))
    #token encode
    user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
