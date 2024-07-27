@@ -81,7 +81,7 @@ async def function_qrunner(request:Request):
 
 @app.get("/{x}/database")
 async def function_database(request:Request):
-   #token
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #core
    config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"is_protected":["int","users,post,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity,atom"],"remark":["text","atom"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"],"rating":["numeric","atom"]}
@@ -139,21 +139,20 @@ async def function_signup(request:Request):
 async def function_login(request:Request):
    #prework
    body=await request.json()
-   mode=body["mode"] if "mode" in body else None
    #username
-   if not mode:
+   if "mode" not in body:
       output=await request.state.postgres_object.fetch_all(query="select * from users where username=:username and password=:password order by id desc limit 1;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #google
-   if mode=="google":
+   if body["mode"]=="google":
       output=await request.state.postgres_object.fetch_all(query="select * from users where google_id=:google_id order by id desc limit 1;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
       user=output[0] if output else None
       if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (google_id) values (:google_id) returning *;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
       output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=output[0]
    #email
-   if mode=="email":
+   if body["mode"]=="email":
       output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and email=:email order by id desc limit 1;",values={"email":body["email"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
@@ -163,7 +162,7 @@ async def function_login(request:Request):
       output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=output[0]
    #mobile
-   if mode=="mobile":
+   if body["mode"]=="mobile":
       output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and mobile=:mobile order by id desc limit 1;",values={"mobile":body["mobile"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
@@ -235,19 +234,21 @@ async def function_object(request:Request,background:BackgroundTasks):
    #response
    return {"status":1,"message":output}
 
-@app.get("/{x}/message")
-async def function_message(request:Request,background_tasks:BackgroundTasks,mode:str,page:int,user_id:int=None,limit:int=30):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #logic
-   if mode=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
-   if mode=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
-   if mode=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":user_id,"limit":limit,"offset":(page-1)*limit}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #response
-   if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
-   return {"status":1,"message":output}
+# @app.post("/{x}/message")
+# async def function_message(request:Request,background_tasks:BackgroundTasks):
+#    #token check
+#    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#    #prework
+#    page:int,user_id:int=None,limit:int=30
+#    #logic
+#    if mode=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
+#    if mode=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
+#    if mode=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":user_id,"limit":limit,"offset":(page-1)*limit}
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    #response
+#    if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+#    return {"status":1,"message":output}
 
 @app.get("/{x}/pcache")
 @cache(expire=60)
