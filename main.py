@@ -246,30 +246,45 @@ async def function_message(request:Request,background_tasks:BackgroundTasks,mode
    if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
 
-@app.get("/{x}/aws")
-async def function_aws(request:Request,mode:str):
+@app.post("/{x}/aws")
+async def function_aws(request:Request):
+   #prework
+   body=await request.json()
+   mode=body["mode"]
+   body.pop("mode",None)
+   #response
    return response
 
 @app.post("/{x}/mongo")
-async def function_mongo(request:Request,mode:str):
+async def function_mongo(request:Request):
+   #prework
    body=await request.json()
+   mode=body["mode"]
+   body.pop("mode",None)
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   #logic
    if mode=="create":response=await mongo_object.test.users.insert_one(body)
    if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
    if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
    if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+   #response
    return response
 
 @app.post("/{x}/elasticsearch")
 async def function_elasticsearch(request:Request,mode:str):
+   #prework
    body=await request.json()
+   mode=body["mode"]
+   body.pop("mode",None)
    elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
+   #logic
    if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
    if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
    if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
    if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
    if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
    if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
+   #response
    return response
     
     
