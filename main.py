@@ -123,7 +123,7 @@ async def function_insert(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
-   await request.state.postgres_object.execute_many(query=f"insert into {file.filename.split(".")[0]} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
+   await request.state.postgres_object.execute_many(query=f"insert into atom ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
    file.file.close
    #response    
    return {"status":1,"message":"done"}
