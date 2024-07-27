@@ -1,18 +1,5 @@
 
 
-#import
-from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
-from fastapi_cache.decorator import cache
-from fastapi_limiter.depends import RateLimiter
-import hashlib,json,random,csv,codecs,jwt,time
-from datetime import datetime,timedelta
-import motor.motor_asyncio
-from bson import ObjectId
-from elasticsearch import Elasticsearch
-import boto3,uuid
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
 #api
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
