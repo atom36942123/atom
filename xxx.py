@@ -133,55 +133,6 @@ async def function_object_read_public(request:Request,table:Literal["users","ato
    #final response
    return response
 
-@router.get("/{x}/object-read-admin/{table}/{page}")
-async def function_object_read_admin(request:Request,table:str,page:int,limit:int=30):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #permission check
-   if request_user["is_active"]!=1:return function_http_response(400,0,"only active user allowed")
-   if request_user["type"] not in ["root","admin"]:return function_http_response(400,0,"only admin allowed")
-   #logic
-   response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
-
-@router.get("/{x}/pcache")
-@cache(expire=60)
-async def function_pcache(request:Request):    
-    #logic
-    output={}
-    output["mapping_post_type"]={"funding123":"startup idea"}
-    output["switch"]={"listing":0}
-    output["admin_type"]=["root","admin"]
-    #post type tag
-    output["post_tag_type"]={}
-    response=await function_query_runner(request.state.postgres_object,"read","select distinct(type) from post where type is not null;",{})
-    if response["status"]==0:return function_http_response(400,0,response["message"])
-    type_list=[item["type"] for item in response["message"] if item["type"]]
-    for item in type_list:
-        response=await function_query_runner(request.state.postgres_object,"read",f"with x as (select unnest(tag) as tag from post where type='{item}' and tag is not null) select tag,count(*) from x group by tag order by count desc limit 1000;",{})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        output["post_tag_type"][item]=response["message"]
-    #query
-    query_dict={
-    "post_tag":"with x as (select unnest(tag) as tag from post where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-    "user_tag":"with x as (select unnest(tag) as tag from users where tag is not null) select tag,count(*) from x group by tag order by count desc;",
-    "user_count":"select count(*) from users;",
-    "logo":"select * from atom where type='logo' and is_active=1 limit 1;",
-    "about":"select * from atom where type='about' and is_active=1 limit 1;",
-    "post_tag_trending":"select * from atom where type='post_tag_trending' and is_active=1 limit 1;",
-    "curated":"select * from atom where type='curated' and is_active=1 order by id asc limit 1000;",
-    "link":"select * from atom where type='link' and is_active=1 order by id asc limit 10;",
-    }
-    for k,v in query_dict.items():
-        response=await function_query_runner(request.state.postgres_object,"read",v,{})
-        if response["status"]==0:return function_http_response(400,0,response["message"])
-        output[k]=response["message"]
-    #final response
-    return {"status":1,"message":output}
 
 
 
