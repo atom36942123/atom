@@ -60,13 +60,9 @@ async def middleware(request:Request,api_function):
    #final response
    return response
 
-#root
+#api
 @app.get("/")
 async def function_root():return {"status":1,"message":f"welcome to {[*postgres_object]}"}
-
-#router
-from api import router
-app.include_router(router)
 
 #server start
 import uvicorn,asyncio
