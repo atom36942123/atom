@@ -220,11 +220,11 @@ async def function_object(request:Request,background:BackgroundTasks):
       key=""
       for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
       column=key.strip().rsplit(',', 1)[0]
-      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={user['id']} returning *;",values=param)
+      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={user['id']} returning *;",values=param)
       else:output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={body['id']} and created_by_id={user['id']} returning *;",values=param)
    #delete
    if body["mode"]=="delete":
-      if table=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id={user['id']};",values={})
+      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id={user['id']};",values={})
       else:output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id={body['id']} and created_by_id={user['id']};",values={})
    #response
    return {"status":1,"message":output}
