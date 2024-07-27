@@ -252,8 +252,13 @@ async def function_aws(request:Request):
    body=await request.json()
    mode=body["mode"]
    body.pop("mode",None)
+   #logic
+   if mode=="create-s3-url":
+      user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+      if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+      output=boto3.client("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1],region_name=env.list("s3")[1]).generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=1000,Conditions=[['content-length-range',1,1024*1000]])
    #response
-   return response
+   return {"status":1,"message":output}
 
 @app.post("/{x}/mongo")
 async def function_mongo(request:Request):
