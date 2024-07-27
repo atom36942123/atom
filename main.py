@@ -242,8 +242,8 @@ async def function_message(request:Request,background_tasks:BackgroundTasks):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #prework
    body=await request.json()
-   if "page" not in body:body["page]=1
-   if "limit" not in body:body["limit]=30
+   if "page" not in body:body["page"]=1
+   if "limit" not in body:body["limit"]=30
    #logic
    if body["mode"]=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
