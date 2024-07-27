@@ -223,10 +223,6 @@ async def function_update_cell(request:Request,table:str,id:int,column:str,value
 
 @router.get("/{x}/{function}")
 async def function_function(request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
-    if function=="send-email-ses":
-        if any(not item for item in [email,title,description]):return function_http_response(400,0,"email/title/description must")
-        response=await function_ses_send_email(env.list("aws")[0],env.list("aws")[1],env.list("ses")[0],env.list("ses")[1],email,title,description)
-        if response["status"]==0:return function_http_response(400,0,response["message"])
     if function=="send-otp-email":
         if not email:return function_http_response(400,0,"email must")
         otp=random.randint(100000,999999)
@@ -278,11 +274,7 @@ async def function_object_read(postgres_object,function_query_runner,table,param
 
 
 
-import boto3
-async def function_ses_send_email(access_key_id,secret_access_key,ses_sender,ses_region,to,title,description):
-   try:output=boto3.client("ses",region_name=ses_region,aws_access_key_id=access_key_id,aws_secret_access_key=secret_access_key).send_email(Source=ses_sender,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":output}
+
 
 
 
