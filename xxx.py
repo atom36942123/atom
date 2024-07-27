@@ -258,24 +258,6 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
     if function=="database-clean":
         response=await function_database_clean(request.state.postgres_object,function_query_runner)
         if response["status"]==0:return function_http_response(400,0,response["message"])
-    if function=="mongo":
-        body=await request.json()
-        if not mode:return function_http_response(400,0,"mode must")
-        mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-        if mode=="create":response=await mongo_object.test.users.insert_one(body)
-        if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
-        if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
-        if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
-    if function=="elasticsearch":
-        body=await request.json()
-        if not mode:return function_http_response(400,0,"mode must")
-        elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
-        if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
-        if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
-        if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
-        if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
-        if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
-        if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
     #final response
     return response
 
