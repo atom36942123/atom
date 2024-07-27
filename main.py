@@ -106,8 +106,9 @@ async def function_database(request:Request):
 
 @app.post("/{x}/insert")
 async def function_insert(request:Request,file:UploadFile):
-   #prework
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #prework
    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    table=file.filename.split(".")[0]
@@ -234,21 +235,23 @@ async def function_object(request:Request,background:BackgroundTasks):
    #response
    return {"status":1,"message":output}
 
-# @app.post("/{x}/message")
-# async def function_message(request:Request,background_tasks:BackgroundTasks):
-#    #token check
-#    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-#    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-#    #prework
-#    page:int,user_id:int=None,limit:int=30
-#    #logic
-#    if mode=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
-#    if mode=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":limit,"offset":(page-1)*limit}
-#    if mode=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":user_id,"limit":limit,"offset":(page-1)*limit}
-#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-#    #response
-#    if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
-#    return {"status":1,"message":output}
+@app.post("/{x}/message")
+async def function_message(request:Request,background_tasks:BackgroundTasks):
+   #token check
+   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #prework
+   body=await request.json()
+   if "page" not in body:body["page]=1
+   if "limit" not in body:body["limit]=30
+   #logic
+   if body["mode"]=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #response
+   if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+   return {"status":1,"message":output}
 
 @app.get("/{x}/pcache")
 @cache(expire=60)
@@ -259,8 +262,9 @@ async def function_pcache(request:Request):
    
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
-   #prework
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #prework
    body=await request.json()
    s3_client=boto3.client("s3",region_name=env.list("s3")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
    ses_client=boto3.client("ses",region_name=env.list("ses")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
