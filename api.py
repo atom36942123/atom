@@ -14,13 +14,13 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 #api
-@router.get("/{x}/qrunner")
+@app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
    return output
 
-@router.get("/{x}/database")
+@app.get("/{x}/database")
 async def function_database(request:Request):
    #token
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -45,7 +45,7 @@ async def function_database(request:Request):
    #response
    return {"status":1,"message":"done"}
 
-@router.post("/{x}/insert")
+@app.post("/{x}/insert")
 async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -69,13 +69,13 @@ async def function_insert(request:Request,table:str,file:UploadFile):
    #response    
    return {"status":1,"message":"done"}
 
-@router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
+@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
 async def function_signup(request:Request):
    body=await request.json()
    output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
    return {"status":1,"message":output}
 
-@router.post("/{x}/login")
+@app.post("/{x}/login")
 async def function_login(request:Request):
    #prework
    body=await request.json()
@@ -118,7 +118,7 @@ async def function_login(request:Request):
    #response
    return {"status":1,"message":token}
 
-@router.get("/{x}/profile")
+@app.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
@@ -136,7 +136,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
 
-@router.post("/{x}/object")
+@app.post("/{x}/object")
 async def function_object(request:Request,background:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
@@ -174,7 +174,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    #response
    return {"status":1,"message":output}
 
-@router.get("/{x}/message")
+@app.get("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks,mode:str,page:int,user_id:int=None,limit:int=30):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
