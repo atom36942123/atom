@@ -137,20 +137,21 @@ async def function_signup(request:Request):
 async def function_login(request:Request):
    #prework
    body=await request.json()
+   mode=body["mode"] if "mode" in body else None
    #username
-   if "username" in body:
+   if not mode:
       output=await request.state.postgres_object.fetch_all(query="select * from users where username=:username and password=:password order by id desc limit 1;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #google
-   if "google_id" in body:
+   if mode=="google":
       output=await request.state.postgres_object.fetch_all(query="select * from users where google_id=:google_id order by id desc limit 1;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
       user=output[0] if output else None
       if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (google_id) values (:google_id) returning *;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
       output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=output[0]
    #email
-   if "email" in body:
+   if mode=="email":
       output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and email=:email order by id desc limit 1;",values={"email":body["email"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
@@ -160,7 +161,7 @@ async def function_login(request:Request):
       output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
       user=output[0]
    #mobile
-   if "mobile" in body:
+   if mode=="mobile":
       output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and mobile=:mobile order by id desc limit 1;",values={"mobile":body["mobile"]})
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
