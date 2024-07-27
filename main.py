@@ -6,7 +6,7 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#postgres
+#database
 from databases import Database
 postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres")}
 
@@ -48,16 +48,14 @@ async def middleware(request:Request,api_function):
    #x check
    x=str(request.url).split("/")[3]
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
-   #assgin
+   #rassgin
    request.state.postgres_object=None
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
    except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
    #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
-   traceback.format_exc()
-
-   #final response
+   #response
    return response
 
 #api
