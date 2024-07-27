@@ -266,8 +266,7 @@ async def function_aws(request:Request):
    #logic
    if body["mode"]=="s3_create":output=s3_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=1000,Conditions=[['content-length-range',1,(1024*1000/3)]])
    if body["mode"]=="s3_delete":output=list(map(lambda x:boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1]).Object(env.list("s3")[0],x).delete(),[item.split("/")[-1] for item in body["url"].split(",") if env.list("s3")[0] in item]))
-   #if body["mode"]=="s3_delete":output=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1]).Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
-   if body["mode"]=="ses":output=ses_client.send_email(Source=env.list("ses")[0],Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
+   if body["mode"]=="s3_delete":output=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1]).Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
    #response
    return {"status":1,"message":output}
    
