@@ -251,7 +251,7 @@ async def function_message(request:Request,background_tasks:BackgroundTasks,mode
 @cache(expire=0)
 async def function_pcache(request:Request):
    query_dict={"user_count":"select count(*) from users;",}
-   output={k,await request.state.postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
+   output={k:await request.state.postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
    return {"status":1,"message":output}
    
 @app.post("/{x}/aws")
