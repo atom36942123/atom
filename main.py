@@ -273,46 +273,35 @@ async def function_aws(request:Request):
    
 
 
-# @router.get("/{x}/my-read-parent")
-# async def function_my_read_parent(request:Request,table:str,parent_table:str,page:int,limit:int=30):
-#    #logic
-#    parent_ids=[item["parent_id"] for item in await request.state.postgres_object.fetch_all(query=f"select parent_id from {table} where parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"parent_table":parent_table,"limit":limit,"offset":(page-1)*limit}]
+@router.post("/{x}/my-read-parent")
+async def function_my_read_parent(request:Request):
+   #logic
+   body=await request.json()
+   if "page" not in body:body["page"]=1
+   if "limit" not in body:body["limit"]=30
+   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
+   parent_ids=[item["parent_id"] for item in output]
+   output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
    
-#    output=await request.state.postgres_object.fetch_all(query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-#    output=[dict(item) for item in output]
-#    #add user key
-#    user_column=["received_by_id","created_by_id"]
-#    user_key=["username","profile_pic_url"]
-#    if output:
-#       for column in user_column:
-#          user_ids=','.join([str(item[column]) for item in output if item[column]])
-#          if user_ids:
-#             output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-#             for object in output:
-#                for key in user_key:object[f"{column}_{key}"]=None
-#                for object_user in output_user:
-#                   if object[column]==object_user["id"]:
-#                      for key in user_key:
-#                         object[f"{column}_{key}"]=object_user[key]
-#                      break
-#    #add like count
-#    if output:
-#       ids=list(set([item["id"] for item in output if item["id"]]))
-#       object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from likes join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
-#       for object in output:
-#          object["like_count"]=0
-#          for object_like in object_like_list:
-#             if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-#    #add comment count
-#    if output:
-#       ids=list(set([item["id"] for item in output if item["id"]]))
-#       object_comment_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from comment join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
-#       for object in output:
-#          object["comment_count"]=0
-#          for object_comment in object_comment_list:
-#             if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-#    #response
-#    return {"status":1,"message":output}
+
+   # #add like count
+   # if output:
+   #    ids=list(set([item["id"] for item in output if item["id"]]))
+   #    object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from likes join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
+   #    for object in output:
+   #       object["like_count"]=0
+   #       for object_like in object_like_list:
+   #          if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+   # #add comment count
+   # if output:
+   #    ids=list(set([item["id"] for item in output if item["id"]]))
+   #    object_comment_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from comment join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table='{table}' group by parent_id;",values={})
+   #    for object in output:
+   #       object["comment_count"]=0
+   #       for object_comment in object_comment_list:
+   #          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
+   #response
+   return {"status":1,"message":output}
 
 @app.post("/{x}/mongo")
 async def function_mongo(request:Request):
