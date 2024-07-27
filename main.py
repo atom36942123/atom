@@ -248,7 +248,7 @@ async def function_message(request:Request,background_tasks:BackgroundTasks,mode
    return {"status":1,"message":output}
 
 @app.get("/{x}/pcache")
-@cache(expire=1)
+@cache(expire=10)
 async def function_pcache(request:Request):
    query_dict={"user_count":"select count(*) from users;",}
    output={k:await request.state.postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
