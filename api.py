@@ -158,6 +158,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    if mode=="create":
       table=body["table"]
       if table=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+      if table in ["action","activity"] and (not body["parent_table"] or not body["parent_id"]):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong body"}))
       body["created_by_id"]=user["id"]
       for item in ["table","id","created_at","is_active","is_verified","google_id","otp"]:body.pop(item,None)
       column_1,column_2,=','.join([*body]),','.join([':'+item for item in [*body]])
@@ -166,7 +167,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    if mode=="update":
       table,id=body["table"],body["id"]
       body["updated_at"],body["updated_by_id"]=datetime.now(),user["id"]
-      for item in ["table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp"]:body.pop(item,None)
+      for item in ["table","id","created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:body.pop(item,None)
       key=""
       for k,v in body.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
       column=key.strip().rsplit(',', 1)[0]
