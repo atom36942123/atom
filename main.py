@@ -111,10 +111,11 @@ async def function_insert(request:Request,file:UploadFile):
    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    table=file.filename.split(".")[0]
+   file_column_name_list=file_object.fieldnames
    #logic
    values=[]
    for row in file_object:
-      for column in file_object.fieldnames:
+      for column in file_column_name_list:
          if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
          if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
          if schema_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
