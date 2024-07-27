@@ -246,7 +246,7 @@ async def function_message(request:Request,background_tasks:BackgroundTasks,mode
    if mode=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":user_id,"parent_id":user['id'],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
 
-@router.get("/{x}/mongo")
+@app.get("/{x}/mongo")
 async def function_mongo(request:Request,mode:str):
    body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
@@ -256,7 +256,7 @@ async def function_mongo(request:Request,mode:str):
    if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
    return response
 
-@router.get("/{x}/elasticsearch")
+@app.get("/{x}/elasticsearch")
 async def function_elasticsearch(request:Request,mode:str):
    body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
