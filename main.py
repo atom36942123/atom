@@ -263,9 +263,10 @@ async def function_aws(request:Request):
    body=await request.json()
    s3_client=boto3.client("s3",region_name=env.list("s3")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
    ses_client=boto3.client("ses",region_name=env.list("ses")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
+   s3_resource=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
    #logic
    if body["mode"]=="s3_create":output=s3_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=1000,Conditions=[['content-length-range',1,(1024*1000/3)]])
-   if body["mode"]=="s3_delete":output=list(map(lambda x:boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1]).Object(env.list("s3")[0],x).delete(),[item.split("/")[-1] for item in body["url"].split(",") if env.list("s3")[0] in item]))
+   if body["mode"]=="s3_delete":output=list(map(lambda x:s3_resource.Object(env.list("s3")[0],x).delete(),[item.split("/")[-1] for item in body["url"].split(",")]))
    if body["mode"]=="s3_delete":output=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1]).Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
    #response
    return {"status":1,"message":output}
