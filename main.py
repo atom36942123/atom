@@ -106,7 +106,6 @@ async def function_database(request:Request):
 @app.post("/{x}/insert")
 async def function_insert(request:Request,table:str,file:UploadFile):
    #prework
-   body=await request.json()
    return body
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
