@@ -260,6 +260,7 @@ async def function_pcache(request:Request):
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
    #prework
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
    s3_client=boto3.client("s3",region_name=env.list("s3")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
    ses_client=boto3.client("ses",region_name=env.list("ses")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
