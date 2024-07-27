@@ -291,14 +291,6 @@ async def function_elasticsearch(request:Request,mode:str):
    if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
    #response
    return response
-    
-    
-       
-        
-   
-        
-        
-        
 
 #server start
 import uvicorn,asyncio
