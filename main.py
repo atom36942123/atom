@@ -266,7 +266,7 @@ async def function_aws(request:Request):
    s3_resource=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
    #logic
    if body["mode"]=="s3_create":output=s3_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=1000,Conditions=[['content-length-range',1,(1024*1000/3)]])
-   if body["mode"]=="s3_delete":output=s3_resource.Object(env.list("s3")[0],body["url"]).delete()
+   if body["mode"]=="s3_delete":output=s3_resource.Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
    if body["mode"]=="ses":output=ses_client.send_email(Source=env.list("ses")[0],Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #response
    return {"status":1,"message":output}
