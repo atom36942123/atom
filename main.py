@@ -208,7 +208,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #create
    if body["mode"]=="create":
-      if table=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+      if body["table"]=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
       param={k:v for k,v in body.items() if k not in ["mode","table"]+["id","created_at","is_active","is_verified","google_id","otp"]}
       param["created_by_id"]=user["id"]
       column_1,column_2,=','.join([*param]),','.join([':'+item for item in [*param]])
