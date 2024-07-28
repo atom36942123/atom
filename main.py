@@ -240,7 +240,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":output}
 
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items())),repr(sorted(request.query_params.items()))])
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items())),repr(sorted(request.json().items()))])
 @app.get("/{x}/feed")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
