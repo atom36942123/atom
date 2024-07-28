@@ -293,7 +293,7 @@ async def function_cell(request:Request):
    return {"status":1,"message":output}
    
 @app.post("/{x}/message")
-async def function_message(request:Request,background_tasks:BackgroundTasks):
+async def function_message(request:Request,background:BackgroundTasks):
    #token check
    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
@@ -307,12 +307,12 @@ async def function_message(request:Request,background_tasks:BackgroundTasks):
    if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
-   if body["mode"]=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+   if body["mode"]=="thread":background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
 
 
 # @router.delete("/{x}/my-delete")
-# async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mode:str,user_id:int=None,post_id:int=None,message_id:int=None):
+# async def function_my_delete(request:Request,background:BackgroundTasks,mode:str,user_id:int=None,post_id:int=None,message_id:int=None):
 #    #token check
 #    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
 #    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
