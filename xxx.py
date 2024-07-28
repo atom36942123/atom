@@ -70,35 +70,7 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
 
 
 
-@router.get("/{x}/object-read-self/{table}/{page}")
-async def function_object_read_self(request:Request,table:str,page:int,id:int=None,mode:str=None,limit:int=30):
-   #token check
-   response=await function_token_decode(request,env("key"))
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   request_user=response["message"]
-   #table=users
-   if table=="users":
-      response=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      if not response["message"]:return function_http_response(400,0,"no user for token passed")
-      return {"status":1,"message":response["message"][0]}
-   #table!=users
-   query,values=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"id":id}
-   if mode=="receiver":query,values=f"select * from {table} where (received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"received_by_id":request_user['id'],"id":id}
-   if mode=="all":query,values=f"select * from {table} where (created_by_id=:created_by_id or received_by_id=:received_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"received_by_id":request_user['id'],"id":id}
-   response=await function_query_runner(request.state.postgres_object,"read",query,values)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add user key
-   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add count key
-   if table in ["post"]:
-      response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      response=await function_add_comment_count(request.state.postgres_object,function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
+
 
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=function_redis_key_builder)
