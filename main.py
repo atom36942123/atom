@@ -130,7 +130,7 @@ async def function_insert(request:Request,file:UploadFile):
    #final    
    return {"status":1,"message":"done"}
 
-@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
+@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
    body=await request.json()
    output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
