@@ -251,6 +251,7 @@ async def function_feed(request:Request):
    #where
    param={k:v for k,v in body.items() if (k not in ["table","page","limit"] and "_operator" not in k)}
    where="where "
+   return where
    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
    #logic
