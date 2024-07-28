@@ -252,6 +252,7 @@ async def function_feed(request:Request):
    for k,v in param.items():
       if schema_column_datatype[k] in ["numeric"]:param[k]=float(v)
       if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
+   return param
    where="where "
    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
