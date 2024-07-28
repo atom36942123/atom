@@ -306,6 +306,7 @@ async def function_message(request:Request,background:BackgroundTasks):
    if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=[dict(item) for item in output]
    #add user key
    user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
    if user_ids:
