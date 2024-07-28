@@ -231,11 +231,10 @@ async def function_object(request:Request,background:BackgroundTasks):
       if "page" not in body:body["page"]=1
       if "limit" not in body:body["limit"]=30
       if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
+      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where created_by_id=:created_by_id order by id desc limit :limit offset :offset;",values={"created_by_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
    #response
    return {"status":1,"message":output}
 
-   #table=users
-   #else:query,values=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"id":id}
   
 async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
    #param
