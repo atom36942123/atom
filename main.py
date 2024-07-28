@@ -309,12 +309,12 @@ async def function_message(request:Request,background:BackgroundTasks):
    #add user key
    user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
    if user_ids:
-   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-   for object in output:
-      for object_user in output_user:
-         object["created_by_username"]=None
-         if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
-         break
+      output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+      for object in output:
+         for object_user in output_user:
+            object["created_by_username"]=None
+            if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
+            break
    #final
    if body["mode"]=="thread":background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
