@@ -240,6 +240,29 @@ async def function_object(request:Request,background:BackgroundTasks):
    #response
    return {"status":1,"message":output}
 
+
+
+@router.get("/{x}/object-read-public/{table}/{page}")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_object_read_public(request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
+   #logic
+   response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add user key
+   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
+   if response["status"]==0:return function_http_response(400,0,response["message"])
+   #add count key
+   if table in ["post"]:
+      response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+      response=await function_add_comment_count(request.state.postgres_object,function_query_runner,table,response["message"])
+      if response["status"]==0:return function_http_response(400,0,response["message"])
+   #final response
+   return response
+
+
+
+
 @app.post("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks):
    #token check
