@@ -245,7 +245,7 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
    #prework
-   return request.body
+   return vars(request.body)
    body=await request.json()
    if "page" not in body:body["page"]=1
    if "limit" not in body:body["limit"]=30
