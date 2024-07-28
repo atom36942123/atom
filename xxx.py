@@ -99,10 +99,6 @@ async def function_update_cell(request:Request,table:str,id:int,column:str,value
     return response
 
 
-#function
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-    return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 
 
 
