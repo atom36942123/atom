@@ -19,19 +19,6 @@ async def function_parent(request:Request):
    #          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
    #response
    
-
-@router.get("/{x}/my-action-check")
-async def function_my_action_check(request:Request,action:str,table:str,ids:str):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #logic
-   ids=[int(x) for x in ids.split(',')]
-   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {action} join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;",values={"parent_table":table,"created_by_id":user["id"]})
-   ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   #response
-   return {"status":1,"message":ids_filtered}
-
 async def function_database_clean(postgres_object,function_query_runner):
    #logic
    query_dict={
