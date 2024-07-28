@@ -232,7 +232,7 @@ async def function_object(request:Request,background:BackgroundTasks):
       where="where "
       for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
-      where=None if where=="where" else where
+      where="" if where=="where" else where
       if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
       else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #final
@@ -244,8 +244,8 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
-   if "page" not in body:int(body["page"]=1)
-   if "limit" not in body:int(body["limit"]=30)
+   body["page"]=1 if "page" not in body else int(body["page"])
+   body["limit"]=30 if "limit" not in body else int(body["limit"])
    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    #where
    param={k:v for k,v in body.items() if (k not in ["table","page","limit"] and "_operator" not in k)}
