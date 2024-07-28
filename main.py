@@ -232,12 +232,12 @@ async def function_object(request:Request,background:BackgroundTasks):
       if "limit" not in body:body["limit"]=30
       param={k:v for k,v in body.items() if k not in ["mode","table","page","limit"] or "_operator" not in k}
       param["created_by_id"]=user["id"]
-      if param:
-         where="where "
-         for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
-         where=where.strip().rsplit('and',1)[0]
+      where="where "
+      for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
+      where=where.strip().rsplit('and',1)[0]
+      return where
       if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
-      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit {body['limit']} offset {(body['page']-1)*body['limit']};",values=param)
+      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #response
    return {"status":1,"message":output}
 
