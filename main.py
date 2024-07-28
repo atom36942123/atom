@@ -70,22 +70,22 @@ from bson import ObjectId
 from elasticsearch import Elasticsearch
 
 #add like count
-   if output:
-      ids=list(set([item["id"] for item in output if item["id"]]))
-      object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
-      for object in output:
-         object["like_count"]=0
-         for object_like in object_like_list:
-            if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+   # if output:
+   #    ids=list(set([item["id"] for item in output if item["id"]]))
+   #    object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
+   #    for object in output:
+   #       object["like_count"]=0
+   #       for object_like in object_like_list:
+   #          if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
   
 #add comment count
-   if output:
-      ids=list(set([item["id"] for item in output if item["id"]]))
-      object_comment_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from activity join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='comment' and parent_table='{table}' group by parent_id;",values={})
-      for object in output:
-         object["comment_count"]=0
-         for object_comment in object_comment_list:
-            if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
+   # if output:
+   #    ids=list(set([item["id"] for item in output if item["id"]]))
+   #    object_comment_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from activity join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='comment' and parent_table='{table}' group by parent_id;",values={})
+   #    for object in output:
+   #       object["comment_count"]=0
+   #       for object_comment in object_comment_list:
+   #          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
 
 @app.get("/")
 async def function_root():return {"status":1,"message":f"welcome to {[*postgres_object]}"}
