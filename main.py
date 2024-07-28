@@ -230,38 +230,15 @@ async def function_object(request:Request,background:BackgroundTasks):
    if body["mode"]=="read":
       if "page" not in body:body["page"]=1
       if "limit" not in body:body["limit"]=30
-      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where created_by_id=:created_by_id order by id desc limit :limit offset :offset;",values={"created_by_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
+      param={k:v for k,v in body.items() if k not in ["mode","table","page","limit"] or "_operator" not in k}
+      param["created_by_id"]=user["id"]
+      where="where "
+      for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
+      where=where.strip().rsplit('and',1)[0]
+      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
+      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values={"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
    #response
    return {"status":1,"message":output}
-
-  
-async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
-   #param
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param_schema_atom={k:v for k,v in vars(schema_atom(**param)).items() if v not in [None,""," "]}
-   #operator
-   operator={}
-   for k,v in param_schema_atom.items():
-       operator_name=f"{k}_operator"
-       if operator_name in param:operator[k]=param[operator_name]
-   #where
-   where="where "
-   for k,v in param_schema_atom.items():
-      if k in operator:where=where+f"({k} {operator[k]} :{k} or :{k} is null) and "
-      elif k=="tag":where=where+f"({k} @> :{k} or :{k} is null) and "
-      else:where=where+f"({k} = :{k} or :{k} is null) and "
-   where=where.strip().rsplit('and',1)[0]
-   if where=="where":where=""
-   #logic
-   query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
-   response=await function_query_runner(postgres_object,"read",query,param_schema_atom)
-   if response["status"]==0:return response
-   #final response
-   return response
-
-
 
 @app.post("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks):
