@@ -226,8 +226,8 @@ async def function_object(request:Request,background:BackgroundTasks):
    if body["mode"]=="delete":
       if body["table"]=="users":
          output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id;",values={"id":user['id']})
-         for item in ["post","action","activity","atom"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
-         for item in ["action","activity"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
+         for item in ["post","action","activity","atom"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
+         for item in ["action","activity"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
       else:
          output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;",values={"id":body['id'],"created_by_id":user['id']})
    #read
