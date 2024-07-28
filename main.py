@@ -246,7 +246,6 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
-   return body
    if "page" not in body:body["page"]=1
    if "limit" not in body:body["limit"]=30
    #where
