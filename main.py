@@ -116,8 +116,10 @@ async def function_insert(request:Request,file:UploadFile):
    values=[]
    for row in file_object:
       for column in file_column_list:
+         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
+         if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
          if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
-         if schema_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
+         if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
@@ -260,6 +262,29 @@ async def function_feed(request:Request):
    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #final
    return {"status":1,"message":output}
+
+# @app.post("/{x}/cell")
+# async def function_cell(request:Request):
+#    #token check
+#    user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#    #prework
+#    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
+
+
+#     #admin check
+#     id,created_by_id=id,None
+#     if request_user["type"] not in ["root","admin"]:
+#         if table=="users":id,created_by_id=request_user['id'],None
+#         else:id,created_by_id=id,request_user['id']
+#         if column in ["created_by_id","received_by_id","is_active","is_verified","type"]:return function_http_response(400,0,"column not allowed")
+#     #logic
+#     query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+#     values={"value":value,"updated_at":datetime.now(),"updated_by_id":request_user['id'],"id":id,"created_by_id":created_by_id}
+#     response=await function_query_runner(request.state.postgres_object,"write",query,values)
+#     if response["status"]==0:return function_http_response(400,0,response["message"])
+#     #final response
+#     return response
    
 @app.post("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks):
