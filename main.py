@@ -319,7 +319,7 @@ async def function_my(request:Request):
    body=await request.json()
    #logic
    if body["mode"]=="delete_table_all":await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   if mode=="delete_message_all":await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
+   if  body["mode"]=="delete_message_all":await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
    #final
    return {"status":1,"message":"done"}
 
