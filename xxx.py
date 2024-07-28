@@ -1,12 +1,6 @@
 @app.post("/{x}/parent")
 async def function_parent(request:Request):
-   body=await request.json()
-   if "page" not in body:body["page"]=1
-   if "limit" not in body:body["limit"]=30
-   output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
-   parent_ids=[item["parent_id"] for item in output]
-   output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-   return {"status":1,"message":output}
+   
    # #add like count
    # if output:
    #    ids=list(set([item["id"] for item in output if item["id"]]))
