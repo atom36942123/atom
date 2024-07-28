@@ -7,8 +7,6 @@ async def function_parent(request:Request):
    parent_ids=[item["parent_id"] for item in output]
    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
    return {"status":1,"message":output}
-   
-
    # #add like count
    # if output:
    #    ids=list(set([item["id"] for item in output if item["id"]]))
@@ -67,11 +65,6 @@ async def function_my_delete(request:Request,background_tasks:BackgroundTasks,mo
    #response
    return {"status":1,"message":"done"}
 
-
-
-
-
-
 @router.get("/{x}/object-read-public/{table}/{page}")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_object_read_public(request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
@@ -89,9 +82,6 @@ async def function_object_read_public(request:Request,table:Literal["users","ato
       if response["status"]==0:return function_http_response(400,0,response["message"])
    #final response
    return response
-
-
-
 
 @router.put("/{x}/update-cell")
 async def function_update_cell(request:Request,table:str,id:int,column:str,value:str):
@@ -125,10 +115,6 @@ async def function_update_cell(request:Request,table:str,id:int,column:str,value
     #final response
     return response
 
-
-
-
-
 @router.get("/{x}/{function}")
 async def function_function(request:Request,function:str,background_tasks:BackgroundTasks,filename:str=None,url:str=None,email:str=None,title:str=None,description:str=None,mode:str=None,query:str=None):
     if function=="send-otp-email":
@@ -144,45 +130,10 @@ async def function_function(request:Request,function:str,background_tasks:Backgr
     #final response
     return response
 
-
-
 #function
 from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
     return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
-
-async def function_object_read(postgres_object,function_query_runner,table,param,order,limit,offset,schema_atom):
-   #param
-   param={k:v for k,v in param.items() if v not in [None,""," "]}
-   if "tag" in param and param["tag"]:param["tag"]=param["tag"].split(",")
-   param_schema_atom={k:v for k,v in vars(schema_atom(**param)).items() if v not in [None,""," "]}
-   #operator
-   operator={}
-   for k,v in param_schema_atom.items():
-       operator_name=f"{k}_operator"
-       if operator_name in param:operator[k]=param[operator_name]
-   #where
-   where="where "
-   for k,v in param_schema_atom.items():
-      if k in operator:where=where+f"({k} {operator[k]} :{k} or :{k} is null) and "
-      elif k=="tag":where=where+f"({k} @> :{k} or :{k} is null) and "
-      else:where=where+f"({k} = :{k} or :{k} is null) and "
-   where=where.strip().rsplit('and',1)[0]
-   if where=="where":where=""
-   #logic
-   query=f"select * from {table} {where} order by {order[0]} {order[1]} limit {limit} offset {offset};"
-   response=await function_query_runner(postgres_object,"read",query,param_schema_atom)
-   if response["status"]==0:return response
-   #final response
-   return response
-
-
-
-
-
-
-
-
 
 
 
