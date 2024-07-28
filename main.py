@@ -281,7 +281,7 @@ async def function_aws(request:Request):
    if body["mode"]=="ses":output=ses_client.send_email(Source=env.list("ses")[0],Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #response
    return {"status":1,"message":output}
-   
+
 @app.post("/{x}/mongo")
 async def function_mongo(request:Request):
    #prework
