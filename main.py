@@ -326,11 +326,13 @@ async def function_my(request:Request):
       output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
       parent_ids=[item["parent_id"] for item in output]
       output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   if  body["mode"]=="action_check":
+      output=await request.state.postgres_object.fetch_all(query=f"select parent_id from action join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table and created_by_id=:created_by_id;",values={"type":body["type"],"parent_table":body["table"],"created_by_id":user["id"]})
+      output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
    return {"status":1,"message":output}
 
-   
-  
+
    
    
 
