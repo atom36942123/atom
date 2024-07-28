@@ -332,10 +332,6 @@ async def function_my(request:Request):
    #final
    return {"status":1,"message":output}
 
-
-   
-   
-
 @app.get("/{x}/pcache")
 @cache(expire=60)
 async def function_pcache(request:Request):
