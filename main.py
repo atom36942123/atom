@@ -283,7 +283,7 @@ async def function_cell(request:Request):
    created_by_id=None
    if user["type"]!="admin" and body["table"]=="users":body["id"]=user["id"]
    if user["type"]!="admin" and body["table"]!="users":created_by_id=user["id"]
-   output=await request.state.postgres_object.fetch_all(query="update :table set :column=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values={"table":body["table"],"column":body["column"],"id":body["id"],"value":body["value"],"updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":created_by_id})
+   output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set :column=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values={"column":body["column"],"id":body["id"],"value":body["value"],"updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":created_by_id})
    #final
    return response
    
