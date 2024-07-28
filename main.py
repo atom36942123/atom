@@ -257,7 +257,7 @@ async def function_feed(request:Request):
    where=where.strip().rsplit('and',1)[0]
    #logic
    where=None if where=="where" else where
-   return where
+   return f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #final
    return {"status":1,"message":output}
