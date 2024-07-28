@@ -253,6 +253,7 @@ async def function_feed(request:Request):
    where="where "
    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
+   return where
    #logic
    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #final
