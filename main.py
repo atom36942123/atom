@@ -240,12 +240,12 @@ async def function_object(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":output}
 
-async def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items())),repr(sorted(await request.json().items()))])
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items())),])
 @app.get("/{x}/feed")
-@cache(expire=60,key_builder=await function_redis_key_builder)
+@cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
    #prework
-   #body=dict(request.query_params)
+   return dir(request)
    body=await request.json()
    if "page" not in body:body["page"]=1
    if "limit" not in body:body["limit"]=30
