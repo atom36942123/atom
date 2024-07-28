@@ -273,7 +273,7 @@ async def function_aws(request:Request):
    
 
 
-@router.post("/{x}/parent")
+@app.post("/{x}/parent")
 async def function_parent(request:Request):
    body=await request.json()
    if "page" not in body:body["page"]=1
