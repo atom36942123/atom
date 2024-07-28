@@ -318,10 +318,21 @@ async def function_my(request:Request):
    #prework
    body=await request.json()
    #logic
-   if body["mode"]=="delete_table_all":await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   if  body["mode"]=="delete_message_all":await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
+   if body["mode"]=="delete_table_all":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
+   if  body["mode"]=="delete_message_all":output=await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
+   if  body["mode"]=="read_parent_data":
+      if "page" not in body:body["page"]=1
+      if "limit" not in body:body["limit"]=30
+      output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
+      parent_ids=[item["parent_id"] for item in output]
+      output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
    #final
-   return {"status":1,"message":"done"}
+   return {"status":1,"message":output}
+
+   
+  
+   
+   
 
 @app.get("/{x}/pcache")
 @cache(expire=60)
