@@ -226,8 +226,18 @@ async def function_object(request:Request,background:BackgroundTasks):
    if body["mode"]=="delete":
       if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id={user['id']};",values={})
       else:output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id={body['id']} and created_by_id={user['id']};",values={})
+   #read
+   if body["mode"]=="read":
+      if "page" not in body:body["page"]=1
+      if "limit" not in body:body["limit"]=30
+      
+      if body["table"]=="users":esponse=await function_query_runner(request.state.postgres_object,"read","select * from users where id=:id;",{"id":request_user["id"]})
    #response
    return {"status":1,"message":output}
+
+   #table=users
+   else:query,values=f"select * from {table} where (created_by_id=:created_by_id) and (id=:id or :id is null) order by id desc offset {(page-1)*limit} limit {limit};",{"created_by_id":request_user['id'],"id":id}
+  
 
 @app.post("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks):
