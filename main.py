@@ -306,6 +306,15 @@ async def function_message(request:Request,background:BackgroundTasks):
    if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #add user key
+   user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
+   if user_ids:
+   output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+   for object in output:
+      for object_user in output_user:
+         object["created_by_username"]=None
+         if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
+         break
    #final
    if body["mode"]=="thread":background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
