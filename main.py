@@ -14,15 +14,15 @@ postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in e
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
+from fastapi_limiter import FastAPILimiter
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis
    redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
-   FastAPICache.init(RedisBackend(redis_object))
    await FastAPILimiter.init(redis_object)
+   FastAPICache.init(RedisBackend(redis_object))
    #postgres
    for k,v in postgres_object.items():await v.connect()
    #shutdown
