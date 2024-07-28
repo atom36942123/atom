@@ -366,6 +366,12 @@ async def function_pcache(request:Request):
    query_dict={"user_count":"select count(*) from users;",}
    output={k:await request.state.postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
    return {"status":1,"message":output}
+
+@app.get("/{x}/clean")
+async def function_clean(request:Request):
+   creator_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",values={}) for table in ["post","action","activity","atom"]]
+   parent_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join {parent_table} as y on x.parent_id=y.id where x.parent_id is not null and x.parent_table='{parent_table}' and y.id is null);",values={}) for table in ["post","action","activity","atom"] for parent_table in ["users","post"]]
+   return {"status":1,"message":parent_null}
    
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
