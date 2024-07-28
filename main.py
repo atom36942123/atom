@@ -111,23 +111,20 @@ async def function_insert(request:Request,file:UploadFile):
    #prework
    schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   table=file.filename.split(".")[0]
-   file_column_name_list=file_object.fieldnames
+   file_column_list=file_object.fieldnames 
    #logic
    values=[]
    for row in file_object:
-      for column in file_column_name_list:
-         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
+      for column in file_column_list:
          if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
          if schema_column_datatype[column] in ["numeric"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
-         if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
       values.append(row)
-   await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
+   await request.state.postgres_object.execute_many(query=f"insert into {file.filename.split('.')[0]} ({','.join(file_column_list)}) values ({','.join([':'+item for item in file_column_list])}) returning *;",values=values)
    file.file.close
-   #final    
+   #final
    return {"status":1,"message":"done"}
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
@@ -249,8 +246,12 @@ async def function_feed(request:Request):
    body=dict(request.query_params)
    if "page" not in body:body["page"]=1
    if "limit" not in body:body["limit"]=30
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
    #where
    param={k:v for k,v in body.items() if (k not in ["table","page","limit"] and "_operator" not in k)}
+   for k,v in param.items():
+      if schema_column_datatype[column] in ["numeric"]:param[k]=float(v)
+      if schema_column_datatype[column] in ["integer","bigint"]:param[k]=int(v)
    where="where "
    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
    where=where.strip().rsplit('and',1)[0]
