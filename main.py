@@ -224,8 +224,12 @@ async def function_object(request:Request,background:BackgroundTasks):
       else:output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={body['id']} and created_by_id={user['id']} returning *;",values=param)
    #delete
    if body["mode"]=="delete":
-      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id;",values={"id":user['id']})
-      else:output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;",values={"id":body['id'],"created_by_id":user['id']})
+      if body["table"]=="users":
+         output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id;",values={"id":user['id']})
+         for item in ["post","action","activity","atom"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
+         for item in ["action","activity"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
+      else:
+         output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;",values={"id":body['id'],"created_by_id":user['id']})
    #read
    if body["mode"]=="read":
       if "page" not in body:body["page"]=1
@@ -325,12 +329,6 @@ async def function_message(request:Request,background_tasks:BackgroundTasks):
 #    if mode=="like_post":await request.state.postgres_object.fetch_all(query="delete from likes where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",values={"created_by_id":user['id'],"parent_table":"post","parent_id":post_id})
 #    if mode=="bookmark_post":await request.state.postgres_object.fetch_all(query="delete from bookmark where created_by_id=:created_by_id and parent_table=:parent_table and parent_id=:parent_id;",values={"created_by_id":user['id'],"parent_table":"post","parent_id":post_id})
 #    if mode=="message":query,values=f"delete from message where id=:id and (created_by_id=:created_by_id or received_by_id=:received_by_id);",{"id":message_id,"created_by_id":user['id'],"received_by_id":user['id']}
-#    if mode=="account":await request.state.postgres_object.fetch_all(query="delete from users where id=:id;",values={"id":user['id']})
-#    #clean data
-#    if mode=="account":
-#       for item in ["post","likes","bookmark","report","rating","comment","block"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
-#       for item in ["message"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id or received_by_id=:received_by_id;",values={"created_by_id":user['id'],"received_by_id":user['id']}))
-#       for item in ["likes","bookmark","comment","rating","block","report"]:background_tasks.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
 #    #response
 #    return {"status":1,"message":"done"}
 
