@@ -54,11 +54,11 @@ async def middleware(request:Request,api_function):
    try:response=await api_function(request)
    #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
    except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
-   #response
+   #final
    return response
 
 #api
-from fastapi import Request,BackgroundTasks,Depends,Body,File,UploadFile
+from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi_cache.decorator import cache
@@ -101,7 +101,7 @@ async def function_database(request:Request):
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in schema_column if column['column_name'] in index_column]
-   #response
+   #final
    return {"status":1,"message":"done"}
 
 @app.post("/{x}/insert")
@@ -127,7 +127,7 @@ async def function_insert(request:Request,file:UploadFile):
       values.append(row)
    await request.state.postgres_object.execute_many(query=f"insert into {table} ({','.join(file_column_name_list)}) values ({','.join([':'+item for item in file_column_name_list])}) returning *;",values=values)
    file.file.close
-   #response    
+   #final    
    return {"status":1,"message":"done"}
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=1))])
@@ -176,7 +176,7 @@ async def function_login(request:Request):
    user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
    token=jwt.encode(payload,env("key"))
-   #response
+   #final
    return {"status":1,"message":token}
 
 @app.get("/{x}/profile")
@@ -193,7 +193,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    for k,v in query_dict.items():
       output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
       user[k]=output[0]["count"]
-   #response
+   #final
    background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
 
@@ -237,32 +237,27 @@ async def function_object(request:Request,background:BackgroundTasks):
       where=where.strip().rsplit('and',1)[0]
       if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
       else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
-   #response
+   #final
    return {"status":1,"message":output}
 
-
-
-@router.get("/{x}/object-read-public/{table}/{page}")
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
+@router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_redis_key_builder)
-async def function_object_read_public(request:Request,table:Literal["users","atom","post","comment","workseeker"],page:int,limit:int=30):
+async def function_feed(request:Request):
+   #prework
+   body=dict(request.query_params)
+   if "page" not in body:body["page"]=1
+   if "limit" not in body:body["limit"]=30
+   #where
+   param={k:v for k,v in body.items() if (k not in ["table","page","limit"] and "_operator" not in k)}
+   where="where "
+   for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
+   where=where.strip().rsplit('and',1)[0]
    #logic
-   response=await function_object_read(request.state.postgres_object,function_query_runner,table,dict(request.query_params),["id","desc"],limit,(page-1)*limit,schema_atom)
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add user key
-   response=await function_add_user_key(request.state.postgres_object,function_query_runner,response["message"],"created_by_id")
-   if response["status"]==0:return function_http_response(400,0,response["message"])
-   #add count key
-   if table in ["post"]:
-      response=await function_add_like_count(request.state.postgres_object,function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-      response=await function_add_comment_count(request.state.postgres_object,function_query_runner,table,response["message"])
-      if response["status"]==0:return function_http_response(400,0,response["message"])
-   #final response
-   return response
-
-
-
-
+   output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
+   #final
+   return {"status":1,"message":output}
+   
 @app.post("/{x}/message")
 async def function_message(request:Request,background_tasks:BackgroundTasks):
    #token check
@@ -277,7 +272,7 @@ async def function_message(request:Request,background_tasks:BackgroundTasks):
    if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #response
+   #final
    if body["mode"]=="thread":background_tasks.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    return {"status":1,"message":output}
 
@@ -302,7 +297,7 @@ async def function_aws(request:Request):
    if body["mode"]=="s3_delete":output=s3_resource.Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
    if body["mode"]=="s3_delete_all":output=s3_resource.Bucket(env.list("s3")[0]).objects.all().delete()
    if body["mode"]=="ses":output=ses_client.send_email(Source=env.list("ses")[0],Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
-   #response
+   #final
    return {"status":1,"message":output}
 
 @app.post("/{x}/mongo")
@@ -317,7 +312,7 @@ async def function_mongo(request:Request):
    if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
    if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
    if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
-   #response
+   #final
    return response
 
 @app.post("/{x}/elasticsearch")
@@ -334,7 +329,7 @@ async def function_elasticsearch(request:Request,mode:str):
    if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
    if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
    if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
-   #response
+   #final
    return response
 
 #server start
