@@ -70,37 +70,6 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 
-#api config
-config_database={
-"created_at":["timestamptz","users,post,action,activity,atom"],
-"created_by_id":["bigint","users,post,action,activity,atom"],
-"updated_at":["timestamptz","users,post,action,activity,atom"],
-"updated_by_id":["bigint","users,post,action,activity,atom"],
-"is_active":["int","users,post,action,activity,atom"],
-"is_verified":["int","users,post,action,activity,atom"],
-"is_protected":["int","users,post,atom"],
-"type":["text","users,post,action,activity,atom"],
-"parent_table":["text","action,activity"],
-"parent_id":["bigint","action,activity"],
-"status":["text","action,activity,atom"],
-"remark":["text","atom"],
-"metadata":["jsonb","post"],
-"username":["text","users"],
-"password":["text","users"],
-"google_id":["text","users"],
-"last_active_at":["timestamptz","users"],
-"name":["text","users"],
-"email":["text","users,atom"],
-"mobile":["text","users,atom"],
-"otp":["int","atom"],
-"title":["text","post,atom"],
-"description":["text","users,post,action,activity,atom"],
-"tag":["text","post"],
-"link":["text","post,atom"],
-"file":["text","post,atom"],
-"rating":["numeric","atom"]
-}
-
 #api
 @app.get("/")
 async def function_root():
@@ -124,8 +93,38 @@ async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   table_name_all=config_database["created_at"][1].split(',')
+   #config database
+   config_database={
+   "created_at":["timestamptz","users,post,action,activity,atom"],
+   "created_by_id":["bigint","users,post,action,activity,atom"],
+   "updated_at":["timestamptz","users,post,action,activity,atom"],
+   "updated_by_id":["bigint","users,post,action,activity,atom"],
+   "is_active":["int","users,post,action,activity,atom"],
+   "is_verified":["int","users,post,action,activity,atom"],
+   "is_protected":["int","users,post,atom"],
+   "type":["text","users,post,action,activity,atom"],
+   "parent_table":["text","action,activity"],
+   "parent_id":["bigint","action,activity"],
+   "status":["text","action,activity,atom"],
+   "remark":["text","atom"],
+   "metadata":["jsonb","post"],
+   "username":["text","users"],
+   "password":["text","users"],
+   "google_id":["text","users"],
+   "last_active_at":["timestamptz","users"],
+   "name":["text","users"],
+   "email":["text","users,atom"],
+   "mobile":["text","users,atom"],
+   "otp":["int","atom"],
+   "title":["text","post,atom"],
+   "description":["text","users,post,action,activity,atom"],
+   "tag":["text","post"],
+   "link":["text","post,atom"],
+   "file":["text","post,atom"],
+   "rating":["numeric","atom"]
+   }
    #create table
+   table_name_all=config_database["created_at"][1].split(',')
    for table in table_name_all:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
@@ -182,27 +181,22 @@ async def function_database(request:Request):
          output=await database(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
-
-         
-      
-
    
-   
-      
-   
-  
-  
-   
-
 @app.post("/{x}/insert")
 async def function_insert(request:Request,file:UploadFile):
-   #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #prework
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
+   database=request.state.postgres_object.fetch_all
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #schema column groupby
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await database(query=query,values=values)
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in output]
+   #file
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_object.fieldnames 
-   #conversion
+   table=file.filename.split('.')[0]
+   #values
    values=[]
    for row in file_object:
       for column in file_column_list:
@@ -215,10 +209,31 @@ async def function_insert(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
       values.append(row)
    #logic
-   await request.state.postgres_object.execute_many(query=f"insert into {file.filename.split('.')[0]} ({','.join(file_column_list)}) values ({','.join([':'+item for item in file_column_list])}) returning *;",values=values)
+   column_1=','.join(file_column_list)
+   column_2=','.join([':'+item for item in file_column_list])
+   query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
+   values=values
+   output=await database(query=query,values=values)
    file.file.close
    #final
-   return {"status":1,"message":"done"}
+   return {"status":1,"message":output}
+
+
+
+                     
+   
+   
+   
+   
+   
+   
+   
+      
+         
+      
+   
+  
+  
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
