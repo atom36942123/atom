@@ -360,7 +360,7 @@ async def function_signup(request:Request):
    body=await request.json()
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
-   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
+   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
