@@ -285,8 +285,8 @@ async def function_feed(request:Request):
    else:
       where="where "
       for k,v in param.items():
-         where=where+f"({k}=:{k} or :{k} is null) and "
          if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
+         else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
    table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
@@ -581,8 +581,8 @@ async def function_read(request:Request):
    else:
       where="where "
       for k,v in param.items():
-         where=where+f"({k}=:{k} or :{k} is null) and "
          if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
+         else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
    table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
