@@ -219,6 +219,22 @@ async def function_insert(request:Request,file:UploadFile):
    #final
    return {"status":1,"message":output}
 
+@app.get("/{x}/pcache")
+@cache(expire=60)
+async def function_pcache(request:Request):
+   #prewrok
+   database=request.state.postgres_object.fetch_all
+   query_dict={"user_count":"select count(*) from users;"}
+   temp={}
+   #logic
+   for k,v in query_dict.items():
+      query=v
+      values={}
+      output=await database(query=query,values=values)
+      temp[k]=output
+   #final
+   return {"status":1,"message":temp}
+
 
 
                      
@@ -448,12 +464,7 @@ async def function_my(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.get("/{x}/pcache")
-@cache(expire=60)
-async def function_pcache(request:Request):
-   query_dict={"user_count":"select count(*) from users;",}
-   output={k:await request.state.postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
-   return {"status":1,"message":output}
+
 
 @app.get("/{x}/clean")
 async def function_clean(request:Request):
