@@ -197,7 +197,7 @@ async def function_insert(request:Request,file:UploadFile):
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_object.fieldnames 
    table=file.filename.split('.')[0]
-   #values
+   #datatype conversion
    values=[]
    for row in file_object:
       for column in file_column_list:
@@ -282,6 +282,77 @@ async def function_aws(request:Request):
       output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
    #final
    return {"status":1,"message":output}
+
+@app.post("/{x}/mongo")
+async def function_mongo(request:Request):
+   #prework
+   body=await request.json()
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   mode=body["mode"]
+   body.pop("mode",None)
+   #logic
+   if mode=="create":response=await mongo_object.test.users.insert_one(body)
+   if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+   if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
+   if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+   #final
+   return response
+
+@app.post("/{x}/elasticsearch")
+async def function_elasticsearch(request:Request,mode:str):
+   #prework
+   body=await request.json()
+   elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
+   mode=body["mode"]
+   body.pop("mode",None)
+   #logic
+   if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
+   if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
+   if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
+   if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
+   if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
+   if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
+   #final
+   return response
+
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
+@app.get("/{x}/feed")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_feed(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=dict(request.query_params)
+   #pagination
+   body["page"]=1 if "page" not in body else int(body["page"])
+   body["limit"]=30 if "limit" not in body else int(body["limit"])
+   #schema column groupby
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await database(query=query,values=values)
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
+   #param
+   param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
+   param={k:v for k,v in param.items() if "_operator" not in k}
+   #datatype conversion
+   for k,v in param.items():
+      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
+      if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
+   #where
+   if not param:where=""
+   else:
+      where="where "
+      for k,v in param.items():
+         where=where+f"({k}=:{k} or :{k} is null) and "
+         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
+      where=where.strip().rsplit('and',1)[0]
+   #logic
+   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
+   query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
+   values=param
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
 
       
       
@@ -419,30 +490,7 @@ async def function_object(request:Request,background:BackgroundTasks):
       else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
    #final
    return {"status":1,"message":output}
-
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
-@app.get("/{x}/feed")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_feed(request:Request):
-   #prework
-   body=dict(request.query_params)
-   body["page"]=1 if "page" not in body else int(body["page"])
-   body["limit"]=30 if "limit" not in body else int(body["limit"])
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
-   #where
-   param={k:v for k,v in body.items() if (k not in ["table","page","limit"] and "_operator" not in k)}
-   for k,v in param.items():
-      if schema_column_datatype[k] in ["numeric"]:param[k]=float(v)
-      if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
-   where="where "
-   for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
-   where=where.strip().rsplit('and',1)[0]
-   #logic
-   where="" if where=="where" else where
-   output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
-   #final
-   return {"status":1,"message":output}
-
+   
 @app.post("/{x}/cell")
 async def function_cell(request:Request):
    #token check
@@ -523,37 +571,7 @@ async def function_my(request:Request):
    
 
 
-@app.post("/{x}/mongo")
-async def function_mongo(request:Request):
-   #prework
-   body=await request.json()
-   mode=body["mode"]
-   body.pop("mode",None)
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-   #logic
-   if mode=="create":response=await mongo_object.test.users.insert_one(body)
-   if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
-   if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
-   if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
-   #final
-   return response
 
-@app.post("/{x}/elasticsearch")
-async def function_elasticsearch(request:Request,mode:str):
-   #prework
-   body=await request.json()
-   mode=body["mode"]
-   body.pop("mode",None)
-   elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
-   #logic
-   if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
-   if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
-   if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
-   if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
-   if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
-   if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
-   #final
-   return response
 
 #server start
 import uvicorn,asyncio
