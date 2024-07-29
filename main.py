@@ -185,7 +185,8 @@ async def function_database(request:Request):
 @app.post("/{x}/insert")
 async def function_insert(request:Request,file:UploadFile):
    #prework
-   database=request.state.postgres_object.execute_many
+   database=request.state.postgres_object.fetch_all
+   database_bulk=request.state.postgres_object.execute_many
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
@@ -213,7 +214,7 @@ async def function_insert(request:Request,file:UploadFile):
    column_2=','.join([':'+item for item in file_column_list])
    query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
    values=values
-   output=await database(query=query,values=values)
+   output=await database_bulk(query=query,values=values)
    file.file.close
    #final
    return {"status":1,"message":output}
