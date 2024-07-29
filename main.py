@@ -224,8 +224,8 @@ async def function_insert(request:Request,file:UploadFile):
 async def function_pcache(request:Request):
    #prewrok
    database=request.state.postgres_object.fetch_all
-   query_dict={"user_count":"select count(*) from users;"}
    temp={}
+   query_dict={"user_count":"select count(*) from users;"}
    #logic
    for k,v in query_dict.items():
       query=v
@@ -234,6 +234,24 @@ async def function_pcache(request:Request):
       temp[k]=output
    #final
    return {"status":1,"message":temp}
+
+@app.get("/{x}/clean")
+async def function_clean(request:Request):
+   #prewrok
+   database=request.state.postgres_object.fetch_all
+   #created_by_id null
+   for table in ["post","action","activity"]:
+      query=f"delete from {table} where created_by_id not in (select id from users);"
+      values={}
+      output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":"done"}
+
+      
+      
+   ##parent_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join {parent_table} as y on x.parent_id=y.id where x.parent_id is not null and x.parent_table='{parent_table}' and y.id is null);",values={}) for table in ["action","activity"] for parent_table in ["users","post"]]
+   
+   
 
 
 
@@ -466,11 +484,7 @@ async def function_my(request:Request):
 
 
 
-@app.get("/{x}/clean")
-async def function_clean(request:Request):
-   creator_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",values={}) for table in ["post","action","activity"]]
-   parent_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join {parent_table} as y on x.parent_id=y.id where x.parent_id is not null and x.parent_table='{parent_table}' and y.id is null);",values={}) for table in ["action","activity"] for parent_table in ["users","post"]]
-   return {"status":1,"message":parent_null}
+
    
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
