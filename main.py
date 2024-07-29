@@ -9,7 +9,7 @@ env.read_env()
 
 #database
 from databases import Database
-postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in env.list("postgres")}
 
 #lifespan
 from fastapi import FastAPI
@@ -258,7 +258,7 @@ async def function_aws(request:Request):
    #prework
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
-   #config
+   #env
    aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
    s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
    ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
@@ -278,9 +278,7 @@ async def function_aws(request:Request):
    if body["mode"]=="s3_delete_all":
       output=s3_resource.Bucket(s3_bucket).objects.all().delete()
    if body["mode"]=="ses":
-      to=[body["email"]]
-      title=body["title"]
-      description=body["description"]
+      to,title,description=[body["email"]],body["title"],body["description"]
       output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
    #final
    return {"status":1,"message":output}
