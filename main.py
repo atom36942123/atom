@@ -353,6 +353,23 @@ async def function_feed(request:Request):
    #final
    return {"status":1,"message":output}
 
+@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
+async def function_signup(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   #logic
+   query="insert into users (username,password) values (:username,:password) returning *;"
+   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+   
+   
+   
+   
+  
+
 
       
       
@@ -376,11 +393,7 @@ async def function_feed(request:Request):
   
   
 
-@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
-async def function_signup(request:Request):
-   body=await request.json()
-   output=await request.state.postgres_object.fetch_all(query="insert into users (username,password) values (:username,:password) returning *;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
-   return {"status":1,"message":output}
+
 
 @app.post("/{x}/login")
 async def function_login(request:Request):
