@@ -206,8 +206,8 @@ async def function_insert(request:Request,file:UploadFile):
       for column in file_column_list:
          if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
-         if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
          if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
+         if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
          if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
@@ -342,8 +342,9 @@ async def function_feed(request:Request):
    param={k:v for k,v in param.items() if "_operator" not in k}
    #datatype conversion
    for k,v in param.items():
-      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
+      if schema_column_datatype[k] in ["ARRAY"]:param[k]=v.split(",")
       if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
+      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
    #where
    if not param:where=""
    else:
@@ -480,6 +481,42 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user}
 
+@app.post("/{x}/cell")
+async def function_cell(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=dict(await request.json())
+   #token check
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #schema column groupby
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await database(query=query,values=values)
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
+   #datatype conversion
+   column=body["column"]
+   if column in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
+   if schema_column_datatype[column] in ["jsonb"]:body["value"]=json.dumps(body["value"])
+   if schema_column_datatype[column] in ["ARRAY"]:body["value"]=body["value"].split(",")
+   if schema_column_datatype[column] in ["integer","bigint"]:body["value"]=int(body["value"])
+   if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:body["value"]=round(float(body["value"]),3)
+   if schema_column_datatype[column] in ["date","timestamp with time zone"]:body["value"]=datetime.strptime(body["value"],'%Y-%m-%d')
+   #admin set
+   created_by_id=None
+   if user["type"]!="admin":
+      if body["table"]=="users":body["id"]=user["id"]
+      else:created_by_id=user["id"]
+   #logic
+   table=body['table']
+   column=body['column']
+   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   values={"value":body["value"],"id":body["id"],"created_by_id":created_by_id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
 
 
 
@@ -551,29 +588,7 @@ async def function_object(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":output}
    
-@app.post("/{x}/cell")
-async def function_cell(request:Request):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #prework
-   body=dict(await request.json())
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})}
-   #conversion
-   if body["column"] in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
-   if schema_column_datatype[body["column"]] in ["ARRAY"]:body["value"]=body["value"].split(",")
-   if schema_column_datatype[body["column"]] in ["jsonb"]:body["value"]=json.dumps(body["value"])
-   if schema_column_datatype[body["column"]] in ["integer","bigint"]:body["value"]=int(body["value"])
-   if schema_column_datatype[body["column"]] in ["decimal","numeric","real","double precision"]:body["value"]=round(float(body["value"]),3)
-   if schema_column_datatype[body["column"]] in ["date","timestamp with time zone"]:body["value"]=datetime.strptime(body["value"],'%Y-%m-%d')
-   #logic
-   created_by_id=None
-   if user["type"]!="admin" and body["table"]=="users":body["id"]=user["id"]
-   if user["type"]!="admin" and body["table"]!="users":created_by_id=user["id"]
-   output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {body['column']}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values={"id":body["id"],"value":body["value"],"updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":created_by_id})
-   #output=await request.state.postgres_object.fetch_all(query=f"update :table set :column=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;",values={"table":body["table"],"column":body["column"],"id":body["id"],"value":body["value"],"updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":created_by_id})
-   #final
-   return {"status":1,"message":output}
+
    
 @app.post("/{x}/message")
 async def function_message(request:Request,background:BackgroundTasks):
