@@ -78,13 +78,13 @@ async def function_root():
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
    #prework
-   database=await request.state.postgres_object.fetch_all
+   database=request.state.postgres_object.fetch_all
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
    #logic
    query=body["query"]
    values={}
-   output=database(query=query,values=values)
+   output=await database(query=query,values=values)
    #final
    return output
     
