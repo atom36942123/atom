@@ -6,7 +6,7 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#database
+#postgres
 from databases import Database
 postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres")}
 
@@ -23,7 +23,7 @@ async def lifespan(app:FastAPI):
    redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
    await FastAPILimiter.init(redis_object)
    FastAPICache.init(RedisBackend(redis_object))
-   #database
+   #postgres
    for k,v in postgres_object.items():await v.connect()
    #shutdown
    yield 
