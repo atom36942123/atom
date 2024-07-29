@@ -213,7 +213,6 @@ async def function_insert(request:Request,file:UploadFile):
    column_2=','.join([':'+item for item in file_column_list])
    query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
    values=values
-   return query
    output=await database(query=query,values=values)
    file.file.close
    #final
