@@ -364,6 +364,84 @@ async def function_signup(request:Request):
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
+
+@app.post("/{x}/login")
+async def function_login(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   #username
+   if "mode" not in body:
+      query="select * from users where username=:username and password=:password order by id desc limit 1;"
+      values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
+      output=await database(query=query,values=values)
+      user=output[0] if output else None
+      if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   #google
+   if "mode" in body and body["mode"]=="google":
+      query="select * from users where google_id=:google_id order by id desc limit 1;",
+      values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
+      output=await database(query=query,values=values)
+      user=output[0] if output else None
+      if not user:
+         query="insert into users (google_id) values (:google_id) returning *;"
+         values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
+         output=await database(query=query,values=values)
+         user_id=output[0]["id"]
+         query="select * from users where id=:id;"
+         values={"id":user_id}
+         output=await database(query=query,values=values)
+         user=output[0]
+   #email
+   if "mode" in body and body["mode"]=="email":
+      query="select otp from atom where type='otp' and email=:email order by id desc limit 1;"
+      values={"email":body["email"]}
+      output=await database(query=query,values=values)
+      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
+      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
+      query="select * from users where email=:email order by id desc limit 1;"
+      values={"email":body["email"]}
+      output=await database(query=query,values=values)
+      user=output[0] if output else None
+      if not user:
+         query="insert into users (email) values (:email) returning *;"
+         values={"email":body["email"]}
+         output=await database(query=query,values=values)
+         user_id=output[0]["id"]
+         query="select * from users where id=:id;"
+         values={"id":user_id}
+         output=await database(query=query,values=values)
+         user=output[0]
+   #mobile
+   if "mode" in body and body["mode"]=="mobile":
+      query="select otp from atom where type='otp' and mobile=:mobile order by id desc limit 1;"
+      values={"mobile":body["mobile"]}
+      output=await database(query=query,values=values)
+      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
+      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
+      query="select * from users where mobile=:mobile order by id desc limit 1;"
+      values={"mobile":body["mobile"]}
+      output=await database(query=query,values=values)
+      user=output[0] if output else None
+      if not user:
+         query="insert into users (mobile) values (:mobile) returning *;"
+         values={"mobile":body["mobile"]}
+         output=await database(query=query,values=values)
+         user_id=output[0]["id"]
+         query="select * from users where id=:id;"
+         values={"id":user_id}
+         output=await database(query=query,values=values)
+         user=output[0]
+   #token encode
+   expiry_days=1
+   expiry=time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple())
+   x=str(request.url).split("/")[3]
+   user={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   data=json.dumps(user,default=str)
+   payload={"exp":expiry,"data":data}
+   token=jwt.encode(payload,env("key"))
+   #final
+   return {"status":1,"message":token}
    
    
    
@@ -395,48 +473,7 @@ async def function_signup(request:Request):
 
 
 
-@app.post("/{x}/login")
-async def function_login(request:Request):
-   #prework
-   body=await request.json()
-   #username
-   if "mode" not in body:
-      output=await request.state.postgres_object.fetch_all(query="select * from users where username=:username and password=:password order by id desc limit 1;",values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()})
-      user=output[0] if output else None
-      if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #google
-   if "mode" in body and body["mode"]=="google":
-      output=await request.state.postgres_object.fetch_all(query="select * from users where google_id=:google_id order by id desc limit 1;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
-      user=output[0] if output else None
-      if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (google_id) values (:google_id) returning *;",values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()})
-      output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
-      user=output[0]
-   #email
-   if "mode" in body and body["mode"]=="email":
-      output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and email=:email order by id desc limit 1;",values={"email":body["email"]})
-      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
-      output=await request.state.postgres_object.fetch_all(query="select * from users where email=:email order by id desc limit 1;",values={"email":body["email"]})
-      user=output[0] if output else None
-      if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (email) values (:email) returning *;",values={"email":body["email"]})
-      output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
-      user=output[0]
-   #mobile
-   if "mode" in body and body["mode"]=="mobile":
-      output=await request.state.postgres_object.fetch_all(query="select otp from atom where type='otp' and mobile=:mobile order by id desc limit 1;",values={"mobile":body["mobile"]})
-      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
-      output=await request.state.postgres_object.fetch_all(query="select * from users where mobile=:mobile order by id desc limit 1;",values={"mobile":body["mobile"]})
-      user=output[0] if output else None
-      if not user:output=await request.state.postgres_object.fetch_all(query="insert into users (mobile) values (:mobile) returning *;",values={"mobile":body["mobile"]})
-      output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":output[0]["id"]})
-      user=output[0]
-   #token encode
-   user={"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=int(1))).timetuple()),"data":json.dumps(user,default=str)}
-   token=jwt.encode(payload,env("key"))
-   #final
-   return {"status":1,"message":token}
+
 
 @app.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
