@@ -473,7 +473,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
       values={"user_id":user["id"]}
       output=await database(query=query,values=values)
       user[k]=output[0]["count"]
-   #background
+   #update last_active_at
    query="update users set last_active_at=:last_active_at where id=:id;"
    values={"last_active_at":datetime.now(),"id":user["id"]}
    background.add_task(await database(query=query,values=values))
