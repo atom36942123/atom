@@ -138,7 +138,7 @@ async def function_database(request:Request):
          output=await database(query=query,values=values)
    #created_at default
    for table in table_name_all:
-      query=f"alter table {table} alter column created_at set default now();",
+      query=f"alter table {table} alter column created_at set default now();"
       values={}
       output=await database(query=query,values=values)
    #protect rows
