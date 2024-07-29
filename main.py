@@ -23,7 +23,7 @@ async def lifespan(app:FastAPI):
    redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
    await FastAPILimiter.init(redis_object)
    FastAPICache.init(RedisBackend(redis_object))
-   #postgres
+   #database
    for k,v in postgres_object.items():await v.connect()
    #shutdown
    yield 
@@ -47,7 +47,7 @@ async def middleware(request:Request,api_function):
    #x check
    x=str(request.url).split("/")[3]
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
-   #assgin
+   #database assgin
    request.state.postgres_object=None
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
@@ -57,10 +57,8 @@ async def middleware(request:Request,api_function):
    #final
    return response
 
-#api
+#api import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
 import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
@@ -68,6 +66,13 @@ from datetime import datetime,timedelta
 import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
+
+#api helper
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
+
+
 
 #add like count
    # if output:
@@ -87,16 +92,19 @@ from elasticsearch import Elasticsearch
    #       for object_comment in object_comment_list:
    #          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
 
+
+#api
 @app.get("/")
-async def function_root():return {"status":1,"message":f"welcome to {[*postgres_object]}"}
+async def function_root():
+   return {"status":1,"message":f"welcome to {[*postgres_object]}"}
 
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
    body=await request.json()
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=env("key"):return error("token issue")
    output=await request.state.postgres_object.fetch_all(query=body["query"],values={})
    return output
-
+    
 @app.get("/{x}/database")
 async def function_database(request:Request):
    #token check
@@ -369,7 +377,7 @@ async def function_pcache(request:Request):
 
 @app.get("/{x}/clean")
 async def function_clean(request:Request):
-   creator_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",values={}) for table in ["post","action","activity","atom"]]
+   creator_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join users as y on x.created_by_id=y.id where x.created_by_id is not null and y.id is null);",values={}) for table in ["post","action","activity"]]
    parent_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join {parent_table} as y on x.parent_id=y.id where x.parent_id is not null and x.parent_table='{parent_table}' and y.id is null);",values={}) for table in ["action","activity"] for parent_table in ["users","post"]]
    return {"status":1,"message":parent_null}
    
