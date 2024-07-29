@@ -552,10 +552,10 @@ async def function_delete(request:Request):
    table=body['table']
    if table=="users":
       query=f"delete from {table} where id=:id;"
-      values={"id":user['id']})
+      values={"id":user["id"]}
    else:
       query=f"delete from {table} where id=:id and created_by_id=:created_by_id;"
-      values={"id":body['id'],"created_by_id":user['id']})
+      values={"id":body['id'],"created_by_id":user["id"]}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
