@@ -379,7 +379,7 @@ async def function_login(request:Request):
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #google
    if "mode" in body and body["mode"]=="google":
-      query="select * from users where google_id=:google_id order by id desc limit 1;",
+      query="select * from users where google_id=:google_id order by id desc limit 1;"
       values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
       output=await database(query=query,values=values)
       user=output[0] if output else None
