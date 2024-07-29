@@ -481,6 +481,50 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user}
 
+@app.post("/{x}/create")
+async def function_create(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   if body["table"]=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table issue"}))
+   #token check
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #param
+   param={k:v for k,v in body.items() if v not in [None,""," "]}
+   param={k:v for k,v in param.items() if k not in ["table"]}
+   param={k:v for k,v in param.items() if k not in ["id","created_at","is_active","is_verified","google_id","otp"]}
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   param["created_by_id"]=user["id"]
+   #column set
+   column_1,=','.join([*param])
+   column_2=','.join([':'+item for item in [*param]])
+   #logic
+   table=body['table']
+   query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
+   values=param
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+   
+
+   
+   
+   
+
+   
+   
+
+   
+
+   
+   
+   
+      
+   
+   
+
 @app.post("/{x}/cell")
 async def function_cell(request:Request):
    #prework
@@ -526,65 +570,6 @@ async def function_cell(request:Request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-@app.post("/{x}/object")
-async def function_object(request:Request,background:BackgroundTasks):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #prework
-   body=await request.json()
-   body={k:v for k,v in body.items() if v not in [None,""," "]}
-   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
-   #create
-   if body["mode"]=="create":
-      if body["table"]=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-      param={k:v for k,v in body.items() if k not in ["mode","table"]+["id","created_at","is_active","is_verified","google_id","otp"]}
-      param["created_by_id"]=user["id"]
-      column_1,column_2,=','.join([*param]),','.join([':'+item for item in [*param]])
-      output=await request.state.postgres_object.fetch_all(query=f"insert into {body['table']} ({column_1}) values ({column_2}) returning *;",values=param)
-   #update
-   if body["mode"]=="update":
-      param={k:v for k,v in body.items() if k not in ["mode","table","id"]+["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]}
-      param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
-      key=""
-      for k,v in param.items():key=key+f"{k}=coalesce(:{k},{k}) ,"
-      column=key.strip().rsplit(',', 1)[0]
-      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={user['id']} returning *;",values=param)
-      else:output=await request.state.postgres_object.fetch_all(query=f"update {body['table']} set {column} where id={body['id']} and created_by_id={user['id']} returning *;",values=param)
-   #delete
-   if body["mode"]=="delete":
-      if body["table"]=="users":
-         output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id;",values={"id":user['id']})
-         for item in ["post","action","activity","atom"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
-         for item in ["action","activity"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
-      else:
-         output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;",values={"id":body['id'],"created_by_id":user['id']})
-   #read
-   if body["mode"]=="read":
-      if "page" not in body:body["page"]=1
-      if "limit" not in body:body["limit"]=30
-      param={k:v for k,v in body.items() if (k not in ["mode","table","page","limit"] and "_operator" not in k)}
-      param["created_by_id"]=user["id"]
-      where="where "
-      for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
-      where=where.strip().rsplit('and',1)[0]
-      where="" if where=="where" else where
-      if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
-      else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
-   #final
-   return {"status":1,"message":output}
-   
 
    
 @app.post("/{x}/message")
