@@ -257,6 +257,45 @@ async def function_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
+@app.get("/{x}/feed")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_feed(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=dict(request.query_params)
+   #pagination
+   body["page"]=1 if "page" not in body else int(body["page"])
+   body["limit"]=30 if "limit" not in body else int(body["limit"])
+   #schema column groupby
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await database(query=query,values=values)
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
+   #param
+   param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
+   param={k:v for k,v in param.items() if "_operator" not in k}
+   #datatype conversion
+   for k,v in param.items():
+      if schema_column_datatype[k] in ["ARRAY"]:param[k]=v.split(",")
+      if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
+      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
+   #column set
+   if not param:where=""
+   else:
+      where="where "
+      for k,v in param.items():
+         where=where+f"({k}=:{k} or :{k} is null) and "
+         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
+      where=where.strip().rsplit('and',1)[0]
+   #logic
+   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
+   query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
+   values=param
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
    #prework
@@ -321,45 +360,6 @@ async def function_elasticsearch(request:Request,mode:str):
    if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
    #final
    return response
-
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
-@app.get("/{x}/feed")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_feed(request:Request):
-   #prework
-   database=request.state.postgres_object.fetch_all
-   body=dict(request.query_params)
-   #pagination
-   body["page"]=1 if "page" not in body else int(body["page"])
-   body["limit"]=30 if "limit" not in body else int(body["limit"])
-   #schema column groupby
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await database(query=query,values=values)
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #param
-   param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
-   param={k:v for k,v in param.items() if "_operator" not in k}
-   #datatype conversion
-   for k,v in param.items():
-      if schema_column_datatype[k] in ["ARRAY"]:param[k]=v.split(",")
-      if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
-      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
-   #where
-   if not param:where=""
-   else:
-      where="where "
-      for k,v in param.items():
-         where=where+f"({k}=:{k} or :{k} is null) and "
-         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
-      where=where.strip().rsplit('and',1)[0]
-   #logic
-   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
-   query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
-   values=param
-   output=await database(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
@@ -539,8 +539,36 @@ async def function_update(request:Request):
    #final
    return {"status":1,"message":output}
    
-   
-
+# @app.post("/{x}/delete")
+# async def function_delete(request:Request):
+#    #prework
+#    database=request.state.postgres_object.fetch_all
+#    body=await request.json()
+#    #token check
+#    payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+#    user=json.loads(payload["data"])
+#    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+#    #param
+#    param={k:v for k,v in body.items() if v not in [None,""," "]}
+#    param={k:v for k,v in param.items() if k not in ["table","id"]}
+#    param={k:v for k,v in param.items() if k not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]}
+#    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+#    param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
+#    #column set
+#    column=""
+#    for k,v in param.items():column=column+f"{k}=coalesce(:{k},{k}),"
+#    column=column[:-1]
+#    #logic
+#    table=body['table']
+#    if body["table"]=="users":
+#       query=f"update {table} set {column} where id=:id returning *;"
+#       values=param|{"id":user["id"]}
+#    else:
+#       query=f"update {table} set {column} where id=:id and created_by_id=:created_by_id returning *;"
+#       values=param|{"id":body["id"],"created_by_id":user["id"]}
+#    output=await database(query=query,values=values)
+#    #final
+#    return {"status":1,"message":output}
       
       
       
