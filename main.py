@@ -526,7 +526,7 @@ async def function_update(request:Request):
    #column set
    column=""
    for k,v in param.items():column=column+f"{k}=coalesce(:{k},{k}),"
-   column=column=[:-1]
+   column=column[:-1]
    #logic
    table=body['table']
    if body["table"]=="users":
