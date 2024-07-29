@@ -507,11 +507,69 @@ async def function_create(request:Request):
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
+
+@app.post("/{x}/update")
+async def function_update(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   #token check
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #param
+   param={k:v for k,v in body.items() if v not in [None,""," "]}
+   param={k:v for k,v in param.items() if k not in ["table","id"]}
+   param={k:v for k,v in param.items() if k not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]}
+   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
+   param["updated_at"],param["updated_by_id"]=datetime.now(),user["id"]
+   #column set
+   column=""
+   for k,v in param.items():column=column+f"{k}=coalesce(:{k},{k}),"
+   column=column=[:-1]
+   #logic
+   table=body['table']
+   if body["table"]=="users":
+      query=f"update {table} set {column} where id=:id returning *;"
+      values=param|{"id":user["id"]}
+   else:
+      query=f"update {table} set {column} where id=:id and created_by_id=:created_by_id returning *;"
+      values=param|{"id":body["id"],"created_by_id":user["id"]}
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
    
+   
+
+      
+      
+      
+
 
    
    
    
+   # #delete
+   # if body["mode"]=="delete":
+   #    if body["table"]=="users":
+   #       output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id;",values={"id":user['id']})
+   #       for item in ["post","action","activity","atom"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where created_by_id=:created_by_id;",values={"created_by_id":user['id']}))
+   #       for item in ["action","activity"]:background.add_task(await request.state.postgres_object.fetch_all(query=f"delete from {item} where parent_table='users' and parent_id=:parent_id;",values={"parent_id":user['id']}))
+   #    else:
+   #       output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;",values={"id":body['id'],"created_by_id":user['id']})
+   # #read
+   # if body["mode"]=="read":
+   #    if "page" not in body:body["page"]=1
+   #    if "limit" not in body:body["limit"]=30
+   #    param={k:v for k,v in body.items() if (k not in ["mode","table","page","limit"] and "_operator" not in k)}
+   #    param["created_by_id"]=user["id"]
+   #    where="where "
+   #    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
+   #    where=where.strip().rsplit('and',1)[0]
+   #    where="" if where=="where" else where
+   #    if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
+   #    else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
+
 
    
    
