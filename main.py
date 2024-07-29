@@ -591,7 +591,7 @@ async def function_read(request:Request):
       values={"id":user["id"]}
    else:
       query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
-      return param
+      return query
       values=param
    output=await database(query=query,values=values)
    #final
