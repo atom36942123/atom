@@ -79,8 +79,9 @@ async def function_root():
 async def function_qrunner(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
+   #token check
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=body["query"]
    values={}
@@ -92,6 +93,7 @@ async def function_qrunner(request:Request):
 async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config database
    config_database={
@@ -187,6 +189,7 @@ async def function_insert(request:Request,file:UploadFile):
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
+   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
@@ -225,6 +228,7 @@ async def function_pcache(request:Request):
    #prewrok
    database=request.state.postgres_object.fetch_all
    temp={}
+   #config
    query_dict={"user_count":"select count(*) from users;"}
    #logic
    for k,v in query_dict.items():
@@ -256,8 +260,9 @@ async def function_clean(request:Request):
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
    #prework
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
+   #token check
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #env
    aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
    s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
@@ -288,6 +293,7 @@ async def function_mongo(request:Request):
    #prework
    body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   #mode
    mode=body["mode"]
    body.pop("mode",None)
    #logic
@@ -303,6 +309,7 @@ async def function_elasticsearch(request:Request,mode:str):
    #prework
    body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
+   #mode
    mode=body["mode"]
    body.pop("mode",None)
    #logic
@@ -434,64 +441,67 @@ async def function_login(request:Request):
          user=output[0]
    #token encode
    expiry_days=1
-   expiry=time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple())
-   x=str(request.url).split("/")[3]
-   user={"x":x,"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":expiry,"data":data}
+   data=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple()),"data":data}
    token=jwt.encode(payload,env("key"))
    #final
    return {"status":1,"message":token}
    
-   
-   
-   
-  
-
-
-      
-      
-   
-   
-
-
-
-                     
-   
-   
-   
-   
-   
-   
-   
-      
-         
-      
-   
-  
-  
-
-
-
-
-
 @app.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
+   #prework
+   database=request.state.postgres_object.fetch_all
    #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
-   output=await request.state.postgres_object.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
-   user=dict(output[0]) if output else None
+   query="select * from users where id=:id;"
+   values={"id":user["id"]}
+   output=await database(query=query,values=values)
+   user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   user=dict(user)
    #count key
-   query_dict={"post_count":"select count(*) from post where created_by_id=:user_id;","comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;","message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"}
+   query_dict={
+   "post_count":"select count(*) from post where created_by_id=:user_id;",
+   "comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
+   "message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
+   }
    for k,v in query_dict.items():
-      output=await request.state.postgres_object.fetch_all(query=v,values={"user_id":user["id"]})
+      query=v
+      values={"user_id":user["id"]}
+      output=await database(query=query,values=values)
       user[k]=output[0]["count"]
+   #background
+   query="update users set last_active_at=:last_active_at where id=:id;"
+   values={"last_active_at":datetime.now(),"id":user["id"]}
+   background.add_task(await database(query=query,values=values))
    #final
-   background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"id":user["id"],"last_active_at":datetime.now()}))
    return {"status":1,"message":user}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @app.post("/{x}/object")
 async def function_object(request:Request,background:BackgroundTasks):
