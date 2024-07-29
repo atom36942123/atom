@@ -498,7 +498,7 @@ async def function_create(request:Request):
    if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
    param["created_by_id"]=user["id"]
    #column set
-   column_1,=','.join([*param])
+   column_1=','.join([*param])
    column_2=','.join([':'+item for item in [*param]])
    #logic
    table=body['table']
