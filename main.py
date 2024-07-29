@@ -191,7 +191,7 @@ async def function_insert(request:Request,file:UploadFile):
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
    output=await database(query=query,values=values)
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in output]
+   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_object.fieldnames 
