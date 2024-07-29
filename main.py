@@ -1,3 +1,4 @@
+
 #package
 package="pip install a==1.0 aiohttp==3.9.1 aiosignal==1.3.1 annotated-types==0.6.0 anyio==4.3.0 appnope==0.1.4 APScheduler==3.10.4 argon2-cffi==23.1.0 argon2-cffi-bindings==21.2.0 arrow==1.3.0 asgiref==3.7.2 asttokens==2.4.1 async-lru==2.0.4 async-timeout==4.0.3 asyncpg==0.29.0 attrs==23.2.0 autocommand==2.2.2 Automat==0.8.0 awscli==1.18.69 Babel==2.14.0 beautifulsoup4==4.12.3 bleach==6.1.0 blinker==1.4 boto3==1.34.49 botocore==1.34.17 certifi==2023.11.17 cffi==1.16.0 chardet==3.0.4 charset-normalizer==3.3.2 cheroot==10.0.0 CherryPy==18.9.0 click==8.1.7 cloud-init==24.1.3 colorama==0.4.6 comm==0.2.1 commonmark==0.9.1 configobj==5.0.6 constantly==15.1.0 cryptography==41.0.7 databases==0.8.0 dbus-python==1.2.16 debugpy==1.8.1 decorator==5.1.1 defusedxml==0.7.1 Deprecated==1.2.14 distlib==0.3.8 distro==1.4.0 distro-info==0.23+ubuntu1.1 dnspython==2.4.2 docutils==0.16 ec2-hibinit-agent==1.0.0 elastic-transport==8.13.0 elasticsearch==8.13.0 entrypoints==0.3 environs==10.3.0 executing==2.0.1 fastapi==0.110.0 fastapi-cache2==0.2.1 fastapi-limiter==0.1.6 fastjsonschema==2.19.1 fqdn==1.5.1 frozenlist==1.4.1 gazpacho==1.1 greenlet==3.0.3 h11==0.14.0 hibagent==1.0.1 httpcore==1.0.4 httplib2==0.14.0 httpx==0.27.0 hyperlink==19.0.0 idna==3.6 importlib-metadata==1.5.0 incremental==16.10.1 inflect==7.0.0 install==1.3.5 ipykernel==6.29.2 ipython==8.22.1 isoduration==20.11.0 jaraco.classes==3.3.0 jaraco.collections==5.0.0 jaraco.context==4.3.0 jaraco.functools==4.0.0 jaraco.text==3.12.0 jedi==0.19.1 Jinja2==3.1.3 jmespath==1.0.1 json5==0.9.17 jsonpatch==1.22 jsonpointer==2.4 jsonschema==4.21.1 jsonschema-specifications==2023.12.1 jupyter-events==0.9.0 jupyter-lsp==2.2.2 jupyter_client==8.6.0 jupyter_core==5.7.1 jupyter_server==2.12.5 jupyter_server_terminals==0.5.2 jupyterlab==4.1.2 jupyterlab_pygments==0.3.0 jupyterlab_server==2.25.3 keyring==18.0.1 launchpadlib==1.10.13 lazr.restfulclient==0.14.2 lazr.uri==1.0.3 markdown-it-py==3.0.0 MarkupSafe==2.1.5 marshmallow==3.20.2 matplotlib-inline==0.1.6 mdurl==0.1.2 mistune==3.0.2 more-itertools==10.2.0 motor==3.3.2 multidict==6.0.5 nbclient==0.9.0 nbconvert==7.16.1 nbformat==5.9.2 nest-asyncio==1.6.0 netifaces==0.10.4 notebook==7.1.0 notebook_shim==0.2.4 numpy==1.26.3 oauthlib==3.1.0 of==1.0.1 olefile==0.46 overrides==7.7.0 packaging==23.2 pandas==2.1.4 pandocfilters==1.5.1 parso==0.8.3 pendulum==3.0.0 pexpect==4.9.0 Pillow==7.0.0 pip-review==1.3.0 platformdirs==4.2.0 portend==3.2.0 prometheus_client==0.20.0 prompt-toolkit==3.0.43 psutil==5.9.8 ptyprocess==0.7.0 pure-eval==0.2.2 pyasn1-modules==0.2.1 pycparser==2.21 pydantic==2.5.3 pydantic_core==2.14.6 Pygments==2.17.2 PyGObject==3.36.0 PyJWT==2.8.0 pymacaroons==0.13.0 pymongo==4.6.1 pyparsing==3.1.1 pyrsistent==0.20.0 python-apt==2.0.1+ubuntu0.20.4.1 python-dateutil==2.8.2 python-debian==0.1.36+ubuntu1.1 python-dotenv==1.0.1 python-json-logger==2.0.7 python-multipart==0.0.9 pytz==2024.1 pytz-deprecation-shim==0.1.0.post0 pytzdata==2020.1 PyYAML==6.0.1 pyzmq==25.1.2 redis==5.1.0b2 referencing==0.33.0 requests==2.31.0 rfc3339-validator==0.1.4 rfc3986-validator==0.1.1 rich==13.7.0 roman==2.0.0 rpds-py==0.18.0 s3transfer==0.10.0 SecretStorage==2.3.1 Send2Trash==1.8.2 shellingham==1.5.4 simplejson==3.16.0 six==1.16.0 sniffio==1.3.0 sos==4.5.6 soupsieve==2.5 SQLAlchemy==1.4.51 stack-data==0.6.3 starlette==0.35.1 systemd-python==234 tempora==5.5.1 terminado==0.18.0 time-machine==2.13.0 tinycss2==1.2.1 to==0.3 tornado==6.4 traitlets==5.14.1 Twisted==18.9.0 typer==0.9.0 types-python-dateutil==2.8.19.20240106 typing_extensions==4.9.0 tzdata==2024.1 tzlocal==5.2 ufw==0.36 uri-template==1.3.0 urllib3==2.0.7 uvicorn==0.27.1 wcwidth==0.2.13 webcolors==1.13 webencodings==0.5.1 websocket-client==1.7.0 wrapt==1.16.0 ws4py==0.5.1 yarl==1.9.4 zc.lockfile==3.0.post1 zipp==1.0.0"
 
@@ -6,7 +7,7 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#postgres
+#database
 from databases import Database
 postgres_object={x.split("/")[-1]:Database(x,min_size=1,max_size=100) for x in env.list("postgres")}
 
@@ -23,7 +24,7 @@ async def lifespan(app:FastAPI):
    redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
    await FastAPILimiter.init(redis_object)
    FastAPICache.init(RedisBackend(redis_object))
-   #postgres
+   #database
    for k,v in postgres_object.items():await v.connect()
    #shutdown
    yield 
@@ -69,26 +70,36 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 
-#api helper
-
-#add like count
-   # if output:
-   #    ids=list(set([item["id"] for item in output if item["id"]]))
-   #    object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
-   #    for object in output:
-   #       object["like_count"]=0
-   #       for object_like in object_like_list:
-   #          if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-  
-#add comment count
-   # if output:
-   #    ids=list(set([item["id"] for item in output if item["id"]]))
-   #    object_comment_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from activity join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='comment' and parent_table='{table}' group by parent_id;",values={})
-   #    for object in output:
-   #       object["comment_count"]=0
-   #       for object_comment in object_comment_list:
-   #          if object["id"]==object_comment["parent_id"]:object["comment_count"]=object_comment["count"]
-
+#api config
+config_database={
+"created_at":["timestamptz","users,post,action,activity,atom"],
+"created_by_id":["bigint","users,post,action,activity,atom"],
+"updated_at":["timestamptz","users,post,action,activity,atom"],
+"updated_by_id":["bigint","users,post,action,activity,atom"],
+"is_active":["int","users,post,action,activity,atom"],
+"is_verified":["int","users,post,action,activity,atom"],
+"is_protected":["int","users,post,atom"],
+"type":["text","users,post,action,activity,atom"],
+"parent_table":["text","action,activity"],
+"parent_id":["bigint","action,activity"],
+"status":["text","action,activity,atom"],
+"remark":["text","atom"],
+"metadata":["jsonb","post"],
+"username":["text","users"],
+"password":["text","users"],
+"google_id":["text","users"],
+"last_active_at":["timestamptz","users"],
+"name":["text","users"],
+"email":["text","users,atom"],
+"mobile":["text","users,atom"],
+"otp":["int","atom"],
+"title":["text","post,atom"],
+"description":["text","users,post,action,activity,atom"],
+"tag":["text","post"],
+"link":["text","post,atom"],
+"file":["text","post,atom"],
+"rating":["numeric","atom"]
+}
 
 #api
 @app.get("/")
@@ -97,35 +108,91 @@ async def function_root():
 
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
-   output=await request.state.postgres_object.fetch_all(query=body["query"],values={})
+   #logic
+   query=body["query"]
+   values={}
+   output=await database(query=query,values=values)
+   #final
    return output
     
 @app.get("/{x}/database")
 async def function_database(request:Request):
-   #token check
+   #prework
+   database=request.state.postgres_object.fetch_all
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #core
-   config_database={"created_at":["timestamptz","users,post,action,activity,atom"],"created_by_id":["bigint","users,post,action,activity,atom"],"updated_at":["timestamptz","users,post,action,activity,atom"],"updated_by_id":["bigint","users,post,action,activity,atom"],"is_active":["int","users,post,action,activity,atom"],"is_verified":["int","users,post,action,activity,atom"],"is_protected":["int","users,post,atom"],"type":["text","users,post,action,activity,atom"],"parent_table":["text","action,activity"],"parent_id":["bigint","action,activity"],"status":["text","action,activity,atom"],"remark":["text","atom"],"metadata":["jsonb","post"],"username":["text","users"],"password":["text","users"],"google_id":["text","users"],"last_active_at":["timestamptz","users"],"name":["text","users"],"email":["text","users,atom"],"mobile":["text","users,atom"],"otp":["int","atom"],"title":["text","post,atom"],"description":["text","users,post,action,activity,atom"],"tag":["text","post"],"link":["text","post,atom"],"file":["text","post,atom"],"rating":["numeric","atom"]}
-   [await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={}) for table in config_database["created_at"][1].split(',')]
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database.items() for table in v[1].split(',')]
-   #pattern
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={}) for table in config_database["created_at"][1].split(',')]
-   [await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={}) for table in config_database["is_protected"][1].split(',')]
-   #zzz
-   schema_constraint_name_list=[item["constraint_name"] for item in await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})]
-   query_zzz=["alter table users add constraint constraint_unique_users unique (username);","alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in query_zzz if query.split()[5] not in schema_constraint_name_list]
-   #index
-   output=await request.state.postgres_object.fetch_all(query='''select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;''',values={})
-   if output[0]["output"]:await request.state.postgres_object.fetch_all(query=output[0]["output"],values={})
-   schema_column=await request.state.postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public' order by column_name;",values={})
+   table_name_all=config_database["created_at"][1].split(',')
+   #create table
+   for table in table_name_all:
+      query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
+      values={}
+      output=await database(query=query,values=values)
+   #create column
+   for k,v in config_database.items():
+      for table in v[1].split(','):
+         query=f"alter table {table} add column if not exists {k} {v[0]};"
+         values={}
+         output=await database(query=query,values=values)
+   #created_at default
+   for table in table_name_all:
+      query=f"alter table {table} alter column created_at set default now();",
+      values={}
+      output=await database(query=query,values=values)
+   #protect rows
+   for table in config_database["is_protected"][1].split(','):
+      query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
+      values={}
+      output=await database(query=query,values=values)
+   #schema constraint
+   query="select constraint_name from information_schema.constraint_column_usage;"
+   values={}
+   output=await database(query=query,values=values)
+   schema_constraint_name_list=[item["constraint_name"] for item in output]
+   #query zzz
+   query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
+   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
+   ]
+   for item in query_zzz:
+      if item.split()[5] not in schema_constraint_name_list:
+         query=item
+         values={}
+         output=await database(query=query,values=values)
+   #drop index
+   query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+   values={}
+   output=await database(query=query,values=values)
+   if output[0]["output"]:
+      query=output[0]["output"]
+      values={}
+      output=await database(query=query,values=values)
+   #schema column
+   query="select * from information_schema.columns where table_schema='public' order by column_name;"
+   values={}
+   schema_column=await database(query=query,values=values)
+   #create index
+   column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-   index_column=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});",values={}) for column in schema_column if column['column_name'] in index_column]
+   for column in schema_column:
+      if column['column_name'] in column_to_index:
+         query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});"
+         values={}
+         output=await database(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
+
+         
+      
+
+   
+   
+      
+   
+  
+  
+   
 
 @app.post("/{x}/insert")
 async def function_insert(request:Request,file:UploadFile):
