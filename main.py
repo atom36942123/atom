@@ -490,6 +490,8 @@ async def function_cell(request:Request):
    payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #admin check
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
@@ -503,16 +505,11 @@ async def function_cell(request:Request):
    if schema_column_datatype[column] in ["integer","bigint"]:body["value"]=int(body["value"])
    if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:body["value"]=round(float(body["value"]),3)
    if schema_column_datatype[column] in ["date","timestamp with time zone"]:body["value"]=datetime.strptime(body["value"],'%Y-%m-%d')
-   #admin set
-   created_by_id=None
-   if user["type"]!="admin":
-      if body["table"]=="users":body["id"]=user["id"]
-      else:created_by_id=user["id"]
    #logic
    table=body['table']
    column=body['column']
-   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   values={"value":body["value"],"id":body["id"],"created_by_id":created_by_id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
+   values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
