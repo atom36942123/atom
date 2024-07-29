@@ -244,12 +244,17 @@ async def function_clean(request:Request):
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await database(query=query,values=values)
+   #parent_table null
+   for table in ["action","activity"]:
+      for parent_table in ["users","post"]:
+         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+         values={}
+         output=await database(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
 
       
       
-   ##parent_null=[await request.state.postgres_object.fetch_all(query=f"delete from {table} where id in (select x.id from {table} as x left join {parent_table} as y on x.parent_id=y.id where x.parent_id is not null and x.parent_table='{parent_table}' and y.id is null);",values={}) for table in ["action","activity"] for parent_table in ["users","post"]]
    
    
 
