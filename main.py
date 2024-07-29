@@ -59,6 +59,8 @@ async def middleware(request:Request,api_function):
 
 #api import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
 import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
@@ -68,11 +70,6 @@ from bson import ObjectId
 from elasticsearch import Elasticsearch
 
 #api helper
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-error=lambda x:JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
-
-
 
 #add like count
    # if output:
@@ -100,8 +97,8 @@ async def function_root():
 
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    body=await request.json()
-   if request.headers.get("token")!=env("key"):return error("token issue")
    output=await request.state.postgres_object.fetch_all(query=body["query"],values={})
    return output
     
