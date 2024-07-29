@@ -508,6 +508,42 @@ async def function_create(request:Request):
    #final
    return {"status":1,"message":output}
 
+@app.post("/{x}/read")
+async def function_read(request:Request):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   #token check
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #pagination
+   body["page"]=1 if "page" not in body else int(body["page"])
+   body["limit"]=30 if "limit" not in body else int(body["limit"])
+   #param
+   param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
+   param={k:v for k,v in param.items() if "_operator" not in k}
+   param["created_by_id"]=user["id"]
+   #column set
+   if not param:where=""
+   else:
+      where="where "
+      for k,v in param.items():
+         where=where+f"({k}=:{k} or :{k} is null) and "
+         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
+      where=where.strip().rsplit('and',1)[0]
+   #logic
+   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
+   if table=="users":
+      query=f"select * from {table} where id=:id"
+      values={"id":user["id"]}
+   else:
+      query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
+      values=param
+   output=await database(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
 @app.post("/{x}/update")
 async def function_update(request:Request):
    #prework
@@ -570,18 +606,6 @@ async def function_delete(request:Request):
   
 
  
-   # if body["mode"]=="read":
-   #    if "page" not in body:body["page"]=1
-   #    if "limit" not in body:body["limit"]=30
-   #    param={k:v for k,v in body.items() if (k not in ["mode","table","page","limit"] and "_operator" not in k)}
-   #    param["created_by_id"]=user["id"]
-   #    where="where "
-   #    for k,v in param.items():where=where+f"({k} {body[f'{k}_operator']} :{k} or :{k} is null) and " if f"{k}_operator" in body else where+f"({k} = :{k} or :{k} is null) and "
-   #    where=where.strip().rsplit('and',1)[0]
-   #    where="" if where=="where" else where
-   #    if body["table"]=="users":output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} where id={user['id']};",values={})
-   #    else:output=await request.state.postgres_object.fetch_all(query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;",values=param|{"limit":body['limit'],"offset":(body['page']-1)*body['limit']})
-
 
    
    
