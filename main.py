@@ -212,9 +212,10 @@ async def function_insert(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
       values.append(row)
-   #logic
+   #column set
    column_1=','.join(file_column_list)
    column_2=','.join([':'+item for item in file_column_list])
+   #logic
    query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
    values=values
    output=await database_bulk(query=query,values=values)
@@ -280,7 +281,7 @@ async def function_feed(request:Request):
       if schema_column_datatype[k] in ["ARRAY"]:param[k]=v.split(",")
       if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
       if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
-   #column set
+   #where set
    if not param:where=""
    else:
       where="where "
@@ -295,71 +296,6 @@ async def function_feed(request:Request):
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
-
-@app.post("/{x}/aws")
-async def function_aws(request:Request):
-   #prework
-   body=await request.json()
-   #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #env
-   aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
-   s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
-   ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
-   #boto3
-   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
-   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
-   s3_resource=boto3.resource("s3",aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
-   #logic
-   if body["mode"]=="s3_create":
-      expiry=1000
-      size_kb=300
-      key=str(uuid.uuid4())+"-"+body["filename"]
-      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
-   if body["mode"]=="s3_delete":
-      key=body["url"].split("/")[-1]
-      output=s3_resource.Object(s3_bucket,key).delete()
-   if body["mode"]=="s3_delete_all":
-      output=s3_resource.Bucket(s3_bucket).objects.all().delete()
-   if body["mode"]=="ses":
-      to,title,description=[body["email"]],body["title"],body["description"]
-      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
-   #final
-   return {"status":1,"message":output}
-
-@app.post("/{x}/mongo")
-async def function_mongo(request:Request):
-   #prework
-   body=await request.json()
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-   #mode
-   mode=body["mode"]
-   body.pop("mode",None)
-   #logic
-   if mode=="create":response=await mongo_object.test.users.insert_one(body)
-   if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
-   if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
-   if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
-   #final
-   return response
-
-@app.post("/{x}/elasticsearch")
-async def function_elasticsearch(request:Request,mode:str):
-   #prework
-   body=await request.json()
-   elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
-   #mode
-   mode=body["mode"]
-   body.pop("mode",None)
-   #logic
-   if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
-   if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
-   if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
-   if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
-   if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
-   if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
-   #final
-   return response
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
@@ -576,7 +512,7 @@ async def function_read(request:Request):
    param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
    param={k:v for k,v in param.items() if "_operator" not in k}
    param["created_by_id"]=user["id"]
-   #column set
+   #where set
    if not param:where=""
    else:
       where="where "
@@ -716,14 +652,71 @@ async def function_my(request:Request):
    #final
    return {"status":1,"message":output}
 
+@app.post("/{x}/aws")
+async def function_aws(request:Request):
+   #prework
+   body=await request.json()
+   #token check
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #env
+   aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
+   s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
+   ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
+   #boto3
+   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   s3_resource=boto3.resource("s3",aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   #logic
+   if body["mode"]=="s3_create":
+      expiry=1000
+      size_kb=300
+      key=str(uuid.uuid4())+"-"+body["filename"]
+      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
+   if body["mode"]=="s3_delete":
+      key=body["url"].split("/")[-1]
+      output=s3_resource.Object(s3_bucket,key).delete()
+   if body["mode"]=="s3_delete_all":
+      output=s3_resource.Bucket(s3_bucket).objects.all().delete()
+   if body["mode"]=="ses":
+      to,title,description=[body["email"]],body["title"],body["description"]
+      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+   #final
+   return {"status":1,"message":output}
 
+@app.post("/{x}/mongo")
+async def function_mongo(request:Request):
+   #prework
+   body=await request.json()
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   #mode
+   mode=body["mode"]
+   body.pop("mode",None)
+   #logic
+   if mode=="create":response=await mongo_object.test.users.insert_one(body)
+   if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+   if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
+   if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+   #final
+   return response
 
-
+@app.post("/{x}/elasticsearch")
+async def function_elasticsearch(request:Request,mode:str):
+   #prework
+   body=await request.json()
+   elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
+   #mode
+   mode=body["mode"]
+   body.pop("mode",None)
+   #logic
+   if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
+   if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
+   if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
+   if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
+   if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
+   if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
+   #final
+   return response
    
-
-
-
-
 #server start
 import uvicorn,asyncio
 if __name__=="__main__":
