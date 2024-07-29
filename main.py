@@ -253,6 +253,38 @@ async def function_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+@app.post("/{x}/aws")
+async def function_aws(request:Request):
+   #prework
+   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   body=await request.json()
+   #config
+   aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
+   s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
+   ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
+   #boto3
+   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   s3_resource=boto3.resource("s3",aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   #logic
+   if body["mode"]=="s3_create":
+      expiry=1000
+      size_kb=300
+      key=str(uuid.uuid4())+"-"+body["filename"]
+      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
+   if body["mode"]=="s3_delete":
+      key=body["url"].split("/")[-1]
+      output=s3_resource.Object(s3_bucket,key).delete()
+   if body["mode"]=="s3_delete_all":
+      output=s3_resource.Bucket(s3_bucket).objects.all().delete()
+   if body["mode"]=="ses":
+      to=[body["email"]]
+      title=body["title"]
+      description=body["description"]
+      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+   #final
+   return {"status":1,"message":output}
+
       
       
    
@@ -491,22 +523,7 @@ async def function_my(request:Request):
 
 
    
-@app.post("/{x}/aws")
-async def function_aws(request:Request):
-   #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #prework
-   body=await request.json()
-   s3_client=boto3.client("s3",region_name=env.list("s3")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
-   ses_client=boto3.client("ses",region_name=env.list("ses")[1],aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
-   s3_resource=boto3.resource("s3",aws_access_key_id=env.list("aws")[0],aws_secret_access_key=env.list("aws")[1])
-   #logic
-   if body["mode"]=="s3_create":output=s3_client.generate_presigned_post(Bucket=env.list("s3")[0],Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=1000,Conditions=[['content-length-range',1,(1024*1000/3)]])
-   if body["mode"]=="s3_delete":output=s3_resource.Object(env.list("s3")[0],body["url"].split("/")[-1]).delete()
-   if body["mode"]=="s3_delete_all":output=s3_resource.Bucket(env.list("s3")[0]).objects.all().delete()
-   if body["mode"]=="ses":output=ses_client.send_email(Source=env.list("ses")[0],Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
-   #final
-   return {"status":1,"message":output}
+
 
 @app.post("/{x}/mongo")
 async def function_mongo(request:Request):
