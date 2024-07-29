@@ -207,7 +207,7 @@ async def function_insert(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
-      values.append(row)
+         values.append(row)
    #logic
    column_1=','.join(file_column_list)
    column_2=','.join([':'+item for item in file_column_list])
