@@ -246,7 +246,7 @@ async def function_clean(request:Request):
       output=await database(query=query,values=values)
    #parent_table null
    for table in ["action","activity"]:
-      for parent_table in ["users","post"]:
+      for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
          values={}
          output=await database(query=query,values=values)
