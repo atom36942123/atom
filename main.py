@@ -259,7 +259,7 @@ async def function_clean(request:Request):
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await database(query=query,values=values)
-   #parent_table null
+   #parent_id null
    for table in ["action","activity"]:
       for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
@@ -551,17 +551,17 @@ async def function_delete(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
+   if body['table'] not in ["users","post","action","activity"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table issue"}))
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #logic
-   table=body['table']
    if table=="users":
-      query=f"delete from {table} where id=:id;"
+      query=f"delete from users where id=:id;"
       values={"id":user["id"]}
    else:
-      query=f"delete from {table} where id=:id and created_by_id=:created_by_id;"
+      query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;"
       values={"id":body['id'],"created_by_id":user["id"]}
    output=await database(query=query,values=values)
    #final
