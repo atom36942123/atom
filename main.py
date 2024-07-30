@@ -1,4 +1,5 @@
 #useful
+#aws=sudo -i / cd atom/atom / git pull origin main / sh /opt/fastapi.sh
 # export=\copy post to 'filename' with (format csv,header);
 # import=\copy post from 'path' with (format csv,header);
 # export_column=\copy (query)  to 'filename' with (format csv,header);
