@@ -75,19 +75,11 @@ from elasticsearch import Elasticsearch
 async def function_root():
    return {"status":1,"message":f"welcome to {[*postgres_object]}"}
 
-@app.post("/{x}/qrunner")
-async def function_qrunner(request:Request):
-   #body={"query":"select * from users limit 10;"}
-   #prework
+@app.get("/{x}/qrunner")
+async def function_qrunner(request:Request,query:str):
    database=request.state.postgres_object.fetch_all
-   body=await request.json()
-   #token check
    if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #logic
-   query=body["query"]
-   values={}
-   output=await database(query=query,values=values)
-   #final
+   output=await database(query=query,values={})
    return output
     
 @app.get("/{x}/database")
