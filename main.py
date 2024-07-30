@@ -296,18 +296,12 @@ async def function_feed(request:Request):
    values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await database(query=query,values=values)
    #add creator key
-   output=[dict(item) for item in output]
-   user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
-   if user_ids:
-      query=f"select * from users where id in ({user_ids});"
-      values={}
-      output_user=await database(query=query,values=values)
-      for object in output:
-         object["created_by_username"]=None
-         for object_user in output_user:
-            if object["created_by_id"]==object_user["id"]:
-               object["created_by_username"]=object_user["username"]
-               break
+   if body['table'] in ["post"] and output:
+      output=[dict(item) for item in output]
+      output=[item|{"created_by_username":None} for item in output]
+      user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
+      if user_ids:output_user=await database(query=f"select * from users where id in ({user_ids});",values={})
+      [object["created_by_username"]=object_user["username"] for object in output for object_user in output_user if object["created_by_id"]==object_user["id"]]
    #final
    return {"status":1,"message":output}
 
