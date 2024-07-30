@@ -223,23 +223,6 @@ async def function_insert(request:Request,file:UploadFile):
    #final
    return {"status":1,"message":output}
 
-@app.get("/{x}/pcache")
-@cache(expire=60)
-async def function_pcache(request:Request):
-   #prewrok
-   database=request.state.postgres_object.fetch_all
-   temp={}
-   #config
-   query_dict={"user_count":"select count(*) from users;"}
-   #logic
-   for k,v in query_dict.items():
-      query=v
-      values={}
-      output=await database(query=query,values=values)
-      temp[k]=output
-   #final
-   return {"status":1,"message":temp}
-
 @app.get("/{x}/clean")
 async def function_clean(request:Request):
    #prewrok
@@ -257,6 +240,23 @@ async def function_clean(request:Request):
          output=await database(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
+
+@app.get("/{x}/pcache")
+@cache(expire=60)
+async def function_pcache(request:Request):
+   #prewrok
+   database=request.state.postgres_object.fetch_all
+   temp={}
+   #config
+   query_dict={"user_count":"select count(*) from users;"}
+   #logic
+   for k,v in query_dict.items():
+      query=v
+      values={}
+      output=await database(query=query,values=values)
+      temp[k]=output
+   #final
+   return {"status":1,"message":temp}
 
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 @app.get("/{x}/feed")
