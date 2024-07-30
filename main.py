@@ -688,7 +688,7 @@ async def function_aws(request:Request):
       output=s3_resource.Bucket(s3_bucket).objects.all().delete()
    if body["mode"]=="ses":
       #body={"mode":"ses","email":"atom36942@gmail.com","title":"hello","description":"hello"}
-      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":["description"]}}})
+      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #final
    return {"status":1,"message":output}
 
