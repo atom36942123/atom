@@ -423,7 +423,9 @@ async def function_profile(request:Request,background:BackgroundTasks):
 
 @app.post("/{x}/create")
 async def function_create(request:Request):
-   #body={"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
+   #body_post={"table":"post","type":"xxx","description":"xxx"}
+   #body_report={"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
+   #body_message={{"table":"activity","type":"message","parent_table":"users","parent_id":2,"description":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
