@@ -108,7 +108,7 @@ async def function_database(request:Request):
    "parent_table":["text","action,activity"],
    "parent_id":["bigint","action,activity"],
    "status":["text","action,activity,atom"],
-   "remark":["text","atom"],
+   "remark":["text","action,activity,atom"],
    "metadata":["jsonb","post"],
    "username":["text","users"],
    "password":["text","users"],
@@ -554,6 +554,22 @@ async def function_my(request:Request,background:BackgroundTasks):
    if body["mode"]=="message_thread":
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="delete_message_all":
+      query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      values={"created_by_id":user['id'],"parent_id":user['id']}
+   if body["mode"]=="read_parent_data":
+      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and parent_table=:parent_table and (type=:type or :type is null) order by id desc limit :limit offset :offset;"
+      values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+      output=await database(query=query,values=values)
+      parent_ids=[item["parent_id"] for item in output]
+      query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+      values={}
+   if body["mode"]=="action_check":
+      query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
+      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
+      output=await database(query=query,values=values)
+      output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+      return {"status":1,"message":output}
    #query run
    output=await database(query=query,values=values)
    #background task
@@ -563,33 +579,6 @@ async def function_my(request:Request,background:BackgroundTasks):
       background.add_task(await database(query=query,values=values))
    #final
    return {"status":1,"message":output}
-
-   # output=[dict(item) for item in output]
-   # #add user key
-   # user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
-   # if user_ids:
-   #    output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-   #    for object in output:
-   #       for object_user in output_user:
-   #          object["created_by_username"]=None
-   #          if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
-   #          break
-
-
-
-   # if body["mode"]=="delete_table_all":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   # if  body["mode"]=="delete_message_all":output=await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
-   # if  body["mode"]=="read_parent_data":
-   #    if "page" not in body:body["page"]=1
-   #    if "limit" not in body:body["limit"]=30
-   #    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
-   #    parent_ids=[item["parent_id"] for item in output]
-   #    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-   # if  body["mode"]=="action_check":
-   #    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from action join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table and created_by_id=:created_by_id;",values={"type":body["type"],"parent_table":body["parent_table"],"created_by_id":user["id"]})
-   #    output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   # #final
-   # return {"status":1,"message":output}
 
 @app.post("/{x}/cell")
 async def function_cell(request:Request):
