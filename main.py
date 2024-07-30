@@ -541,8 +541,8 @@ async def function_read(request:Request):
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
-   if table=="users":
-      query=f"select * from {table} where id=:id"
+   if {body['table']}=="users":
+      query=f"select * from {body['table']} where id=:id"
       values={"id":user["id"]}
    else:
       query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
