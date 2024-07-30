@@ -546,21 +546,25 @@ async def function_my(request:Request,background:BackgroundTasks):
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #query set
    if body["mode"]=="message_inbox":
+      #{"mode":"message_inbox"}
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="message_inbox_unread":
+      #{"mode":"message_inbox_unread"}
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="message_thread":
+      #{"mode":"message_thread","user_id":1}
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="delete_message_all":
+      #{"mode":"message_thread"}
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
    if body["mode"]=="read_parent_data":
-      #{"mode":"read_parent_data","table":"activity","parent_table":"post","type":"report"}
-      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and parent_table=:parent_table and type=:type order by id desc limit :limit offset :offset;"
-      values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+      #{"mode":"read_parent_data","table":"activity","type":"report","parent_table":"post"}
+      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
+      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
       output=await database(query=query,values=values)
       parent_ids=[item["parent_id"] for item in output]
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
