@@ -455,7 +455,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
    values={"id":user["id"]}
@@ -495,7 +495,7 @@ async def function_create(request:Request):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #param
    param={k:v for k,v in body.items() if v not in [None,""," "]}
    param={k:v for k,v in param.items() if k not in ["table"]}
@@ -522,7 +522,7 @@ async def function_update(request:Request):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #param
    param={k:v for k,v in body.items() if v not in [None,""," "]}
    param={k:v for k,v in param.items() if k not in ["table","id"]}
@@ -551,13 +551,13 @@ async def function_delete(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
-   if body['table'] not in ["users","post","action","activity"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table issue"}))
+   if body['table'] not in ["users","post","action","activity"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
-   if table=="users":
+   if body['table']=="users":
       query=f"delete from users where id=:id;"
       values={"id":user["id"]}
    else:
@@ -576,7 +576,7 @@ async def function_read(request:Request):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #order limit offset set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
@@ -611,7 +611,7 @@ async def function_my(request:Request,background:BackgroundTasks):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #order limit offset set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
@@ -671,7 +671,7 @@ async def function_cell(request:Request):
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #schema column groupby
