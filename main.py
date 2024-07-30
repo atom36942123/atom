@@ -419,6 +419,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
 
 @app.post("/{x}/create")
 async def function_create(request:Request):
+   #{"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -446,6 +447,7 @@ async def function_create(request:Request):
 
 @app.post("/{x}/update")
 async def function_update(request:Request):
+   #{"table":"users","id":1,"name":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
