@@ -260,16 +260,17 @@ async def function_feed(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
-   #pagination set
-   body["page"]=1 if "page" not in body else int(body["page"])
+   #order limit offset set
+   body["order"]="id desc" if "order" not in body else body["order"]
    body["limit"]=30 if "limit" not in body else int(body["limit"])
+   body["page"]=1 if "page" not in body else int(body["page"])
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
    output=await database(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #param
-   param={k:v for k,v in body.items() if k not in ["table","page","limit"]}
+   param={k:v for k,v in body.items() if k not in ["table","page","limit","order"]}
    param={k:v for k,v in param.items() if "_operator" not in k}
    #datatype conversion
    for k,v in param.items():
@@ -285,7 +286,7 @@ async def function_feed(request:Request):
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
-   query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
+   query=f"select * from {body['table']} {where} order by {body['order']} limit :limit offset :offset;"
    values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await database(query=query,values=values)
    output=[dict(item) for item in output]
