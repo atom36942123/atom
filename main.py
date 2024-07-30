@@ -264,6 +264,7 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 @app.get("/{x}/feed")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
+   #query_param=table:post,page:1,limit:100,id:100,id_operator:>=
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
@@ -309,6 +310,18 @@ async def function_feed(request:Request):
                   break 
    #final
    return {"status":1,"message":output}
+
+
+# add like count
+#    if output:
+#       ids=list(set([item["id"] for item in output if item["id"]]))
+#       object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
+#       for object in output:
+#          object["like_count"]=0
+#          for object_like in object_like_list:
+#             if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+  
+
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
@@ -661,18 +674,21 @@ async def function_aws(request:Request):
    s3_resource=boto3.resource("s3",aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
    #logic
    if body["mode"]=="s3_create":
+      #body={"mode":"s3_create","filename":"abc.png"}
       expiry=1000
       size_kb=300
       key=str(uuid.uuid4())+"-"+body["filename"]
       output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
    if body["mode"]=="s3_delete":
+      #body={"mode":"s3_delete","url":"www.abc.png/23123"}
       key=body["url"].split("/")[-1]
       output=s3_resource.Object(s3_bucket,key).delete()
    if body["mode"]=="s3_delete_all":
+      #body={"mode":"s3_delete_all"}
       output=s3_resource.Bucket(s3_bucket).objects.all().delete()
    if body["mode"]=="ses":
-      to,title,description=[body["email"]],body["title"],body["description"]
-      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":to},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+      #body={"mode":"ses","email":"atom36942@gmail.com","title":"hello","description":"hello"}
+      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":["description"]}}})
    #final
    return {"status":1,"message":output}
 
