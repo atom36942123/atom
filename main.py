@@ -5,10 +5,15 @@ package="pip install a==1.0 aiohttp==3.9.1 aiosignal==1.3.1 annotated-types==0.6
 from environs import Env
 env=Env()
 env.read_env()
+postgres_url_list=env.list("postgres")
+key=env("key")
+aws_access_key_id,aws_secret_access_key=env.list("aws")[0],env.list("aws")[1]
+s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
+ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
 
 #database
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in env.list("postgres")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in postgres_url_list}
 
 #lifespan
 from fastapi import FastAPI
@@ -77,7 +82,7 @@ async def function_root():
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    mapping={
    "reset":"DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;",
    "database":"select * from pg_database where datistemplate=false;",
@@ -98,7 +103,7 @@ async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config database
    config_database={
    "created_at":["timestamptz","users,post,action,activity,atom"],
@@ -195,7 +200,7 @@ async def function_insert(request:Request,file:UploadFile):
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
    #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
@@ -422,7 +427,7 @@ async def function_login(request:Request):
    expiry_days=1
    data=json.dumps({"x":str(request.url).split("/")[3],"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    payload={"exp":time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple()),"data":data}
-   token=jwt.encode(payload,env("key"))
+   token=jwt.encode(payload,key)
    #final
    return {"status":1,"message":token}
    
@@ -431,7 +436,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #read user
@@ -471,7 +476,7 @@ async def function_create(request:Request):
    body=await request.json()
    if body["table"]=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table issue"}))
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
@@ -498,7 +503,7 @@ async def function_update(request:Request):
    database=request.state.postgres_object.fetch_all
    body=await request.json()
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #param
@@ -530,7 +535,7 @@ async def function_delete(request:Request):
    database=request.state.postgres_object.fetch_all
    body=await request.json()
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #logic
@@ -552,7 +557,7 @@ async def function_read(request:Request):
    database=request.state.postgres_object.fetch_all
    body=await request.json()
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #order limit offset set
@@ -587,7 +592,7 @@ async def function_my(request:Request,background:BackgroundTasks):
    database=request.state.postgres_object.fetch_all
    body=await request.json()
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #order limit offset set
@@ -647,7 +652,7 @@ async def function_cell(request:Request):
    database=request.state.postgres_object.fetch_all
    body=dict(await request.json())
    #token check
-   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
    #admin check
@@ -679,15 +684,11 @@ async def function_aws(request:Request):
    #prework
    body=await request.json()
    #token check
-   if request.headers.get("token")!=env("key"):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #env
-   aws_username,aws_password=env.list("aws")[0],env.list("aws")[1]
-   s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
-   ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
+   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #boto3
-   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
-   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
-   s3_resource=boto3.resource("s3",aws_access_key_id=aws_username,aws_secret_access_key=aws_password)
+   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
    #logic
    if body["mode"]=="s3_create":
       #body={"mode":"s3_create","filename":"abc.png"}
