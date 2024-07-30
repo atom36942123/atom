@@ -501,6 +501,7 @@ async def function_delete(request:Request):
 
 @app.post("/{x}/read")
 async def function_read(request:Request):
+   #{"table":"post", "id":7014,"id_operator":">"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
