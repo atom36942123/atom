@@ -99,7 +99,6 @@ async def function_database(request:Request):
    #config database
    config_database={
    "created_at":["timestamptz","users,post,action,activity,atom"],
-   "created_by_id":["bigint","users,post,action,activity,atom"],
    "updated_at":["timestamptz","users,post,action,activity,atom"],
    "updated_by_id":["bigint","users,post,action,activity,atom"],
    "is_active":["int","users,post,action,activity,atom"],
@@ -296,9 +295,9 @@ async def function_feed(request:Request):
    query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
    values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await database(query=query,values=values)
+   output=[dict(item) for item in output]
    #add creator key
-   if body['table'] in ["post"] and output:
-      output=[dict(item) for item in output]
+   if output and body['table'] in ["post"]:
       output=[item|{"created_by_username":None} for item in output]
       user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
       if user_ids:
@@ -307,19 +306,26 @@ async def function_feed(request:Request):
             for object_user in output_user:
                if object["created_by_id"]==object_user["id"]:
                   object["created_by_username"]=object_user["username"]
-                  break 
+                  break
+   #add like count
+   if output and body['table'] in ["post"]:
+      output=[item|{"like_count":0} for item in output]
+      ids=list(set([item["id"] for item in output if item["id"]]))
+      if ids:
+         output_parent=await database(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
+
+         
+      
+   
    #final
    return {"status":1,"message":output}
 
 
-# add like count
-#    if output:
-#       ids=list(set([item["id"] for item in output if item["id"]]))
-#       object_like_list=await request.state.postgres_object.fetch_all(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
-#       for object in output:
-#          object["like_count"]=0
-#          for object_like in object_like_list:
-#             if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+ 
+      
+      for object in output:
+         for object_like in object_like_list:
+            if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
   
 
 
