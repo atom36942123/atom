@@ -89,6 +89,7 @@ async def function_qrunner(request:Request,query:str):
    "tableg":"with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;",
    "columng":"select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",
    }
+   if query in mapping:query=mapping[query]
    output=await database(query=query,values={})
    return output
     
