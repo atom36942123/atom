@@ -77,6 +77,7 @@ async def function_root():
 
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
+   #{"query":"select * from users limit 10;"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
