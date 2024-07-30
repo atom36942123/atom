@@ -491,7 +491,7 @@ async def function_create(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
-   if body["table"]=="users":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table issue"}))
+   if body['table'] not in ["post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
@@ -519,6 +519,7 @@ async def function_update(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
+   if body['table'] not in ["users","post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #token check
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
