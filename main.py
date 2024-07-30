@@ -77,7 +77,7 @@ async def function_root():
 
 @app.post("/{x}/qrunner")
 async def function_qrunner(request:Request):
-   #{"query":"select * from users limit 10;"}
+   #body={"query":"select * from users limit 10;"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -187,6 +187,7 @@ async def function_database(request:Request):
    
 @app.post("/{x}/insert")
 async def function_insert(request:Request,file:UploadFile):
+   #body={"file":file}
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
@@ -300,6 +301,7 @@ async def function_feed(request:Request):
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
+   #body={"username":"xxx","password":"123"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -312,6 +314,7 @@ async def function_signup(request:Request):
 
 @app.post("/{x}/login")
 async def function_login(request:Request):
+   #body={"username":"xxx","password":"123"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -420,7 +423,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
 
 @app.post("/{x}/create")
 async def function_create(request:Request):
-   #{"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
+   #body={"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -448,7 +451,7 @@ async def function_create(request:Request):
 
 @app.post("/{x}/update")
 async def function_update(request:Request):
-   #{"table":"users","id":1,"name":"xxx"}
+   #body={"table":"users","id":1,"name":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -480,7 +483,7 @@ async def function_update(request:Request):
    
 @app.post("/{x}/delete")
 async def function_delete(request:Request):
-   #{"table":"post","id":7012}
+   #body={"table":"post","id":7012}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -502,7 +505,7 @@ async def function_delete(request:Request):
 
 @app.post("/{x}/read")
 async def function_read(request:Request):
-   #{"table":"post", "id":7014,"id_operator":">"}
+   #body={"table":"post", "id":7014,"id_operator":">"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
@@ -551,23 +554,23 @@ async def function_my(request:Request,background:BackgroundTasks):
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #query set
    if body["mode"]=="message_inbox":
-      #{"mode":"message_inbox"}
+      #body={"mode":"message_inbox"}
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="message_inbox_unread":
-      #{"mode":"message_inbox_unread"}
+      #body={"mode":"message_inbox_unread"}
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="message_thread":
-      #{"mode":"message_thread","user_id":1}
+      #body={"mode":"message_thread","user_id":1}
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="delete_message_all":
-      #{"mode":"message_thread"}
+      #body={"mode":"message_thread"}
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
    if body["mode"]=="read_parent_data":
-      #{"mode":"read_parent_data","table":"activity","type":"report","parent_table":"post"}
+      #body={"mode":"read_parent_data","table":"activity","type":"report","parent_table":"post"}
       query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
       output=await database(query=query,values=values)
