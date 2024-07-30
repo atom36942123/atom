@@ -544,7 +544,7 @@ async def function_read(request:Request):
    payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #pagination set
+   #order limit offset set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #param
@@ -579,7 +579,7 @@ async def function_my(request:Request,background:BackgroundTasks):
    payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #pagination set
+   #order limit offset set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #query set
