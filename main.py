@@ -315,8 +315,8 @@ async def function_feed(request:Request):
    #add action count
    object_list=object_list
    object_table=body["table"]
-   action_table="action"
    action_type="like"
+   action_table="action"
    key_name=f"{action_type}_count"
    if object_list and object_table in ["post"]:
       object_list=[item|{key_name:0} for item in object_list]
