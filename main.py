@@ -99,6 +99,7 @@ async def function_database(request:Request):
    #config database
    config_database={
    "created_at":["timestamptz","users,post,action,activity,atom"],
+   "created_by_id":["bigint","users,post,action,activity,atom"],
    "updated_at":["timestamptz","users,post,action,activity,atom"],
    "updated_by_id":["bigint","users,post,action,activity,atom"],
    "is_active":["int","users,post,action,activity,atom"],
