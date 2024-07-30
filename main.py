@@ -701,10 +701,20 @@ async def function_mongo(request:Request):
    mode=body["mode"]
    body.pop("mode",None)
    #logic
-   if mode=="create":response=await mongo_object.test.users.insert_one(body)
-   if mode=="read":response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
-   if mode=="update":response=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":body})
-   if mode=="delete":response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+   if mode=="create":
+      #body={"mode":"create"}|{user object}
+      response=await mongo_object.test.users.insert_one(body)
+   if mode=="read":
+      #body={"mode":"read","id":user_id}
+      response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+   if mode=="update":
+      #body={"mode":"update","id":user_id}|{user object}
+      id=body["id"]
+      body.pop("id",None)
+      response=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
+   if mode=="delete":
+      #body={"mode":"read","id":user_id}
+      response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
    #final
    return response
 
@@ -716,13 +726,33 @@ async def function_elasticsearch(request:Request,mode:str):
    #mode
    mode=body["mode"]
    body.pop("mode",None)
+   #table
+   if "table" in body:
+      table=body["table"]
+      body.pop("table",None)
+   #id
+   if "id" in body:
+      id=body["id"]
+      body.pop("id",None)
    #logic
-   if mode=="create":response=elasticsearch_object.index(index="users",id=body["id"],document=body)
-   if mode=="read":response=elasticsearch_object.get(index="users",id=body["id"])
-   if mode=="update":response=elasticsearch_object.update(index="users",id=body["id"],doc=body)
-   if mode=="delete":response=elasticsearch_object.delete(index="users",id=body["id"])
-   if mode=="refresh":response=elasticsearch_object.indices.refresh(index="users")
-   if mode=="search":response=elasticsearch_object.search(index="users",body={"query":{"match":{column:keyword}},"size":30})
+   if mode=="create":
+      #body={"mode":"create","table":"users"}|{object}
+      response=elasticsearch_object.index(index=table,id=id,document=body)
+   if mode=="read":
+      #body={"mode":"read","table":"users","id":user_id}
+      response=elasticsearch_object.get(index=table,id=id)
+   if mode=="update":
+      #body={"mode":"update","table":"users","id":user_id}|{object}
+      response=elasticsearch_object.update(index=table,id=id,doc=body)
+   if mode=="delete":
+      #body={"mode":"delete","table":"users","id":user_id}
+      response=elasticsearch_object.delete(index=table,id=id)
+   if mode=="refresh":
+      #body={"mode":"refresh","table":"users"}
+      response=elasticsearch_object.indices.refresh(index=table)
+   if mode=="search":
+      #body={"mode":"search","table":"users","keyword":"xxx","size":30}
+      response=elasticsearch_object.search(index=table,body={"query":{"match":{column:body["keyword"]}},"size":body["size"]})
    #final
    return response
    
