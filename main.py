@@ -595,8 +595,8 @@ async def function_my(request:Request,background:BackgroundTasks):
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
       values={}
    if body["mode"]=="action_check":
-      #body={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
-      #body={"mode":"action_check","table":"activity","type":"report","parent_table":"post","ids":[1,2,3]}
+      #body_action={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
+      #body_activity={"mode":"action_check","table":"activity","type":"report","parent_table":"post","ids":[1,2,3]}
       query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
       output=await database(query=query,values=values)
