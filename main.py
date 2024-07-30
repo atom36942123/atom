@@ -210,8 +210,8 @@ async def function_database(request:Request):
    #final
    return {"status":1,"message":"done"}
    
-@app.post("/{x}/insert")
-async def function_insert(request:Request,file:UploadFile):
+@app.post("/{x}/csv")
+async def function_csv(request:Request,file:UploadFile):
    #body={"file":file}
    #prework
    database=request.state.postgres_object.fetch_all
@@ -226,7 +226,9 @@ async def function_insert(request:Request,file:UploadFile):
    #file
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_object.fieldnames 
-   table=file.filename.split('.')[0]
+   filename=file.filename.split(".")[0]
+   table=filename.split("_")[0]
+   mode=filename.split("_")[1]
    #datatype conversion
    values=[]
    for row in file_object:
@@ -239,14 +241,15 @@ async def function_insert(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
       values.append(row)
-   #column set
-   column_1=','.join(file_column_list)
-   column_2=','.join([':'+item for item in file_column_list])
-   #logic
-   query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
-   values=values
-   output=await database_bulk(query=query,values=values)
    file.file.close
+   #query set
+   if mode=="create":
+      column_1=','.join(file_column_list)
+      column_2=','.join([':'+item for item in file_column_list])
+      query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
+      values=values
+   #query run
+   output=await database_bulk(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
