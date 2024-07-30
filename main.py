@@ -123,8 +123,8 @@ async def function_database(request:Request):
    if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config database
    config_database={
-   "created_at":["timestamptz","users,post,action,activity,atom"],
-   "created_by_id":["bigint","users,post,action,activity,atom"],
+   "created_at":["timestamptz","users,post,action,activity,box,atom"],
+   "created_by_id":["bigint","users,post,action,activity,box,atom"],
    "updated_at":["timestamptz","users,post,action,activity,atom"],
    "updated_by_id":["bigint","users,post,action,activity,atom"],
    "is_active":["int","users,post,action,activity,atom"],
