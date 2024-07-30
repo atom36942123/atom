@@ -212,7 +212,7 @@ async def function_database(request:Request):
    
 @app.post("/{x}/csv")
 async def function_csv(request:Request,file:UploadFile):
-   #body={"file":file}
+   #body={"file":table_crud.csv}
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
@@ -247,6 +247,12 @@ async def function_csv(request:Request,file:UploadFile):
       column_1=','.join(file_column_list)
       column_2=','.join([':'+item for item in file_column_list])
       query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
+      values=values
+   if mode=="update":
+      column=""
+      for item in file_column_list:column=column+f"{k}=coalesce(:{k},{k}),"
+      column=column[:-1]
+      query=f"update {table} set {column} where id=:id returning *;"
       values=values
    #query run
    output=await database_bulk(query=query,values=values)
