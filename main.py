@@ -304,9 +304,9 @@ async def function_feed(request:Request):
          output_user=await database(query=f"select * from users where id in ({user_ids});",values={})
          for object in output:
             for object_user in output_user:
-               if object["created_by_id"]==object_user["id"]
-               object["created_by_username"]=object_user["username"]
-               break 
+               if object["created_by_id"]==object_user["id"]:
+                  object["created_by_username"]=object_user["username"]
+                  break 
    #final
    return {"status":1,"message":output}
 
