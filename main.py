@@ -265,7 +265,7 @@ async def function_feed(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
-   #pagination
+   #pagination set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #schema column groupby
@@ -410,7 +410,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
       values={"user_id":user["id"]}
       output=await database(query=query,values=values)
       user[k]=output[0]["count"]
-   #update last_active_at
+   #background task
    query="update users set last_active_at=:last_active_at where id=:id;"
    values={"last_active_at":datetime.now(),"id":user["id"]}
    background.add_task(await database(query=query,values=values))
@@ -505,7 +505,7 @@ async def function_read(request:Request):
    payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #pagination
+   #pagination set
    body["page"]=1 if "page" not in body else int(body["page"])
    body["limit"]=30 if "limit" not in body else int(body["limit"])
    #param
@@ -532,28 +532,64 @@ async def function_read(request:Request):
    #final
    return {"status":1,"message":output}
       
-      
-      
+@app.post("/{x}/my")
+async def function_my(request:Request,background:BackgroundTasks):
+   #prework
+   database=request.state.postgres_object.fetch_all
+   body=await request.json()
+   #token check
+   payload=jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")
+   user=json.loads(payload["data"])
+   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
+   #pagination set
+   body["page"]=1 if "page" not in body else int(body["page"])
+   body["limit"]=30 if "limit" not in body else int(body["limit"])
+   #query set
+   if body["mode"]=="message_inbox":
+      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
+      values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="message_inbox_unread":
+      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
+      values={"created_by_id":user["id"],"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="message_thread":
+      query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
+      values={"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   #query run
+   output=await database(query=query,values=values)
+   #background task
+   if body["mode"]=="message_thread":
+      query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+      values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+      background.add_task(await database(query=query,values=values))
+   #final
+   return {"status":1,"message":output}
+
+   # output=[dict(item) for item in output]
+   # #add user key
+   # user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
+   # if user_ids:
+   #    output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+   #    for object in output:
+   #       for object_user in output_user:
+   #          object["created_by_username"]=None
+   #          if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
+   #          break
 
 
-   
-   
-   
-  
 
- 
-
-   
-   
-
-   
-
-   
-   
-   
-      
-   
-   
+   # if body["mode"]=="delete_table_all":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
+   # if  body["mode"]=="delete_message_all":output=await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
+   # if  body["mode"]=="read_parent_data":
+   #    if "page" not in body:body["page"]=1
+   #    if "limit" not in body:body["limit"]=30
+   #    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
+   #    parent_ids=[item["parent_id"] for item in output]
+   #    output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
+   # if  body["mode"]=="action_check":
+   #    output=await request.state.postgres_object.fetch_all(query=f"select parent_id from action join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table and created_by_id=:created_by_id;",values={"type":body["type"],"parent_table":body["parent_table"],"created_by_id":user["id"]})
+   #    output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+   # #final
+   # return {"status":1,"message":output}
 
 @app.post("/{x}/cell")
 async def function_cell(request:Request):
@@ -585,70 +621,6 @@ async def function_cell(request:Request):
    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
    values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
    output=await database(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-@app.post("/{x}/message")
-async def function_message(request:Request,background:BackgroundTasks):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #prework
-   body=await request.json()
-   if "page" not in body:body["page"]=1
-   if "limit" not in body:body["limit"]=30
-   #logic
-   if body["mode"]=="inbox":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
-   if body["mode"]=="inbox_unread":query,values="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;",{"created_by_id":user['id'],"parent_id":user['id'],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
-   if body["mode"]=="thread":query,values="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;",{"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   output=[dict(item) for item in output]
-   #add user key
-   user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
-   if user_ids:
-      output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
-      for object in output:
-         for object_user in output_user:
-            object["created_by_username"]=None
-            if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
-            break
-   #final
-   if body["mode"]=="thread":background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
-   return {"status":1,"message":output}
-
-@app.post("/{x}/my")
-async def function_my(request:Request):
-   #token check
-   user=json.loads(jwt.decode(request.headers.get("token"),env("key"),algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x issue"}))
-   #prework
-   body=await request.json()
-   #logic
-   if body["mode"]=="delete_table_all":output=await request.state.postgres_object.fetch_all(query=f"delete from {body['table']} where created_by_id=:created_by_id;",values={"created_by_id":user['id']})
-   if  body["mode"]=="delete_message_all":output=await request.state.postgres_object.fetch_all(query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);",values={"created_by_id":user['id'],"parent_id":user['id']})
-   if  body["mode"]=="read_parent_data":
-      if "page" not in body:body["page"]=1
-      if "limit" not in body:body["limit"]=30
-      output=await request.state.postgres_object.fetch_all(query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;",values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]})
-      parent_ids=[item["parent_id"] for item in output]
-      output=await request.state.postgres_object.fetch_all(query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;",values={})
-   if  body["mode"]=="action_check":
-      output=await request.state.postgres_object.fetch_all(query=f"select parent_id from action join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table and created_by_id=:created_by_id;",values={"type":body["type"],"parent_table":body["parent_table"],"created_by_id":user["id"]})
-      output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
    return {"status":1,"message":output}
 
