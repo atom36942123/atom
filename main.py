@@ -298,35 +298,35 @@ async def function_feed(request:Request):
    output=await database(query=query,values=values)
    output=[dict(item) for item in output]
    #add creator key
-   if output and body['table'] in ["post"]:
-      output=[item|{"created_by_username":None} for item in output]
-      user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
+   object_list=output
+   table=body['table']
+   if object_list and table in ["post"]:
+      object_list=[item|{"created_by_username":None} for item in object_list]
+      user_ids=','.join([str(item["created_by_id"]) for item in object_list if item["created_by_id"]])
       if user_ids:
-         output_user=await database(query=f"select * from users where id in ({user_ids});",values={})
-         for object in output:
-            for object_user in output_user:
+         object_list_user=await database(query=f"select * from users where id in ({user_ids});",values={})
+         for object in object_list:
+            for object_user in object_list_user:
                if object["created_by_id"]==object_user["id"]:
                   object["created_by_username"]=object_user["username"]
                   break
-   #add like count
-   if output and body['table'] in ["post"]:
-      output=[item|{"like_count":0} for item in output]
-      ids=list(set([item["id"] for item in output if item["id"]]))
-      if ids:
-         output_parent=await database(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
+   # #add like count
+   # if output and body['table'] in ["post"]:
+   #    output=[item|{"like_count":0} for item in output]
+   #    ids=list(set([item["id"] for item in output if item["id"]]))
+   #    if ids:
+   #       output_parent=await database(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
 
-         
       
-   
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":object_list}
 
 
  
       
-      for object in output:
-         for object_like in object_like_list:
-            if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
+      # for object in output:
+      #    for object_like in object_like_list:
+      #       if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
   
 
 
