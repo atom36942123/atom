@@ -595,7 +595,7 @@ async def function_my(request:Request,background:BackgroundTasks):
 
 @app.post("/{x}/cell")
 async def function_cell(request:Request):
-   #{"table":"users","id":1,"column":"type","value":"admin"}
+   #body={"table":"users","id":1,"column":"type","value":"admin"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(await request.json())
