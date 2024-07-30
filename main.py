@@ -460,6 +460,8 @@ async def function_create(request:Request):
    #body_post={"table":"post","type":"xxx","description":"xxx"}
    #body_report={"table":"action","type":"report","parent_table":"post","parent_id":1,"description":"xxx"}
    #body_message={"table":"activity","type":"message","parent_table":"users","parent_id":2,"description":"xxx"}
+   #body_like={"table":"action","type":"like","parent_table":"post","parent_id":4}
+   #body_comment={"table":"activity","type":"comment","parent_table":"post","parent_id":4,"description":"xxx"}
    #prework
    database=request.state.postgres_object.fetch_all
    body=await request.json()
