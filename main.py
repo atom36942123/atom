@@ -565,6 +565,10 @@ async def function_my(request:Request,background:BackgroundTasks):
       #body={"mode":"message_thread","user_id":1}
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   if body["mode"]=="message_received":
+      #body={"mode":"message_received"}
+      query="select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by id desc limit :limit offset :offset;"
+      values={"parent_id":user["id"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    if body["mode"]=="delete_message_all":
       #body={"mode":"delete_message_all"}
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
