@@ -694,8 +694,8 @@ async def function_aws(request:Request):
       #body={"mode":"s3_create","filename":"abc.png"}
       expiry=1000
       size_kb=300
-      key=str(uuid.uuid4())+"-"+body["filename"]
-      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
+      url_key=str(uuid.uuid4())+"-"+body["filename"]
+      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=url_key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
    if body["mode"]=="s3_delete":
       #body={"mode":"s3_delete","url":"www.abc.png/23123"}
       url_key=body["url"].split("/")[-1]
