@@ -558,6 +558,7 @@ async def function_my(request:Request,background:BackgroundTasks):
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
    if body["mode"]=="read_parent_data":
+      #{"mode":"read_parent_data","table":"activity","parent_table":"post","type":"report"}
       query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and parent_table=:parent_table and type=:type order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"],"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
       output=await database(query=query,values=values)
