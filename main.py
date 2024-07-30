@@ -292,12 +292,22 @@ async def function_feed(request:Request):
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
-   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
-   query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
-   values=param
+   query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
+   values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
+
+ # output=[dict(item) for item in output]
+ #   #add user key
+ #   user_ids=','.join([str(item["created_by_id"]) for item in output if item["created_by_id"]])
+ #   if user_ids:
+ #      output_user=await request.state.postgres_object.fetch_all(query=f"select * from users where id in ({user_ids});",values={})
+ #      for object in output:
+ #         for object_user in output_user:
+ #            object["created_by_username"]=None
+ #            if object["created_by_id"]==object_user["id"]:object["created_by_username"]=object_user["username"]
+ #            break
 
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
@@ -531,13 +541,12 @@ async def function_read(request:Request):
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
-   table,limit,offset=body['table'],body['limit'],(body['page']-1)*body['limit']
    if table=="users":
       query=f"select * from {table} where id=:id"
       values={"id":user["id"]}
    else:
-      query=f"select * from {table} {where} order by id desc limit {limit} offset {offset};"
-      values=param
+      query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
+      values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
