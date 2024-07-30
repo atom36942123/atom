@@ -299,37 +299,40 @@ async def function_feed(request:Request):
    output=[dict(item) for item in output]
    #add creator key
    object_list=output
-   table=body['table']
-   if object_list and table in ["post"]:
+   object_table=body['table']
+   if object_list and object_table in ["post"]:
       object_list=[item|{"created_by_username":None} for item in object_list]
       user_ids=','.join([str(item["created_by_id"]) for item in object_list if item["created_by_id"]])
       if user_ids:
-         object_list_user=await database(query=f"select * from users where id in ({user_ids});",values={})
+         query=f"select * from users where id in ({user_ids});"
+         values={}
+         object_user_list=await database(query=query,values=values)
          for object in object_list:
-            for object_user in object_list_user:
+            for object_user in object_user_list:
                if object["created_by_id"]==object_user["id"]:
                   object["created_by_username"]=object_user["username"]
                   break
-   # #add like count
-   # if output and body['table'] in ["post"]:
-   #    output=[item|{"like_count":0} for item in output]
-   #    ids=list(set([item["id"] for item in output if item["id"]]))
-   #    if ids:
-   #       output_parent=await database(query=f"select parent_id,count(*) from action join unnest(array{ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type='like' and parent_table='{table}' group by parent_id;",values={})
-
-      
+   #add action count
+   object_list=object_list
+   object_table=body["table"]
+   action_table="action"
+   action_type="like"
+   key_name=f"{action_type}_count"
+   if object_list and object_table in ["post"]:
+      object_list=[item|{key_name:0} for item in object_list]
+      parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
+      if parent_ids:
+         query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table group by parent_id;"
+         values={"type":action_type,"parent_table":object_table}
+         object_action_list=await database(query=query,values=values)
+         for object in object_list:
+            for object_action in object_action_list:
+               if object["id"]==object_action["parent_id"]:
+                  object[key_name]=object_action["count"]
+                  break
    #final
    return {"status":1,"message":object_list}
-
-
- 
-      
-      # for object in output:
-      #    for object_like in object_like_list:
-      #       if object["id"]==object_like["parent_id"]:object["like_count"]=object_like["count"]
-  
-
-
+   
 @app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
    #body={"username":"xxx","password":"123"}
