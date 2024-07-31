@@ -42,10 +42,8 @@ ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
 #function
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-async def error(x):
+def error(x):
    return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":x}))
-
-
 
 #postgres object
 from databases import Database
@@ -85,7 +83,7 @@ import traceback
 async def middleware(request:Request,api_function):
    #x check
    x=str(request.url).split("/")[3]
-   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return await error("wrong x")
+   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return error("wrong x")
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
