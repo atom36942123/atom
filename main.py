@@ -320,7 +320,7 @@ async def function_feed(request:Request):
    page=int(body["page"]) if "page" in body else 1
    offset=(page-1)*limit
    where=""
-   where_param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k)}
+   where_param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
    #where set
    if where_param:
       where="where "
@@ -328,7 +328,7 @@ async def function_feed(request:Request):
          if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
-   #logic
+   #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
    values=where_param
    output=await database(query=query,values=values)
@@ -506,7 +506,7 @@ async def function_create(request:Request):
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #param
+   #create query set
    param={k:v for k,v in body.items() if v not in [None,""," "]}
    param={k:v for k,v in param.items() if k not in ["table"]}
    param={k:v for k,v in param.items() if k not in ["id","created_at","is_active","is_verified","google_id","otp"]}
