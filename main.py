@@ -227,8 +227,8 @@ async def function_csv(request:Request,file:UploadFile):
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_object.fieldnames 
    filename=file.filename.split(".")[0]
-   table=filename.split("_")[0]
-   mode=filename.split("_")[1]
+   table=filename.rsplit("_",1)[0]
+   mode=filename.rsplit("_",1)[1]
    #datatype conversion
    values=[]
    for row in file_object:
@@ -302,34 +302,33 @@ async def function_feed(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
-   #order limit offset set
-   body["order"]="id desc" if "order" not in body else body["order"]
-   body["limit"]=30 if "limit" not in body else int(body["limit"])
-   body["page"]=1 if "page" not in body else int(body["page"])
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
    output=await database(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #param
-   param={k:v for k,v in body.items() if k not in ["table","page","limit","order"]}
-   param={k:v for k,v in param.items() if "_operator" not in k}
    #datatype conversion
-   for k,v in param.items():
-      if schema_column_datatype[k] in ["ARRAY"]:param[k]=v.split(",")
-      if schema_column_datatype[k] in ["integer","bigint"]:param[k]=int(v)
-      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param[k]=float(v)
-   #where set
-   if not param:where=""
-   else:
+   for k,v in body.items():
+      if schema_column_datatype[k] in ["ARRAY"]:body[k]=v.split(",")
+      if schema_column_datatype[k] in ["integer","bigint"]:body[k]=int(v)
+      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:body[k]=float(v)
+   #read query set
+   table=body["table"]
+   order=body["order"] if "order" in body else "id desc"
+   limit=int(body["limit"]) if "limit" in body else 30
+   page=int(body["page"]) if "page" in body else 1
+   where=""
+   #where param
+   where_param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k)}
+   if where_param:
       where="where "
-      for k,v in param.items():
+      for k,v in where_param.items():
          if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
    #logic
-   query=f"select * from {body['table']} {where} order by {body['order']} limit :limit offset :offset;"
-   values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+   query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
+   values=where_param
    output=await database(query=query,values=values)
    output=[dict(item) for item in output]
    #add creator key
