@@ -125,7 +125,9 @@ async def function_qrunner(request:Request,query:str):
    }
    if query in mapping:query=mapping[query]
    #logic
-   output=await database(query=query,values={})
+   query=query
+   values={}
+   output=await database(query=query,values=values)
    #final
    return output
     
