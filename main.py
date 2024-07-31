@@ -168,8 +168,8 @@ async def function_database(request:Request):
    "rating":["numeric","users,post,box,atom"],
    }
    #create table
-   table_name_all=config_database["created_at"][1].split(',')
-   for table in table_name_all:
+   table_all=config_database["created_at"][1].split(',')
+   for table in table_all:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
       output=await database(query=query,values=values)
@@ -180,7 +180,7 @@ async def function_database(request:Request):
          values={}
          output=await database(query=query,values=values)
    #created_at default
-   for table in table_name_all:
+   for table in table_all:
       query=f"alter table {table} alter column created_at set default now();"
       values={}
       output=await database(query=query,values=values)
