@@ -25,6 +25,7 @@
 # --form 'file=@"9w4PMnK0L/logo atom.jpg"'
 
 #body
+#csv={"file":tablename_crud.csv}
 
 #package
 package="pip install a==1.0 aiohttp==3.9.1 aiosignal==1.3.1 annotated-types==0.6.0 anyio==4.3.0 appnope==0.1.4 APScheduler==3.10.4 argon2-cffi==23.1.0 argon2-cffi-bindings==21.2.0 arrow==1.3.0 asgiref==3.7.2 asttokens==2.4.1 async-lru==2.0.4 async-timeout==4.0.3 asyncpg==0.29.0 attrs==23.2.0 autocommand==2.2.2 Automat==0.8.0 awscli==1.18.69 Babel==2.14.0 beautifulsoup4==4.12.3 bleach==6.1.0 blinker==1.4 boto3==1.34.49 botocore==1.34.17 certifi==2023.11.17 cffi==1.16.0 chardet==3.0.4 charset-normalizer==3.3.2 cheroot==10.0.0 CherryPy==18.9.0 click==8.1.7 cloud-init==24.1.3 colorama==0.4.6 comm==0.2.1 commonmark==0.9.1 configobj==5.0.6 constantly==15.1.0 cryptography==41.0.7 databases==0.8.0 dbus-python==1.2.16 debugpy==1.8.1 decorator==5.1.1 defusedxml==0.7.1 Deprecated==1.2.14 distlib==0.3.8 distro==1.4.0 distro-info==0.23+ubuntu1.1 dnspython==2.4.2 docutils==0.16 ec2-hibinit-agent==1.0.0 elastic-transport==8.13.0 elasticsearch==8.13.0 entrypoints==0.3 environs==10.3.0 executing==2.0.1 fastapi==0.110.0 fastapi-cache2==0.2.1 fastapi-limiter==0.1.6 fastjsonschema==2.19.1 fqdn==1.5.1 frozenlist==1.4.1 gazpacho==1.1 greenlet==3.0.3 h11==0.14.0 hibagent==1.0.1 httpcore==1.0.4 httplib2==0.14.0 httpx==0.27.0 hyperlink==19.0.0 idna==3.6 importlib-metadata==1.5.0 incremental==16.10.1 inflect==7.0.0 install==1.3.5 ipykernel==6.29.2 ipython==8.22.1 isoduration==20.11.0 jaraco.classes==3.3.0 jaraco.collections==5.0.0 jaraco.context==4.3.0 jaraco.functools==4.0.0 jaraco.text==3.12.0 jedi==0.19.1 Jinja2==3.1.3 jmespath==1.0.1 json5==0.9.17 jsonpatch==1.22 jsonpointer==2.4 jsonschema==4.21.1 jsonschema-specifications==2023.12.1 jupyter-events==0.9.0 jupyter-lsp==2.2.2 jupyter_client==8.6.0 jupyter_core==5.7.1 jupyter_server==2.12.5 jupyter_server_terminals==0.5.2 jupyterlab==4.1.2 jupyterlab_pygments==0.3.0 jupyterlab_server==2.25.3 keyring==18.0.1 launchpadlib==1.10.13 lazr.restfulclient==0.14.2 lazr.uri==1.0.3 markdown-it-py==3.0.0 MarkupSafe==2.1.5 marshmallow==3.20.2 matplotlib-inline==0.1.6 mdurl==0.1.2 mistune==3.0.2 more-itertools==10.2.0 motor==3.3.2 multidict==6.0.5 nbclient==0.9.0 nbconvert==7.16.1 nbformat==5.9.2 nest-asyncio==1.6.0 netifaces==0.10.4 notebook==7.1.0 notebook_shim==0.2.4 numpy==1.26.3 oauthlib==3.1.0 of==1.0.1 olefile==0.46 overrides==7.7.0 packaging==23.2 pandas==2.1.4 pandocfilters==1.5.1 parso==0.8.3 pendulum==3.0.0 pexpect==4.9.0 Pillow==7.0.0 pip-review==1.3.0 platformdirs==4.2.0 portend==3.2.0 prometheus_client==0.20.0 prompt-toolkit==3.0.43 psutil==5.9.8 ptyprocess==0.7.0 pure-eval==0.2.2 pyasn1-modules==0.2.1 pycparser==2.21 pydantic==2.5.3 pydantic_core==2.14.6 Pygments==2.17.2 PyGObject==3.36.0 PyJWT==2.8.0 pymacaroons==0.13.0 pymongo==4.6.1 pyparsing==3.1.1 pyrsistent==0.20.0 python-apt==2.0.1+ubuntu0.20.4.1 python-dateutil==2.8.2 python-debian==0.1.36+ubuntu1.1 python-dotenv==1.0.1 python-json-logger==2.0.7 python-multipart==0.0.9 pytz==2024.1 pytz-deprecation-shim==0.1.0.post0 pytzdata==2020.1 PyYAML==6.0.1 pyzmq==25.1.2 redis==5.1.0b2 referencing==0.33.0 requests==2.31.0 rfc3339-validator==0.1.4 rfc3986-validator==0.1.1 rich==13.7.0 roman==2.0.0 rpds-py==0.18.0 s3transfer==0.10.0 SecretStorage==2.3.1 Send2Trash==1.8.2 shellingham==1.5.4 simplejson==3.16.0 six==1.16.0 sniffio==1.3.0 sos==4.5.6 soupsieve==2.5 SQLAlchemy==1.4.51 stack-data==0.6.3 starlette==0.35.1 systemd-python==234 tempora==5.5.1 terminado==0.18.0 time-machine==2.13.0 tinycss2==1.2.1 to==0.3 tornado==6.4 traitlets==5.14.1 Twisted==18.9.0 typer==0.9.0 types-python-dateutil==2.8.19.20240106 typing_extensions==4.9.0 tzdata==2024.1 tzlocal==5.2 ufw==0.36 uri-template==1.3.0 urllib3==2.0.7 uvicorn==0.27.1 wcwidth==0.2.13 webcolors==1.13 webencodings==0.5.1 websocket-client==1.7.0 wrapt==1.16.0 ws4py==0.5.1 yarl==1.9.4 zc.lockfile==3.0.post1 zipp==1.0.0"
@@ -140,31 +141,31 @@ async def function_database(request:Request):
    config_database={
    "created_at":["timestamptz","users,post,action,activity,box,atom"],
    "created_by_id":["bigint","users,post,action,activity,box,atom"],
-   "updated_at":["timestamptz","users,post,action,activity,atom"],
-   "updated_by_id":["bigint","users,post,action,activity,atom"],
-   "is_active":["int","users,post,action,activity,atom"],
-   "is_verified":["int","users,post,action,activity,atom"],
-   "is_protected":["int","users,post,atom"],
-   "type":["text","users,post,action,activity,atom"],
+   "updated_at":["timestamptz","users,post,action,activity,box,atom"],
+   "updated_by_id":["bigint","users,post,action,activity,box,atom"],
+   "is_active":["int","users,post,action,activity,box,atom"],
+   "is_verified":["int","users,post,action,activity,box,atom"],
+   "is_protected":["int","users,post,action,activity,box,atom"],
+   "type":["text","users,post,action,activity,box,atom"],
+   "status":["text","users,post,action,activity,box,atom"],
+   "remark":["text","users,post,action,activity,box,atom"],
+   "metadata":["jsonb","users,post,action,activity,box,atom"],
    "parent_table":["text","action,activity"],
    "parent_id":["bigint","action,activity"],
-   "status":["text","action,activity,atom"],
-   "remark":["text","action,activity,atom"],
-   "metadata":["jsonb","post"],
+   "last_active_at":["timestamptz","users"],
+   "google_id":["text","users"],
+   "otp":["int","box"],
    "username":["text","users"],
    "password":["text","users"],
-   "google_id":["text","users"],
-   "last_active_at":["timestamptz","users"],
    "name":["text","users"],
-   "email":["text","users,atom"],
-   "mobile":["text","users,atom"],
-   "otp":["int","atom"],
-   "title":["text","post,atom"],
-   "description":["text","users,post,action,activity,atom"],
-   "tag":["text","post"],
-   "link":["text","post,atom"],
-   "file":["text","post,atom"],
-   "rating":["numeric","atom"]
+   "email":["text","users,post,box,atom"],
+   "mobile":["text","users,post,box,atom"],
+   "title":["text","users,post,box,atom"],
+   "description":["text","users,post,action,activity,box,atom"],
+   "tag":["text","users,post,box,atom"],
+   "link":["text","users,post,box,atom"],
+   "file":["text","users,post,box,atom"],
+   "rating":["numeric","users,post,box,atom"],
    }
    #create table
    table_name_all=config_database["created_at"][1].split(',')
@@ -227,11 +228,9 @@ async def function_database(request:Request):
    
 @app.post("/{x}/csv")
 async def function_csv(request:Request,file:UploadFile):
-   #body={"file":table_crud.csv}
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
-   #token check
    if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
@@ -240,15 +239,15 @@ async def function_csv(request:Request,file:UploadFile):
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   file_column_list=file_object.fieldnames 
+   file_column_list=file_object.fieldnames
    filename=file.filename.split(".")[0]
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
-   #datatype conversion
+   #modification
    values=[]
    for row in file_object:
       for column in file_column_list:
-         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in database"}))
+         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in the schema"}))
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
          if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
          if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
@@ -265,6 +264,7 @@ async def function_csv(request:Request,file:UploadFile):
       values=values
    if mode=="update":
       column=""
+      param=[item for item in file_column_list if item not in ["id"]]
       for item in file_column_list:column=column+f"{k}=coalesce(:{k},{k}),"
       column=column[:-1]
       query=f"update {table} set {column} where id=:id returning *;"
