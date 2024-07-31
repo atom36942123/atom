@@ -81,11 +81,16 @@ from fastapi import Request
 import traceback
 @app.middleware("http")
 async def middleware(request:Request,api_function):
-   #x check
+   #prework
    x=str(request.url).split("/")[3]
+   func=str(request.url).split("/")[4]
+   token=request.headers.get("token")
+   #x check
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return error("wrong x")
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
+   #token check
+   if func in ["qrunner"] and token!=key:return error("token issue)
    #api response
    try:response=await api_function(request)
    except Exception as e:return error(e.args)
@@ -111,7 +116,6 @@ async def function_root():
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    mapping={
    "reset":"DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;",
    "database":"select * from pg_database where datistemplate=false;",
