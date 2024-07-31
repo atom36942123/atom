@@ -318,9 +318,10 @@ async def function_feed(request:Request):
    order=body["order"] if "order" in body else "id desc"
    limit=int(body["limit"]) if "limit" in body else 30
    page=int(body["page"]) if "page" in body else 1
+   offset=((body["page"]-1)*body["limit"])
    where=""
-   #where param
    where_param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k)}
+   #where set
    if where_param:
       where="where "
       for k,v in where_param.items():
@@ -608,7 +609,7 @@ async def function_read(request:Request):
       values={"id":user["id"]}
    else:
       query=f"select * from {body['table']} {where} order by id desc limit :limit offset :offset;"
-      values=param|{"limit":body["limit"],"offset":(body["page"]-1)*body["limit"]}
+      values=param|{"limit":body["limit"],"offset":((body["page"]-1)*body["limit"])}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
