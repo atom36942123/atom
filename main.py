@@ -42,6 +42,7 @@
 #my={"mode":"message_thread","user_id":1}
 #my={"mode":"message_received"}
 #my={"mode":"delete_message_all"}
+#my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
 #my={"mode":"read_parent_data","table":"activity","type":"report","parent_table":"post"}
 #my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 #my={"mode":"action_check","table":"activity","type":"report","parent_table":"post","ids":[1,2,3]}
