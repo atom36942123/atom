@@ -540,27 +540,15 @@ async def function_update(request:Request):
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #update query set
    table=body["table"]
-   
-
-
-   
-   #param
-   param={k:v for k,v in body.items() if v not in [None,""," "]}
-   param={k:v for k,v in param.items() if k not in ["table","id"]}
-   param={k:v for k,v in param.items() if k not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]}
-   
-   #column set
+   id=user["id"] if table=="users" else body["id"]
+   created_by_id=None if table=="users" else user["id"]
+   param={k:v for k,v in body.items() if (k not in ["table","id"]+["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] and v not in [None,""," "])}
    column=""
    for k,v in param.items():column=column+f"{k}=coalesce(:{k},{k}),"
    column=column[:-1]
-   #logic
-   table=body['table']
-   if table=="users":
-      query=f"update {table} set {column} where id=:id returning *;"
-      values=param|{"id":user["id"]}
-   else:
-      query=f"update {table} set {column} where id=:id and created_by_id=:created_by_id returning *;"
-      values=param|{"id":body["id"],"created_by_id":user["id"]}
+   #query run
+   query=f"update {table} set {column} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   values=param|{"id":id,"created_by_id":created_by_id}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
