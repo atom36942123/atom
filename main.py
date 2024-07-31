@@ -570,13 +570,13 @@ async def function_delete(request:Request):
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #logic
-   if body['table']=="users":
-      query=f"delete from users where id=:id;"
-      values={"id":user["id"]}
-   else:
-      query=f"delete from {body['table']} where id=:id and created_by_id=:created_by_id;"
-      values={"id":body['id'],"created_by_id":user["id"]}
+   #delete query set
+   table=body["table"]
+   id=user["id"] if table=="users" else body["id"]
+   created_by_id=None if table=="users" else user["id"]
+   #query run
+   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+   values={"id":id,"created_by_id":created_by_id}
    output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
