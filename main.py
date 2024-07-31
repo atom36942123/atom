@@ -307,7 +307,7 @@ async def function_feed(request:Request):
    values={}
    output=await database(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #datatype conversion
+   #body modification
    for k,v in body.items():
       if k in schema_column_datatype:
          if schema_column_datatype[k] in ["ARRAY"]:body[k]=v.split(",")
@@ -506,17 +506,15 @@ async def function_create(request:Request):
    payload=jwt.decode(request.headers.get("token"),key,algorithms="HS256")
    user=json.loads(payload["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #body modification
+   body["created_by_id"]=user["id"]
+   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
    #create query set
-   param={k:v for k,v in body.items() if v not in [None,""," "]}
-   param={k:v for k,v in param.items() if k not in ["table"]}
-   param={k:v for k,v in param.items() if k not in ["id","created_at","is_active","is_verified","google_id","otp"]}
-   if "metadata" in param:param["metadata"]=json.dumps(param["metadata"],default=str)
-   param["created_by_id"]=user["id"]
-   #column set
+   table=body["table"]
+   param={k:v for k,v in body.items() if (k not in ["table"]+["id","created_at","is_active","is_verified","google_id","otp"] and v not in [None,""," "])}
    column_1=','.join([*param])
    column_2=','.join([':'+item for item in [*param]])
-   #logic
-   table=body['table']
+   #query run
    query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
    values=param
    output=await database(query=query,values=values)
