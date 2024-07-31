@@ -318,7 +318,7 @@ async def function_feed(request:Request):
    order=body["order"] if "order" in body else "id desc"
    limit=int(body["limit"]) if "limit" in body else 30
    page=int(body["page"]) if "page" in body else 1
-   offset=((body["page"]-1)*body["limit"])
+   offset=(page-1)*limit
    where=""
    where_param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k)}
    #where set
