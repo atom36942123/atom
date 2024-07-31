@@ -74,8 +74,8 @@ async def middleware(request:Request,api_function):
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
-   #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
+   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+   #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
    #final
    return response
 
@@ -309,9 +309,10 @@ async def function_feed(request:Request):
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #datatype conversion
    for k,v in body.items():
-      if schema_column_datatype[k] in ["ARRAY"]:body[k]=v.split(",")
-      if schema_column_datatype[k] in ["integer","bigint"]:body[k]=int(v)
-      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:body[k]=float(v)
+      if k in schema_column_datatype:
+         if schema_column_datatype[k] in ["ARRAY"]:body[k]=v.split(",")
+         if schema_column_datatype[k] in ["integer","bigint"]:body[k]=int(v)
+         if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:body[k]=float(v)
    #read query set
    table=body["table"]
    order=body["order"] if "order" in body else "id desc"
