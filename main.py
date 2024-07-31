@@ -88,15 +88,13 @@ async def middleware(request:Request,api_function):
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
    try:response=await api_function(request)
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
-   #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
+   except Exception as e:return error(e.args)
+   #except Exception as e:return error(traceback.format_exc())
    #final
    return response
 
 #api import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
 import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
