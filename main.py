@@ -243,7 +243,7 @@ async def function_csv(request:Request,file:UploadFile):
    filename=file.filename.split(".")[0]
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
-   #modification
+   #values
    values=[]
    for row in file_object:
       for column in file_column_list:
@@ -263,11 +263,14 @@ async def function_csv(request:Request,file:UploadFile):
       query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
       values=values
    if mode=="update":
-      column=""
       param=[item for item in file_column_list if item not in ["id"]]
-      for item in file_column_list:column=column+f"{k}=coalesce(:{k},{k}),"
+      column=""
+      for k in param:column=column+f"{k}=coalesce(:{k},{k}),"
       column=column[:-1]
       query=f"update {table} set {column} where id=:id returning *;"
+      values=values
+   if mode=="delete":
+      query=f"delete from {table} where id=:id;"
       values=values
    #query run
    output=await database_bulk(query=query,values=values)
