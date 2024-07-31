@@ -85,7 +85,7 @@ import traceback
 async def middleware(request:Request,api_function):
    #x check
    x=str(request.url).split("/")[3]
-   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return error("wrong x")
+   if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return await error("wrong x")
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #api response
