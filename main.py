@@ -90,7 +90,7 @@ async def middleware(request:Request,api_function):
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #token check
-   if func in ["qrunner"] and token!=key:return error("token issue)
+   if func in ["qrunner"] and token!=key:return error("token issue")
    #api response
    try:response=await api_function(request)
    except Exception as e:return error(e.args)
