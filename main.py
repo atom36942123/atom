@@ -502,7 +502,6 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
-   return user
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
@@ -649,18 +648,23 @@ async def function_my(request:Request,background:BackgroundTasks):
    if body["mode"]=="message_inbox":
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
+      output=await database(query=query,values=values)
    if body["mode"]=="message_inbox_unread":
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
+      output=await database(query=query,values=values)
    if body["mode"]=="message_thread":
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":limit,"offset":offset}
+      output=await database(query=query,values=values)
    if body["mode"]=="message_received":
       query="select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by id desc limit :limit offset :offset;"
       values={"parent_id":user["id"],"limit":limit,"offset":offset}
+      output=await database(query=query,values=values)
    if body["mode"]=="delete_message_all":
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
+      output=await database(query=query,values=values)
    if body["mode"]=="read_parent_data":
       query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":limit,"offset":offset}
@@ -668,19 +672,18 @@ async def function_my(request:Request,background:BackgroundTasks):
       parent_ids=[item["parent_id"] for item in output]
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
       values={}
+      output=await database(query=query,values=values)
    if body["mode"]=="action_check":
       query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
       output=await database(query=query,values=values)
       output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-      return {"status":1,"message":output}
-   #query run
-   output=await database(query=query,values=values)
    #background task
    if body["mode"]=="message_thread":
       query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
       values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
       background.add_task(await database(query=query,values=values))
+      output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
@@ -692,27 +695,46 @@ async def function_admin(request:Request):
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    body=dict(await request.json())
-   #schema column groupby
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await database(query=query,values=values)
-   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #datatype conversion
-   column=body["column"]
-   if column in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
-   if schema_column_datatype[column] in ["jsonb"]:body["value"]=json.dumps(body["value"])
-   if schema_column_datatype[column] in ["ARRAY"]:body["value"]=body["value"].split(",")
-   if schema_column_datatype[column] in ["integer","bigint"]:body["value"]=int(body["value"])
-   if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:body["value"]=round(float(body["value"]),3)
-   if schema_column_datatype[column] in ["date","timestamp with time zone"]:body["value"]=datetime.strptime(body["value"],'%Y-%m-%d')
    #logic
-   table=body['table']
-   column=body['column']
-   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
-   output=await database(query=query,values=values)
+   if body["mode"]=="update_cell":
+      #schema column groupby
+      query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+      values={}
+      output=await database(query=query,values=values)
+      schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
+      #body preprocessing
+      if body["column"] in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
+      if schema_column_datatype[body["column"]] in ["jsonb"]:body["value"]=json.dumps(body["value"])
+      if schema_column_datatype[body["column"]] in ["ARRAY"]:body["value"]=body["value"].split(",")
+      if schema_column_datatype[body["column"]] in ["integer","bigint"]:body["value"]=int(body["value"])
+      if schema_column_datatype[body["column"]] in ["decimal","numeric","real","double precision"]:body["value"]=round(float(body["value"]),3)
+      if schema_column_datatype[body["column"]] in ["date","timestamp with time zone"]:body["value"]=datetime.strptime(body["value"],'%Y-%m-%d')
+      #logic
+      query=f"update {body['table']} set {body['column']}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
+      values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
+      output=await database(query=query,values=values)
    #final
    return {"status":1,"message":output}
+  
+
+         
+    
+
+      
+   
+  
+   
+   
+   
+   
+   
+   
+   
+  
+   
+   
+  
+   
 
 @app.post("/{x}/aws")
 async def function_aws(request:Request):
