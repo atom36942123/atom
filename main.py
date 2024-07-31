@@ -39,7 +39,7 @@
 #read={"table":"post", "id":1,"id_operator":">","page":1,"limit":1}
 #my={"mode":"message_inbox"}
 #my={"mode":"message_inbox_unread"}
-#my={"mode":"message_thread","user_id":1}
+#my={"mode":"message_thread","user_id":2}
 #my={"mode":"message_received"}
 #my={"mode":"delete_message_all"}
 #my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
