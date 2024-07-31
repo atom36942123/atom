@@ -502,6 +502,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   return user
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
