@@ -333,7 +333,7 @@ async def function_feed(request:Request):
    output=[dict(item) for item in output]
    #add creator key
    object_list=output
-   object_table=body['table']
+   object_table=table
    if object_list and object_table in ["post"]:
       object_list=[item|{"created_by_username":None} for item in object_list]
       user_ids=','.join([str(item["created_by_id"]) for item in object_list if item["created_by_id"]])
@@ -348,7 +348,7 @@ async def function_feed(request:Request):
                   break
    #add action count
    object_list=object_list
-   object_table=body["table"]
+   object_table=table
    action_type="comment"
    action_table="activity"
    key_name=f"{action_type}_count"
