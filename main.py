@@ -325,7 +325,7 @@ async def function_feed(request:Request):
    values={}
    output=await database(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #body modification
+   #datatype conversion
    for k,v in body.items():
       if k in schema_column_datatype:
          if schema_column_datatype[k] in ["ARRAY"]:body[k]=v.split(",")
