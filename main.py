@@ -225,7 +225,7 @@ async def function_database(request:Request):
       values={}
       output=await database(query=query,values=values)
    #set not null
-   mapping_not_null={"created_at":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+   mapping_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
    for k,v in mapping_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
