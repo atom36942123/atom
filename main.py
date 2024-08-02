@@ -13,6 +13,9 @@
 # tag_append_no_duplicate=update box set tag=(select array_agg(distinct t) from unnest(tag||'{xxx}') as t) where id=1;
 # tag_delete=update box set tag=array_remove(tag,'atom') where id=1;
 #redis_size=redis-cli info memory | grep 'used_memory.*human';
+#postgres=brew services start postgresql@16
+#postgres=psql postgres
+
 
 #s3 upload
 # curl --location 'https://atom36942-production.s3.amazonaws.com/' \
