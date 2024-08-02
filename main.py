@@ -16,7 +16,6 @@
 #postgres=brew services start postgresql@16
 #postgres=psql postgres
 
-
 #s3 upload
 # curl --location 'https://atom36942-production.s3.amazonaws.com/' \
 # --form 'key="xxx"' \
