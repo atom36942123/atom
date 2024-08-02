@@ -219,11 +219,18 @@ async def function_database(request:Request):
       query=f"alter table {table} alter column created_at set default now();"
       values={}
       output=await database(query=query,values=values)
-   #protect rows
+   #protected rows
    for table in config_database["is_protected"][1].split(','):
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
       values={}
       output=await database(query=query,values=values)
+   #set not null
+   mapping_not_null={"created_at":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+   for k,v in mapping_not_null.items():
+      for table in v:
+         query=f"alter table {table} alter column {k} set not null;"
+         values={}
+         output=await database(query=query,values=values)
    #schema constraint
    query="select constraint_name from information_schema.constraint_column_usage;"
    values={}
