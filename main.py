@@ -15,7 +15,7 @@
 #redis_size=redis-cli info memory | grep 'used_memory.*human';
 #postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres
 #redis=brew install redis / brew services start redis
-#pgweb=brew install pgweb / pgweb --url postgresql://localhost:5432/postgres
+#pgweb=brew install pgweb / pgweb --url postgresql://localhost:5432/test
 
 #s3 upload
 # curl --location 'https://atom36942-production.s3.amazonaws.com/' \
