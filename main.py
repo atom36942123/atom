@@ -25,7 +25,9 @@
 # --form 'file=@"9w4PMnK0L/logo atom.jpg"'
 
 #body
-#csv={"file":tablename_crud.csv}
+#csv={"file":atom_create.csv}
+#csv={"file":atom_update.csv}
+#csv={"file":atom_delete.csv}
 #feed={table:post,page:1,limit:100,id:100,id_operator:>=,order:created_by_id desc}
 #signup={"username":"xxx","password":"123"}
 #login={"username":"xxx","password":"123"}
