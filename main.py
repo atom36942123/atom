@@ -75,15 +75,18 @@ package="pip install aioredis==1.3.1 annotated-types==0.7.0 anyio==4.4.0 async-t
 from environs import Env
 env=Env()
 env.read_env()
-postgres_url_list=env.list("postgres")
+postgres=env("postgres")
 key=env("key")
-aws_access_key_id,aws_secret_access_key=env.list("aws")[0],env.list("aws")[1]
-s3_bucket,s3_region=env.list("s3")[0],env.list("s3")[1]
-ses_sender,ses_region=env.list("ses")[0],env.list("ses")[1]
+aws_access_key_id=env("aws_access_key_id")
+aws_secret_access_key=env("aws_secret_access_key")
+s3_bucket=env("s3_bucket")
+s3_region=env("s3_region")
+ses_sender=env("ses_sender")
+ses_region=env("ses_region")
 
 #database
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in postgres_url_list}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in postgres.split(",")}
 
 #lifespan
 from fastapi import FastAPI
