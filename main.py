@@ -13,8 +13,9 @@
 # tag_append_no_duplicate=update box set tag=(select array_agg(distinct t) from unnest(tag||'{xxx}') as t) where id=1;
 # tag_delete=update box set tag=array_remove(tag,'atom') where id=1;
 #redis_size=redis-cli info memory | grep 'used_memory.*human';
-#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres
+#virtualenv=python3 -m venv <name> / source name/bin/activate
 #redis=brew install redis / brew services start redis
+#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres
 #pgweb=brew install pgweb / pgweb --url postgresql://localhost:5432/test
 
 #s3 upload
