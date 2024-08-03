@@ -1,7 +1,8 @@
 #useful
 #virtualenv=python3 -m venv <name> / source name/bin/activate
 #redis=brew install redis / brew services start/info/stop redis
-#postgres=brew install postgresql@16 / brew services start/info/stop postgresql@16 / psql postgres / postgresql://localhost:5432/test
+#postgres=brew install postgresql@16 / brew services start/info/stop postgresql@16
+#psql=psql postgres / postgresql://localhost:5432/test
 #pgweb=brew install pgweb / pgweb
 #aws=sudo -i / cd atom/atom / git pull origin main / sh /opt/fastapi.sh
 #redis_size=redis-cli info memory | grep 'used_memory.*human';
