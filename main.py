@@ -1,5 +1,10 @@
 #useful
+#virtualenv=python3 -m venv <name> / source name/bin/activate
+#redis=brew install redis / brew services start redis
+#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres / postgresql://localhost:5432/test
+#pgweb=brew install pgweb / pgweb
 #aws=sudo -i / cd atom/atom / git pull origin main / sh /opt/fastapi.sh
+#redis_size=redis-cli info memory | grep 'used_memory.*human';
 # export=\copy post to 'filename' with (format csv,header);
 # import=\copy post from 'path' with (format csv,header);
 # export_column=\copy (query)  to 'filename' with (format csv,header);
@@ -12,11 +17,6 @@
 # tag_append=update box set tag=array_append(tag,'xxx') where id=1;
 # tag_append_no_duplicate=update box set tag=(select array_agg(distinct t) from unnest(tag||'{xxx}') as t) where id=1;
 # tag_delete=update box set tag=array_remove(tag,'atom') where id=1;
-#redis_size=redis-cli info memory | grep 'used_memory.*human';
-#virtualenv=python3 -m venv <name> / source name/bin/activate
-#redis=brew install redis / brew services start redis
-#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres / postgresql://localhost:5432/test
-#pgweb=brew install pgweb / pgweb
 
 #s3 upload
 # curl --location 'https://atom36942-production.s3.amazonaws.com/' \
