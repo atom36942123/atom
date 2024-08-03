@@ -69,7 +69,7 @@
 #elasticsearch={"mode":"refresh","table":"users"}
 #elasticsearch={"mode":"search","table":"users","keyword":"xxx","size":30}
 
-#readme
+#deployment
 # 1. install package
 # 2. create .env file
 # 3. start redis server
