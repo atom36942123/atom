@@ -15,8 +15,8 @@
 #redis_size=redis-cli info memory | grep 'used_memory.*human';
 #virtualenv=python3 -m venv <name> / source name/bin/activate
 #redis=brew install redis / brew services start redis
-#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres
-#pgweb=brew install pgweb / pgweb --url postgresql://localhost:5432/test
+#postgres=brew install postgresql@16 / brew services start postgresql@16 / psql postgres / postgresql://localhost:5432/test
+#pgweb=brew install pgweb / pgweb
 
 #s3 upload
 # curl --location 'https://atom36942-production.s3.amazonaws.com/' \
