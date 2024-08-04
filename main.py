@@ -151,8 +151,8 @@ async def function_database(request:Request):
       values={}
       output=await database(query=query,values=values)
    #set not null
-   config_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
-   for k,v in config_not_null.items():
+   config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+   for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
          values={}
@@ -185,9 +185,9 @@ async def function_database(request:Request):
    schema_column=await database(query=query,values=values)
    #create index
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-   config_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
+   config_column_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    for column in schema_column:
-      if column['column_name'] in config_index:
+      if column['column_name'] in config_column_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});"
          values={}
          output=await database(query=query,values=values)
