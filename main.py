@@ -151,8 +151,8 @@ async def function_database(request:Request):
       values={}
       output=await database(query=query,values=values)
    #set not null
-   mapping_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
-   for k,v in mapping_not_null.items():
+   config_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+   for k,v in config_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
          values={}
@@ -163,10 +163,10 @@ async def function_database(request:Request):
    output=await database(query=query,values=values)
    schema_constraint_name_list=[item["constraint_name"] for item in output]
    #query zzz
-   query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
+   config_query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
    "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
    ]
-   for item in query_zzz:
+   for item in config_query_zzz:
       if item.split()[5] not in schema_constraint_name_list:
          query=item
          values={}
@@ -184,10 +184,10 @@ async def function_database(request:Request):
    values={}
    schema_column=await database(query=query,values=values)
    #create index
-   column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
+   config_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    for column in schema_column:
-      if column['column_name'] in column_to_index:
+      if column['column_name'] in config_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});"
          values={}
          output=await database(query=query,values=values)
