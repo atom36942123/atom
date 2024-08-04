@@ -54,9 +54,11 @@ import traceback
 async def middleware(request:Request,api_function):
    #x check
    x=str(request.url).split("/")[3]
+   print(str(request.url))
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
+   #token check
    #api response
    try:response=await api_function(request)
    except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
