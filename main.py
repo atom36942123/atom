@@ -85,19 +85,6 @@ async def function_qrunner(request:Request,query:str):
    #prework
    database=request.state.postgres_object.fetch_all
    if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #mapping
-   mapping={
-   "reset":"DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname=current_schema()) LOOP EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;",
-   "database":"select * from pg_database where datistemplate=false;",
-   "constraint":"select * from information_schema.constraint_column_usage;",
-   "index":"select * from pg_indexes where schemaname='public';",
-   "rules":"select * from pg_rules;",
-   "table":"select * from information_schema.tables where table_schema='public' and table_type='BASE TABLE';",
-   "column":"select * from information_schema.columns where table_schema='public';",
-   "tableg":"with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;",
-   "columng":"select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",
-   }
-   if query in mapping:query=mapping[query]
    #logic
    query=query
    values={}
