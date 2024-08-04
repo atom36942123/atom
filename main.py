@@ -200,6 +200,7 @@ async def function_csv(request:Request,file:UploadFile):
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
    if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
@@ -223,7 +224,7 @@ async def function_csv(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
       values.append(row)
-   file.file.close
+   await file.close()
    #query set
    if mode=="create":
       column_1=','.join(file_column_list)
