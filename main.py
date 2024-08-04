@@ -5,14 +5,14 @@ env.read_env()
 
 #config
 config_postgres_url=env("postgres_url")
-key=env("key")
-key=env("key_jwt")
-aws_access_key_id=env("aws_access_key_id")
-aws_secret_access_key=env("aws_secret_access_key")
-s3_bucket=env("s3_bucket")
-s3_region=env("s3_region")
-ses_sender=env("ses_sender")
-ses_region=env("ses_region")
+config_key=env("key")
+config_key_jwt=env("key_jwt")
+config_aws_access_key_id=env("aws_access_key_id")
+config_aws_secret_access_key=env("aws_secret_access_key")
+config_s3_bucket=env("s3_bucket")
+config_s3_region=env("s3_region")
+config_ses_sender=env("ses_sender")
+config_ses_region=env("ses_region")
 
 #database
 from databases import Database
@@ -85,7 +85,7 @@ async def function_root():
 async def function_qrunner(request:Request,query:str):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=query
    values={}
@@ -97,7 +97,7 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config
    config_database={
    "created_at":["timestamptz","users,post,action,activity,box,atom"],
@@ -199,7 +199,7 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
-   if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
@@ -436,7 +436,7 @@ async def function_login(request:Request):
    expiry_days=1
    data=json.dumps({"x":str(request.url).split("/")[3],"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    payload={"exp":time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple()),"data":data}
-   token=jwt.encode(payload,key)
+   token=jwt.encode(payload,config_key_jwt)
    #final
    return {"status":1,"message":token}
    
@@ -444,7 +444,7 @@ async def function_login(request:Request):
 async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
@@ -475,7 +475,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
 async def function_create(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] not in ["post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
@@ -501,7 +501,7 @@ async def function_create(request:Request):
 async def function_update(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] not in ["users","post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
@@ -529,7 +529,7 @@ async def function_update(request:Request):
 async def function_delete(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] not in ["users","post","action","activity"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
@@ -548,7 +548,7 @@ async def function_delete(request:Request):
 async def function_read(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] not in ["post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
@@ -580,7 +580,7 @@ async def function_read(request:Request):
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #pagination set
@@ -634,7 +634,7 @@ async def function_my(request:Request,background:BackgroundTasks):
 async def function_admin(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   user=json.loads(jwt.decode(request.headers.get("token"),key,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    body=dict(await request.json())
