@@ -28,8 +28,7 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis
-   config_redis_url="redis://127.0.0.1"
-   redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
+   redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
    await FastAPILimiter.init(redis_object)
    FastAPICache.init(RedisBackend(redis_object))
    #postgres
@@ -130,11 +129,6 @@ async def function_database(request:Request):
    "file":["text","users,post,box,atom"],
    "rating":["numeric","users,post,box,atom"],
    }
-   config_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
-   config_query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
-   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
-   ]
-   config_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    #create table
    for table in config_database["created_at"][1].split(','):
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
@@ -157,6 +151,7 @@ async def function_database(request:Request):
       values={}
       output=await database(query=query,values=values)
    #set not null
+   config_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
    for k,v in config_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
@@ -168,6 +163,9 @@ async def function_database(request:Request):
    output=await database(query=query,values=values)
    schema_constraint_name_list=[item["constraint_name"] for item in output]
    #query zzz
+   config_query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
+   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
+   ]
    for item in config_query_zzz:
       if item.split()[5] not in schema_constraint_name_list:
          query=item
@@ -187,6 +185,7 @@ async def function_database(request:Request):
    schema_column=await database(query=query,values=values)
    #create index
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
+   config_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    for column in schema_column:
       if column['column_name'] in config_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});"
