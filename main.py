@@ -3,9 +3,10 @@ from environs import Env
 env=Env()
 env.read_env()
 
-#env unpack
-postgres=env("postgres")
+#config
+postgres=env("postgres_url")
 key=env("key")
+key=env("key_jwt")
 aws_access_key_id=env("aws_access_key_id")
 aws_secret_access_key=env("aws_secret_access_key")
 s3_bucket=env("s3_bucket")
