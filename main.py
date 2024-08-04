@@ -28,8 +28,9 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis
-   await FastAPILimiter.init(aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True))
-   FastAPICache.init(RedisBackend(aioredis.from_url("redis://127.0.0.1")))
+   config_redis_url="redis://127.0.0.1"
+   await FastAPILimiter.init(aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True))
+   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_url)))
    #postgres
    for k,v in postgres_object.items():await v.connect()
    #shutdown
@@ -698,7 +699,8 @@ async def function_aws(request:Request):
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   config_mongo_url="mongodb://localhost:27017"
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_url)
    mode=body["mode"]
    body.pop("mode",None)
    #logic
