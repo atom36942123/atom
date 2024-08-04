@@ -101,7 +101,6 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config
    config_database={
    "created_at":["timestamptz","users,post,action,activity,box,atom"],
