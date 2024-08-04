@@ -53,12 +53,15 @@ import traceback
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    #x check
-   x=str(request.url).split("/")[3]
-   print(str(request.url))
+   path=str(request.url.path)
+   x=path.split("/")[1]
+   token=request.headers.get("token")
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
    #token check
+   for item in ["qrunner","database","csv","aws"]:
+      if item in path and token!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #api response
    try:response=await api_function(request)
    except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
@@ -87,7 +90,6 @@ async def function_root():
 async def function_qrunner(request:Request,query:str):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=query
    values={}
