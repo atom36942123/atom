@@ -1,7 +1,9 @@
-#env
+#env read
 from environs import Env
 env=Env()
 env.read_env()
+
+#env unpack
 postgres=env("postgres")
 key=env("key")
 aws_access_key_id=env("aws_access_key_id")
