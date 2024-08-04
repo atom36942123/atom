@@ -249,13 +249,16 @@ async def function_csv(request:Request,file:UploadFile):
 async def function_clean(request:Request):
    #prewrok
    database=request.state.postgres_object.fetch_all
+   #config
+   config_clean_table_creator=["post","action","activity"]
+   config_clean_table_parent=["action","activity"]
    #created_by_id null
-   for table in ["post","action","activity"]:
+   for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await database(query=query,values=values)
    #parent_id null
-   for table in ["action","activity"]:
+   for table in config_clean_table_parent:
       for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
          values={}
