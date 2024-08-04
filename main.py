@@ -4,7 +4,7 @@ env=Env()
 env.read_env()
 
 #config
-postgres=env("postgres_url")
+config_postgres_url=env("postgres_url")
 key=env("key")
 key=env("key_jwt")
 aws_access_key_id=env("aws_access_key_id")
@@ -16,7 +16,7 @@ ses_region=env("ses_region")
 
 #database
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in postgres.split(",")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
 
 #lifespan
 from fastapi import FastAPI
