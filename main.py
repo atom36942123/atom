@@ -245,7 +245,7 @@ async def function_csv(request:Request,file:UploadFile):
    #query run
    output=await database_bulk(query=query,values=values)
    #final
-   return {"status":1,"message":f"{table} {mode}={len(values)}"}
+   return {"status":1,"message":f"{table}_{mode}={len(values)}"}
 
 @app.get("/{x}/clean")
 async def function_clean(request:Request):
