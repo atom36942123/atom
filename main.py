@@ -480,7 +480,9 @@ async def function_create(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   if body['table'] not in ["post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #config
+   config_table_allowed_create=["post","action","activity","box"]
+   if body['table'] not in config_table_allowed_create:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body preprocessing
    body["created_by_id"]=user["id"]
    if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
@@ -506,7 +508,9 @@ async def function_update(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   if body['table'] not in ["users","post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #config
+   config_table_allowed_update=["users","post","action","activity","box"]
+   if body['table'] not in config_table_allowed_update:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body preprocessing
    body["updated_at"]=datetime.now()
    body["updated_by_id"]=user["id"]
@@ -534,7 +538,9 @@ async def function_delete(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   if body['table'] not in ["users","post","action","activity"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #config
+   config_table_allowed_delete=["users","post","action","activity"]
+   if body['table'] not in config_table_allowed_delete:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #query set
    table=body["table"]
    id=user["id"] if table=="users" else body["id"]
@@ -553,7 +559,6 @@ async def function_read(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   if body['table'] not in ["post","action","activity","box"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body preprocessing
    body["created_by_id"]=user["id"]
    #query set
@@ -671,10 +676,10 @@ async def function_aws(request:Request):
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    #logic
    if body["mode"]=="s3_create":
-      expiry=1000
-      size_kb=300
+      config_s3_link_expiry=1000
+      config_s3_size_kb=300
       bucket_key=str(uuid.uuid4())+"-"+body["filename"]
-      output=s3_client.generate_presigned_post(Bucket=config_s3_bucket,Key=bucket_key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
+      output=s3_client.generate_presigned_post(Bucket=config_s3_bucket,Key=bucket_key,ExpiresIn=config_s3_link_expiry,Conditions=[['content-length-range',1,config_s3_size_kb*1024]])
    if body["mode"]=="s3_delete":
       bucket_key=body["url"].split("/")[-1]
       output=s3_resource.Object(config_s3_bucket,bucket_key).delete()
