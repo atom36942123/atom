@@ -207,15 +207,16 @@ async def function_csv(request:Request,file:UploadFile):
    output=await database(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
-   file_object=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   file_column_list=file_object.fieldnames
    filename=file.filename.split(".")[0]
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
-   #body preprocessing
+   #file csv
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   file_csv_column_list=file_csv.fieldnames
+   #values
    values=[]
-   for row in file_object:
-      for column in file_column_list:
+   for row in file_csv:
+      for column in file_csv_column_list:
          if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in the schema"}))
          if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
          if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
@@ -227,12 +228,12 @@ async def function_csv(request:Request,file:UploadFile):
    await file.close()
    #query set
    if mode=="create":
-      column_1=','.join(file_column_list)
-      column_2=','.join([':'+item for item in file_column_list])
+      column_1=','.join(file_csv_column_list)
+      column_2=','.join([':'+item for item in file_csv_column_list])
       query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
       values=values
    if mode=="update":
-      param=[item for item in file_column_list if item not in ["id"]]
+      param=[item for item in file_csv_column_list if item not in ["id"]]
       column=""
       for k in param:column=column+f"{k}=coalesce(:{k},{k}),"
       column=column[:-1]
