@@ -28,13 +28,14 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis
-   redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
+   config_redis_url="redis://127.0.0.1"
+   redis_object=aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True)
    await FastAPILimiter.init(redis_object)
    FastAPICache.init(RedisBackend(redis_object))
    #postgres
    for k,v in postgres_object.items():await v.connect()
    #shutdown
-   yield 
+   yield
    for k,v in postgres_object.items():await v.disconnect()
 
 #app
@@ -53,8 +54,7 @@ import traceback
 @app.middleware("http")
 async def middleware(request:Request,api_function):
    #x check
-   path=str(request.url.path)
-   x=path.split("/")[1]
+   x=str(request.url.path).split("/")[1]
    if x not in ["","docs","redoc","openapi.json"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
    #database assgin
    if x in postgres_object:request.state.postgres_object=postgres_object[x]
@@ -289,6 +289,9 @@ async def function_feed(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
+   #config
+   config_table_allowed_feed=["users","post","atom"]
+   if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
@@ -696,7 +699,8 @@ async def function_aws(request:Request):
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+   config_mongo_url="mongodb://localhost:27017"
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_url)
    mode=body["mode"]
    body.pop("mode",None)
    #logic
