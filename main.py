@@ -28,9 +28,8 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis
-   redis_object=aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True)
-   await FastAPILimiter.init(redis_object)
-   FastAPICache.init(RedisBackend(redis_object))
+   await FastAPILimiter.init(aioredis.from_url("redis://127.0.0.1",encoding="utf-8",decode_responses=True))
+   FastAPICache.init(RedisBackend(aioredis.from_url("redis://127.0.0.1")))
    #postgres
    for k,v in postgres_object.items():await v.connect()
    #shutdown
