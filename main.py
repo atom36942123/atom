@@ -664,22 +664,22 @@ async def function_aws(request:Request):
    #prework
    body=await request.json()
    if request.headers.get("token")!=key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-   s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   s3_client=boto3.client("s3",region_name=config_s3_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   ses_client=boto3.client("ses",region_name=config_ses_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    #logic
    if body["mode"]=="s3_create":
       expiry=1000
       size_kb=300
       bucket_key=str(uuid.uuid4())+"-"+body["filename"]
-      output=s3_client.generate_presigned_post(Bucket=s3_bucket,Key=bucket_key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
+      output=s3_client.generate_presigned_post(Bucket=config_s3_bucket,Key=bucket_key,ExpiresIn=expiry,Conditions=[['content-length-range',1,size_kb*1024]])
    if body["mode"]=="s3_delete":
       bucket_key=body["url"].split("/")[-1]
-      output=s3_resource.Object(s3_bucket,bucket_key).delete()
+      output=s3_resource.Object(config_s3_bucket,bucket_key).delete()
    if body["mode"]=="s3_delete_all":
-      output=s3_resource.Bucket(s3_bucket).objects.all().delete()
+      output=s3_resource.Bucket(config_s3_bucket).objects.all().delete()
    if body["mode"]=="ses":
-      output=ses_client.send_email(Source=ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
+      output=ses_client.send_email(Source=config_ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #final
    return {"status":1,"message":output}
 
