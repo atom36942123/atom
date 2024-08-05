@@ -53,7 +53,8 @@ async def function_root():
    return {"status":1,"message":f"welcome to {[*config_postgres_object]}"}
   
 #router
-
+from api_core import router
+app.include_router(router)
 
 #server start
 import uvicorn,asyncio
