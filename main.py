@@ -14,13 +14,13 @@ async def function_lifespan(app:FastAPI):
   #redis cache
   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_url)))
   #redis rate limiter
-   await FastAPILimiter.init(aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True))
-   #postgres connect
-   for k,v in config_postgres_object.items():await v.connect()
-   #shutdown
-   yield
-   #postgres disconnect
-   for k,v in config_postgres_object.items():await v.disconnect()
+  await FastAPILimiter.init(aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True))
+  #postgres connect
+  for k,v in config_postgres_object.items():await v.connect()
+  #shutdown
+  yield
+  #postgres disconnect
+  for k,v in config_postgres_object.items():await v.disconnect()
 
 #app
 from fastapi import FastAPI
@@ -37,15 +37,15 @@ from fastapi.encoders import jsonable_encoder
 import traceback
 @app.middleware("http")
 async def middleware(request:Request,api_function):
-   #postgres object assgin
-   key_4th=str(request.url.path).split("/")[1]
-   if key_4th in config_postgres_object:request.state.postgres_object=postgres_object[key_4th]
-   #api response
-   try:response=await api_function(request)
-   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
-   #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
-   #final
-   return response
+  #postgres object assgin
+  key_4th=str(request.url.path).split("/")[1]
+  if key_4th in config_postgres_object:request.state.postgres_object=postgres_object[key_4th]
+  #api response
+  try:response=await api_function(request)
+  except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+  #except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":traceback.format_exc()}))
+  #final
+  return response
 
 #root api
 @app.get("/")
