@@ -17,7 +17,7 @@ from elasticsearch import Elasticsearch
 #api
 @router.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
    return output
 
@@ -25,7 +25,7 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #config
    config_database={
    "created_at":["timestamptz","users,post,action,activity,box,atom"],
@@ -126,7 +126,7 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    database=request.state.postgres_object.fetch_all
    database_bulk=request.state.postgres_object.execute_many
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
@@ -603,7 +603,7 @@ async def function_admin(request:Request):
 async def function_aws(request:Request):
    #prework
    body=await request.json()
-   if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #boto3
    s3_client=boto3.client("s3",region_name=config_s3_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    ses_client=boto3.client("ses",region_name=config_ses_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
