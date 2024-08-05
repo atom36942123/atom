@@ -18,12 +18,12 @@ from elasticsearch import Elasticsearch
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    #prework
-   database=request.state.postgres_object.fetch_all
+   database=
    if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=query
    values={}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return output
 
@@ -66,34 +66,34 @@ async def function_database(request:Request):
    for table in config_database["created_at"][1].split(','):
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #create column
    for k,v in config_database.items():
       for table in v[1].split(','):
          query=f"alter table {table} add column if not exists {k} {v[0]};"
          values={}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #created_at default
    for table in config_database["created_at"][1].split(','):
       query=f"alter table {table} alter column created_at set default now();"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #protected rows
    for table in config_database["is_protected"][1].split(','):
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set not null
    config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
    for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
          values={}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #schema constraint
    query="select constraint_name from information_schema.constraint_column_usage;"
    values={}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    schema_constraint_name_list=[item["constraint_name"] for item in output]
    #query zzz
    config_query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
@@ -103,19 +103,19 @@ async def function_database(request:Request):
       if item.split()[5] not in schema_constraint_name_list:
          query=item
          values={}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #drop index
    query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
    values={}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if output[0]["output"]:
       query=output[0]["output"]
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #schema column
    query="select * from information_schema.columns where table_schema='public' order by column_name;"
    values={}
-   schema_column=await database(query=query,values=values)
+   schema_column=await request.state.postgres_object.fetch_all(query=query,values=values)
    #create index
    mapping_index_datatype={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    config_column_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
@@ -123,7 +123,7 @@ async def function_database(request:Request):
       if column['column_name'] in config_column_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {mapping_index_datatype[column['data_type']]} ({column['column_name']});"
          values={}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
    
@@ -137,7 +137,7 @@ async def function_csv(request:Request,file:UploadFile):
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
@@ -191,13 +191,13 @@ async def function_clean(request:Request):
    for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #parent_id null
    for table in config_clean_table_parent:
       for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
          values={}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
 
@@ -212,7 +212,7 @@ async def function_pcache(request:Request):
    for k,v in query_dict.items():
       query=v
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       temp[k]=output
    #final
    return {"status":1,"message":temp}
@@ -230,7 +230,7 @@ async def function_feed(request:Request):
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
    #body preprocessing
    for k,v in body.items():
@@ -256,7 +256,7 @@ async def function_feed(request:Request):
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
    values=param
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
    #add creator key
    object_list=output
@@ -267,7 +267,7 @@ async def function_feed(request:Request):
       if user_ids:
          query=f"select * from users where id in ({user_ids});"
          values={}
-         object_user_list=await database(query=query,values=values)
+         object_user_list=await request.state.postgres_object.fetch_all(query=query,values=values)
          for object in object_list:
             for object_user in object_user_list:
                if object["created_by_id"]==object_user["id"]:
@@ -285,7 +285,7 @@ async def function_feed(request:Request):
       if parent_ids:
          query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table group by parent_id;"
          values={"type":action_type,"parent_table":object_table}
-         object_action_list=await database(query=query,values=values)
+         object_action_list=await request.state.postgres_object.fetch_all(query=query,values=values)
          for object in object_list:
             for object_action in object_action_list:
                if object["id"]==object_action["parent_id"]:
@@ -302,7 +302,7 @@ async def function_signup(request:Request):
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
    values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
@@ -315,63 +315,63 @@ async def function_login(request:Request):
    if "mode" not in body:
       query="select * from users where username=:username and password=:password order by id desc limit 1;"
       values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #google
    if "mode" in body and body["mode"]=="google":
       query="select * from users where google_id=:google_id order by id desc limit 1;"
       values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0] if output else None
       if not user:
          query="insert into users (google_id) values (:google_id) returning *;"
          values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user_id=output[0]["id"]
          query="select * from users where id=:id;"
          values={"id":user_id}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #email
    if "mode" in body and body["mode"]=="email":
       query="select otp from box where type='otp' and email=:email order by id desc limit 1;"
       values={"email":body["email"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
       query="select * from users where email=:email order by id desc limit 1;"
       values={"email":body["email"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0] if output else None
       if not user:
          query="insert into users (email) values (:email) returning *;"
          values={"email":body["email"]}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user_id=output[0]["id"]
          query="select * from users where id=:id;"
          values={"id":user_id}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #mobile
    if "mode" in body and body["mode"]=="mobile":
       query="select otp from box where type='otp' and mobile=:mobile order by id desc limit 1;"
       values={"mobile":body["mobile"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
       if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
       query="select * from users where mobile=:mobile order by id desc limit 1;"
       values={"mobile":body["mobile"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0] if output else None
       if not user:
          query="insert into users (mobile) values (:mobile) returning *;"
          values={"mobile":body["mobile"]}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user_id=output[0]["id"]
          query="select * from users where id=:id;"
          values={"id":user_id}
-         output=await database(query=query,values=values)
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #token encode
    expiry_days=1
@@ -390,7 +390,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #read user
    query="select * from users where id=:id;"
    values={"id":user["id"]}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    user=dict(user)
@@ -403,12 +403,12 @@ async def function_profile(request:Request,background:BackgroundTasks):
    for k,v in query_dict.items():
       query=v
       values={"user_id":user["id"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user[k]=output[0]["count"]
    #background task
    query="update users set last_active_at=:last_active_at where id=:id;"
    values={"last_active_at":datetime.now(),"id":user["id"]}
-   background.add_task(await database(query=query,values=values))
+   background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
    return {"status":1,"message":user}
 
@@ -436,7 +436,7 @@ async def function_create(request:Request):
    #query run
    query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
    values=param
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
@@ -466,7 +466,7 @@ async def function_update(request:Request):
    #query run
    query=f"update {table} set {column} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    values=param|{"id":id,"created_by_id":created_by_id}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
    
@@ -487,7 +487,7 @@ async def function_delete(request:Request):
    #query run
    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
    values={"id":id,"created_by_id":created_by_id}
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
@@ -518,7 +518,7 @@ async def function_read(request:Request):
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
    values=param
-   output=await database(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
      
@@ -537,42 +537,42 @@ async def function_my(request:Request,background:BackgroundTasks):
    if body["mode"]=="message_inbox":
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="message_inbox_unread":
       query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="message_thread":
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
       values={"user_1":user["id"],"user_2":body["user_id"],"limit":limit,"offset":offset}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="message_received":
       query="select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by id desc limit :limit offset :offset;"
       values={"parent_id":user["id"],"limit":limit,"offset":offset}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="delete_message_all":
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="read_parent_data":
       query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":limit,"offset":offset}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       parent_ids=[item["parent_id"] for item in output]
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="action_check":
       query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #background task
    if body["mode"]=="message_thread":
       query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
       values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
-      background.add_task(await database(query=query,values=values))
-      output=await database(query=query,values=values)
+      background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
@@ -589,7 +589,7 @@ async def function_admin(request:Request):
       #schema column groupby
       query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
       values={}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
       schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
       #body preprocessing
       if body["column"] in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
@@ -601,7 +601,7 @@ async def function_admin(request:Request):
       #logic
       query=f"update {body['table']} set {body['column']}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
       values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
-      output=await database(query=query,values=values)
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
