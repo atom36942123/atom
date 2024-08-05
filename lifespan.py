@@ -6,7 +6,7 @@ from fastapi_limiter import FastAPILimiter
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
-#custom
+#config
 from config import config_redis_url
 from config import config_postgres_object
 
