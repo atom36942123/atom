@@ -11,7 +11,7 @@ from config import *
 
 #logic
 @asynccontextmanager
-async def lifespan(app:FastAPI):
+async def function_lifespan(app:FastAPI):
    #redis rate limiter
    await FastAPILimiter.init(aioredis.from_url(env("redis_url"),encoding="utf-8",decode_responses=True))
    #redis cache
