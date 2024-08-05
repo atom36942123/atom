@@ -19,4 +19,34 @@ config_redis_url=env("redis_url")
 from databases import Database
 config_postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
 
+config_database={
+"created_at":["timestamptz","users,post,action,activity,box,atom"],
+"created_by_id":["bigint","users,post,action,activity,box,atom"],
+"updated_at":["timestamptz","users,post,action,activity,box,atom"],
+"updated_by_id":["bigint","users,post,action,activity,box,atom"],
+"is_active":["int","users,post,action,activity,box,atom"],
+"is_verified":["int","users,post,action,activity,box,atom"],
+"is_protected":["int","users,post,action,activity,box,atom"],
+"type":["text","users,post,action,activity,box,atom"],
+"status":["text","users,post,action,activity,box,atom"],
+"remark":["text","users,post,action,activity,box,atom"],
+"metadata":["jsonb","users,post,action,activity,box,atom"],
+"parent_table":["text","action,activity"],
+"parent_id":["bigint","action,activity"],
+"last_active_at":["timestamptz","users"],
+"google_id":["text","users"],
+"otp":["int","box"],
+"username":["text","users"],
+"password":["text","users"],
+"name":["text","users"],
+"email":["text","users,post,box,atom"],
+"mobile":["text","users,post,box,atom"],
+"title":["text","users,post,box,atom"],
+"description":["text","users,post,action,activity,box,atom"],
+"tag":["text","users,post,box,atom"],
+"link":["text","users,post,box,atom"],
+"file":["text","users,post,box,atom"],
+"rating":["numeric","users,post,box,atom"],
+}
+
 
