@@ -47,6 +47,7 @@ async def middleware(request:Request,api_function):
    #final
    return response
 
+#root api
 @app.get("/")
 async def function_root():
-   return {"status":1,"message":f"welcome to {[*postgres_object]}"}
+   return {"status":1,"message":f"welcome to {[*config_postgres_object]}"}
