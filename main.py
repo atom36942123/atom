@@ -39,7 +39,7 @@ import traceback
 async def middleware(request:Request,api_function):
   #postgres object assgin
   key_4th=str(request.url.path).split("/")[1]
-  if key_4th in config_postgres_object:request.state.postgres_object=postgres_object[key_4th]
+  if key_4th in config_postgres_object:request.state.postgres_object=config_postgres_object[key_4th]
   #api response
   try:response=await api_function(request)
   except Exception as e:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
