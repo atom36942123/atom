@@ -17,6 +17,6 @@ config_redis_url=env("redis_url")
 
 #postgres object
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
+config_postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
 
 
