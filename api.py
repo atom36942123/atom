@@ -19,7 +19,6 @@ from elasticsearch import Elasticsearch
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
-   #final
    return output
 
 @app.get("/{x}/database")
