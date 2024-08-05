@@ -17,13 +17,8 @@ from elasticsearch import Elasticsearch
 #api
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
-   #prework
-   database=
    if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #logic
-   query=query
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
    #final
    return output
 
