@@ -1,9 +1,3 @@
-
-
-
-
-
-
 #api import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
 from fastapi.responses import JSONResponse
@@ -16,10 +10,6 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 
-#api
-@app.get("/")
-async def function_root():
-   return {"status":1,"message":f"welcome to {[*postgres_object]}"}
 
 @app.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
