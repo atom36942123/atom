@@ -15,13 +15,13 @@ from bson import ObjectId
 from elasticsearch import Elasticsearch
 
 #api
-@app.get("/{x}/qrunner")
+@router.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("token")!=config_key:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
    return output
 
-@app.get("/{x}/database")
+@router.get("/{x}/database")
 async def function_database(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -121,7 +121,7 @@ async def function_database(request:Request):
    #final
    return {"status":1,"message":"done"}
    
-@app.post("/{x}/csv")
+@router.post("/{x}/csv")
 async def function_csv(request:Request,file:UploadFile):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -174,7 +174,7 @@ async def function_csv(request:Request,file:UploadFile):
    #final
    return {"status":1,"message":f"{table}_{mode}={len(values)}"}
 
-@app.get("/{x}/clean")
+@router.get("/{x}/clean")
 async def function_clean(request:Request):
    #prewrok
    database=request.state.postgres_object.fetch_all
@@ -195,7 +195,7 @@ async def function_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-@app.get("/{x}/pcache")
+@router.get("/{x}/pcache")
 @cache(expire=60)
 async def function_pcache(request:Request):
    #prewrok
@@ -212,7 +212,7 @@ async def function_pcache(request:Request):
    return {"status":1,"message":temp}
 
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
-@app.get("/{x}/feed")
+@router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
    #prework
@@ -288,7 +288,7 @@ async def function_feed(request:Request):
    #final
    return {"status":1,"message":object_list}
    
-@app.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
+@router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -300,7 +300,7 @@ async def function_signup(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/login")
+@router.post("/{x}/login")
 async def function_login(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -375,7 +375,7 @@ async def function_login(request:Request):
    #final
    return {"status":1,"message":token}
    
-@app.get("/{x}/profile")
+@router.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -406,7 +406,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user}
 
-@app.post("/{x}/create")
+@router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -434,7 +434,7 @@ async def function_create(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/update")
+@router.post("/{x}/update")
 async def function_update(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -464,7 +464,7 @@ async def function_update(request:Request):
    #final
    return {"status":1,"message":output}
    
-@app.post("/{x}/delete")
+@router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -485,7 +485,7 @@ async def function_delete(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/read")
+@router.post("/{x}/read")
 async def function_read(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -516,7 +516,7 @@ async def function_read(request:Request):
    #final
    return {"status":1,"message":output}
      
-@app.post("/{x}/my")
+@router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -570,7 +570,7 @@ async def function_my(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/admin")
+@router.post("/{x}/admin")
 async def function_admin(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
@@ -599,7 +599,7 @@ async def function_admin(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/aws")
+@router.post("/{x}/aws")
 async def function_aws(request:Request):
    #prework
    body=await request.json()
@@ -624,7 +624,7 @@ async def function_aws(request:Request):
    #final
    return {"status":1,"message":output}
 
-@app.post("/{x}/mongo")
+@router.post("/{x}/mongo")
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
@@ -646,7 +646,7 @@ async def function_mongo(request:Request):
    #final
    return response
 
-@app.post("/{x}/elasticsearch")
+@router.post("/{x}/elasticsearch")
 async def function_elasticsearch(request:Request,mode:str):
    #prework
    body=await request.json()
