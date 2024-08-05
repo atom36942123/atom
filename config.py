@@ -5,7 +5,7 @@ env.read_env()
 
 #env unpack
 config_postgres_url=env("postgres_url")
-config_key=env("key")
+config_key_root=env("key_root")
 config_key_jwt=env("key_jwt")
 config_aws_access_key_id=env("aws_access_key_id")
 config_aws_secret_access_key=env("aws_secret_access_key")
