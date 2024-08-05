@@ -1,4 +1,4 @@
-from config import *
+#package
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
@@ -6,6 +6,10 @@ from fastapi_limiter import FastAPILimiter
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
+#custom
+from config import *
+
+#logic
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #redis rate limiter
