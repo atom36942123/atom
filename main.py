@@ -1,9 +1,3 @@
-#database
-from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
-
-
-
 #app
 from fastapi import FastAPI
 app=FastAPI(lifespan=lifespan,title="atom")
