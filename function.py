@@ -1,3 +1,4 @@
+
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
@@ -46,10 +47,26 @@ async def function_add_creator_key(postgres_object,object_list):
       query=f"select * from users where id in ({user_ids});"
       values={}
       object_user_list=await postgres_object.fetch_all(query=query,values=values)
-      for object in object_list:
-        for object_user in object_user_list:
-           if object["created_by_id"]==object_user["id"]:
-             object["created_by_username"]=object_user["username"]
+      for x in object_list:
+        for y in object_user_list:
+           if x["created_by_id"]==y["id"]:
+             x["created_by_username"]=y["username"]
              break
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
+
+async def function_add_action_count(postgres_object,object_list,object_table,action_table,action_type):
+  if not object_list:return {"status":1,"message":object_list}
+  try:
+    key_name=f"{action_type}_count"
+    object_list=[item|{key_name:0} for item in object_list]
+    parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
+    if parent_ids:
+      query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table group by parent_id;"
+      values={"type":action_type,"parent_table":object_table}
+      object_action_list=await postgres_object.fetch_all(query=query,values=values)
+      for x in object_list:
+        for y in object_action_list:
+          if x["id"]==y["parent_id"]:
+            x[key_name]=y["count"]
+            break
