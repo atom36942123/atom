@@ -26,6 +26,8 @@ async def function_qrunner(request:Request,query:str):
 
 @router.get("/{x}/database")
 async def function_database(request:Request):
+   #prework
+   if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #create table
    for table in config_database["created_at"][1].split(','):
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
