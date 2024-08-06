@@ -56,7 +56,7 @@ async def function_database(request:Request):
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #function schema_constraint_name_list
+   #function call:schema_constraint_name_list
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
@@ -66,10 +66,10 @@ async def function_database(request:Request):
          query=item
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #function delete index all
+   #function call:delete index all
    response=await function_delete_index_all(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #function read schema column
+   #function call:read schema column
    response=await function_read_schema_column(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column=response["message"]
@@ -87,7 +87,7 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #function schema column datatype
+   #function call:schema column datatype
    response=await function_read_schema_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
@@ -181,7 +181,7 @@ async def function_feed(request:Request):
          if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
          else:where=where+f"({k}=:{k} or :{k} is null) and "
       where=where.strip().rsplit('and',1)[0]
-   #function schema column datatype
+   #function call:schema column datatype
    response=await function_read_schema_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
@@ -195,7 +195,11 @@ async def function_feed(request:Request):
    values=param_where
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
-   #add creator key
+   #function call:add creator key
+   response=await function_add_creator_key(request.state.postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   schema_column_datatype=response["message"]
+
    #add action count
    object_list=object_list
    object_table=table
