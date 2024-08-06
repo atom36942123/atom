@@ -56,7 +56,7 @@ async def function_database(request:Request):
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #function call
+   #function schema_constraint_name_list
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
@@ -66,14 +66,7 @@ async def function_database(request:Request):
          query=item
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #drop index
-   query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   if output[0]["output"]:
-      query=output[0]["output"]
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #function drop index
    #helper schema column
    query="select * from information_schema.columns where table_schema='public' order by column_name;"
    values={}
