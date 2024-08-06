@@ -199,9 +199,12 @@ async def function_feed(request:Request):
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
-   #add action count
+   #function call:add action count
+   response=await function_add_action_count(request.state.postgres_object,output,table,"activity","comment")
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #final
-   return {"status":1,"message":object_list}
+   return {"status":1,"message":output}
    
 @router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_signup(request:Request):
