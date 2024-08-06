@@ -99,6 +99,7 @@ async def function_csv(request:Request,file:UploadFile):
    values_list=[]
    for row in file_csv:values_list.append(row)
    await file.close()
+   return values_list
    #santization
    for index,object in values_list:
       for k,v in object.items():
