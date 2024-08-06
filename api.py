@@ -334,24 +334,6 @@ async def function_update(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
-   
-@router.post("/{x}/delete")
-async def function_delete(request:Request):
-   #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   body=await request.json()
-   #query set
-   table=body["table"]
-   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-   #values
-   values={}
-   values["id"]=user["id"] if table=="users" else body["id"]
-   values["created_by_id"]=None if table=="users" else user["id"]
-   #query run
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
 
 @router.post("/{x}/read")
 async def function_read(request:Request):
@@ -366,7 +348,37 @@ async def function_read(request:Request):
    output=response["message"]
    #final
    return {"status":1,"message":output}
-     
+   
+@router.post("/{x}/delete")
+async def function_delete(request:Request):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   body=await request.json()
+   #logic
+   if body["mode"]=="object":
+      table=body["table"]
+      query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+      values={}
+      values["id"]=user["id"] if table=="users" else body["id"]
+      values["created_by_id"]=None if table=="users" else user["id"]
+      
+      
+   
+   
+   #values
+   
+   
+   
+   #query run
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+   
+query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+values={"created_by_id":user['id'],"parent_id":user['id']}
+output=await request.state.postgres_object.fetch_all(query=query,values=values)
+    
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
@@ -394,10 +406,6 @@ async def function_my(request:Request,background:BackgroundTasks):
    if body["mode"]=="message_received":
       query="select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by id desc limit :limit offset :offset;"
       values={"parent_id":user["id"],"limit":limit,"offset":offset}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   if body["mode"]=="delete_message_all":
-      query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      values={"created_by_id":user['id'],"parent_id":user['id']}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="read_parent_data":
       query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
