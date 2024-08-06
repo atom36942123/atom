@@ -111,25 +111,21 @@ async def function_csv(request:Request,file:UploadFile):
          if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
    if mode=="create":
-      table=table
       column_to_insert_list=file_column_list
       query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
-      table=table
       ids_to_read=','.join([str(item["id"]) for item in values_list])
       query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if mode=="update":
-      table=table
       column_to_update_list=[item for item in file_column_list if item not in ["id"]]
       query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="delete":
-      table=table
       query=f"delete from {table} where id=:id;"
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
