@@ -112,16 +112,12 @@ async def function_csv(request:Request,file:UploadFile):
    await file.close()
    #query set
    if mode=="create":
-      column_1=','.join(file_column_list)
-      column_2=','.join([':'+item for item in file_column_list])
-      query=f"insert into {table} ({column_1}) values ({column_2}) returning *;"
+      column_to_insert_list=file_column_list
+      query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
       values=values
    if mode=="update":
-      param=[item for item in file_column_list if item not in ["id"]]
-      column=""
-      for k in param:column=column+f"{k}=coalesce(:{k},{k}),"
-      column=column[:-1]
-      query=f"update {table} set {column} where id=:id returning *;"
+      column_to_update_list=[item for item in file_column_list if item not in ["id"]]
+      query=f"update {table} set {','.join([f"{item}=coalesce(:{item},{item})" for item in column_to_update_list])} where id=:id returning *;"
       values=values
    if mode=="delete":
       query=f"delete from {table} where id=:id;"
@@ -313,16 +309,19 @@ async def function_create(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   #config
-   
    if body['table'] not in config_table_allowed_create:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #body preprocessing
-   body["created_by_id"]=user["id"]
-   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
-   #query set
+   #query set (insert into :table :column_1 values :column_2;)
    table=body["table"]
    column_1=None
    column_2=None
+   
+   #body preprocessing
+   body["created_by_id"]=user["id"]
+   if "metadata" in body:body["metadata"]=json.dumps(body["metadata"],default=str)
+   
+   
+   
+   
    #param set
    param={k:v for k,v in body.items() if (k not in ["table"]+["id","created_at","is_active","is_verified","google_id","otp"] and v not in [None,""," "])}
    column_1=','.join([*param])
