@@ -58,6 +58,8 @@ config_column_to_index=["type","is_verified","is_active","created_by_id","status
 config_clean_table_creator=["post","action","activity"]
 config_clean_table_parent=["action","activity"]
 config_pcache={"user_count":"select count(*) from users;"}
+config_table_allowed_feed=["users","post","atom"]
+
 
 
 
