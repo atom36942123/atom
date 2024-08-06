@@ -192,7 +192,7 @@ async def function_feed(request:Request):
       if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param_where[k]=float(v)
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-   values=param
+   values=param_where
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
    #add creator key
