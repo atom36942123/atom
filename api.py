@@ -39,12 +39,12 @@ async def function_database(request:Request):
          query=f"alter table {table} add column if not exists {k} {v[0]};"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #created_at default
+   #set created_at default
    for table in config_database["created_at"][1].split(','):
       query=f"alter table {table} alter column created_at set default now();"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #protected rows
+   #set protected rows
    for table in config_database["is_protected"][1].split(','):
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
       values={}
@@ -55,7 +55,7 @@ async def function_database(request:Request):
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #schema constraint
+   #helper schema constraint
    query="select constraint_name from information_schema.constraint_column_usage;"
    values={}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
