@@ -61,9 +61,6 @@ async def function_database(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    schema_constraint_name_list=[item["constraint_name"] for item in output]
    #query zzz
-   config_query_zzz=["alter table users add constraint constraint_unique_users unique (username);",
-   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
-   ]
    for item in config_query_zzz:
       if item.split()[5] not in schema_constraint_name_list:
          query=item
