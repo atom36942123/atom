@@ -96,7 +96,8 @@ async def function_read_object(postgres_object,body,function_read_schema_column_
     page=int(body["page"]) if "page" in body else 1
     offset=(page-1)*limit
     column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-    where=f"where {temp}" if temp else ""
+    key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
+    where=f"where {key_joined}" if key_joined else ""
     #santized filter values
     response=await function_read_schema_column_datatype(postgres_object)
     if response["status"]==0:return response
