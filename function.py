@@ -4,7 +4,8 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
 async def function_read_constraint_name_list(postgres_object):
   query="select constraint_name from information_schema.constraint_column_usage;"
   values={}
-  output=await request.state.postgres_object.fetch_all(query=query,values=values)
+  try:output=await postgres_object.fetch_all(query=query,values=values)
+  
   schema_constraint_name_list=[item["constraint_name"] for item in output]
 
   
