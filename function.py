@@ -69,3 +69,5 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
           if x["id"]==y["parent_id"]:
             x[key_name]=y["count"]
             break
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":object_list}
