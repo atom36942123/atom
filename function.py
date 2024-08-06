@@ -44,7 +44,7 @@ async def function_verify_otp(postgres_object,contact,otp):
   try:output=await postgres_object.fetch_all(query=query,values=values)
   except Exception as e:return {"status":0,"message":e.args}
   if not output:return {"status":0,"message":"otp not exist"}
-  if output[0]["otp"]!=otp:return {"status":0,"message":"otp mismatched"}
+  if output[0]["otp"]!=int(otp):return {"status":0,"message":"otp mismatched"}
   return {"status":1,"message":"done"}
   
 async def function_add_creator_key(postgres_object,object_list):
