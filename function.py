@@ -45,7 +45,7 @@ async def function_add_creator_key(postgres_object,object_list):
     if user_ids:
       query=f"select * from users where id in ({user_ids});"
       values={}
-      object_user_list=await request.state.postgres_object.fetch_all(query=query,values=values)
+      object_user_list=await postgres_object.fetch_all(query=query,values=values)
       for object in object_list:
         for object_user in object_user_list:
            if object["created_by_id"]==object_user["id"]:
