@@ -128,7 +128,7 @@ async def function_csv(request:Request,file:UploadFile):
    #query run
    output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
-   return {"status":1,"message":f"{filename}={len(values)}"}
+   return {"status":1,"message":output}
 
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
