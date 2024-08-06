@@ -180,7 +180,7 @@ async def function_feed(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #add action count
-   response=await function_add_action_count(request.state.postgres_object,output,table,"activity","comment")
+   response=await function_add_action_count(request.state.postgres_object,output,body["table"],"activity","comment")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #final
