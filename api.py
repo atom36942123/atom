@@ -110,24 +110,26 @@ async def function_csv(request:Request,file:UploadFile):
          if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
       values.append(row)
    await file.close()
-   #query set
+   #logic
    if mode=="create":
       column_to_insert_list=file_column_list
       query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
       values=values
+      output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
       ids_to_read=','.join([str(item["id"]) for item in values])
       query=f"select * from {table} where id in (f'{ids_to_read}');"
-      values={} 
+      values={}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if mode=="update":
       column_to_update_list=[item for item in file_column_list if item not in ["id"]]
       query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
       values=values
+      output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="delete":
       query=f"delete from {table} where id=:id;"
       values=values
-   #query run
-   output=await request.state.postgres_object.execute_many(query=query,values=values)
+      output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
