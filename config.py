@@ -60,6 +60,11 @@ config_clean_table_parent=["action","activity"]
 config_pcache={"user_count":"select count(*) from users;"}
 config_table_allowed_feed=["users","post","atom"]
 config_token_expiry_days=1
+config_user_profile={
+"post_count":"select count(*) from post where created_by_id=:user_id;",
+"comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
+"message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
+}
 
 
 
