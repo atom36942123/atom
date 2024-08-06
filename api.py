@@ -156,10 +156,9 @@ async def function_clean(request:Request):
 
 @router.get("/{x}/pcache")
 @cache(expire=60)
-async def function_pcache(request:Request):
-   #prewrok
-   temp={}
+async def function_pcache(request:Request):   
    #logic
+   temp={}
    for k,v in config_pcache.items():
       query=v
       values={}
