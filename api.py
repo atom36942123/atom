@@ -100,7 +100,7 @@ async def function_csv(request:Request,file:UploadFile):
    for row in file_csv:values_list.append(row)
    await file.close()
    #santization
-   for index,object in values_list:
+   for index,object in enumerate(values_list):
       for k,v in object.items():
          datatype=schema_column_datatype[k]
          if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
@@ -109,7 +109,6 @@ async def function_csv(request:Request,file:UploadFile):
          if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
          if datatype in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
          if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
-   return values_list
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
