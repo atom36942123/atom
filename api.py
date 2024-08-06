@@ -362,6 +362,8 @@ async def function_delete(request:Request):
       values={}
       values["id"]=user["id"] if table=="users" else body["id"]
       values["created_by_id"]=None if table=="users" else user["id"]
+   if body["mode"]=="message":
+      
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
