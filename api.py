@@ -200,23 +200,6 @@ async def function_feed(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #add action count
-   object_list=output
-   object_table=table
-   action_type="comment"
-   action_table="activity"
-   key_name=f"{action_type}_count"
-   if object_list and object_table in ["post"]:
-      object_list=[item|{key_name:0} for item in object_list]
-      parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
-      if parent_ids:
-         query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where type=:type and parent_table=:parent_table group by parent_id;"
-         values={"type":action_type,"parent_table":object_table}
-         object_action_list=await request.state.postgres_object.fetch_all(query=query,values=values)
-         for object in object_list:
-            for object_action in object_action_list:
-               if object["id"]==object_action["parent_id"]:
-                  object[key_name]=object_action["count"]
-                  break
    #final
    return {"status":1,"message":object_list}
    
