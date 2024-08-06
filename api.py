@@ -56,7 +56,7 @@ async def function_database(request:Request):
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #function call:schema_constraint_name_list
+   #schema_constraint_name_list
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
@@ -66,14 +66,13 @@ async def function_database(request:Request):
          query=item
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #function call:delete index all
+   #delete index all
    response=await function_delete_index_all(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #function call:read schema column
+   #create index
    response=await function_read_schema_column(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column=response["message"]
-   #create index
    for column in schema_column:
       if column['column_name'] in config_column_to_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {config_datatype_index[column['data_type']]} ({column['column_name']});"
@@ -87,7 +86,7 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #function call:schema column datatype
+   #schema column datatype
    response=await function_read_schema_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
@@ -177,7 +176,7 @@ async def function_feed(request:Request):
    column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
    where=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
    where=f"where {where}" if where else ""
-   #santized colun to filter values
+   #santized filter values
    response=await function_read_schema_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
@@ -187,15 +186,14 @@ async def function_feed(request:Request):
       if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-   return query
    values=column_to_filter_dict
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
-   #function call:add creator key
+   #add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
-   #function call:add action count
+   #add action count
    response=await function_add_action_count(request.state.postgres_object,output,table,"activity","comment")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
