@@ -90,11 +90,9 @@ async def function_database(request:Request):
 @router.post("/{x}/csv")
 async def function_csv(request:Request,file:UploadFile):
    #prework
-   database=request.state.postgres_object.fetch_all
-   database_bulk=request.state.postgres_object.execute_many
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #schema column groupby
+   #helper schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
@@ -136,7 +134,7 @@ async def function_csv(request:Request,file:UploadFile):
       query=f"delete from {table} where id=:id;"
       values=values
    #query run
-   output=await database_bulk(query=query,values=values)
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
    return {"status":1,"message":f"{table}_{mode}={len(values)}"}
 
