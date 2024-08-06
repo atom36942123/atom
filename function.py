@@ -37,6 +37,16 @@ async def function_read_schema_column_datatype(postgres_object):
   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
   return {"status":1,"message":schema_column_datatype}
 
+async def function_verify_otp(postgres_object,contact,otp):
+  if "@" in contact:query="select otp from box where type='otp' and email=:contact order by id desc limit 1;"
+  else:query="select otp from box where type='otp' and mobile=:contact order by id desc limit 1;"
+  values={"contact":contact}
+  try:output=await postgres_object.fetch_all(query=query,values=values)
+  except Exception as e:return {"status":0,"message":e.args}
+  if not output:return {"status":0,"message":"otp not exist"}
+  if output[0]["otp"]!=otp:return {"status":0,"message":"otp mismatched"}
+  return {"status":1,"message":"done"}
+  
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
   try:
