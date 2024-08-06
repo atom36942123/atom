@@ -48,8 +48,11 @@ config_database={
 "file":["text","users,post,box,atom"],
 "rating":["numeric","users,post,box,atom"],
 }
-
 config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+config_query_zzz=[
+"alter table users add constraint constraint_unique_users unique (username);",
+"alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
+]
 
 
 
