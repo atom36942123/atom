@@ -95,7 +95,7 @@ async def function_csv(request:Request,file:UploadFile):
    mode=filename.rsplit("_",1)[1]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_csv.fieldnames
-   #values list
+   #values
    values_list=[]
    for row in file_csv:values_list.append(row)
    await file.close()
@@ -359,7 +359,6 @@ async def function_read(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   #body preprocessing
    #read object
    body["created_by_id"]=user["id"]
    response=await function_read_object(request.state.postgres_object,body,function_read_schema_column_datatype)
