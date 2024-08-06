@@ -60,6 +60,7 @@ config_clean_table_parent=["action","activity"]
 config_pcache={"user_count":"select count(*) from users;"}
 config_table_allowed_feed=["users","post","atom"]
 config_table_allowed_create=["post","action","activity","box"]
+config_table_allowed_update=["users","post","action","activity","box"]
 config_token_expiry_days=1
 config_user_profile={
 "post_count":"select count(*) from post where created_by_id=:user_id;",
