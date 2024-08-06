@@ -84,3 +84,38 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
             break
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
+
+#min
+async def function_read_object(postgres_object,body):
+  try:
+    table=body["table"]
+    order=body["order"] if "order" in body else "id desc"
+    limit=int(body["limit"]) if "limit" in body else 30
+    
+  
+
+
+
+   
+   
+   
+   page=int(body["page"]) if "page" in body else 1
+   offset=(page-1)*limit
+   column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
+   temp=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
+   where=f"where {temp}" if temp else ""
+   #santized filter values
+   response=await function_read_schema_column_datatype(request.state.postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   schema_column_datatype=response["message"]
+   for k,v in column_to_filter_dict.items():
+      datatype=schema_column_datatype[k]
+      if datatype in ["ARRAY"]:column_to_filter_dict[k]=v.split(",")
+      if datatype in ["integer","bigint"]:column_to_filter_dict[k]=int(v)
+      if datatype in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
+   #query run
+   query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
+   values=column_to_filter_dict
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=[dict(item) for item in output]   
+
