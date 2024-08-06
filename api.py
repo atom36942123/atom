@@ -67,7 +67,7 @@ async def function_database(request:Request):
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #function drop index
-   response=await function_delete_index_all(request.state.postgres_object)
+   response=await function_delete_all_index(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #helper schema column
    query="select * from information_schema.columns where table_schema='public' order by column_name;"
