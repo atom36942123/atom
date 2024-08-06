@@ -55,6 +55,9 @@ config_query_zzz=[
 ]
 config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
 config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
+config_clean_table_creator=["post","action","activity"]
+config_clean_table_parent=["action","activity"]
+
 
 
 
