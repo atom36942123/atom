@@ -117,7 +117,7 @@ async def function_csv(request:Request,file:UploadFile):
       values=values
    if mode=="update":
       column_to_update_list=[item for item in file_column_list if item not in ["id"]]
-      query=f"update {table} set {','.join([f"{item}=coalesce(:{item},{item})" for item in column_to_update_list])} where id=:id returning *;"
+      query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
       values=values
    if mode=="delete":
       query=f"delete from {table} where id=:id;"
