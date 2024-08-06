@@ -328,13 +328,20 @@ async def function_create(request:Request):
 @router.post("/{x}/update")
 async def function_update(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #config
-   config_table_allowed_update=["users","post","action","activity","box"]
    if body['table'] not in config_table_allowed_update:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   
+      column_to_update_list=[item for item in file_column_list if item not in ["id"]]
+      query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+      values=values_list
+      output=await request.state.postgres_object.execute_many(query=query,values=values)
+
+   
+   
+   
    #body preprocessing
    body["updated_at"]=datetime.now()
    body["updated_by_id"]=user["id"]
