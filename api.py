@@ -91,47 +91,43 @@ async def function_csv(request:Request,file:UploadFile):
    schema_column_datatype=response["message"]
    #file
    filename=file.filename.split(".")[0]
-   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   file_column_list=file_csv.fieldnames
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   file_column_list=file_csv.fieldnames
    #values list
    values_list=[]
    for row in file_csv:values_list.append(row)
-   return values_list
-   
-   
-   row_list=[]
-   for row in file_csv:
-      for column in file_column_list:
-         if column not in schema_column_datatype:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"column not in the schema"}))
-         if column in ["password","google_id"]:row[column]=hashlib.sha256(row[column].encode()).hexdigest() if row[column] else None  
-         if schema_column_datatype[column] in ["jsonb"]:row[column]=json.dumps(row[column]) if row[column] else None
-         if schema_column_datatype[column] in ["ARRAY"]:row[column]=row[column].split(",") if row[column] else None
-         if schema_column_datatype[column] in ["integer","bigint"]:row[column]=int(row[column]) if row[column] else None
-         if schema_column_datatype[column] in ["decimal","numeric","real","double precision"]:row[column]=round(float(row[column]),3) if row[column] else None
-         if schema_column_datatype[column] in ["date","timestamp with time zone"]:row[column]=datetime.strptime(row[column],'%Y-%m-%d') if row[column] else None
-      row_list.append(row)
    await file.close()
+   #santization
+   for object in values_list:
+      for k,v in object.items():
+         datatype=schema_column_datatype[k]
+         if k in ["password","google_id"]:v=hashlib.sha256(v.encode()).hexdigest() if v else None
+         if datatype in ["jsonb"]:v=json.dumps(v) if v else None
+         if datatype in ["ARRAY"]:v=v.split(",") if v else None
+         if datatype in ["integer","bigint"]:v=int(v) if v else None
+         if datatype in ["decimal","numeric","real","double precision"]:v=round(float(v),3) if v else None
+         if datatype in ["date","timestamp with time zone"]:v=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
       query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-      values=row_list
+      values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
-      ids_to_read=','.join([str(item["id"]) for item in row_list])
+      ids_to_read=','.join([str(item["id"]) for item in values_list])
       query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if mode=="update":
       column_to_update_list=[item for item in file_column_list if item not in ["id"]]
       query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-      values=row_list
+      values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="delete":
       query=f"delete from {table} where id=:id;"
-      values=row_list
+      values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
    return {"status":1,"message":output}
