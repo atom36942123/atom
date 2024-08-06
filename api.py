@@ -163,7 +163,7 @@ async def function_pcache(request:Request):
    return {"status":1,"message":temp}
 
 @router.get("/{x}/feed")
-@cache(expire=60,key_builder=function_redis_key_builder)
+@cache(expire=60,key_builder=function_read_redis_key)
 async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
