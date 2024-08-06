@@ -133,12 +133,12 @@ async def function_csv(request:Request,file:UploadFile):
 
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
-   #created_by_id null
+   #creator null
    for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #parent_id null
+   #parent null
    for table in config_clean_table_parent:
       for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
@@ -206,16 +206,12 @@ async def function_feed(request:Request):
    #final
    return {"status":1,"message":output}
    
-@router.post("/{x}/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
+@router.post("/{x}/signup")
 async def function_signup(request:Request):
-   #prework
-   database=request.state.postgres_object.fetch_all
    body=await request.json()
-   #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
    values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
    return {"status":1,"message":output}
 
 @router.post("/{x}/login")
