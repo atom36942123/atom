@@ -358,12 +358,9 @@ async def function_update(request:Request):
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   #config
-   config_table_allowed_delete=["users","post","action","activity"]
    if body['table'] not in config_table_allowed_delete:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #query set
    table=body["table"]
