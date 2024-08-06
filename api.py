@@ -140,9 +140,6 @@ async def function_csv(request:Request,file:UploadFile):
 
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
-   #prewrok
-   database=request.state.postgres_object.fetch_all
-   #config
    #created_by_id null
    for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
