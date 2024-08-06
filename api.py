@@ -70,9 +70,6 @@ async def function_database(request:Request):
    response=await function_delete_index_all(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #helper schema column
-   query="select * from information_schema.columns where table_schema='public' order by column_name;"
-   values={}
-   schema_column=await request.state.postgres_object.fetch_all(query=query,values=values)
    #create index
    for column in schema_column:
       if column['column_name'] in config_column_to_index:
