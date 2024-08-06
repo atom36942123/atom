@@ -200,7 +200,7 @@ async def function_feed(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #add action count
-   object_list=object_list
+   object_list=output
    object_table=table
    action_type="comment"
    action_table="activity"
