@@ -37,7 +37,16 @@ async def function_read_schema_column_datatype(postgres_object):
   schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
   return {"status":1,"message":schema_column_datatype}
 
-
-
-   
-
+async def function_add_creator_key(postgres_object,object_list):
+  if not object_list:return {"status":1,"message":object_list}
+  object_list=[item|{"created_by_username":None} for item in object_list]
+  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
+  if user_ids:
+    query=f"select * from users where id in ({user_ids});"
+    values={}
+    object_user_list=await request.state.postgres_object.fetch_all(query=query,values=values)
+    for object in object_list:
+      for object_user in object_user_list:
+         if object["created_by_id"]==object_user["id"]:
+           object["created_by_username"]=object_user["username"]
+           break
