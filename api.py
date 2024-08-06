@@ -158,11 +158,9 @@ async def function_clean(request:Request):
 @cache(expire=60)
 async def function_pcache(request:Request):
    #prewrok
-   database=request.state.postgres_object.fetch_all
    temp={}
-   query_dict={"user_count":"select count(*) from users;"}
    #logic
-   for k,v in query_dict.items():
+   for k,v in config_pcache.items():
       query=v
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
