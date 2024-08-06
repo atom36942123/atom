@@ -49,4 +49,7 @@ config_database={
 "rating":["numeric","users,post,box,atom"],
 }
 
+config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+
+
 
