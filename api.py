@@ -242,6 +242,8 @@ async def function_login(request:Request):
          user=output[0]
    #email
    if "mode" in body and body["mode"]=="email":
+      response=await function_verify_otp(request.state.postgres_object,body["email"],body["otp"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
       query="select * from users where email=:email order by id desc limit 1;"
       values={"email":body["email"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
@@ -257,11 +259,8 @@ async def function_login(request:Request):
          user=output[0]
    #mobile
    if "mode" in body and body["mode"]=="mobile":
-      query="select otp from box where type='otp' and mobile=:mobile order by id desc limit 1;"
-      values={"mobile":body["mobile"]}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-      if output[0]["otp"]!=body["otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatched"}))
+      response=await function_verify_otp(request.state.postgres_object,body["mobile"],body["otp"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
       query="select * from users where mobile=:mobile order by id desc limit 1;"
       values={"mobile":body["mobile"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
