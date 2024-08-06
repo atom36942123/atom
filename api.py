@@ -80,7 +80,7 @@ async def function_database(request:Request):
    schema_column=await request.state.postgres_object.fetch_all(query=query,values=values)
    #create index
    for column in schema_column:
-      if column['column_name'] in config_column_index:
+      if column['column_name'] in config_column_to_index:
          query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {config_datatype_index[column['data_type']]} ({column['column_name']});"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
