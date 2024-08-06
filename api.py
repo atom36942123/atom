@@ -172,28 +172,6 @@ async def function_feed(request:Request):
    body=dict(request.query_params)
    if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #query set (select * from :table :where :olo;)
-   table=body["table"]
-   order=body["order"] if "order" in body else "id desc"
-   limit=int(body["limit"]) if "limit" in body else 30
-   page=int(body["page"]) if "page" in body else 1
-   offset=(page-1)*limit
-   column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-   temp=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
-   where=f"where {temp}" if temp else ""
-   #santized filter values
-   response=await function_read_schema_column_datatype(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   schema_column_datatype=response["message"]
-   for k,v in column_to_filter_dict.items():
-      datatype=schema_column_datatype[k]
-      if datatype in ["ARRAY"]:column_to_filter_dict[k]=v.split(",")
-      if datatype in ["integer","bigint"]:column_to_filter_dict[k]=int(v)
-      if datatype in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
-   #query run
-   query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-   values=column_to_filter_dict
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   output=[dict(item) for item in output]   
    #add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
@@ -375,7 +353,6 @@ async def function_delete(request:Request):
 @router.post("/{x}/read")
 async def function_read(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
