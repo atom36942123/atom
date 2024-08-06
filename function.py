@@ -1,4 +1,3 @@
-
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
