@@ -174,28 +174,20 @@ async def function_feed(request:Request):
    limit=int(body["limit"]) if "limit" in body else 30
    page=int(body["page"]) if "page" in body else 1
    offset=(page-1)*limit
-   where=""
-   
-   #where set
-   param_where={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-   if param_where:
-      where="where "
-      for k,v in param_where.items():
-         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
-         else:where=where+f"({k}=:{k} or :{k} is null) and "
-      where=where.strip().rsplit('and',1)[0]
-   #function call:schema column datatype
+   column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
+   where=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if "{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
+   where=f"where {where}" if where else ""
+   #santized colun to filter values
    response=await function_read_schema_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
-   #santized param_where
-   for k,v in param_where.items():
-      if schema_column_datatype[k] in ["ARRAY"]:param_where[k]=v.split(",")
-      if schema_column_datatype[k] in ["integer","bigint"]:param_where[k]=int(v)
-      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:param_where[k]=float(v)
+   for k,v in column_to_filter_dict.items():
+      if schema_column_datatype[k] in ["ARRAY"]:column_to_filter_dict[k]=v.split(",")
+      if schema_column_datatype[k] in ["integer","bigint"]:column_to_filter_dict[k]=int(v)
+      if schema_column_datatype[k] in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-   values=param_where
+   values=column_to_filter_dict
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
    #function call:add creator key
