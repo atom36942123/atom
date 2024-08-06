@@ -360,26 +360,11 @@ async def function_read(request:Request):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #body preprocessing
+   #read object
    body["created_by_id"]=user["id"]
-   #query set
-   table=body["table"]
-   where=""
-   order=body["order"] if "order" in body else "id desc"
-   limit=int(body["limit"]) if "limit" in body else 30
-   page=int(body["page"]) if "page" in body else 1
-   offset=(page-1)*limit
-   #param set
-   param={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-   if param:
-      where="where "
-      for k,v in param.items():
-         if f"{k}_operator" in body:where=where+f"({k}{body[f'{k}_operator']}:{k} or :{k} is null) and "
-         else:where=where+f"({k}=:{k} or :{k} is null) and "
-      where=where.strip().rsplit('and',1)[0]
-   #query run
-   query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-   values=param
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   response=await function_read_object(request.state.postgres_object,body,function_read_schema_column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #final
    return {"status":1,"message":output}
      
