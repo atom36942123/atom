@@ -118,7 +118,7 @@ async def function_csv(request:Request,file:UploadFile):
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
       ids_to_read=','.join([str(item["id"]) for item in values])
-      query=f"select * from {table} where id in (f'{ids_to_read}');"
+      query=f"select * from {table} where id in ({ids_to_read});"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if mode=="update":
