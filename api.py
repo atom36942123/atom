@@ -57,10 +57,6 @@ async def function_database(request:Request):
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #helper schema constraint
-   query="select constraint_name from information_schema.constraint_column_usage;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   schema_constraint_name_list=[item["constraint_name"] for item in output]
    #run query zzz
    for item in config_query_zzz:
       if item.split()[5] not in schema_constraint_name_list:
