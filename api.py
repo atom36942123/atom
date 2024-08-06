@@ -116,7 +116,7 @@ async def function_csv(request:Request,file:UploadFile):
       query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
       values=values
    if mode=="read":
-      ids_to_read=','.join([item["id"] for item in values])
+      ids_to_read=','.join([str(item["id"]) for item in values])
       query=f"select * from {table} where id in (f'{ids_to_read}');"
       values={} 
    if mode=="update":
