@@ -362,22 +362,14 @@ async def function_delete(request:Request):
       values={}
       values["id"]=user["id"] if table=="users" else body["id"]
       values["created_by_id"]=None if table=="users" else user["id"]
-      
-      
-   
-   
-   #values
-   
-   
-   
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
    
-query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-values={"created_by_id":user['id'],"parent_id":user['id']}
-output=await request.state.postgres_object.fetch_all(query=query,values=values)
+# query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+# values={"created_by_id":user['id'],"parent_id":user['id']}
+# output=await request.state.postgres_object.fetch_all(query=query,values=values)
     
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
