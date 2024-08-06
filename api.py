@@ -100,15 +100,16 @@ async def function_csv(request:Request,file:UploadFile):
    for row in file_csv:values_list.append(row)
    await file.close()
    #santization
-   for object in values_list:
+   for index,object in values_list:
       for k,v in object.items():
          datatype=schema_column_datatype[k]
-         if k in ["password","google_id"]:v=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if datatype in ["jsonb"]:v=json.dumps(v) if v else None
-         if datatype in ["ARRAY"]:v=v.split(",") if v else None
-         if datatype in ["integer","bigint"]:v=int(v) if v else None
-         if datatype in ["decimal","numeric","real","double precision"]:v=round(float(v),3) if v else None
-         if datatype in ["date","timestamp with time zone"]:v=datetime.strptime(v,'%Y-%m-%d') if v else None
+         position=values_list[index][k]
+         if k in ["password","google_id"]:position=hashlib.sha256(v.encode()).hexdigest() if v else None
+         if datatype in ["jsonb"]:position=json.dumps(v) if v else None
+         if datatype in ["ARRAY"]:position=v.split(",") if v else None
+         if datatype in ["integer","bigint"]:position=int(v) if v else None
+         if datatype in ["decimal","numeric","real","double precision"]:position=round(float(v),3) if v else None
+         if datatype in ["date","timestamp with time zone"]:position=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
