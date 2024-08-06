@@ -172,10 +172,8 @@ async def function_pcache(request:Request):
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    body=dict(request.query_params)
    #config
-   config_table_allowed_feed=["users","post","atom"]
    if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #schema column groupby
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
