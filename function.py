@@ -20,7 +20,7 @@ async def function_delete_index_all(postgres_object):
     values={}
     try:output=await postgres_object.fetch_all(query=query,values=values)
     except Exception as e:return {"status":0,"message":e.args}
-  return None
+  return {"status":1,"message":"done"}
 
 async def function_read_schema_column(postgres_object):
   query="select * from information_schema.columns where table_schema='public' order by column_name;"
