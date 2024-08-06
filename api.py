@@ -95,8 +95,12 @@ async def function_csv(request:Request,file:UploadFile):
    file_column_list=file_csv.fieldnames
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
-   #row list/santization
-   return file_csv
+   #values list
+   values_list=[]
+   for row in file_csv:values_list.append(row)
+   return values_list
+   
+   
    row_list=[]
    for row in file_csv:
       for column in file_column_list:
