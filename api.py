@@ -316,12 +316,11 @@ async def function_profile(request:Request,background:BackgroundTasks):
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #config
-   config_table_allowed_create=["post","action","activity","box"]
+   
    if body['table'] not in config_table_allowed_create:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body preprocessing
    body["created_by_id"]=user["id"]
