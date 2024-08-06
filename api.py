@@ -3,8 +3,7 @@ from fastapi import APIRouter
 router = APIRouter()
 
 #config
-from config import config_key_root
-from config import config_database
+from config import *
 
 #import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
@@ -51,7 +50,6 @@ async def function_database(request:Request):
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set not null
-   config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
    for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
