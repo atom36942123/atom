@@ -53,6 +53,9 @@ config_query_zzz=[
 "alter table users add constraint constraint_unique_users unique (username);",
 "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
 ]
+config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
+config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
+
 
 
 
