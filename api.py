@@ -290,40 +290,35 @@ async def function_login(request:Request):
 @router.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #read user
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #add user object
    query="select * from users where id=:id;"
    values={"id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   user=output[0] if output else None
+   user=dict(output[0]) if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   user=dict(user)
-   #count key
-   query_dict={
-   "post_count":"select count(*) from post where created_by_id=:user_id;",
-   "comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
-   "message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
-   }
-   for k,v in query_dict.items():
+   #add extra info
+   temp={}
+   for k,v in config_user_profile.items():
       query=v
       values={"user_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      user[k]=output[0]["count"]
+      if "count" in k:temp[k]=output[0]["count"]
+      else:temp[k]=output
    #background task
    query="update users set last_active_at=:last_active_at where id=:id;"
    values={"last_active_at":datetime.now(),"id":user["id"]}
    background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
-   return {"status":1,"message":user}
+   return {"status":1,"message":user|temp}
 
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #config
    config_table_allowed_create=["post","action","activity","box"]
@@ -351,7 +346,7 @@ async def function_update(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #config
    config_table_allowed_update=["users","post","action","activity","box"]
@@ -381,7 +376,7 @@ async def function_delete(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #config
    config_table_allowed_delete=["users","post","action","activity"]
@@ -402,7 +397,7 @@ async def function_read(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #body preprocessing
    body["created_by_id"]=user["id"]
@@ -433,7 +428,7 @@ async def function_my(request:Request,background:BackgroundTasks):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #pagination set
    limit=int(body["limit"]) if "limit" in body else 30
@@ -487,7 +482,7 @@ async def function_admin(request:Request):
    #prework
    database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url).split("/")[3]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    body=dict(await request.json())
    #logic
