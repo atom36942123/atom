@@ -242,7 +242,7 @@ async def function_login(request:Request):
          user=output[0]
    #email
    if "mode" in body and body["mode"]=="email":
-      response=await function_verify_otp(request.state.postgres_object,body["email"],body["otp"])
+      response=await function_verify_otp(request.state.postgres_object,body["otp"],body["email"],None)
       if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
       query="select * from users where email=:email order by id desc limit 1;"
       values={"email":body["email"]}
@@ -259,7 +259,7 @@ async def function_login(request:Request):
          user=output[0]
    #mobile
    if "mode" in body and body["mode"]=="mobile":
-      response=await function_verify_otp(request.state.postgres_object,body["mobile"],body["otp"])
+      response=await function_verify_otp(request.state.postgres_object,body["otp"],None,body["mobile"])
       if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
       query="select * from users where mobile=:mobile order by id desc limit 1;"
       values={"mobile":body["mobile"]}
