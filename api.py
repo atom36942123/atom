@@ -82,7 +82,7 @@ async def function_database(request:Request):
    #final
    return {"status":1,"message":"done"}
    
-@router.post("/{x}/csv")
+@router.post("/{x}/csv",dependencies=[Depends(RateLimiter(times=1,seconds=10))])
 async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
