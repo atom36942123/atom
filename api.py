@@ -69,7 +69,10 @@ async def function_database(request:Request):
    #function delete index all
    response=await function_delete_index_all(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #helper schema column
+   #function read schema column
+   response=await function_read_schema_column(request.state.postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   schema_column=response["message"]
    #create index
    for column in schema_column:
       if column['column_name'] in config_column_to_index:
