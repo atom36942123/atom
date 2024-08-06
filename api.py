@@ -196,20 +196,6 @@ async def function_feed(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
    #add creator key
-   object_list=output
-   object_table=table
-   if object_list and object_table in ["post"]:
-      object_list=[item|{"created_by_username":None} for item in object_list]
-      user_ids=','.join([str(item["created_by_id"]) for item in object_list if item["created_by_id"]])
-      if user_ids:
-         query=f"select * from users where id in ({user_ids});"
-         values={}
-         object_user_list=await request.state.postgres_object.fetch_all(query=query,values=values)
-         for object in object_list:
-            for object_user in object_user_list:
-               if object["created_by_id"]==object_user["id"]:
-                  object["created_by_username"]=object_user["username"]
-                  break
    #add action count
    object_list=object_list
    object_table=table
