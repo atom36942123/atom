@@ -198,8 +198,7 @@ async def function_feed(request:Request):
    #function call:add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   schema_column_datatype=response["message"]
-
+   output=response["message"]
    #add action count
    object_list=object_list
    object_table=table
