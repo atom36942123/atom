@@ -171,7 +171,7 @@ async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
    if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #query set (select * from :table :where :olo;)
+   #query set
    #add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
