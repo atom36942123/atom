@@ -28,3 +28,16 @@ async def function_read_schema_column(postgres_object):
   try:output=await postgres_object.fetch_all(query=query,values=values)
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":output}
+
+async def function_read_schema_column_datatype(postgres_object):
+  query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+  values={}
+  try:output=await postgres_object.fetch_all(query=query,values=values)
+  except Exception as e:return {"status":0,"message":e.args}
+  schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
+  return {"status":1,"message":schema_column_datatype}
+
+
+
+   
+
