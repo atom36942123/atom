@@ -95,7 +95,8 @@ async def function_csv(request:Request,file:UploadFile):
    file_column_list=file_csv.fieldnames
    table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
-   #row list
+   #row list/santization
+   return file_csv
    row_list=[]
    for row in file_csv:
       for column in file_column_list:
@@ -307,7 +308,14 @@ async def function_create(request:Request):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] not in config_table_allowed_create:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #query set (insert into :table :column_1 values :column_2;)
+   #query set
+   column_to_insert_list=file_column_list
+   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+   values=row_list
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
+
+
+   
    table=body["table"]
    column_1=None
    column_2=None
