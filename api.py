@@ -56,7 +56,10 @@ async def function_database(request:Request):
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #helper schema constraint
+   #function call
+   response=await function_read_constraint_name_list(request.state.postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   schema_constraint_name_list=response["message"]
    #run query zzz
    for item in config_query_zzz:
       if item.split()[5] not in schema_constraint_name_list:
