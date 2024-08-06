@@ -2,8 +2,9 @@
 from fastapi import APIRouter
 router = APIRouter()
 
-#config
+#custom
 from config import *
+from function import *
 
 #import
 from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
@@ -167,7 +168,6 @@ async def function_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
 @router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_feed(request:Request):
