@@ -175,7 +175,7 @@ async def function_feed(request:Request):
    page=int(body["page"]) if "page" in body else 1
    offset=(page-1)*limit
    column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-   where=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if "{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
+   where=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
    where=f"where {where}" if where else ""
    #santized colun to filter values
    response=await function_read_schema_column_datatype(request.state.postgres_object)
@@ -188,7 +188,6 @@ async def function_feed(request:Request):
    #query run
    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
    return query
-
    values=column_to_filter_dict
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]   
