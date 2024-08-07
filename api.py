@@ -465,7 +465,7 @@ async def function_aws(request:Request):
    if body["mode"]=="s3_delete_bucket_key_all":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Bucket(config_s3_bucket_name).objects.all().delete()
-   #body={"mode":"ses_send_email","email":"www.atom36942@gmail.com","title":"xxx","description":"xxx"}
+   #body={"mode":"ses_send_email","email":"atom36942@gmail.com","title":"xxx","description":"xxx"}
    if body["mode"]=="ses_send_email":
       output=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #final
