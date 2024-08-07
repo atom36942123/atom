@@ -457,7 +457,7 @@ async def function_aws(request:Request):
    #body={"mode":"s3_create_presigned_url","filename":"xxx.png"}
    if body["mode"]=="s3_create_presigned_url":
       output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
-   #body={"mode":"s3_delete_bucket_key","url":"www.xxx.png"}
+   #body={"mode":"s3_delete_bucket_key","url":"www.xxx.png/xxx"}
    if body["mode"]=="s3_delete_bucket_key":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Object(config_s3_bucket_name,body["url"].rsplit("/",1)[1]).delete()
