@@ -4,9 +4,9 @@ env=Env()
 env.read_env()
 
 #env unpack
-config_postgres_database_url=env("config_postgres_database_url")
-config_redis_server=env("config_redis_server")
-config_mongo_server=env("config_mongo_server")
+config_postgres_database_uri=env("config_postgres_database_uri")
+config_redis_server_uri=env("config_redis_server_uri")
+config_mongo_server_uri=env("config_mongo_server_uri")
 config_key_root=env("config_key_root")
 config_key_jwt=env("config_key_jwt")
 config_aws_access_key_id=env("config_aws_access_key_id")
