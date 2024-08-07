@@ -316,6 +316,7 @@ async def function_create(request:Request):
    return {"status":1,"message":output}
 
 #body={"table":"post","id":1,"title":"xxx","description":"xxx"}
+#body={"table":"users","id":1,"name":"neo","gender":"male"}
 @router.post("/{x}/update")
 async def function_update(request:Request):
    #prework
@@ -333,9 +334,9 @@ async def function_update(request:Request):
       else:values[item]=None
    values["updated_at"]=datetime.now()
    values["updated_by_id"]=user["id"]
-   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
    values["id"]=user["id"] if table=="users" else body["id"]
    values["created_by_id"]=None if table=="users" else user["id"]
+   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
@@ -381,13 +382,11 @@ async def function_delete(request:Request):
    #final
    return {"status":1,"message":output}
 
-
 #my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
 #my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
