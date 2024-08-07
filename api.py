@@ -291,6 +291,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    return {"status":1,"message":user|temp}
 
 #body={"table":"post","type":"xxx","description":"xxx"}
+#body={"table":"action","type":"like","parent_table":"post","parent_id":4}
 #body={"table":"activity","type":"comment","parent_table":"post","parent_id":4,"description":"xxx"}
 #body={"table":"activity","type":"message","parent_table":"users","parent_id":3,"description":"xxx"}
 @router.post("/{x}/create")
