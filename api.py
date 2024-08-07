@@ -458,9 +458,9 @@ async def function_aws(request:Request):
    ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    #logic
    #body={"mode":"update_cell","table":"users","id":12,"column":"name","value":"xxx"}
-   if body["mode"]=="s3_create":
-      output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=bucket_key,ExpiresIn=3600,Conditions=[['content-length-range',1,250*1024]])
+   if body["mode"]=="s3_create":output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=bucket_key,ExpiresIn=3600,Conditions=[['content-length-range',1,250*1024]])
    if body["mode"]=="s3_delete":
+      
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       bucket_key=body["url"].split("/")[-1]
       output=s3_resource.Object(config_s3_bucket,bucket_key).delete()
