@@ -482,7 +482,7 @@ async def function_mongo(request:Request):
       object={k:v for k,v in body.items() if k not in ["mode"]}
       output=await mongo_object.test.users.insert_one(object)
       response={"status":1,"message":repr(output.inserted_id)}
-   #body={"mode":"read","id":"66b363e917e01888164aa381"}
+   #body={"mode":"read","id":"66b36a8a94d4da9c7652ef08"}
    if body["mode"]=="read":
       output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
       if output:output['_id']=str(output['_id'])
