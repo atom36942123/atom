@@ -383,6 +383,7 @@ async def function_delete(request:Request):
    return {"status":1,"message":output}
 
 #body={"mode":"message_inbox"}
+#body={"mode":"message_inbox_unread"}
 #my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
 #my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 @router.post("/{x}/my")
@@ -398,12 +399,12 @@ async def function_my(request:Request,background:BackgroundTasks):
    offset=(page-1)*limit
    #query set
    if body["mode"]=="message_inbox":
-      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit :limit offset :offset),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by id desc;"
-      values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by {order};"
+      values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="message_inbox_unread":
-      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by id desc limit :limit offset :offset;"
-      values={"created_by_id":user["id"],"parent_id":user["id"],"limit":limit,"offset":offset}
+      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+      values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    if body["mode"]=="message_thread":
       query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
