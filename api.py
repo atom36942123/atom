@@ -488,12 +488,15 @@ async def function_mongo(request:Request):
       if output:output['_id']=str(output['_id'])
       response={"status":1,"message":output}
    #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
+   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
    if body["mode"]=="update":
       key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
       output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
       response={"status":1,"message":output.modified_count}
+   #body={"mode":"delete","id":"66b36a8a94d4da9c7652ef08"}
    if body["mode"]=="delete":
-      response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+      response={"status":1,"message":output.deleted_count}
    #final
    return response
 
