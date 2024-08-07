@@ -487,6 +487,7 @@ async def function_mongo(request:Request):
       output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
       if output:output['_id']=str(output['_id'])
       response={"status":1,"message":output}
+   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
    if body["mode"]=="update":
       key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
       output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
