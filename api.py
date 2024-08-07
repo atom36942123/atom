@@ -454,7 +454,7 @@ async def function_aws(request:Request):
    #prework
    body=await request.json()
    #logic
-   #body={"mode":"s3_create","file":"xxx.png"}
+   #body={"mode":"s3_create","filename":"xxx.png"}
    if body["mode"]=="s3_create":
       output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
    #body={"mode":"s3_delete","url":"www.xxx.png"}
