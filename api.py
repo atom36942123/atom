@@ -484,8 +484,9 @@ async def function_mongo(request:Request):
       response={"status":1,"message":repr(output.inserted_id)}
    #body={"mode":"read","id":"66b363e917e01888164aa381"}
    if body["mode"]=="read":
-      output=await mongo_object.test.users.find({"_id":ObjectId(body["id"])})
-      response={"status":1,"message":str(output['_id'])}
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+      if output:output['_id']=str(output['_id'])
+      response={"status":1,"message":output}
    if body["mode"]=="update":
       id=body["id"]
       body.pop("id",None)
