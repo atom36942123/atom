@@ -15,10 +15,6 @@ config_ses_sender=env("ses_sender")
 config_ses_region=env("ses_region")
 config_redis_url=env("redis_url")
 
-#postgres object
-from databases import Database
-config_postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
-
 config_database={
 "created_at":["timestamptz","users,post,action,activity,box,atom"],
 "created_by_id":["bigint","users,post,action,activity,box,atom"],
