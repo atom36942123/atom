@@ -475,7 +475,7 @@ async def function_aws(request:Request):
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    #body={"mode":"create","username":"xxx","age":33,"country":"korea"}
    if body["mode"]=="create":
