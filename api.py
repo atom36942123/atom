@@ -356,7 +356,9 @@ async def function_read(request:Request):
    #final
    return {"status":1,"message":output}
 
-
+#body={"mode":"object","table":"post","id":123}
+#body={"mode":"object","table":"users","id":1}
+#body={"mode":"message_all"}
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
