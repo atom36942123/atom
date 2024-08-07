@@ -107,6 +107,7 @@ async def function_read_object(postgres_object,body,function_read_schema_column_
       if datatype in ["ARRAY"]:column_to_filter_dict[k]=v.split(",")
       if datatype in ["integer","bigint"]:column_to_filter_dict[k]=int(v)
       if datatype in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
+      if datatype in ["date","timestamp with time zone"]:column_to_filter_dict[k]=datetime.strptime(v,'%Y-%m-%d')
     #query run
     query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
     values=column_to_filter_dict
