@@ -1,10 +1,10 @@
 #config
-from config import config_redis_server
-from config import config_postgres_database_url
+from config import config_redis_server_uri
+from config import config_postgres_database_uri
 
 #postgres object
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_url.split(",")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_uri.split(",")}
 
 #lifespan
 from fastapi import FastAPI
@@ -16,9 +16,9 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
   #redis cache
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server)))
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_uri)))
   #redis rate limiter
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server,encoding="utf-8",decode_responses=True))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_uri,encoding="utf-8",decode_responses=True))
   #postgres connect
   for k,v in postgres_object.items():await v.connect()
   #shutdown
