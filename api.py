@@ -475,19 +475,18 @@ async def function_aws(request:Request):
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_url)
-   mode=body["mode"]
-   body.pop("mode",None)
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
    #logic
-   if mode=="create":
-      response=await mongo_object.test.users.insert_one(body)
-   if mode=="read":
+   if body["mode"]=="create":
+      object={k:v for k,v in body.items if k not in ["mode"]}
+      response=await mongo_object.test.users.insert_one(object)
+   if body["mode"]=="read":
       response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
-   if mode=="update":
+   if body["mode"]=="update":
       id=body["id"]
       body.pop("id",None)
       response=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
-   if mode=="delete":
+   if body["mode"]=="delete":
       response=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
    #final
    return response
