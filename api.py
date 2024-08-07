@@ -79,7 +79,8 @@ async def function_database(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
-   
+
+#body={"file":"atom_create.csv"}
 @router.post("/{x}/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv(request:Request,file:UploadFile):
    #prework
@@ -165,6 +166,7 @@ async def function_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
+#query param={"table":"post","order":"type desc","page":3,"limit":100,"id":9,"id_operator":">="}
 @router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_feed(request:Request):
@@ -287,8 +289,9 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user|temp}
 
-#create={"table":"post","type":"xxx","description":"xxx"}
-#create={"table":"activity","type":"comment","parent_table":"post","parent_id":4,"description":"xxx"}
+#body={"table":"post","type":"xxx","description":"xxx"}
+#body={"table":"activity","type":"comment","parent_table":"post","parent_id":4,"description":"xxx"}
+#body={"table":"activity","type":"message","parent_table":"users","parent_id":3,"description":"xxx"}
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
@@ -312,6 +315,7 @@ async def function_create(request:Request):
    #final
    return {"status":1,"message":output}
 
+#body={"table":"post","id":1,"title":"xxx","description":"xxx"}
 @router.post("/{x}/update")
 async def function_update(request:Request):
    #prework
@@ -337,6 +341,7 @@ async def function_update(request:Request):
    #final
    return {"status":1,"message":output}
 
+#body={"table":"post","order":"type desc","page":3,"limit":100,"id":9,"id_operator":">="}
 @router.post("/{x}/read")
 async def function_read(request:Request):
    #prework
@@ -350,7 +355,8 @@ async def function_read(request:Request):
    output=response["message"]
    #final
    return {"status":1,"message":output}
-   
+
+
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
