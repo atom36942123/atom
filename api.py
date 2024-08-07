@@ -372,7 +372,10 @@ async def function_delete(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
-   
+
+
+#my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
+#my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
