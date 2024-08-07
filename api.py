@@ -475,7 +475,6 @@ async def function_aws(request:Request):
 async def function_mongo(request:Request):
    #prework
    body=await request.json()
-   config_mongo_url="mongodb://localhost:27017"
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_url)
    mode=body["mode"]
    body.pop("mode",None)
