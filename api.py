@@ -477,9 +477,11 @@ async def function_mongo(request:Request):
    body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
    #logic
+   #body={"mode":"create","username":"xxx","age":33,"country":"korea"}
    if body["mode"]=="create":
       object={k:v for k,v in body.items() if k not in ["mode"]}
       response=await mongo_object.test.users.insert_one(object)
+   #body={"mode":"read","id":"66b363e917e01888164aa381"}
    if body["mode"]=="read":
       response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
    if body["mode"]=="update":
