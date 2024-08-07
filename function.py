@@ -85,11 +85,11 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
-#query=(select * from :table :where :olo;)
 #body min={"table":"post"}
 #body max={"table":"post","id":100,"id_operator":">=","page":100,"limit":100}
 async def function_read_object(postgres_object,body,function_read_schema_column_datatype):
   try:
+    #set param=select * from :table :where :olo;
     table=body["table"]
     order=body["order"] if "order" in body else "id desc"
     limit=int(body["limit"]) if "limit" in body else 30
