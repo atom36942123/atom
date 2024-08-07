@@ -4,16 +4,16 @@ env=Env()
 env.read_env()
 
 #env unpack
-config_postgres_url=env("postgres_url")
-config_redis_url=env("redis_url")
-config_key_root=env("key_root")
-config_key_jwt=env("key_jwt")
-config_aws_access_key_id=env("aws_access_key_id")
-config_aws_secret_access_key=env("aws_secret_access_key")
-config_s3_bucket_name=env("s3_bucket_name")
-config_s3_region_name=env("s3_region_name")
-config_ses_sender_email=env("ses_sender_email")
-config_ses_region_name=env("ses_region_name")
+config_postgres_url=env("config_postgres_url")
+config_redis_url=env("config_redis_url")
+config_key_root=env("config_key_root")
+config_key_jwt=env("config_key_jwt")
+config_aws_access_key_id=env("config_aws_access_key_id")
+config_aws_secret_access_key=env("config_aws_secret_access_key")
+config_s3_bucket_name=env("config_s3_bucket_name")
+config_s3_region_name=env("config_s3_region_name")
+config_ses_sender_email=env("config_ses_sender_email")
+config_ses_region_name=env("config_ses_region_name")
 
 config_database={
 "created_at":["timestamptz","users,post,action,activity,box,atom"],
