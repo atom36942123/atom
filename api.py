@@ -453,22 +453,21 @@ async def function_admin(request:Request):
 async def function_aws(request:Request):
    #prework
    body=await request.json()
-   #config
-   s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-   ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    #logic
-   #body={"mode":"update_cell","table":"users","id":12,"column":"name","value":"xxx"}
-   if body["mode"]=="s3_create":output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=bucket_key,ExpiresIn=3600,Conditions=[['content-length-range',1,250*1024]])
+   #body={"mode":"s3_create","file":"xxx.png"}
+   if body["mode"]=="s3_create":
+      output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+   #body={"mode":"s3_delete","url":"www.xxx.png"}
    if body["mode"]=="s3_delete":
-      
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-      bucket_key=body["url"].split("/")[-1]
-      output=s3_resource.Object(config_s3_bucket,bucket_key).delete()
+      output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Object(config_s3_bucket_name,body["url"].rsplit("/")[1]).delete()
+   #body={"mode":"s3_delete_all"}
    if body["mode"]=="s3_delete_all":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-      output=s3_resource.Bucket(config_s3_bucket).objects.all().delete()
+      output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Bucket(config_s3_bucket_name).objects.all().delete()
+   #body={"mode":"ses","email":"www.atom36942@gmail.com","title":"xxx","description":"xxx"}
    if body["mode"]=="ses":
-      output=ses_client.send_email(Source=config_ses_sender,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
+      output=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[body["email"]]},Message={"Subject":{"Charset":"UTF-8","Data":body["title"]},"Body":{"Text":{"Charset":"UTF-8","Data":body["description"]}}})
    #final
    return {"status":1,"message":output}
 
