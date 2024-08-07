@@ -453,17 +453,16 @@ async def function_admin(request:Request):
 async def function_aws(request:Request):
    #prework
    body=await request.json()
-   #boto3
-   s3_client=boto3.client("s3",region_name=config_s3_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   #config
+   s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-   ses_client=boto3.client("ses",region_name=config_ses_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    #logic
    #body={"mode":"update_cell","table":"users","id":12,"column":"name","value":"xxx"}
    if body["mode"]=="s3_create":
-      config_s3_link_expiry=1000
       config_s3_size_kb=300
       bucket_key=str(uuid.uuid4())+"-"+body["filename"]
-      output=s3_client.generate_presigned_post(Bucket=config_s3_bucket,Key=bucket_key,ExpiresIn=config_s3_link_expiry,Conditions=[['content-length-range',1,config_s3_size_kb*1024]])
+      output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=bucket_key,ExpiresIn=3600,Conditions=[['content-length-range',1,config_s3_size_kb*1024]])
    if body["mode"]=="s3_delete":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       bucket_key=body["url"].split("/")[-1]
