@@ -460,7 +460,7 @@ async def function_aws(request:Request):
    #body={"mode":"s3_delete","url":"www.xxx.png"}
    if body["mode"]=="s3_delete":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-      output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Object(config_s3_bucket_name,body["url"].rsplit("/")[1]).delete()
+      output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Object(config_s3_bucket_name,body["url"].rsplit("/",1)[1]).delete()
    #body={"mode":"s3_delete_all"}
    if body["mode"]=="s3_delete_all":
       if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
