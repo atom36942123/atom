@@ -4,7 +4,7 @@ from config import config_postgres_url
 
 #postgres object
 from databases import Database
-config_postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
 
 #lifespan
 from fastapi import FastAPI
@@ -20,11 +20,11 @@ async def function_lifespan(app:FastAPI):
   #redis rate limiter
   await FastAPILimiter.init(aioredis.from_url(config_redis_url,encoding="utf-8",decode_responses=True))
   #postgres connect
-  for k,v in config_postgres_object.items():await v.connect()
+  for k,v in postgres_object.items():await v.connect()
   #shutdown
   yield
   #postgres disconnect
-  for k,v in config_postgres_object.items():await v.disconnect()
+  for k,v in postgres_object.items():await v.disconnect()
 
 #app
 from fastapi import FastAPI
@@ -43,7 +43,7 @@ import traceback
 async def middleware(request:Request,api_function):
   #postgres object assgin
   key_4th=str(request.url.path).split("/")[1]
-  if key_4th in config_postgres_object:request.state.postgres_object=config_postgres_object[key_4th]
+  if key_4th in postgres_object:request.state.postgres_object=postgres_object[key_4th]
   #api response
   try:response=await api_function(request)
   except Exception as e:
@@ -55,7 +55,7 @@ async def middleware(request:Request,api_function):
 #root api
 @app.get("/")
 async def function_root():
-   return {"status":1,"message":f"welcome to {[*config_postgres_object]}"}
+   return {"status":1,"message":f"welcome to {[*postgres_object]}"}
   
 #router
 from api import router
