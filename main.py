@@ -1,10 +1,10 @@
 #config
 from config import config_redis_url
-from config import config_postgres_url
+from config import config_postgres_database_url
 
 #postgres object
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_url.split(",")}
+postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_url.split(",")}
 
 #lifespan
 from fastapi import FastAPI
