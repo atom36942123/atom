@@ -162,7 +162,8 @@ async def function_pcache(request:Request):
       query=v
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      temp[k]=output
+      if "count" in k:temp[k]=output[0]["count"]
+      else:temp[k]=output
    #final
    return {"status":1,"message":temp}
 
@@ -357,9 +358,6 @@ async def function_read(request:Request):
    #final
    return {"status":1,"message":output}
 
-#body={"mode":"object","table":"post","id":123}
-#body={"mode":"object","table":"users","id":1}
-#body={"mode":"message_all"}
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
@@ -367,12 +365,14 @@ async def function_delete(request:Request):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #logic
+   #body={"mode":"object","table":"post","id":123}
    if body["mode"]=="object":
       table=body["table"]
       query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
       values={}
       values["id"]=user["id"] if table=="users" else body["id"]
       values["created_by_id"]=None if table=="users" else user["id"]
+   #body={"mode":"message_all"}
    if body["mode"]=="message_all":
       query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
@@ -382,10 +382,6 @@ async def function_delete(request:Request):
    #final
    return {"status":1,"message":output}
 
-#body={"mode":"message_inbox"}
-#body={"mode":"message_inbox_unread"}
-#my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
-#my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
@@ -397,42 +393,43 @@ async def function_my(request:Request,background:BackgroundTasks):
    limit=int(body["limit"]) if "limit" in body else 30
    page=int(body["page"]) if "page" in body else 1
    offset=(page-1)*limit
-   #query set
+   #logic
+   #body={"mode":"message_inbox"}
    if body["mode"]=="message_inbox":
       query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by {order};"
       values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #body={"mode":"message_inbox_unread"}
    if body["mode"]=="message_inbox_unread":
-      query="with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
       values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   if body["mode"]=="message_thread":
-      query="select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit :limit offset :offset;"
-      values={"user_1":user["id"],"user_2":body["user_id"],"limit":limit,"offset":offset}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #body={"mode":"message_received"}
    if body["mode"]=="message_received":
-      query="select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by id desc limit :limit offset :offset;"
-      values={"parent_id":user["id"],"limit":limit,"offset":offset}
+      query=f"select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
+      values={"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #body={"mode":"message_thread","user_id":2}
+   if body["mode"]=="message_thread":
+      query=f"select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {offset};"
+      values={"user_1":user["id"],"user_2":body["user_id"]}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+   #body={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
    if body["mode"]=="read_parent_data":
-      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by id desc limit :limit offset :offset;"
-      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"],"limit":limit,"offset":offset}
+      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by {order} limit {limit} offset {offset};"
+      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       parent_ids=[item["parent_id"] for item in output]
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #body={"mode":"action_check","table":"activity","type":"comment","parent_table":"post","ids":[1,2,3]}
    if body["mode"]=="action_check":
       query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
       values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   #background task
-   if body["mode"]=="message_thread":
-      query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-      values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
-      background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
