@@ -382,6 +382,7 @@ async def function_delete(request:Request):
    #final
    return {"status":1,"message":output}
 
+#body={"mode":"message_inbox"}
 #my={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
 #my={"mode":"action_check","table":"action","type":"like","parent_table":"post","ids":[1,2,3]}
 @router.post("/{x}/my")
@@ -390,7 +391,8 @@ async def function_my(request:Request,background:BackgroundTasks):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
-   #pagination set
+   #olo set
+   order=body["order"] if "order" in body else "id desc"
    limit=int(body["limit"]) if "limit" in body else 30
    page=int(body["page"]) if "page" in body else 1
    offset=(page-1)*limit
