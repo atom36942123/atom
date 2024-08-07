@@ -437,18 +437,13 @@ async def function_my(request:Request,background:BackgroundTasks):
 @router.post("/{x}/admin")
 async def function_admin(request:Request):
    #prework
-   database=request.state.postgres_object.fetch_all
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    body=dict(await request.json())
    #logic
+   #body={"mode":"update_cell","table":"users","id":12,"column":"name","value":"xxx"}
    if body["mode"]=="update_cell":
-      #schema column groupby
-      query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
       #body preprocessing
       if body["column"] in ["password","google_id"]:body["value"]=hashlib.sha256(body["value"].encode()).hexdigest()
       if schema_column_datatype[body["column"]] in ["jsonb"]:body["value"]=json.dumps(body["value"])
