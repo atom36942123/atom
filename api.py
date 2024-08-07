@@ -287,6 +287,8 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user|temp}
 
+#create={"table":"post","type":"xxx","description":"xxx"}
+#create={"table":"activity","type":"comment","parent_table":"post","parent_id":4,"description":"xxx"}
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
