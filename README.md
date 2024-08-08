@@ -5,17 +5,17 @@
 5. run python main.py
 
 #env variables
-config_postgres_database_uri={value}
-config_redis_server_uri={value}
-config_mongo_server_uri={value}
-config_key_root={value}
-config_key_jwt={value}
-config_aws_access_key_id={value}
-config_aws_secret_access_key={value}
-config_s3_bucket_name={value}
-config_s3_region_name={value}
-config_ses_sender_email={value}
-config_ses_region_name={value}
-config_elasticsearch_username={value}
-config_elasticsearch_password={value}
-config_elasticsearch_cloud_id={value}
+1. config_postgres_database_uri={value}
+2. config_redis_server_uri={value}
+3. config_mongo_server_uri={value}
+4. config_key_root={value}
+5. config_key_jwt={value}
+6. config_aws_access_key_id={value}
+7. config_aws_secret_access_key={value}
+8. config_s3_bucket_name={value}
+9. config_s3_region_name={value}
+10. config_ses_sender_email={value}
+11. config_ses_region_name={value}
+12. config_elasticsearch_username={value}
+13. config_elasticsearch_password={value}
+14. config_elasticsearch_cloud_id={value}
