@@ -507,8 +507,8 @@ async def function_elasticsearch(request:Request):
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
    if body["mode"]=="create":
-      
-      response=elasticsearch_object.index(index=table,id=id,document=body)
+      object={k:v for k,v in body.items() if k not in ["mode","table","id"]}
+      response=elasticsearch_object.index(index=body["table"],id=body["id"],document=object)
    if body["mode"]=="read":
       response=elasticsearch_object.get(index=table,id=id)
    if body["mode"]=="update":
