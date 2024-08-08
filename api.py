@@ -501,32 +501,23 @@ async def function_mongo(request:Request):
    return response
 
 @router.post("/{x}/elasticsearch")
-async def function_elasticsearch(request:Request,mode:str):
+async def function_elasticsearch(request:Request):
    #prework
    body=await request.json()
-   elasticsearch_object=Elasticsearch(cloud_id=cloud_id,basic_auth=(username,password))
-   mode=body["mode"]
-   body.pop("mode",None)
-   #table
-   if "table" in body:
-      table=body["table"]
-      body.pop("table",None)
-   #id
-   if "id" in body:
-      id=body["id"]
-      body.pop("id",None)
+   elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
-   if mode=="create":
+   if body["mode"]=="create":
+      
       response=elasticsearch_object.index(index=table,id=id,document=body)
-   if mode=="read":
+   if body["mode"]=="read":
       response=elasticsearch_object.get(index=table,id=id)
-   if mode=="update":
+   if body["mode"]=="update":
       response=elasticsearch_object.update(index=table,id=id,doc=body)
-   if mode=="delete":
+   if body["mode"]=="delete":
       response=elasticsearch_object.delete(index=table,id=id)
-   if mode=="refresh":
+   if body["mode"]=="refresh":
       response=elasticsearch_object.indices.refresh(index=table)
-   if mode=="search":
+   if body["mode"]=="search":
       response=elasticsearch_object.search(index=table,body={"query":{"match":{column:body["keyword"]}},"size":body["size"]})
    #final
    return response
