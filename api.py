@@ -517,7 +517,7 @@ async def function_elasticsearch(request:Request):
    if body["mode"]=="update":
       key_to_update={k:v for k,v in body.items() if k not in ["mode","table","id"]}
       response=elasticsearch_object.update(index=body["table"],id=body["id"],doc=key_to_update)
-   #body={"mode":"delete","id":"CNPnL5EB-4esJ9tXqJLe"}
+   #body={"mode":"delete","table":"users","id":"CNPnL5EB-4esJ9tXqJLe"}
    if body["mode"]=="delete":
       response=elasticsearch_object.delete(index=body["table"],id=body["id"])
    if body["mode"]=="refresh":
