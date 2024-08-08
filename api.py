@@ -523,8 +523,9 @@ async def function_elasticsearch(request:Request):
    #body={"mode":"refresh","table":"users"}
    if body["mode"]=="refresh":
       response=elasticsearch_object.indices.refresh(index=body["table"])
+   #body={"mode":"search","table":"users","keyword":"xxx","limit":1}
    if body["mode"]=="search":
-      response=elasticsearch_object.search(index=table,body={"query":{"match":{column:body["keyword"]}},"size":body["size"]})
+      response=elasticsearch_object.search(index=body["table"],body={"query":{"match":{column:body["keyword"]}},"size":body["limit"]})
    #final
    return response
 
