@@ -520,8 +520,9 @@ async def function_elasticsearch(request:Request):
    #body={"mode":"delete","table":"users","id":"1"}
    if body["mode"]=="delete":
       response=elasticsearch_object.delete(index=body["table"],id=body["id"])
+   #body={"mode":"refresh","table":"users"}
    if body["mode"]=="refresh":
-      response=elasticsearch_object.indices.refresh(index=table)
+      response=elasticsearch_object.indices.refresh(index=body["table"])
    if body["mode"]=="search":
       response=elasticsearch_object.search(index=table,body={"query":{"match":{column:body["keyword"]}},"size":body["size"]})
    #final
