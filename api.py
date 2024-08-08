@@ -508,7 +508,7 @@ async def function_elasticsearch(request:Request):
    #logic
    #body={"mode":"create","table":"users","id":1,"username":"xxx","age":33,"country":"korea"}
    if body["mode"]=="create":
-      object={k:v for k,v in body.items() if k not in ["mode","table","id"]}
+      object={k:v for k,v in body.items() if k not in ["mode","table"]}
       response=elasticsearch_object.index(index=body["table"],document=object)
    if body["mode"]=="read":
       response=elasticsearch_object.get(index=table,id=id)
