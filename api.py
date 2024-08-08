@@ -510,8 +510,9 @@ async def function_elasticsearch(request:Request):
    if body["mode"]=="create":
       object={k:v for k,v in body.items() if k not in ["mode","table"]}
       response=elasticsearch_object.index(index=body["table"],document=object)
+   #body={"mode":"read","table":"users","id":"CNPnL5EB-4esJ9tXqJLe"}
    if body["mode"]=="read":
-      response=elasticsearch_object.get(index=table,id=id)
+      response=elasticsearch_object.get(index=body["table"],id=body["id"])
    if body["mode"]=="update":
       response=elasticsearch_object.update(index=table,id=id,doc=body)
    if body["mode"]=="delete":
