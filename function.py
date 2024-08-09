@@ -38,6 +38,7 @@ async def function_read_schema_column_datatype(postgres_object):
   return {"status":1,"message":schema_column_datatype}
 
 async def function_verify_otp(postgres_object,otp,email,mobile):
+  if email and mobile:return {"status":0,"message":"wrong param"}
   if email:
     query="select otp from box where type='otp' and email=:email order by id desc limit 1;"
     values={"email":email}
