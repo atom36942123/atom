@@ -29,6 +29,35 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   config_database={
+   "created_at":["timestamptz","users,post,action,activity,box,atom"],
+   "created_by_id":["bigint","users,post,action,activity,box,atom"],
+   "updated_at":["timestamptz","users,post,action,activity,box,atom"],
+   "updated_by_id":["bigint","users,post,action,activity,box,atom"],
+   "is_active":["int","users,post,action,activity,box,atom"],
+   "is_verified":["int","users,post,action,activity,box,atom"],
+   "is_protected":["int","users,post,action,activity,box,atom"],
+   "type":["text","users,post,action,activity,box,atom"],
+   "status":["text","users,post,action,activity,box,atom"],
+   "remark":["text","users,post,action,activity,box,atom"],
+   "metadata":["jsonb","users,post,action,activity,box,atom"],
+   "parent_table":["text","action,activity"],
+   "parent_id":["bigint","action,activity"],
+   "last_active_at":["timestamptz","users"],
+   "google_id":["text","users"],
+   "otp":["int","box"],
+   "username":["text","users"],
+   "password":["text","users"],
+   "name":["text","users"],
+   "email":["text","users,post,box,atom"],
+   "mobile":["text","users,post,box,atom"],
+   "title":["text","users,post,box,atom"],
+   "description":["text","users,post,action,activity,box,atom"],
+   "tag":["text","users,post,box,atom"],
+   "link":["text","users,post,box,atom"],
+   "file":["text","users,post,box,atom"],
+   "rating":["numeric","users,post,box,atom"],
+   }
    #create table
    for table in config_database["created_at"][1].split(','):
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
