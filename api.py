@@ -51,12 +51,17 @@ async def function_database(request:Request):
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set not null
+   config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
    for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #run query zzz
+   config_query_zzz=[
+   "alter table users add constraint constraint_unique_users unique (username);",
+   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
+   ]
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
@@ -69,6 +74,8 @@ async def function_database(request:Request):
    response=await function_delete_index_all(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #create index
+   config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
+   config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    response=await function_read_schema_column(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column=response["message"]
@@ -140,11 +147,13 @@ async def function_csv(request:Request,file:UploadFile):
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
    #creator null
+   config_clean_table_creator=["post","action","activity"]
    for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #parent null
+   config_clean_table_parent=["action","activity"]
    for table in config_clean_table_parent:
       for parent_table in ["users","post","activity"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
@@ -157,6 +166,7 @@ async def function_clean(request:Request):
 @cache(expire=60)
 async def function_pcache(request:Request):   
    #logic
+   config_pcache={"user_count":"select count(*) from users;"}
    temp={}
    for k,v in config_pcache.items():
       query=v
@@ -173,6 +183,7 @@ async def function_pcache(request:Request):
 async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
+   config_table_allowed_feed=["users","post","atom"]
    if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #read object
    response=await function_read_object(request.state.postgres_object,body,function_read_schema_column_datatype)
@@ -258,6 +269,7 @@ async def function_login(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #token encode
+   config_token_expiry_days=1
    data_to_encode=json.dumps({"x":str(request.url.path).split("/")[1],"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
    payload={"exp":time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple()),"data":data_to_encode}
    token=jwt.encode(payload,config_key_jwt)
@@ -276,6 +288,11 @@ async def function_profile(request:Request,background:BackgroundTasks):
    user=dict(output[0]) if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #add extra info
+   config_user_profile={
+   "post_count":"select count(*) from post where created_by_id=:user_id;",
+   "comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
+   "message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
+   }
    temp={}
    for k,v in config_user_profile.items():
       query=v
@@ -297,6 +314,7 @@ async def function_create(request:Request):
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
+   config_table_allowed_create=["post","action","activity","box"]
    if body['table'] not in config_table_allowed_create:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #query set
    table=body["table"]
