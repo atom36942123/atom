@@ -48,21 +48,3 @@ config_database={
 "file":["text","users,post,box,atom"],
 "rating":["numeric","users,post,box,atom"],
 }
-config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
-config_query_zzz=[
-"alter table users add constraint constraint_unique_users unique (username);",
-"alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
-]
-config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
-config_clean_table_creator=["post","action","activity"]
-config_clean_table_parent=["action","activity"]
-config_pcache={"user_count":"select count(*) from users;"}
-config_table_allowed_feed=["users","post","atom"]
-config_table_allowed_create=["post","action","activity","box"]
-config_token_expiry_days=1
-config_user_profile={
-"post_count":"select count(*) from post where created_by_id=:user_id;",
-"comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
-"message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
-}
