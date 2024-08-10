@@ -77,6 +77,7 @@ async def function_csv(request:Request,file:UploadFile):
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
+   await file.close()
    return {"status":1,"message":output}
    
 @router.get("/{x}/clean")
