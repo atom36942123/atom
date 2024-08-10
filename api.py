@@ -317,8 +317,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #add extra info
    config_user_profile={
    "post_count":"select count(*) from post where created_by_id=:user_id;",
-   "comment_count":"select count(*) from activity where type='comment' and created_by_id=:user_id;",
-   "message_unread_count":"select count(*) from activity where type='message' and parent_table='users' and parent_id=:user_id and status is null;"
+   "message_unread_count":"select count(*) from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
    temp={}
    for k,v in config_user_profile.items():
