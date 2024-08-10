@@ -176,15 +176,15 @@ async def function_csv(request:Request,file:UploadFile):
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
    #creator null
-   config_clean_table_creator=["post","action","activity"]
+   config_clean_table_creator=["post","likes","bookmark","report","block","rating","comment","message"]
    for table in config_clean_table_creator:
       query=f"delete from {table} where created_by_id not in (select id from users);"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #parent null
-   config_clean_table_parent=["action","activity"]
+   config_clean_table_parent=["likes","bookmark","report","block","rating","comment","message"]
    for table in config_clean_table_parent:
-      for parent_table in ["users","post","activity"]:
+      for parent_table in ["users","post","comment"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
