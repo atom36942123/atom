@@ -88,10 +88,10 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 
 #body min={"table":"post"}
 #body max={"table":"post","order":"id desc","limit":100,"page":100,"id":100,"id_operator":">="}
+#principle=select * from :table :where :olo;
 from datetime import datetime
 async def function_read_object(postgres_object,body,function_read_schema_column_datatype):
   try:
-    #set param=select * from :table :where :olo;
     table=body["table"]
     order=body["order"] if "order" in body else "id desc"
     limit=int(body["limit"]) if "limit" in body else 30
