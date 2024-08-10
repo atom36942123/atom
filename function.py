@@ -40,10 +40,10 @@ async def function_read_column_datatype(postgres_object):
 async def function_verify_otp(postgres_object,otp,email,mobile):
   if email and mobile:return {"status":0,"message":"wrong param"}
   if email:
-    query="select otp from box where type='otp' and email=:email order by id desc limit 1;"
+    query="select otp from otp where email=:email order by id desc limit 1;"
     values={"email":email}
   if mobile:
-    query="select otp from box where type='otp' and mobile=:mobile order by id desc limit 1;"
+    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
     values={"mobile":mobile}
   try:output=await postgres_object.fetch_all(query=query,values=values)
   except Exception as e:return {"status":0,"message":e.args}
