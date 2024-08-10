@@ -296,7 +296,6 @@ async def function_update(request:Request):
    #final
    return {"status":1,"message":output}
 
-#body={"table":"post","order":"type desc","page":3,"limit":100,"id":9,"id_operator":">="}
 @router.post("/{x}/read")
 async def function_read(request:Request):
    #prework
