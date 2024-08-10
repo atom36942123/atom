@@ -453,7 +453,7 @@ async def function_my(request:Request,background:BackgroundTasks):
       query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {offset};"
       values={"user_1":user["id"],"user_2":body["user_id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+      background.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    #body={"mode":"read_parent_table_data","table":"action","parent_table":"post","type":"like"}
    if body["mode"]=="read_parent_table_data":pass
    #body={"mode":"check_action","table":"activity","parent_table":"post","ids":[1,2,3]"type":"comment"}
