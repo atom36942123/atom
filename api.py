@@ -49,10 +49,9 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #schema column datatype
-   response=await function_read_column_datatype(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   column_datatype=response["message"]
+   #column datatype
+   output=await postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})
+   column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
    table=filename.rsplit("_",1)[0]
