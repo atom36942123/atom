@@ -90,7 +90,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 #body max={"table":"post","order":"id desc","limit":100,"page":100,"id":100,"id_operator":">="}
 #principle=select * from :table :where :olo;
 from datetime import datetime
-async def function_read_object(postgres_object,body,function_read_column_datatype):
+async def function_read_object(postgres_object,body):
   try:
     table=body["table"]
     order=body["order"] if "order" in body else "id desc"
@@ -101,9 +101,10 @@ async def function_read_object(postgres_object,body,function_read_column_datatyp
     key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in where_dict.items()])
     where=f"where {key_joined}" if key_joined else ""
     #column datatype
-    response=await function_read_column_datatype(postgres_object)
-    if response["status"]==0:return response
-    column_datatype=response["message"]
+    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+    values={}
+    output=await postgres_object.fetch_all(query=query,values=values)
+    column_datatype={item["column_name"]:item["datatype"] for item in output}
     #santized where
     for k,v in where_dict.items():
       datatype=column_datatype[k]
