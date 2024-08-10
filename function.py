@@ -22,13 +22,6 @@ async def function_delete_index_all(postgres_object):
     except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":"done"}
 
-async def function_read_schema_column(postgres_object):
-  query="select * from information_schema.columns where table_schema='public' order by column_name;"
-  values={}
-  try:output=await postgres_object.fetch_all(query=query,values=values)
-  except Exception as e:return {"status":0,"message":e.args}
-  return {"status":1,"message":output}
-
 async def function_read_column_datatype(postgres_object):
   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
   values={}
