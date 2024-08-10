@@ -80,3 +80,11 @@ async def function_read_object(postgres_object,body):
     output=[dict(item) for item in output]
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":output}
+
+async def function_delete_index_all(postgres_object):
+  try:
+    output=await postgres_object.fetch_all(query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;",values={})
+    drop_all_query=output[0]["output"]
+    if drop_all_query:await postgres_object.fetch_all(query=drop_all_query,values={})
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":"done"}
