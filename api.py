@@ -319,8 +319,7 @@ async def function_delete(request:Request):
    #logic
    #body={"mode":"object","table":"post","id":123}
    if body["mode"]=="object":
-      table=body["table"]
-      query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+      query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
       values={}
       values["id"]=user["id"] if table=="users" else body["id"]
       values["created_by_id"]=None if table=="users" else user["id"]
