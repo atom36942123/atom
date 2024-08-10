@@ -40,12 +40,7 @@ async def function_database(request:Request):
    for table in config_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_column_not_null.items() for table in v]
    [await request.state.postgres_object.fetch_all(query=query,values={}) for query in config_query_zzz if query.split()[5] not in constraint_name_list]
-   #index
-   response=await function_read_schema_column(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   schema_column=response["message"]
-   for column in schema_column:
-      if column['column_name'] in config_index:await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {config_index_datatype_mapping[column['data_type']]} ({column['column_name']});",values={})
+   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_index[k]} ({k});",values={}) for k,v in config_column.items() for table in v[1] if k in config_index]
    #final
    return {"status":1,"message":"done"}
 
