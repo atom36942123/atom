@@ -45,7 +45,7 @@ async def function_database(request:Request):
    "is_verified":["int",["users","post"]],
    "is_protected":["int",["users","post","box","atom"]],
    "type":["text",["users","post","box","atom","helpdesk"]],
-   "status":["text",["report","message","helpdesk"]],
+   "status":["text",["report","helpdesk","message"]],
    "remark":["text",["report","helpdesk"]],
    "metadata":["jsonb",["users","post","box","atom"]],
    "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
