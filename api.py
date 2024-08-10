@@ -34,14 +34,8 @@ async def function_database(request:Request):
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_column.items() for table in v[1]]
    for table in config_table:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={})
    for table in config_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
-   
-   #set not null
-   for k,v in config_column_not_null.items():
-      for table in v:
-         query=f"alter table {table} alter column {k} set not null;"
-         values={}
-         output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #run query zzz
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_column_not_null.items() for table in v]
+   #zzz
    config_query_zzz=[
    "alter table users add constraint constraint_unique_users unique (username);",
    "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
@@ -52,15 +46,8 @@ async def function_database(request:Request):
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
-   for item in config_query_zzz:
-      if item.split()[5] not in schema_constraint_name_list:
-         query=item
-         values={}
-         output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #delete index all
-   response=await function_delete_index_all(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #create index
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in config_query_zzz if query.split()[5] not in schema_constraint_name_list]
+   #index
    config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
    config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    response=await function_read_schema_column(request.state.postgres_object)
