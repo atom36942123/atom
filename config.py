@@ -54,7 +54,13 @@ config_column_not_null={
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
 }
-
+config_query_zzz=[
+"alter table users add constraint constraint_unique_users unique (username);",
+"alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
+"alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
+"alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
+"alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
+]
 
 
 
