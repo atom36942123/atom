@@ -460,19 +460,12 @@ async def function_my(request:Request,background:BackgroundTasks):
       values={"user_1":user["id"],"user_2":body["user_id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
-   #body={"mode":"read_parent_data","table":"action","type":"like","parent_table":"post"}
-   if body["mode"]=="read_parent_data":
-      query=f"select parent_id from {body['table']} where created_by_id=:created_by_id and type=:type and parent_table=:parent_table order by {order} limit {limit} offset {offset};"
-      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      parent_ids=[item["parent_id"] for item in output]
-      query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #body={"mode":"action_check","table":"activity","type":"comment","parent_table":"post","ids":[1,2,3]}
-   if body["mode"]=="action_check":
-      query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and type=:type and parent_table=:parent_table;"
-      values={"created_by_id":user["id"],"type":body["type"],"parent_table":body["parent_table"]}
+   #body={"mode":"read_parent_table_data","table":"action","parent_table":"post","type":"like"}
+   if body["mode"]=="read_parent_table_data":
+   #body={"mode":"check_action","table":"activity","parent_table":"post","ids":[1,2,3]"type":"comment"}
+   if body["mode"]=="check_action":
+      query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table and type=:type;"
+      values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
