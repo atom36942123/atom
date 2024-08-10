@@ -53,14 +53,13 @@ async def function_csv(request:Request,file:UploadFile):
    column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
-   table=filename.rsplit("_",1)[0]
    mode=filename.rsplit("_",1)[1]
+   table=filename.rsplit("_",1)[0]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_csv.fieldnames
    #values
    values_list=[]
    for row in file_csv:values_list.append(row)
-   await file.close()
    #santization
    for index,object in enumerate(values_list):
       for k,v in object.items():
@@ -92,6 +91,7 @@ async def function_csv(request:Request,file:UploadFile):
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
+   await file.close()
    return {"status":1,"message":output}
    
 @router.get("/{x}/clean")
