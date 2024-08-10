@@ -76,7 +76,7 @@ async def function_database(request:Request):
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set protected rows
-   for table in config_database["is_protected"][1]:
+   for table in config_table["is_protected"][1]:
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
