@@ -101,8 +101,7 @@ async def function_clean(request:Request):
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #parent null
-   config_clean_table_parent=["likes","bookmark","report","block","rating","comment","message"]
-   for table in config_clean_table_parent:
+   for table in ["likes","bookmark","report","block","rating","comment","message"]:
       for parent_table in ["users","post","comment"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
          values={}
