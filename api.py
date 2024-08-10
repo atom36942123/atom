@@ -136,7 +136,7 @@ async def function_feed(request:Request):
    body=dict(request.query_params)
    if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #read object
-   response=await function_read_object(request.state.postgres_object,body,function_read_column_datatype)
+   response=await function_read_object(request.state.postgres_object,body)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #add creator key
@@ -314,7 +314,7 @@ async def function_read(request:Request):
    body=await request.json()
    #read object
    body["created_by_id"]=user["id"]
-   response=await function_read_object(request.state.postgres_object,body,function_read_column_datatype)
+   response=await function_read_object(request.state.postgres_object,body)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #final
