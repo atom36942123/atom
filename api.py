@@ -463,10 +463,10 @@ async def function_my(request:Request,background:BackgroundTasks):
       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #body={"mode":"check_action","table":"activity","parent_table":"post","ids":[1,2,3]"type":"comment"}
-   if body["mode"]=="check_action":
-      query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table and type=:type;"
-      values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"]}
+   #body={"mode":"action_check","action_table":"likes","parent_table":"post","parent_ids":[1,2,3]}
+   if body["mode"]=="action_check":
+      query=f"select parent_id from {body['action_table']} join unnest(array{body['parent_ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table;"
+      values={"created_by_id":user["id"],"parent_table":body["parent_table"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
