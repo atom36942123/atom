@@ -21,8 +21,6 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 
 #database
 config_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
-config_index_datatype_mapping={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-config_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
 config_column={
 "created_at":["timestamptz",config_table],
 "created_by_id":["bigint",config_table],
@@ -63,6 +61,12 @@ config_query_zzz=[
 "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
 "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
 ]
+config_index={
+"type":"btree","is_verified":"btree","is_active":"btree","created_by_id":"btree","status":"btree","parent_table":"btree","parent_id":"btree","email":"btree","password":"btree",
+"created_at":"brin"
+}
+
+
 
 
 
