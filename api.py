@@ -206,7 +206,6 @@ async def function_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#query param={"table":"post","order":"type desc","page":3,"limit":100,"id":9,"id_operator":">="}
 @router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_feed(request:Request):
