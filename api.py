@@ -32,35 +32,6 @@ async def function_database(request:Request):
    #create table
    for table in config_table:output=await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
    #create column
-   config_column={
-   "created_at":["timestamptz",config_table],
-   "created_by_id":["bigint",config_table],
-   "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
-   "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
-   "is_active":["int",["users","post"]],
-   "is_verified":["int",["users","post"]],
-   "is_protected":["int",["users","post","box","atom"]],
-   "type":["text",["users","post","box","atom","helpdesk"]],
-   "status":["text",["report","helpdesk","message"]],
-   "remark":["text",["report","helpdesk"]],
-   "metadata":["jsonb",["users","post","box","atom"]],
-   "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
-   "parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
-   "last_active_at":["timestamptz",["users"]],
-   "google_id":["text",["users"]],
-   "otp":["int",["otp"]],
-   "username":["text",["users"]],
-   "password":["text",["users"]],
-   "name":["text",["users"]],
-   "email":["text",["users","post","box","atom","otp"]],
-   "mobile":["text",["users","post","box","atom","otp"]],
-   "title":["text",["users","post","box","atom"]],
-   "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
-   "tag":["text",["users","post","box","atom"]],
-   "link":["text",["post","box","atom"]],
-   "file":["text",["post","box","atom"]],
-   "rating":["numeric",["rating"]],
-   }
    for k,v in config_column.items():
       for table in v[1]:
          query=f"alter table {table} add column if not exists {k} {v[0]};"
