@@ -50,6 +50,12 @@ config_column={
 "file":["text",["post","box","atom"]],
 "rating":["numeric",["rating"]],
 }
+config_column_not_null={
+"parent_table":["likes","bookmark","report","block","rating","comment","message"],
+"parent_id":["likes","bookmark","report","block","rating","comment","message"]
+}
+
+
 
 
 
