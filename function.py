@@ -1,36 +1,3 @@
-   #values
-     #santization
-   for index,object in enumerate(values_list):
-      for k,v in object.items():
-         datatype=column_datatype[k]
-         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
-         if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
-         if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
-         if datatype in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
-         if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
-   
-
-   #logic
-   if mode=="create":
-      column_to_insert_list=file_column_list
-      query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
-
-async def function_create_bulk(postgres_object,table,csv,function_read_column_datatype):
-  #column datatype
-  response=await function_read_column_datatype(postgres_object)
-  if response["status"]==0:return response
-  column_datatype=response["message"]
-  #values
-  values_list=[]
-  for row in csv:values_list.append(row)
-     
-  
-  
-
-
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
@@ -124,10 +91,6 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 #principle=select * from :table :where :olo;
 from datetime import datetime
 async def function_read_object(postgres_object,body,function_read_column_datatype):
-  #column datatype
-  response=await function_read_column_datatype(postgres_object)
-  if response["status"]==0:return response
-  column_datatype=response["message"]
   try:
     table=body["table"]
     order=body["order"] if "order" in body else "id desc"
@@ -137,6 +100,10 @@ async def function_read_object(postgres_object,body,function_read_column_datatyp
     where_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
     key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in where_dict.items()])
     where=f"where {key_joined}" if key_joined else ""
+    #column datatype
+    response=await function_read_column_datatype(postgres_object)
+    if response["status"]==0:return response
+    column_datatype=response["message"]
     #santized where
     for k,v in where_dict.items():
       datatype=column_datatype[k]
