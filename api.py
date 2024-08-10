@@ -29,58 +29,59 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   config_database={
-   "created_at":["timestamptz","users,post,action,activity,box,atom"],
-   "created_by_id":["bigint","users,post,action,activity,box,atom"],
-   "updated_at":["timestamptz","users,post,action,activity,box,atom"],
-   "updated_by_id":["bigint","users,post,action,activity,box,atom"],
-   "is_active":["int","users,post,action,activity,box,atom"],
-   "is_verified":["int","users,post,action,activity,box,atom"],
-   "is_protected":["int","users,post,action,activity,box,atom"],
-   "type":["text","users,post,action,activity,box,atom"],
-   "status":["text","users,post,action,activity,box,atom"],
-   "remark":["text","users,post,action,activity,box,atom"],
-   "metadata":["jsonb","users,post,action,activity,box,atom"],
-   "parent_table":["text","action,activity"],
-   "parent_id":["bigint","action,activity"],
-   "last_active_at":["timestamptz","users"],
-   "google_id":["text","users"],
-   "otp":["int","box"],
-   "username":["text","users"],
-   "password":["text","users"],
-   "name":["text","users"],
-   "email":["text","users,post,box,atom"],
-   "mobile":["text","users,post,box,atom"],
-   "title":["text","users,post,box,atom"],
-   "description":["text","users,post,action,activity,box,atom"],
-   "tag":["text","users,post,box,atom"],
-   "link":["text","users,post,box,atom"],
-   "file":["text","users,post,box,atom"],
-   "rating":["numeric","users,post,box,atom"],
-   }
    #create table
-   for table in config_database["created_at"][1].split(','):
+   config_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
+   for table in config_table:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #create column
-   for k,v in config_database.items():
-      for table in v[1].split(','):
+   config_column={
+   "created_at":["timestamptz",config_table],
+   "created_by_id":["bigint",config_table],
+   "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
+   "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
+   "is_active":["int",["users","post"]],
+   "is_verified":["int",["users","post"]],
+   "is_protected":["int",["users","post","box","atom"]],
+   "type":["text",["users","post","box","atom","helpdesk"]],
+   "status":["text",["report","message","helpdesk"]],
+   "remark":["text",["report","message","helpdesk"]],
+   "metadata":["jsonb",["users","post","box","atom"]],
+   "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
+   "parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
+   "last_active_at":["timestamptz",["users"]],
+   "google_id":["text",["users"]],
+   "otp":["int",["otp"]],
+   "username":["text",["users"]],
+   "password":["text",["users"]],
+   "name":["text",["users"]],
+   "email":["text",["users","post","box","atom","otp"]],
+   "mobile":["text",["users","post","box","atom","otp"]],
+   "title":["text",["users","post","box","atom"]],
+   "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
+   "tag":["text",["users","post","box","atom"]],
+   "link":["text",["post","box","atom"]],
+   "file":["text",["post","box","atom"]],
+   "rating":["numeric",["rating"]],
+   }
+   for k,v in config_column.items():
+      for table in v[1]:
          query=f"alter table {table} add column if not exists {k} {v[0]};"
          values={}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set created_at default
-   for table in config_database["created_at"][1].split(','):
+   for table in config_table:
       query=f"alter table {table} alter column created_at set default now();"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set protected rows
-   for table in config_database["is_protected"][1].split(','):
+   for table in config_database["is_protected"][1]:
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
       values={}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #set not null
-   config_column_not_null={"created_by_id":["action","activity"],"parent_table":["action","activity"],"parent_id":["action","activity"]}
+   config_column_not_null={"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
    for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
@@ -89,7 +90,10 @@ async def function_database(request:Request):
    #run query zzz
    config_query_zzz=[
    "alter table users add constraint constraint_unique_users unique (username);",
-   "alter table action add constraint constraint_unique_action unique (type,created_by_id,parent_table,parent_id);"
+   "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
+   "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
+   "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
+   "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
    ]
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
