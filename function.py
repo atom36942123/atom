@@ -114,22 +114,22 @@ async def function_read_object(postgres_object,body,function_read_schema_column_
     limit=int(body["limit"]) if "limit" in body else 30
     page=int(body["page"]) if "page" in body else 1
     offset=(page-1)*limit
-    column_to_filter_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-    key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in column_to_filter_dict.items()])
+    where_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
+    key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in where_dict.items()])
     where=f"where {key_joined}" if key_joined else ""
     #santized filter values
     response=await function_read_schema_column_datatype(postgres_object)
     if response["status"]==0:return response
     schema_column_datatype=response["message"]
-    for k,v in column_to_filter_dict.items():
+    for k,v in where_dict.items():
       datatype=schema_column_datatype[k]
-      if datatype in ["ARRAY"]:column_to_filter_dict[k]=v.split(",")
-      if datatype in ["integer","bigint"]:column_to_filter_dict[k]=int(v)
-      if datatype in ["decimal","numeric","real","double precision"]:column_to_filter_dict[k]=float(v)
-      if datatype in ["date","timestamp with time zone"]:column_to_filter_dict[k]=datetime.strptime(v,'%Y-%m-%d')
+      if datatype in ["ARRAY"]:where_dict[k]=v.split(",")
+      if datatype in ["integer","bigint"]:where_dict[k]=int(v)
+      if datatype in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
+      if datatype in ["date","timestamp with time zone"]:where_dict[k]=datetime.strptime(v,'%Y-%m-%d')
     #query run
     query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-    values=column_to_filter_dict
+    values=where_dict
     output=await postgres_object.fetch_all(query=query,values=values)
     output=[dict(item) for item in output]
   except Exception as e:return {"status":0,"message":e.args}
