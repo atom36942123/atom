@@ -248,7 +248,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
    return {"status":1,"message":user|temp}
 
 #body={"table":"post","type":"xxx","description":"xxx"}
-#body={"table":"likes","parent_table":"post","parent_id":4}
+#body={"table":"likes","parent_table":"post","parent_id":1}
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
