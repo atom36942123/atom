@@ -44,7 +44,6 @@ async def function_database(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-#body={"file":"atom_create.csv"}
 @router.post("/{x}/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv(request:Request,file:UploadFile):
    #prework
