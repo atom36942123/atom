@@ -30,7 +30,6 @@ async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #create table
-   config_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
    for table in config_table:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
