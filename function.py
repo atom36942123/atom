@@ -1,14 +1,3 @@
-# async def function_read_parent_table_data(postgres_object,table,parent_table,where_param,order,limit,offset):
-#   try:
-#     query=f"select parent_id from {table} where parent_table=:parent_table and created_by_id=:created_by_id and type=:type order by {order} limit {limit} offset {offset};"
-#     values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"]}
-#       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-#       parent_ids=[item["parent_id"] for item in output]
-#       query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-#       values={}
-#       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-
-
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   return ":".join([namespace,request.method.lower(),request.url.path,repr(sorted(request.query_params.items()))])
