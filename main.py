@@ -1,4 +1,4 @@
-#config
+#import from other file
 from config import config_redis_server_uri
 from config import config_postgres_database_uri
 
