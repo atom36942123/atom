@@ -30,10 +30,7 @@ async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #create table
-   for table in config_table:
-      query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   for table in config_table:output=await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
    #create column
    config_column={
    "created_at":["timestamptz",config_table],
