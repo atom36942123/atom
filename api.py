@@ -211,8 +211,7 @@ async def function_pcache(request:Request):
 async def function_feed(request:Request):
    #prework
    body=dict(request.query_params)
-   config_table_allowed_feed=["users","post","atom"]
-   if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #read object
    response=await function_read_object(request.state.postgres_object,body,function_read_column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
