@@ -257,9 +257,8 @@ async def function_create(request:Request):
    body=await request.json()
    if body['table'] in ["users","atom","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #query set
-   table=body["table"]
    column_to_insert_list=[item for item in [*body] if item not in ["table"]+["id","created_at","is_active","is_verified","google_id","otp"]]+["created_by_id"]
-   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+   query=f"insert into {body['table']} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    #values
    values={}
    for item in column_to_insert_list:
