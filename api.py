@@ -53,7 +53,7 @@ async def function_csv(request:Request,file:UploadFile):
    #schema column datatype
    response=await function_read_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   mapping_column_datatype=response["message"]
+   column_datatype=response["message"]
    #file
    filename=file.filename.split(".")[0]
    table=filename.rsplit("_",1)[0]
@@ -67,7 +67,7 @@ async def function_csv(request:Request,file:UploadFile):
    #santization
    for index,object in enumerate(values_list):
       for k,v in object.items():
-         datatype=mapping_column_datatype[k]
+         datatype=column_datatype[k]
          if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
          if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
          if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
