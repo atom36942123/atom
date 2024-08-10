@@ -36,13 +36,6 @@ async def function_database(request:Request):
    for table in config_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_column_not_null.items() for table in v]
    #zzz
-   config_query_zzz=[
-   "alter table users add constraint constraint_unique_users unique (username);",
-   "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
-   "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
-   "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
-   "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
-   ]
    response=await function_read_constraint_name_list(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_constraint_name_list=response["message"]
