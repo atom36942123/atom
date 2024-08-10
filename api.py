@@ -271,7 +271,6 @@ async def function_create(request:Request):
    #final
    return {"status":1,"message":output}
 
-#body={"table":"post","id":1,"title":"xxx","description":"xxx"}
 #body={"table":"users","id":1,"name":"neo","gender":"male"}
 @router.post("/{x}/update")
 async def function_update(request:Request):
@@ -280,9 +279,8 @@ async def function_update(request:Request):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #query set
-   table=body["table"]
    column_to_update_list=[item for item in [*body] if item not in ["table","id"]+["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]]+["updated_at","updated_by_id"]
-   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   query=f"update {body['table']} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    #values
    values={}
    for item in column_to_update_list:
