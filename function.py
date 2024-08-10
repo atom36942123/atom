@@ -1,7 +1,5 @@
    #values
-  
-   
-   #santization
+     #santization
    for index,object in enumerate(values_list):
       for k,v in object.items():
          datatype=column_datatype[k]
@@ -11,6 +9,8 @@
          if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
          if datatype in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
          if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
+   
+
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
@@ -25,8 +25,8 @@ async def function_create_bulk(postgres_object,table,csv,function_read_column_da
   column_datatype=response["message"]
   #values
   values_list=[]
-  for row in file_csv:values_list.append(row)
-  await file.close()
+  for row in csv:values_list.append(row)
+     
   
   
 
@@ -124,6 +124,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 #principle=select * from :table :where :olo;
 from datetime import datetime
 async def function_read_object(postgres_object,body,function_read_column_datatype):
+  #column datatype
   response=await function_read_column_datatype(postgres_object)
   if response["status"]==0:return response
   column_datatype=response["message"]
@@ -150,4 +151,3 @@ async def function_read_object(postgres_object,body,function_read_column_datatyp
     output=[dict(item) for item in output]
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":output}
-
