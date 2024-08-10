@@ -29,28 +29,23 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #constraint name list
+   response=await function_read_constraint_name_list(request.state.postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   constraint_name_list=response["message"]
    #core
    for table in config_table:await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_column.items() for table in v[1]]
    for table in config_table:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={})
    for table in config_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_column_not_null.items() for table in v]
-   #zzz
-   response=await function_read_constraint_name_list(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   schema_constraint_name_list=response["message"]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in config_query_zzz if query.split()[5] not in schema_constraint_name_list]
+   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in config_query_zzz if query.split()[5] not in constraint_name_list]
    #index
-   config_datatype_index={"text":"btree","bigint":"btree","integer":"btree","numeric":"btree","timestamp with time zone":"brin","date":"brin","jsonb":"gin","ARRAY":"gin"}
-   config_column_to_index=["type","is_verified","is_active","created_by_id","status","parent_table","parent_id","email","password","created_at"]
    response=await function_read_schema_column(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column=response["message"]
    for column in schema_column:
-      if column['column_name'] in config_column_to_index:
-         query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {config_datatype_index[column['data_type']]} ({column['column_name']});"
-         values={}
-         output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      if column['column_name'] in config_index:await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{column['column_name']}_{column['table_name']} on {column['table_name']} using {config_index_datatype_mapping[column['data_type']]} ({column['column_name']});",values={})
    #final
    return {"status":1,"message":"done"}
 
