@@ -62,7 +62,15 @@ config_query_zzz=[
 "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
 ]
 config_index={
-"type":"btree","is_verified":"btree","is_active":"btree","created_by_id":"btree","status":"btree","parent_table":"btree","parent_id":"btree","email":"btree","password":"btree",
+"type":"btree",
+"is_verified":"btree",
+"is_active":"btree",
+"created_by_id":"btree",
+"status":"btree",
+"parent_table":"btree",
+"parent_id":"btree",
+"email":"btree",
+"password":"btree",
 "created_at":"brin"
 }
 
