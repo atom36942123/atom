@@ -65,6 +65,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 from datetime import datetime
 async def function_read_object(postgres_object,body):
   try:
+    #query set
     table=body["table"]
     order=body["order"] if "order" in body else "id desc"
     limit=int(body["limit"]) if "limit" in body else 30
