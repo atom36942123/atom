@@ -288,8 +288,8 @@ async def function_update(request:Request):
       else:values[item]=None
    values["updated_at"]=datetime.now()
    values["updated_by_id"]=user["id"]
-   values["id"]=user["id"] if table=="users" else body["id"]
-   values["created_by_id"]=None if table=="users" else user["id"]
+   values["id"]=user["id"] if body['table']=="users" else body["id"]
+   values["created_by_id"]=None if body['table']=="users" else user["id"]
    if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
