@@ -34,8 +34,8 @@ async def function_read_column_datatype(postgres_object):
   values={}
   try:output=await postgres_object.fetch_all(query=query,values=values)
   except Exception as e:return {"status":0,"message":e.args}
-  schema_column_datatype={item["column_name"]:item["datatype"] for item in output}
-  return {"status":1,"message":schema_column_datatype}
+  column_datatype={item["column_name"]:item["datatype"] for item in output}
+  return {"status":1,"message":column_datatype}
 
 async def function_verify_otp(postgres_object,otp,email,mobile):
   if email and mobile:return {"status":0,"message":"wrong param"}
@@ -100,12 +100,13 @@ async def function_read_object(postgres_object,body,function_read_column_datatyp
     where_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
     key_joined=' and'.join([f"({k}{body[f'{k}_operator']}:{k} or :{k} is null)" if f"{k}_operator" in body else f"({k}=:{k} or :{k} is null)" for k,v in where_dict.items()])
     where=f"where {key_joined}" if key_joined else ""
-    #santized filter values
+    #column datatype
     response=await function_read_column_datatype(postgres_object)
     if response["status"]==0:return response
-    schema_column_datatype=response["message"]
+    column_datatype=response["message"]
+     #santized where
     for k,v in where_dict.items():
-      datatype=schema_column_datatype[k]
+      datatype=column_datatype[k]
       if datatype in ["ARRAY"]:where_dict[k]=v.split(",")
       if datatype in ["integer","bigint"]:where_dict[k]=int(v)
       if datatype in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
