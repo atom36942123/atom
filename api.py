@@ -413,7 +413,7 @@ async def function_delete(request:Request):
       values["created_by_id"]=None if table=="users" else user["id"]
    #body={"mode":"message_all"}
    if body["mode"]=="message_all":
-      query="delete from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       values={"created_by_id":user['id'],"parent_id":user['id']}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #query run
