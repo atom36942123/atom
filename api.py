@@ -49,19 +49,36 @@ async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   #schema column datatype
+   response=await function_read_column_datatype(request.state.postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   column_datatype=response["message"]
+   #file
+   filename=file.filename.split(".")[0]
+   table=filename.rsplit("_",1)[0]
+   mode=filename.rsplit("_",1)[1]
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   file_column_list=file_csv.fieldnames
+   #values
+   values_list=[]
+   for row in file_csv:values_list.append(row)
+   await file.close()
+   #santization
+   for index,object in enumerate(values_list):
+      for k,v in object.items():
+         datatype=column_datatype[k]
+         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+         if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+         if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
+         if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
+         if datatype in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
+         if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
-   mode=file.filename.split(".")[0].rsplit("_",1)[1]
-   table=file.filename.split(".")[0].rsplit("_",1)[0]
-   csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   column=file_csv.fieldnames
    if mode=="create":
-      response=await function_create_bulk(request.state.postgres_object,table,csv,function_read_column_datatype)
-      if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-      
-
-   
-
-
+      column_to_insert_list=file_column_list
+      query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+      values=values_list
+      output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
       ids_to_read=','.join([str(item["id"]) for item in values_list])
       query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
@@ -77,7 +94,6 @@ async def function_csv(request:Request,file:UploadFile):
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
    #final
-   await file.close()
    return {"status":1,"message":output}
    
 @router.get("/{x}/clean")
