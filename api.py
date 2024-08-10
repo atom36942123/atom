@@ -123,7 +123,7 @@ async def function_csv(request:Request,file:UploadFile):
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #schema column datatype
-   response=await function_read_schema_column_datatype(request.state.postgres_object)
+   response=await function_read_column_datatype(request.state.postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    schema_column_datatype=response["message"]
    #file
@@ -215,7 +215,7 @@ async def function_feed(request:Request):
    config_table_allowed_feed=["users","post","atom"]
    if body['table'] not in config_table_allowed_feed:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #read object
-   response=await function_read_object(request.state.postgres_object,body,function_read_schema_column_datatype)
+   response=await function_read_object(request.state.postgres_object,body,function_read_column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #add creator key
@@ -397,7 +397,7 @@ async def function_read(request:Request):
    body=await request.json()
    #read object
    body["created_by_id"]=user["id"]
-   response=await function_read_object(request.state.postgres_object,body,function_read_schema_column_datatype)
+   response=await function_read_object(request.state.postgres_object,body,function_read_column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #final
