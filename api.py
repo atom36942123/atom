@@ -321,8 +321,8 @@ async def function_delete(request:Request):
    if body["mode"]=="object":
       query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
       values={}
-      values["id"]=user["id"] if table=="users" else body["id"]
-      values["created_by_id"]=None if table=="users" else user["id"]
+      values["id"]=user["id"] if body['table']=="users" else body["id"]
+      values["created_by_id"]=None if body['table']=="users" else user["id"]
    #body={"mode":"message_all"}
    if body["mode"]=="message_all":
       query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
