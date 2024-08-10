@@ -435,22 +435,22 @@ async def function_my(request:Request,background:BackgroundTasks):
    #logic
    #body={"mode":"message_inbox"}
    if body["mode"]=="message_inbox":
-      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select a.* from x left join activity as a on x.id=a.id) select * from y order by {order};"
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
       values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #body={"mode":"message_inbox_unread"}
    if body["mode"]=="message_inbox_unread":
-      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from activity where type='message' and parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select a.* from x left join activity as a on x.id=a.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
       values={"created_by_id":user["id"],"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #body={"mode":"message_received"}
    if body["mode"]=="message_received":
-      query=f"select * from activity where type='message' and parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
+      query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
       values={"parent_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #body={"mode":"message_thread","user_id":2}
    if body["mode"]=="message_thread":
-      query=f"select * from activity where type='message' and parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {offset};"
+      query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {offset};"
       values={"user_1":user["id"],"user_2":body["user_id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
