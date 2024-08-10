@@ -22,8 +22,8 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 #database
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
 config_database_column={
-"created_at":["timestamptz",config_table],
-"created_by_id":["bigint",config_table],
+"created_at":["timestamptz",config_database_table],
+"created_by_id":["bigint",config_database_table],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
 "is_active":["int",["users","post"]],
