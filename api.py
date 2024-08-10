@@ -461,7 +461,7 @@ async def function_my(request:Request,background:BackgroundTasks):
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       background.add_task(await request.state.postgres_object.fetch_all(query="update activity set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where type='message' and parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
    #body={"mode":"read_parent_table_data","table":"action","parent_table":"post","type":"like"}
-   if body["mode"]=="read_parent_table_data":
+   if body["mode"]=="read_parent_table_data":pass
    #body={"mode":"check_action","table":"activity","parent_table":"post","ids":[1,2,3]"type":"comment"}
    if body["mode"]=="check_action":
       query=f"select parent_id from {body['table']} join unnest(array{body['ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table and type=:type;"
