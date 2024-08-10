@@ -214,9 +214,8 @@ async def function_login(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #token encode
-   config_token_expiry_days=1
-   data_to_encode=json.dumps({"x":str(request.url.path).split("/")[1],"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple()),"data":data_to_encode}
+   data=json.dumps({"x":str(request.url.path).split("/")[1],"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=1)).timetuple()),"data":data}
    token=jwt.encode(payload,config_key_jwt)
    #final
    return {"status":1,"message":token}
@@ -226,19 +225,19 @@ async def function_profile(request:Request,background:BackgroundTasks):
    #prework
    user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #add user object
+   #user object
    query="select * from users where id=:id;"
    values={"id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=dict(output[0]) if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #add extra info
-   config_user_profile={
+   #user extra info
+   user_extra_info={
    "post_count":"select count(*) from post where created_by_id=:user_id;",
    "message_unread_count":"select count(*) from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
    temp={}
-   for k,v in config_user_profile.items():
+   for k,v in user_extra_info.items():
       query=v
       values={"user_id":user["id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
