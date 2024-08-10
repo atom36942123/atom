@@ -104,7 +104,7 @@ async def function_read_object(postgres_object,body,function_read_column_datatyp
     response=await function_read_column_datatype(postgres_object)
     if response["status"]==0:return response
     column_datatype=response["message"]
-     #santized where
+    #santized where
     for k,v in where_dict.items():
       datatype=column_datatype[k]
       if datatype in ["ARRAY"]:where_dict[k]=v.split(",")
