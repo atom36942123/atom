@@ -29,26 +29,13 @@ async def function_qrunner(request:Request,query:str):
 async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #create table
-   for table in config_table:output=await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
-   #create column
-   for k,v in config_column.items():
-      for table in v[1]:
-         query=f"alter table {table} add column if not exists {k} {v[0]};"
-         values={}
-         output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #set created_at default
-   for table in config_table:
-      query=f"alter table {table} alter column created_at set default now();"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #set protected rows
-   for table in config_column["is_protected"][1]:
-      query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #core
+   for table in config_table:await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
+   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_column.items() for table in v[1]]
+   for table in config_table:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={})
+   for table in config_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
+   
    #set not null
-   config_column_not_null={"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
    for k,v in config_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
