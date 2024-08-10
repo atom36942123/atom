@@ -86,6 +86,22 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+      values={"created_by_id":user["id"],"parent_table":body["parent_table"],"type":body["type"]}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      parent_ids=[item["parent_id"] for item in output]
+      query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+      values={}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+
+async def function_read_parent_table_data(postgres_object,table,parent_table,where_param,order,limit,offset):
+  try:
+    query=f"select parent_id from {table} where parent_table=:parent_table and created_by_id=:created_by_id and type=:type order by {order} limit {limit} offset {offset};"
+
+  
+
+  
+
+
 #body min={"table":"post"}
 #body max={"table":"post","id":100,"id_operator":">=","page":100,"limit":100}
 from datetime import datetime
