@@ -30,9 +30,8 @@ async def function_database(request:Request):
    #prework
    if request.headers.get("token")!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #constraint name list
-   response=await function_read_constraint_name_list(request.state.postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   constraint_name_list=response["message"]
+   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+   constraint_name_list=[item["constraint_name"] for item in output]
    #logic
    for table in config_table:await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
    [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_column.items() for table in v[1]]
