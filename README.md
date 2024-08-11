@@ -1,5 +1,4 @@
-#how to run
-
+# how to run
 1. download atom repo
 2. install requirement.txt
 3. create .env file as per config.py
