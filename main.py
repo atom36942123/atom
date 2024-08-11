@@ -1,6 +1,7 @@
 import logging
 logging.basicConfig(filename="logs",encoding="utf-8",filemode="a",format="{asctime} - {levelname} - {message}",style="{",datefmt="%Y-%m-%d %H:%M",)
 logging.info("atom started")
+print("xxx")
 
 #import from other file
 from config import config_redis_server_uri
