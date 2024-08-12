@@ -252,7 +252,7 @@ async def function_profile(request:Request,background:BackgroundTasks):
 @router.post("/{x}/create")
 async def function_create(request:Request):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    if body['table'] in ["users","atom","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
@@ -275,7 +275,7 @@ async def function_create(request:Request):
 @router.post("/{x}/update")
 async def function_update(request:Request):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #query set
@@ -299,7 +299,7 @@ async def function_update(request:Request):
 @router.post("/{x}/read")
 async def function_read(request:Request):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #read object
@@ -313,7 +313,7 @@ async def function_read(request:Request):
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #logic
@@ -336,7 +336,7 @@ async def function_delete(request:Request):
 @router.post("/{x}/my")
 async def function_my(request:Request,background:BackgroundTasks):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #olo set
@@ -387,7 +387,7 @@ async def function_my(request:Request,background:BackgroundTasks):
 @router.post("/{x}/admin")
 async def function_admin(request:Request):
    #prework
-   user=json.loads(jwt.decode(request.headers.get("token"),config_key_jwt,algorithms="HS256")["data"])
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    body=dict(await request.json())
