@@ -214,12 +214,15 @@ async def function_login(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #token encode
-   data=json.dumps({"x":str(request.url.path).split("/")[1],"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]},default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=1)).timetuple()),"data":data}
+   x={"x":str(request.url.path).split("/")[1]}
+   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   data=json.dumps(x|user,default=str)
+   expiry_time=time.mktime((datetime.now()+timedelta(days=1)).timetuple())
+   payload={"exp":expiry_time,"data":data}
    token=jwt.encode(payload,config_key_jwt)
    #final
    return {"status":1,"message":token}
-   
+
 @router.get("/{x}/profile")
 async def function_profile(request:Request,background:BackgroundTasks):
    #prework
