@@ -22,7 +22,9 @@ from elasticsearch import Elasticsearch
 @router.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   output=await request.state.postgres_object.fetch_all(query=query,values={})
+   query=query
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    return output
 
 @router.get("/{x}/database")
@@ -32,16 +34,48 @@ async def function_database(request:Request):
    #constraint name list
    query="select constraint_name from information_schema.constraint_column_usage;"
    values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values={})
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    constraint_name_list=[item["constraint_name"] for item in output]
-   #logic
-   for table in config_database_table:await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
-   for table in config_database_table:await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column created_at set default now();",values={})
-   for table in config_database_column["is_protected"][1]:await request.state.postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;",values={})
-   [await request.state.postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_column_not_null.items() for table in v]
-   [await request.state.postgres_object.fetch_all(query=query,values={}) for query in config_database_query if query.split()[5] not in constraint_name_list]
-   [await request.state.postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
+   #table
+   for table in config_database_table:
+      query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
+      values={}
+      await request.state.postgres_object.fetch_all(query=query,values=values)
+   #column
+   for k,v in config_database_column.items():
+      for table in v[1]:
+         query=f"alter table {table} add column if not exists {k} {v[0]};"
+         values={}
+         await request.state.postgres_object.fetch_all(query=query,values=values)
+   #created_at default
+   for table in config_database_table:
+      query=f"alter table {table} alter column created_at set default now();"
+      values={}
+      await request.state.postgres_object.fetch_all(query=query,values=values)
+   #protected rows
+   for table in config_database_column["is_protected"][1]:
+      query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
+      values={}
+      await request.state.postgres_object.fetch_all(query=query,values=values)
+   #not null
+   for k,v in config_database_column_not_null.items():
+      for table in v:
+         query=f"alter table {table} alter column {k} set not null;"
+         values={}
+         await request.state.postgres_object.fetch_all(query=query,values=values)
+   #query
+   for query in config_database_query:
+      if query.split()[5] not in constraint_name_list:
+         query=query
+         values={}
+         await request.state.postgres_object.fetch_all(query=query,values=values)
+   #index
+   for k,v in config_database_column.items():
+      for table in v[1]:
+         if k in config_database_index:
+            query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
+            values={}
+            await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
 
@@ -53,7 +87,7 @@ async def function_csv(request:Request,file:UploadFile):
    #column datatype
    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values={})
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
    column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
