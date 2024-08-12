@@ -21,7 +21,7 @@ from elasticsearch import Elasticsearch
 #api
 @router.get("/{x}/qrunner")
 async def function_qrunner(request:Request,query:str):
-   if request.headers.get("Authorization").split()[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    output=await request.state.postgres_object.fetch_all(query=query,values={})
    return output
 
