@@ -30,7 +30,9 @@ async def function_database(request:Request):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #constraint name list
-   output=await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+   query="select constraint_name from information_schema.constraint_column_usage;"
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
    constraint_name_list=[item["constraint_name"] for item in output]
    #logic
    for table in config_database_table:await request.state.postgres_object.fetch_all(query=f"create table if not exists {table} (id bigint primary key generated always as identity);",values={})
@@ -49,7 +51,9 @@ async def function_csv(request:Request,file:UploadFile):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #column datatype
-   output=await request.state.postgres_object.fetch_all(query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;",values={})
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values={})
    column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
@@ -255,8 +259,11 @@ async def function_profile(request:Request,background:BackgroundTasks):
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       if "count" in k:temp[k]=output[0]["count"]
       else:temp[k]=output
+   #background
+   query="update users set last_active_at=:last_active_at where id=:id;"
+   values={"last_active_at":datetime.now(),"id":user["id"]}
+   background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
-   background.add_task(await request.state.postgres_object.fetch_all(query="update users set last_active_at=:last_active_at where id=:id;",values={"last_active_at":datetime.now(),"id":user["id"]}))
    return {"status":1,"message":user|temp}
 
 #body={"table":"post","type":"xxx","description":"xxx"}
@@ -377,7 +384,9 @@ async def function_my(request:Request,background:BackgroundTasks):
       query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {offset};"
       values={"user_1":user["id"],"user_2":body["user_id"]}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      background.add_task(await request.state.postgres_object.fetch_all(query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;",values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}))
+      query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+      values={"status":"read","created_by_id":body["user_id"],"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
+      background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #body={"mode":"parent_read","table":"likes","parent_table":"post"}
    if body["mode"]=="parent_read":
       query=f"select parent_id from {body['table']} where parent_table=:parent_table and created_by_id=:created_by_id order by {order} limit {limit} offset {offset};"
