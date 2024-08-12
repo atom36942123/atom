@@ -214,16 +214,18 @@ async def function_login(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
    #body={"mode":"token_refresh"}
-   if "mode" in body and body["mode"]=="mobile":
+   if "mode" in body and body["mode"]=="token_refresh":
       user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
       if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-
-
-      
+      query="select * from users where id=:id;"
+      values={"id":user["id"]}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      user=output[0] if output else None
+      if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #token encode
-   x={"x":str(request.url.path).split("/")[1]}
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(x|user,default=str)
+   user={"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   user_extra={"x":str(request.url.path).split("/")[1],"created_at_token":datetime.today().strftime('%Y-%m-%d')}
+   data=json.dumps(user|user_extra,default=str)
    expiry_time=time.mktime((datetime.now()+timedelta(days=1)).timetuple())
    payload={"exp":expiry_time,"data":data}
    token=jwt.encode(payload,config_key_jwt)
