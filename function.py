@@ -1,6 +1,7 @@
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  return ":".join([repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path])
+  param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
+  return ":".join(param)
 
 async def function_verify_otp(postgres_object,otp,email,mobile):
   try:
