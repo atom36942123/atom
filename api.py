@@ -28,7 +28,7 @@ async def function_qrunner(request:Request,query:str):
 @router.get("/{x}/database")
 async def function_database(request:Request):
    #prework
-   if request.headers.get("Authorization")!=f"Bearer {config_key_root}":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #constraint name list
    output=await request.state.postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
    constraint_name_list=[item["constraint_name"] for item in output]
@@ -412,11 +412,11 @@ async def function_aws(request:Request):
       output=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+body["filename"],ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
    #body={"mode":"s3_delete_bucket_key","url":"www.xxx.png/xxx"}
    if body["mode"]=="s3_delete_bucket_key":
-      if request.headers.get("Authorization")!=f"Bearer {config_key_root}":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+      if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Object(config_s3_bucket_name,body["url"].rsplit("/",1)[1]).delete()
    #body={"mode":"s3_delete_bucket_key_all"}
    if body["mode"]=="s3_delete_bucket_key_all":
-      if request.headers.get("Authorization")!=f"Bearer {config_key_root}":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+      if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
       output=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key).Bucket(config_s3_bucket_name).objects.all().delete()
    #body={"mode":"ses_send_email","to":"atom36942@gmail.com","title":"xxx","description":"xxx"}
    if body["mode"]=="ses_send_email":
