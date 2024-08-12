@@ -2,6 +2,10 @@
 from config import config_redis_server_uri
 from config import config_postgres_database_uri
 
+#logging
+import logging
+logging.basicConfig(level="INFO")
+
 #postgres object
 from databases import Database
 postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_uri.split(",")}
