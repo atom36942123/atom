@@ -157,14 +157,14 @@ async def function_signup(request:Request):
 async def function_login(request:Request):
    #prework
    body=await request.json()
-   #username
+   #body={"username":"xxx","password":"123"}
    if "mode" not in body:
       query="select * from users where username=:username and password=:password order by id desc limit 1;"
       values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #google
+   #body={"mode":"google","google_id":"123"}
    if "mode" in body and body["mode"]=="google":
       query="select * from users where google_id=:google_id order by id desc limit 1;"
       values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
@@ -179,7 +179,7 @@ async def function_login(request:Request):
          values={"id":user_id}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
-   #email
+   #body={"mode":"email","email":"xxx","otp":123}
    if "mode" in body and body["mode"]=="email":
       response=await function_verify_otp(request.state.postgres_object,body["otp"],body["email"],None)
       if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
@@ -196,7 +196,7 @@ async def function_login(request:Request):
          values={"id":user_id}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
-   #mobile
+   #body={"mode":"mobile","mobile":"xxx","otp":123}
    if "mode" in body and body["mode"]=="mobile":
       response=await function_verify_otp(request.state.postgres_object,body["otp"],None,body["mobile"])
       if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
@@ -213,6 +213,13 @@ async def function_login(request:Request):
          values={"id":user_id}
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
          user=output[0]
+   #body={"mode":"token_refresh"}
+   if "mode" in body and body["mode"]=="mobile":
+      user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+      if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+
+
+      
    #token encode
    x={"x":str(request.url.path).split("/")[1]}
    user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
