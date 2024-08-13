@@ -75,10 +75,14 @@ async def function_read_object(postgres_object,body):
     column_datatype={item["column_name"]:item["datatype"] for item in output}
     #santized where
     for k,v in where_dict.items():
+      if f'{k}_operator']} in body and f'{k}_operator']}=="in":
+      break
       if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
       if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
       if column_datatype[k] in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
       if column_datatype[k] in ["date","timestamp with time zone"]:where_dict[k]=datetime.strptime(v,'%Y-%m-%d')
+      
+      
     #query run
     query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
     values=where_dict
