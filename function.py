@@ -75,7 +75,7 @@ async def function_read_object(postgres_object,body):
     column_datatype={item["column_name"]:item["datatype"] for item in output}
     #santized where
     for k,v in where_dict.items():
-      if f'{k}_operator' in body and f'{k}_operator'=="in":
+      if f'{k}_operator' in body and body[f'{k}_operator']=="in":
         where_dict[k]=tuple(v)
         break
       if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
