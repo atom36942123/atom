@@ -56,6 +56,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 #body min={"table":"post"}
 #body max={"table":"post","order":"id desc","limit":100,"page":100,"id":100,"id_operator":">="}
 #principle=select * from :table :where :olo;
+#wont work for in operator
 from datetime import datetime
 async def function_read_object(postgres_object,body):
   try:
@@ -75,9 +76,6 @@ async def function_read_object(postgres_object,body):
     column_datatype={item["column_name"]:item["datatype"] for item in output}
     #santized where
     for k,v in where_dict.items():
-      if f'{k}_operator' in body and body[f'{k}_operator']=="in":
-        where_dict[k]=tuple(v)
-        break
       if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
       if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
       if column_datatype[k] in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
