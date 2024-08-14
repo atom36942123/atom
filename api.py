@@ -130,9 +130,10 @@ async def function_csv(request:Request,file:UploadFile):
    #final
    await file.close()
    return {"status":1,"message":output}
-   
+
 @router.get("/{x}/clean")
 async def function_clean(request:Request):
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
