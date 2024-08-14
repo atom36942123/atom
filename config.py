@@ -16,6 +16,7 @@ config_ses_region_name=env("config_ses_region_name")
 config_elasticsearch_username=env("config_elasticsearch_username")
 config_elasticsearch_password=env("config_elasticsearch_password")
 config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
+config_sentry_dsn=env("config_sentry_dsn")
 
 #database
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
