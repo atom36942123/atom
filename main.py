@@ -9,7 +9,7 @@ logging.basicConfig(level="INFO")
 
 #sentry
 import sentry_sdk
-sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
+if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #postgres object
 from databases import Database
