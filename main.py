@@ -6,6 +6,10 @@ from config import config_postgres_database_uri
 import logging
 logging.basicConfig(level="INFO")
 
+#sentry
+import sentry_sdk
+sentry_sdk.init(dsn="https://974503220dd8387fcea467a0e7d69211@o4507776401932288.ingest.de.sentry.io/4507776412942416",traces_sample_rate=1.0,profiles_sample_rate=1.0)
+
 #postgres object
 from databases import Database
 postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_uri.split(",")}
