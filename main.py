@@ -8,7 +8,7 @@ logging.basicConfig(level="INFO")
 
 #sentry
 import sentry_sdk
-sentry_sdk.init(dsn="https://974503220dd8387fcea467a0e7d69211@o4507776401932288.ingest.de.sentry.io/4507776412942416",traces_sample_rate=1.0,profiles_sample_rate=1.0)
+sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #postgres object
 from databases import Database
