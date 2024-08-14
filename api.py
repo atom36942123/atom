@@ -148,42 +148,6 @@ async def function_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-@router.get("/{x}/pcache")
-@cache(expire=60)
-async def function_pcache(request:Request):   
-   #logic
-   config_pcache={"user_count":"select count(*) from users;"}
-   temp={}
-   for k,v in config_pcache.items():
-      query=v
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      if "count" in k:temp[k]=output[0]["count"]
-      else:temp[k]=output
-   #final
-   return {"status":1,"message":temp}
-
-@router.get("/{x}/feed")
-@cache(expire=60,key_builder=function_read_redis_key)
-async def function_feed(request:Request):
-   #prework
-   body=dict(request.query_params)
-   if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #read object
-   response=await function_read_object(request.state.postgres_object,body)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(request.state.postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(request.state.postgres_object,output,body["table"],"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-   
 @router.post("/{x}/signup")
 async def function_signup(request:Request):
    body=await request.json()
@@ -455,6 +419,42 @@ async def function_admin(request:Request):
       query=f"update {body['table']} set {body['column']}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
       values={"value":body["value"],"id":body["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
+@router.get("/{x}/pcache")
+@cache(expire=60)
+async def function_pcache(request:Request):   
+   #logic
+   config_pcache={"user_count":"select count(*) from users;"}
+   temp={}
+   for k,v in config_pcache.items():
+      query=v
+      values={}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      if "count" in k:temp[k]=output[0]["count"]
+      else:temp[k]=output
+   #final
+   return {"status":1,"message":temp}
+
+@router.get("/{x}/feed")
+@cache(expire=60,key_builder=function_read_redis_key)
+async def function_feed(request:Request):
+   #prework
+   body=dict(request.query_params)
+   if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #read object
+   response=await function_read_object(request.state.postgres_object,body)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
+   #add creator key
+   response=await function_add_creator_key(request.state.postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
+   #add action count
+   response=await function_add_action_count(request.state.postgres_object,output,body["table"],"likes")
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #final
    return {"status":1,"message":output}
 
