@@ -3,30 +3,30 @@ from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
 #profile
-from config import config_key_jwt
-from fastapi import Request
-from fastapi import BackgroundTasks
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-import jwt,json
-from datetime import datetime
-@router.get("/{x}/my/profile")
-async def function_my_profile(request:Request,background:BackgroundTasks):
-   #prework
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #read user
-   query="select * from users where id=:id;"
-   values={"id":user["id"]}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #background
-   query="update users set last_active_at=:last_active_at where id=:id;"
-   values={"last_active_at":datetime.now(),"id":user["id"]}
-   background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
-   #final
-   return {"status":1,"message":user}
+# from config import config_key_jwt
+# from fastapi import Request
+# from fastapi import BackgroundTasks
+# from fastapi.responses import JSONResponse
+# from fastapi.encoders import jsonable_encoder
+# import jwt,json
+# from datetime import datetime
+# @router.get("/{x}/my/profile")
+# async def function_my_profile(request:Request,background:BackgroundTasks):
+#    #prework
+#    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+#    #read user
+#    query="select * from users where id=:id;"
+#    values={"id":user["id"]}
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    user=output[0] if output else None
+#    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+#    #background
+#    query="update users set last_active_at=:last_active_at where id=:id;"
+#    values={"last_active_at":datetime.now(),"id":user["id"]}
+#    background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
+#    #final
+#    return {"status":1,"message":user}
 
 #stats
 from config import config_key_jwt
