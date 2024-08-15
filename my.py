@@ -141,12 +141,16 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_read_object
 @router.post("/{x}/my/read-object")
-async def function_my_read_object(request:Request):
+async def function_my_read_object(request:Request,table:str,page:int=1,limit:int=100):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #read object
+
+   
+
+   
    body["created_by_id"]=user["id"]
    response=await function_read_object(request.state.postgres_object,body)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
