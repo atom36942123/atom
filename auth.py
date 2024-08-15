@@ -17,7 +17,7 @@ async def function_auth_signup(request:Request):
    return {"status":1,"message":output}
 
 from fastapi import Request
-import hashlib
+import hashlib,json
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #prework
