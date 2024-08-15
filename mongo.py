@@ -46,7 +46,6 @@ async def function_mongo_update_object(request:Request,database:str,table:str,id
    #logic
    if database=="test" and table=="users":
       output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
-      if output:output['_id']=str(output['_id'])
    #final
    return {"status":1,"message":output.modified_count}
 
