@@ -30,7 +30,7 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
-      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
       if output:output['_id']=str(output['_id'])
    #final
    return {"status":1,"message":output}
