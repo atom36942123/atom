@@ -147,20 +147,6 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    query_param=dict(request.query_params)
    #where
    query_param["created_by_id"]=f"{user['id']},="
-   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
-   where=f"where {key_joined}" if key_joined else ""
-   #sanitization
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   column_datatype={item["column_name"]:item["datatype"] for item in output}
-   for k,v in key_1.items():
-      if column_datatype[k] in ["ARRAY"]:key_1[k]=v.split(",")
-      if column_datatype[k] in ["integer","bigint"]:key_1[k]=int(v)
-      if column_datatype[k] in ["decimal","numeric","real","double precision"]:key_1[k]=float(v)
-      if column_datatype[k] in ["date","timestamp with time zone"]:key_1[k]=datetime.strptime(v,'%Y-%m-%d')
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=key_1
