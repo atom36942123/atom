@@ -21,20 +21,6 @@ async def function_read(request:Request):
    #final
    return {"status":1,"message":output}
 
-@router.get("/{x}/pcache")
-@cache(expire=60)
-async def function_pcache(request:Request):   
-   #logic
-   config_pcache={"user_count":"select count(*) from users;"}
-   temp={}
-   for k,v in config_pcache.items():
-      query=v
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      if "count" in k:temp[k]=output[0]["count"]
-      else:temp[k]=output
-   #final
-   return {"status":1,"message":temp}
 
 @router.get("/{x}/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
