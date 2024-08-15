@@ -3,18 +3,18 @@ from fastapi import APIRouter
 router=APIRouter(tags=["auth"])
 
 #api
-from fastapi import Request
-import hashlib
-@router.post("/{x}/auth/signup")
-async def function_auth_signup(request:Request):
-   #prework
-   body=await request.json()
-   #logic
-   query="insert into users (username,password) values (:username,:password) returning *;"
-   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
+# from fastapi import Request
+# import hashlib
+# @router.post("/{x}/auth/signup")
+# async def function_auth_signup(request:Request):
+#    #prework
+#    body=await request.json()
+#    #logic
+#    query="insert into users (username,password) values (:username,:password) returning *;"
+#    values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    #final
+#    return {"status":1,"message":output}
 
 from fastapi import Request
 import hashlib,json
@@ -30,7 +30,7 @@ async def function_auth_login(request:Request):
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #logic
    user={"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   
+   data=json.dumps(user|user_extra,default=str)
    return {"status":1,"message":output}
  
 
