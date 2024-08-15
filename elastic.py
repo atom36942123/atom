@@ -48,9 +48,8 @@ from fastapi import Request
 from elasticsearch import Elasticsearch
 from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.delete("/{x}/elasticsearch/delete-object")
-async def function_elasticsearch_delete_object(request:Request,table:str,id:str):
+async def function_elasticsearch_delete_object(request:Request,table:str,id:int):
    #prework
-   body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
    response=elasticsearch_object.delete(index=table,id=id)
@@ -64,7 +63,6 @@ from config import config_elasticsearch_cloud_id,config_elasticsearch_username,c
 @router.get("/{x}/elasticsearch/refresh-table")
 async def function_elasticsearch_refresh_table(request:Request,table:str):
    #prework
-   body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
    response=elasticsearch_object.indices.refresh(index=table)
@@ -78,7 +76,6 @@ from config import config_elasticsearch_cloud_id,config_elasticsearch_username,c
 @router.get("/{x}/elasticsearch/search")
 async def function_elasticsearch_search(request:Request,table:str,key:str,keyword:str,limit:int=100):
    #prework
-   body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:keyword}},"size":limit})
