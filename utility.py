@@ -2,32 +2,59 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-# #feed
-# from fastapi import Request
-# from fastapi_cache.decorator import cache
-# from fastapi.responses import JSONResponse
-# from fastapi.encoders import jsonable_encoder
-# from function import function_read_redis_key
-# from function import function_add_creator_key
-# from function import function_add_action_count
-# @router.get("/{x}/utility/feed")
-# @cache(expire=60,key_builder=function_read_redis_key)
-# async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-#    #prework
-#    query_param=dict(request.query_params)
-#    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+
+  
+   #sanitization
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   column_datatype={item["column_name"]:item["datatype"] for item in output}
+   for k,v in key_1.items():
+      if column_datatype[k] in ["ARRAY"]:key_1[k]=v.split(",")
+      if column_datatype[k] in ["integer","bigint"]:key_1[k]=int(v)
+      if column_datatype[k] in ["decimal","numeric","real","double precision"]:key_1[k]=float(v)
+      if column_datatype[k] in ["date","timestamp with time zone"]:key_1[k]=datetime.strptime(v,'%Y-%m-%d')
+   #read object
+   query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
+   values=key_1
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=[dict(item) for item in output]
+   #final
+   return {"status":1,"message":output}
+
+
+
+#feed
+from fastapi import Request
+from fastapi_cache.decorator import cache
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from function import function_read_redis_key
+from function import function_add_creator_key
+from function import function_add_action_count
+@router.get("/{x}/utility/feed")
+@cache(expire=60,key_builder=function_read_redis_key)
+async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #prework
+   query_param=dict(request.query_params)
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #where
+   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
+   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
+   key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
+   where=f"where {key_joined}" if key_joined else ""
    
    
-#    #add creator key
-#    response=await function_add_creator_key(request.state.postgres_object,output)
-#    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-#    output=response["message"]
-#    #add action count
-#    response=await function_add_action_count(request.state.postgres_object,output,table,"likes")
-#    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-#    output=response["message"]
-#    #final
-#    return {"status":1,"message":output}
+   #add creator key
+   response=await function_add_creator_key(request.state.postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
+   #add action count
+   response=await function_add_action_count(request.state.postgres_object,output,table,"likes")
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
 
 #pcache
 from fastapi import Request
