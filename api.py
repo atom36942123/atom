@@ -69,22 +69,7 @@ async def function_csv(request:Request,file:UploadFile):
    await file.close()
    return {"status":1,"message":output}
 
-@router.get("/{x}/clean")
-async def function_clean(request:Request):
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #creator null
-   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-      query=f"delete from {table} where created_by_id not in (select id from users);"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #parent null
-   for table in ["likes","bookmark","report","block","rating","comment","message"]:
-      for parent_table in ["users","post","comment"]:
-         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-         values={}
-         output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":"done"}
+
 
 @router.post("/{x}/signup")
 async def function_signup(request:Request):
