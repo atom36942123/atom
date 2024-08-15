@@ -1,3 +1,7 @@
+#router
+from fastapi import APIRouter
+router=APIRouter(tags=["zzz"])
+
 
 import motor.motor_asyncio
 from bson import ObjectId
