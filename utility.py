@@ -2,16 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-
-  
-   #read object
-   query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=key_1
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   output=[dict(item) for item in output]
-   #final
-   return {"status":1,"message":output}
-
 #feed
 from fastapi import Request
 from fastapi_cache.decorator import cache
@@ -41,9 +31,11 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
       if column_datatype[k] in ["integer","bigint"]:key_1[k]=int(v)
       if column_datatype[k] in ["decimal","numeric","real","double precision"]:key_1[k]=float(v)
       if column_datatype[k] in ["date","timestamp with time zone"]:key_1[k]=datetime.strptime(v,'%Y-%m-%d')
-
-   
-   
+   #read object
+   query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
+   values=key_1
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=[dict(item) for item in output]
    #add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
