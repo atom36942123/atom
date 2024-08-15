@@ -26,7 +26,6 @@ from config import config_mongo_server_uri
 @router.get("/{x}/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
    #prework
-   body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -35,6 +34,22 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
    #final
    return {"status":1,"message":output}
 
+#update object
+from fastapi import Request
+import motor.motor_asyncio
+from config import config_mongo_server_uri
+@router.put("/{x}/mongo/update-object")
+async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
+   #prework
+   body=await request.json()
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
+   #logic
+   if database=="test" and table=="users":
+      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
+      if output:output['_id']=str(output['_id'])
+   #final
+   return {"status":1,"message":output.modified_count}
+
 #delete object
 from fastapi import Request
 import motor.motor_asyncio
@@ -42,7 +57,6 @@ from config import config_mongo_server_uri
 @router.delete("/{x}/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
    #prework
-   body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -51,15 +65,7 @@ async def function_mongo_delete_object(request:Request,database:str,table:str,id
    return {"status":1,"message":output.deleted_count}
 
 
-      
-     
-      
-   # #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
-   # #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
-   # if body["mode"]=="update":
-   #    key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
-   #    output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
-   #    response={"status":1,"message":output.modified_count}
+
   
 
 # from elasticsearch import Elasticsearch
