@@ -17,6 +17,7 @@ async def function_database_query_runner(request:Request,query:str):
    #final
    return output
 
+
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
    #prework
