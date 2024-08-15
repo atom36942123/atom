@@ -99,19 +99,16 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #file
-   filename=file.filename.split(".")[0]
-   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   file_column_list=file_csv.fieldnames
    #values
    values_list=[]
-   for row in file_csv:values_list.append(row)
+   for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
    response=await function_sanitization_values_list(request.state.postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #logic
-   column_to_insert_list=file_column_list
+   table=file.filename.split(".")[0]
+   column_to_insert_list=file_csv.fieldnames
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    values=values_list
    output=await request.state.postgres_object.execute_many(query=query,values=values)
