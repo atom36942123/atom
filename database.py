@@ -93,6 +93,7 @@ async def function_database_init(request:Request):
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import File,UploadFile
+import csv
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,file:UploadFile):
    #prework
@@ -105,9 +106,11 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
-   #values
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_csv.fieldnames
+   #values
+   values_list=[]
+   for row in file_csv:values_list.append(row)
    
 
 
@@ -126,8 +129,7 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    
    
    #values
-   values_list=[]
-   for row in file_csv:values_list.append(row)
+  
    #sanitized values
    for index,object in enumerate(values_list):
       for k,v in object.items():
@@ -137,6 +139,7 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
          if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
          if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
          if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
+   
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
