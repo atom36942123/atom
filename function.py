@@ -79,10 +79,5 @@ async def function_read_object(postgres_object,table,where,order,limit,offset):
       if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
       if column_datatype[k] in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
       if column_datatype[k] in ["date","timestamp with time zone"]:where_dict[k]=datetime.strptime(v,'%Y-%m-%d')
-    #query run
-    query=f"select * from {table} {where} order by {order} limit {limit} offset {offset};"
-    values=where_dict
-    output=await postgres_object.fetch_all(query=query,values=values)
-    output=[dict(item) for item in output]
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":output}
