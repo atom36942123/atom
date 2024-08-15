@@ -159,9 +159,9 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
 
 
 
-    query=f"delete from {table} where id=:id;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
+    # query=f"delete from {table} where id=:id;"
+    #   values=values_list
+    #   output=await request.state.postgres_object.execute_many(query=query,values=values)
    
    
    
