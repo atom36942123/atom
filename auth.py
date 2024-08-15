@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["auth"])
 
-#api
+#singup
 from fastapi import Request
 import hashlib
 @router.post("/{x}/auth/signup")
@@ -16,6 +16,7 @@ async def function_auth_signup(request:Request):
    #final
    return {"status":1,"message":output}
 
+#login
 from config import config_key_jwt
 from fastapi import Request
 import hashlib,json,jwt,time
@@ -39,6 +40,7 @@ async def function_auth_login(request:Request):
    #final
    return {"status":1,"message":token}
 
+#login google
 from config import config_key_jwt
 from fastapi import Request
 import hashlib,json,jwt,time
@@ -69,6 +71,7 @@ async def function_auth_google(request:Request,google_id:str):
    #final
    return {"status":1,"message":token}
 
+#login email
 from config import config_key_jwt
 from fastapi import Request
 import json,jwt,time
@@ -107,6 +110,7 @@ async def function_auth_email(request:Request,email:str,otp:int):
    #final
    return {"status":1,"message":token}
 
+#login mobile
 from config import config_key_jwt
 from fastapi import Request
 import json,jwt,time
@@ -144,7 +148,8 @@ async def function_auth_mobile(request:Request,mobile:str,otp:int):
    token=jwt.encode(payload,config_key_jwt)
    #final
    return {"status":1,"message":token}
-  
+
+#token refresh
 from config import config_key_jwt
 from fastapi import Request
 import json,jwt,time
