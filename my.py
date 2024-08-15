@@ -212,8 +212,9 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+from fastapi import BackgroundTasks
 @router.get("/{x}/my/message-thread")
-async def function_my_message_thread(request:Request,user_id:int,page:int=1,limit:int=100):
+async def function_my_message_thread(request:Request,background:BackgroundTasks,user_id:int,page:int=1,limit:int=100):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
