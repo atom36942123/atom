@@ -72,10 +72,6 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
-#principle=select * from :table :where :olo;
-#operator not allowed=in
-#body min={"table":"post"}
-#body max={"table":"post","order":"id desc","limit":100,"page":100,"id":100,"id_operator":">="}
 from datetime import datetime
 async def function_read_object(postgres_object,body):
   try:
