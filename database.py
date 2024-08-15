@@ -159,8 +159,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import UploadFile
-import csv,codecs 
-from function import function_sanitization_values_list
+import csv,codecs
+import hashlib,json
+from datetime import datetime
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
@@ -170,9 +171,18 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   values_list=response["message"]
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   column_datatype={item["column_name"]:item["datatype"] for item in output}
+   for index,object in enumerate(values_list):
+      for k,v in object.items():
+         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+         if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+         if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
+         if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
+         if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
+         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
    column_to_insert_list=[*values_list[0]]
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
@@ -190,6 +200,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
 from function import function_sanitization_values_list
+import hashlib,json
+from datetime import datetime
 @router.post("/{x}/database/update-csv")
 async def function_database_update_csv(request:Request,table:str,file:UploadFile):
    #prework
@@ -199,9 +211,18 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   values_list=response["message"]
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   column_datatype={item["column_name"]:item["datatype"] for item in output}
+   for index,object in enumerate(values_list):
+      for k,v in object.items():
+         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+         if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+         if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
+         if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
+         if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
+         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
    #logic
    column_to_update_list=[item for item in [*values_list[0]] if item not in ["id"]]
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
