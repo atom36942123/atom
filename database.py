@@ -116,14 +116,30 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    await file.close()
    return {"status":1,"message":output}
 
+from fastapi import UploadFile
+import csv,codecs
+@router.post("/{x}/database/update-csv")
+async def function_database_update_csv(request:Request,table:str,file:UploadFile):
+   #prework
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   #values
+   values_list=[]
+   for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
+   #sanitization
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   values_list=response["message"]
+   #logic
+   column_to_update_list=[item for item in [*values_list[0]] if item not in ["id"]]
+   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+   values=values_list
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
 
 
-   
-
-
-  
    #final
-   return {"status":1,"message":"done"}
+   await file.close()
+   return {"status":1,"message":output}
 
 
 
@@ -142,11 +158,10 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    #    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
    #    values={}
    #    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   # if mode=="update":
-   #    column_to_update_list=[item for item in file_column_list if item not in ["id"]]
-   #    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-   #    values=values_list
-   #    output=await request.state.postgres_object.execute_many(query=query,values=values)
+
+      
+      
+      
    # if mode=="delete":
    #    query=f"delete from {table} where id=:id;"
    #    values=values_list
