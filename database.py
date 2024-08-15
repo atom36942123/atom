@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 #api
-@router.get("/{x}/database/qrunner")
-async def function_database_qrunner(request:Request,query:str):
+@router.get("/{x}/database/query-runner")
+async def function_database_query_runner(request:Request,query:str):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
