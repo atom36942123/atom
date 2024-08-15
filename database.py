@@ -90,7 +90,6 @@ async def function_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import File,UploadFile
