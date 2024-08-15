@@ -94,6 +94,7 @@ from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import File,UploadFile
 import csv,hashlib,json
+from datetime import datetime
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,file:UploadFile):
    #prework
@@ -123,22 +124,8 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    
    
    
-   #values
-  
-   #sanitization
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   column_datatype={item["column_name"]:item["datatype"] for item in output}
-   for index,object in enumerate(values_list):
-      for k,v in object.items():
-         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
-         if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
-         if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
-         if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
-         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
-   
+
+
    #logic
    if mode=="create":
       column_to_insert_list=file_column_list
