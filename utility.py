@@ -2,31 +2,32 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-
-#feed
-from fastapi import Request
-from fastapi_cache.decorator import cache
-from function import function_read_redis_key
-@router.get("/{x}/utility/feed")
-@cache(expire=60,key_builder=function_read_redis_key)
-async def function_utility_feed(request:Request):
-   #prework
-   body=dict(requesty.query_params)
-   if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #read object
-   response=await function_read_object(request.state.postgres_object,body)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(request.state.postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(request.state.postgres_object,output,body["table"],"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
+# #feed
+# from fastapi import Request
+# from fastapi_cache.decorator import cache
+# from fastapi.responses import JSONResponse
+# from fastapi.encoders import jsonable_encoder
+# from function import function_read_redis_key
+# from function import function_add_creator_key
+# from function import function_add_action_count
+# @router.get("/{x}/utility/feed")
+# @cache(expire=60,key_builder=function_read_redis_key)
+# async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+#    #prework
+#    query_param=dict(request.query_params)
+#    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   
+   
+#    #add creator key
+#    response=await function_add_creator_key(request.state.postgres_object,output)
+#    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+#    output=response["message"]
+#    #add action count
+#    response=await function_add_action_count(request.state.postgres_object,output,table,"likes")
+#    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+#    output=response["message"]
+#    #final
+#    return {"status":1,"message":output}
 
 #pcache
 from fastapi import Request
