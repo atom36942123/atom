@@ -1,15 +1,11 @@
 #router
 from fastapi import APIRouter
-router = APIRouter(tags=["database"])
+router=APIRouter(tags=["database"])
 
-#import
-from config import *
-from function import *
+from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
-#api
 @router.get("/{x}/database/query-runner")
 async def function_database_query_runner(request:Request,query:str):
    #prework
