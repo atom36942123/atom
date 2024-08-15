@@ -3,7 +3,6 @@ from datetime import timedelta
 async def function_token_encode(user):
 
    
-   user_extra={"created_at_token":datetime.today().strftime('%Y-%m-%d')}
    
    expiry_time=time.mktime((datetime.now()+timedelta(days=100000)).timetuple())
    payload={"exp":expiry_time,"data":data}
