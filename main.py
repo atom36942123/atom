@@ -1,19 +1,21 @@
+#config
+from config import config_redis_server_uri
+from config import config_postgres_database_uri
+from config import config_sentry_dsn
+
 #logging
 import logging
 logging.basicConfig(level="INFO")
 
 #sentry
-from config import config_sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #postgres object
-from config import config_postgres_database_uri
 from databases import Database
 postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_uri.split(",")}
 
 #lifespan
-from config import config_redis_server_uri
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
