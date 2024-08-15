@@ -73,6 +73,9 @@ from auth import router as router_auth
 app.include_router(router_auth)
 from my import router as router_my
 app.include_router(router_my)
+from admin import router as router_admin
+app.include_router(router_admin)
+
 
 #server start
 import uvicorn,asyncio
