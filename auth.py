@@ -161,6 +161,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_auth_token_refresh(request:Request):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
    values={"id":user["id"]}
