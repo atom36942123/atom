@@ -45,18 +45,16 @@ import hashlib,json,jwt,time
 from datetime import datetime
 from datetime import timedelta
 @router.post("/{x}/auth/google")
-async def function_auth_google(request:Request):
-   #prework
-   body=await request.json()
+async def function_auth_google(request:Request,google_id:str):
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
-   values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
+   values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    #create user
    if not user:
       query="insert into users (google_id) values (:google_id) returning *;"
-      values={"google_id":hashlib.sha256(body["google_id"].encode()).hexdigest()}
+      values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user_id=output[0]["id"]
       query="select * from users where id=:id;"
