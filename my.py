@@ -139,13 +139,16 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_read_object
 @router.post("/{x}/my/read-object")
 async def function_my_read_object(request:Request,table:str,page:int=1,limit:int=100,order:str="id desc"):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
+   #where
+   where_dict={k:v for k,v in body.items() if "_operator" not in k)}
+   key_joined=' and'.join([f"({k} {body[f'{k}_operator']} :{k} or :{k} is null)" if f"{k}_operator" in body else f"({k} = :{k} or :{k} is null)" for k,v in where_dict.items()])
+   where=f"where {key_joined}" if key_joined else ""
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=where_dict
