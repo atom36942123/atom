@@ -5,3 +5,12 @@ router = APIRouter()
 #custom
 from config import *
 
+#api
+@router.get("/{x}/database/qrunner")
+async def function_qrunner(request:Request,query:str):
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   query=query
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   return output
+
