@@ -113,6 +113,12 @@ router=APIRouter(tags=["my"])
 #    #final
 #    return {"status":1,"message":output}
 
+#delete object
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/delete")
 async def function_delete(request:Request):
    #prework
