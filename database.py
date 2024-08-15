@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#api
+#query runner
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -18,6 +18,7 @@ async def function_database_query_runner(request:Request,query:str):
    #final
    return output
 
+#database clean
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -40,6 +41,7 @@ async def function_database_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+#database init
 from config import config_key_root,config_database_table,config_database_column,config_database_column_not_null,config_database_query,config_database_index
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -96,6 +98,7 @@ async def function_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+#insert csv
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -126,6 +129,7 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    await file.close()
    return {"status":1,"message":output}
 
+#update csv
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -154,6 +158,7 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    await file.close()
    return {"status":1,"message":output}
 
+#delete csv
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -161,7 +166,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
 @router.post("/{x}/database/delete-csv")
-async def function_database_update_csv(request:Request,table:str,file:UploadFile):
+async def function_database_delete_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
@@ -179,6 +184,7 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    await file.close()
    return {"status":1,"message":output}
 
+#read csv
 from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
