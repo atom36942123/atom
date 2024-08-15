@@ -150,10 +150,11 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    #where
    response=await function_prepare_where(request.state.postgres_object,query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
+   where=response["message"][0]
+   values=response["message"][1]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=key_1
+   values=values
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
    #final
