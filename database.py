@@ -94,7 +94,7 @@ async def function_database_init(request:Request):
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import UploadFile
-import csv
+import csv,codecs
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
