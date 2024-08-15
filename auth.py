@@ -6,12 +6,10 @@ router=APIRouter(tags=["auth"])
 from fastapi import Request
 import hashlib
 @router.post("/{x}/auth/signup")
-async def function_auth_signup(request:Request):
-   #prework
-   body=await request.json()
+async def function_auth_signup(request:Request,username:str,password:str):
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
-   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
+   values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
@@ -24,12 +22,10 @@ from datetime import timedelta
 import hashlib
 from fastapi import Request
 @router.post("/{x}/auth/login")
-async def function_auth_login(request:Request):
-   #prework
-   body=await request.json()
+async def function_auth_login(request:Request,username:str,password:str):
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
-   values={"username":body["username"],"password":hashlib.sha256(body["password"].encode()).hexdigest()}
+   values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
