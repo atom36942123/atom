@@ -6,8 +6,7 @@ from function import *
 from fastapi import BackgroundTasks
 
 from fastapi_cache.decorator import cache
-import random,jwt,time,boto3,uuid
-from datetime import timedelta
+import random,time,boto3,uuid
 import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
