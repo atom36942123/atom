@@ -86,7 +86,8 @@ async def function_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-@router.get("/{x}/database/insert-csv")
+from fastapi import Depends
+@router.get("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
   
@@ -98,7 +99,7 @@ async def function_database_insert_csv(request:Request):
 
 
 
-@router.post("/{x}/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+@router.post("/{x}/csv")
 async def function_csv(request:Request,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
