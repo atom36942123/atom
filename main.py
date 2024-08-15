@@ -67,12 +67,16 @@ async def function_root():
 #router
 from database import router as router_database
 app.include_router(router_database)
+
 from auth import router as router_auth
 app.include_router(router_auth)
+
 from my import router as router_my
 app.include_router(router_my)
+
 from utility import router as router_utility
 app.include_router(router_utility)
+
 from zzz import router as router_zzz
 app.include_router(router_zzz)
 
