@@ -55,29 +55,29 @@ router=APIRouter(tags=["my"])
 #    return {"status":1,"message":temp}
 
 #create object
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/my/create-object")
-async def function_my_create_object(request:Request,table:str):
-   #prework
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   if table in ["users","atom","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   body=await request.json()
-   #query set
-   column_to_insert_list=[item for item in [*body] if item not in ["id","created_at","is_active","is_verified","google_id","otp"]]+["created_by_id"]
-   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-   #values
-   values={}
-   for item in column_to_insert_list:
-      if item in body:values[item]=body[item]
-      else:values[item]=None
-   values["created_by_id"]=user["id"]
-   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
-   #query run
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
+# from config import config_key_jwt
+# import jwt,json
+# from fastapi import Request
+# from fastapi.responses import JSONResponse
+# from fastapi.encoders import jsonable_encoder
+# @router.post("/{x}/my/create-object")
+# async def function_my_create_object(request:Request,table:str):
+#    #prework
+#    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+#    if table in ["users","atom","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+#    body=await request.json()
+#    #query set
+#    column_to_insert_list=[item for item in [*body] if item not in ["id","created_at","is_active","is_verified","google_id","otp"]]+["created_by_id"]
+#    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+#    #values
+#    values={}
+#    for item in column_to_insert_list:
+#       if item in body:values[item]=body[item]
+#       else:values[item]=None
+#    values["created_by_id"]=user["id"]
+#    if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
+#    #query run
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    #final
+#    return {"status":1,"message":output}
