@@ -17,8 +17,9 @@ router=APIRouter(tags=["auth"])
 #    return {"status":1,"message":output}
 
 from fastapi import Request
-import hashlib,json
+import hashlib,json,jwt
 from datetime import datetime
+from datetime import timedelta
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #prework
