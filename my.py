@@ -139,33 +139,14 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from function import function_read_object
 @router.get("/{x}/my/read-object")
 async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
-   #where
-   query_param["created_by_id"]=f"{user['id']},="
-   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
-   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
-   key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
-   where=f"where {key_joined}" if key_joined else ""
-   #sanitization
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   column_datatype={item["column_name"]:item["datatype"] for item in output}
-   for k,v in key_1.items():
-      if column_datatype[k] in ["ARRAY"]:key_1[k]=v.split(",")
-      if column_datatype[k] in ["integer","bigint"]:key_1[k]=int(v)
-      if column_datatype[k] in ["decimal","numeric","real","double precision"]:key_1[k]=float(v)
-      if column_datatype[k] in ["date","timestamp with time zone"]:key_1[k]=datetime.strptime(v,'%Y-%m-%d')
-   #read object
-   query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=key_1
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   output=[dict(item) for item in output]
+   
    #final
    return {"status":1,"message":output}
 
