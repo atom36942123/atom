@@ -119,25 +119,34 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/delete")
-async def function_delete(request:Request):
+@router.delete("/{x}/my/delete-object")
+async def function_my_delete_object(request:Request,table:str,id:int):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   body=await request.json()
    #logic
-   #body={"mode":"object","table":"post","id":123}
-   if body["mode"]=="object":
-      query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-      values={}
-      values["id"]=user["id"] if body['table']=="users" else body["id"]
-      values["created_by_id"]=None if body['table']=="users" else user["id"]
-   #body={"mode":"message_all"}
-   if body["mode"]=="message_all":
-      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      values={"created_by_id":user['id'],"parent_id":user['id']}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #query run
+   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+   values={}
+   values["id"]=user["id"] if table=="users" else id
+   values["created_by_id"]=None if table=="users" else user["id"]
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
+#delete message
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.post("/{x}/my/delete-message-all")
+async def function_my_delete_message_all(request:Request):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   values={"created_by_id":user['id'],"parent_id":user['id']}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
