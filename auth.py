@@ -16,6 +16,7 @@ router=APIRouter(tags=["auth"])
 #    #final
 #    return {"status":1,"message":output}
 
+from config import config_key_jwt
 from fastapi import Request
 import hashlib,json,jwt
 from datetime import datetime
@@ -30,11 +31,13 @@ async def function_auth_login(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #logic
+   #token encode
    user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
    data=json.dumps(user,default=str)
-
-   return {"status":1,"message":output}
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
+   token=jwt.encode(payload,config_key_jwt)
+   #final
+   return {"status":1,"message":token}
  
 
 
@@ -102,6 +105,4 @@ async def function_auth_login(request:Request):
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
   
-   #final
-   return {"status":1,"message":token}
-
+  
