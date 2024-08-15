@@ -3,6 +3,7 @@ from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
 #profile
+from config import config_key_jwt
 from fastapi import Request
 from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
