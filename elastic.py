@@ -48,7 +48,7 @@ from fastapi import Request
 from elasticsearch import Elasticsearch
 from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.delete("/{x}/elasticsearch/delete-object")
-async def function_elasticsearch_delete_object(request:Request,table:str,id:int):
+async def function_elasticsearch_delete_object(request:Request,table:str,id:str):
    #prework
    body=await request.json()
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
