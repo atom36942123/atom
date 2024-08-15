@@ -108,7 +108,7 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #logic
-   column_to_insert_list=file_csv.fieldnames
+   column_to_insert_list=[*values_list[0]]
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    values=values_list
    output=await request.state.postgres_object.execute_many(query=query,values=values)
