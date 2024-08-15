@@ -41,6 +41,11 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#read object
+async def function_add_action_count(postgres_object,query_param):
+  
+
+
 #sanitization
 import hashlib,json
 from datetime import datetime
