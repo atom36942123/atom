@@ -7,7 +7,7 @@ from fastapi import Request
 from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-import json,jwt
+import jwt,json
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
    #prework
