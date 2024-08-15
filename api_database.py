@@ -17,6 +17,23 @@ async def function_database_qrunner(request:Request,query:str):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    return output
 
+@router.get("/{x}/clean")
+async def function_clean(request:Request):
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #creator null
+   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+      query=f"delete from {table} where created_by_id not in (select id from users);"
+      values={}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #parent null
+   for table in ["likes","bookmark","report","block","rating","comment","message"]:
+      for parent_table in ["users","post","comment"]:
+         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+         values={}
+         output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":"done"}
+
 @router.get("/{x}/database/init")
 async def function_database_init(request:Request):
    #prework
