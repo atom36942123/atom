@@ -103,8 +103,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import UploadFile
-import csv,codecs import function_sanitization_values_list
-from function import 
+import csv,codecs 
+from function import function_sanitization_values_list
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
@@ -132,6 +132,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
+from function import function_sanitization_values_list
 @router.post("/{x}/database/update-csv")
 async def function_database_update_csv(request:Request,table:str,file:UploadFile):
    #prework
