@@ -80,6 +80,9 @@ app.include_router(router_utility)
 from mongo import router as router_mongo
 app.include_router(router_mongo)
 
+from elasticsearch import router as router_elasticsearch
+app.include_router(router_elasticsearch)
+
 #server start
 import uvicorn,asyncio
 if __name__=="__main__":
