@@ -16,26 +16,39 @@ async def function_mongo_create_object(request:Request,database:str,table:str):
    #logic
    if database=="test" and table=="users":
       output=await mongo_object.test.users.insert_one(body)
-      response={"status":1,"message":repr(output.inserted_id)}
    #final
-   return response
+   return {"status":1,"message":repr(output.inserted_id)}
+
+#read object
+from fastapi import Request
+import motor.motor_asyncio
+from config import config_mongo_server_uri
+@router.get("/{x}/mongo/read-object")
+async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
+   #prework
+   body=await request.json()
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
+   #logic
+   if database=="test" and table=="users":
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
+      if output:output['_id']=str(output['_id'])
+   #final
+   return {"status":1,"message":output}
 
 
- # #body={"mode":"read","id":"66b36a8a94d4da9c7652ef08"}
- #   if body["mode"]=="read":
- #      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(body["id"])})
- #      if output:output['_id']=str(output['_id'])
- #      response={"status":1,"message":output}
- #   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
- #   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
- #   if body["mode"]=="update":
- #      key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
- #      output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
- #      response={"status":1,"message":output.modified_count}
- #   #body={"mode":"delete","id":"66b36a8a94d4da9c7652ef08"}
- #   if body["mode"]=="delete":
- #      output=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
- #      response={"status":1,"message":output.deleted_count}
+      
+     
+      
+   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
+   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
+   if body["mode"]=="update":
+      key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
+      output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
+      response={"status":1,"message":output.modified_count}
+   #body={"mode":"delete","id":"66b36a8a94d4da9c7652ef08"}
+   if body["mode"]=="delete":
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
+      response={"status":1,"message":output.deleted_count}
 
 # from elasticsearch import Elasticsearch
 # @router.post("/{x}/elasticsearch")
