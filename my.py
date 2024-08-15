@@ -139,7 +139,7 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/my/read-object")
+@router.get("/{x}/my/read-object")
 async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
