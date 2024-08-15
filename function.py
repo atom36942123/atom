@@ -22,21 +22,6 @@ def function_read_redis_key(func,namespace:str="",*,request:Request=None,respons
   param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
   return ":".join(param)
 
-async def function_verify_otp(postgres_object,otp,email,mobile):
-  try:
-    if email and mobile:return {"status":0,"message":"wrong param"}
-    if email:
-      query="select otp from otp where email=:email order by id desc limit 1;"
-      values={"email":email}
-    if mobile:
-      query="select otp from otp where mobile=:mobile order by id desc limit 1;"
-      values={"mobile":mobile}
-    output=await postgres_object.fetch_all(query=query,values=values)
-    if not output:return {"status":0,"message":"otp not exist"}
-    if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatched"}
-  except Exception as e:return {"status":0,"message":e.args}
-  return {"status":1,"message":"done"}
-
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
   try:
