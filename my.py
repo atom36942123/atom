@@ -139,6 +139,7 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from function import function_read_object
 @router.post("/{x}/my/read-object")
 async def function_my_read_object(request:Request):
    #prework
