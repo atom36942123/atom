@@ -40,7 +40,7 @@ async def function_database_clean(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
-
+   
 #database init
 from config import config_key_root
 from config import config_database_table,config_database_column,config_database_column_not_null,config_database_query,config_database_index
@@ -57,11 +57,41 @@ async def function_database_init(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    constraint_name_list=[item["constraint_name"] for item in output]
    #table
+   config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
    for table in config_database_table:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
       values={}
       await request.state.postgres_object.fetch_all(query=query,values=values)
    #column
+   config_database_column={
+   "created_at":["timestamptz",config_database_table],
+   "created_by_id":["bigint",config_database_table],
+   "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
+   "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
+   "is_active":["int",["users","post"]],
+   "is_verified":["int",["users","post"]],
+   "is_protected":["int",["users","post","box","atom"]],
+   "type":["text",["users","post","box","atom","helpdesk"]],
+   "status":["text",["report","helpdesk","message"]],
+   "remark":["text",["report","helpdesk"]],
+   "metadata":["jsonb",["users","post","box","atom"]],
+   "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
+   "parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
+   "last_active_at":["timestamptz",["users"]],
+   "google_id":["text",["users"]],
+   "otp":["int",["otp"]],
+   "username":["text",["users"]],
+   "password":["text",["users"]],
+   "name":["text",["users"]],
+   "email":["text",["users","post","box","atom","otp"]],
+   "mobile":["text",["users","post","box","atom","otp"]],
+   "title":["text",["users","post","box","atom"]],
+   "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
+   "tag":["text",["users","post","box","atom"]],
+   "link":["text",["post","box","atom"]],
+   "file":["text",["post","box","atom"]],
+   "rating":["numeric",["rating"]],
+   }
    for k,v in config_database_column.items():
       for table in v[1]:
          query=f"alter table {table} add column if not exists {k} {v[0]};"
@@ -78,18 +108,41 @@ async def function_database_init(request:Request):
       values={}
       await request.state.postgres_object.fetch_all(query=query,values=values)
    #not null
+   config_database_column_not_null={
+   "parent_table":["likes","bookmark","report","block","rating","comment","message"],
+   "parent_id":["likes","bookmark","report","block","rating","comment","message"]
+   }
    for k,v in config_database_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
          values={}
          await request.state.postgres_object.fetch_all(query=query,values=values)
    #query
+   config_database_query=[
+   "alter table users add constraint constraint_unique_users unique (username);",
+   "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
+   "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
+   "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
+   "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
+   ]
    for query in config_database_query:
       if query.split()[5] not in constraint_name_list:
          query=query
          values={}
          await request.state.postgres_object.fetch_all(query=query,values=values)
    #index
+   config_database_index={
+   "type":"btree",
+   "is_verified":"btree",
+   "is_active":"btree",
+   "created_by_id":"btree",
+   "status":"btree",
+   "parent_table":"btree",
+   "parent_id":"btree",
+   "email":"btree",
+   "password":"btree",
+   "created_at":"brin"
+   }
    for k,v in config_database_column.items():
       for table in v[1]:
          if k in config_database_index:
