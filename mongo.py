@@ -35,20 +35,32 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
    #final
    return {"status":1,"message":output}
 
+#delete object
+from fastapi import Request
+import motor.motor_asyncio
+from config import config_mongo_server_uri
+@router.delete("/{x}/mongo/delete-object")
+async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
+   #prework
+   body=await request.json()
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
+   #logic
+   if database=="test" and table=="users":
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
+   #final
+   return {"status":1,"message":output.deleted_count}
+
 
       
      
       
-   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
-   #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
-   if body["mode"]=="update":
-      key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
-      output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
-      response={"status":1,"message":output.modified_count}
-   #body={"mode":"delete","id":"66b36a8a94d4da9c7652ef08"}
-   if body["mode"]=="delete":
-      output=await mongo_object.test.users.delete_one({"_id":ObjectId(body["id"])})
-      response={"status":1,"message":output.deleted_count}
+   # #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob"}
+   # #{"mode":"update","id":"66b363e917e01888164aa381","username":"bob","age":100}
+   # if body["mode"]=="update":
+   #    key_to_update={k:v for k,v in body.items() if k not in ["mode","id"]}
+   #    output=await mongo_object.test.users.update_one({"_id":ObjectId(body["id"])},{"$set":key_to_update})
+   #    response={"status":1,"message":output.modified_count}
+  
 
 # from elasticsearch import Elasticsearch
 # @router.post("/{x}/elasticsearch")
