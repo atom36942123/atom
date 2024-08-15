@@ -7,7 +7,7 @@ from fastapi import Request
 from fastapi_cache.decorator import cache
 @router.get("/{x}/utility/pcache")
 @cache(expire=60)
-async def function_pcache(request:Request):   
+async def function_utility_pcache(request:Request):   
    #logic
    config_pcache={"user_count":"select count(*) from users;"}
    temp={}
