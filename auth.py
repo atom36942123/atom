@@ -147,7 +147,7 @@ async def function_auth_mobile(request:Request,mobile:str,otp:int):
    #final
    return {"status":1,"message":token}
 
-#token refresh
+#refresh
 from config import config_key_jwt
 import jwt,time,json
 from datetime import datetime
@@ -155,8 +155,8 @@ from datetime import timedelta
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/auth/token-refresh")
-async def function_auth_token_refresh(request:Request):
+@router.get("/{x}/auth/refresh")
+async def function_auth_refresh(request:Request):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
