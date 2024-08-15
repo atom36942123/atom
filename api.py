@@ -4,7 +4,6 @@ from function import *
 
 
 from fastapi import BackgroundTasks
-from fastapi import File,UploadFile
 
 from fastapi_cache.decorator import cache
 import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
