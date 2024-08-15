@@ -1,3 +1,4 @@
+#sanitization
 import hashlib,json
 from datetime import datetime
 async def function_sanitization_values_list(postgres_object,values_list):
@@ -17,11 +18,13 @@ async def function_sanitization_values_list(postgres_object,values_list):
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
 
+#key builder
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
   return ":".join(param)
 
+#add creator key
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
   try:
@@ -39,6 +42,7 @@ async def function_add_creator_key(postgres_object,object_list):
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#add action count
 async def function_add_action_count(postgres_object,object_list,object_table,action_table):
   if not object_list:return {"status":1,"message":object_list}
   try:
@@ -57,6 +61,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#read object
 from datetime import datetime
 async def function_read_object(postgres_object,body):
   try:
