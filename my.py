@@ -112,3 +112,27 @@ router=APIRouter(tags=["my"])
 #    output=await request.state.postgres_object.fetch_all(query=query,values=values)
 #    #final
 #    return {"status":1,"message":output}
+
+@router.post("/{x}/delete")
+async def function_delete(request:Request):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   body=await request.json()
+   #logic
+   #body={"mode":"object","table":"post","id":123}
+   if body["mode"]=="object":
+      query=f"delete from {body['table']} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+      values={}
+      values["id"]=user["id"] if body['table']=="users" else body["id"]
+      values["created_by_id"]=None if body['table']=="users" else user["id"]
+   #body={"mode":"message_all"}
+   if body["mode"]=="message_all":
+      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      values={"created_by_id":user['id'],"parent_id":user['id']}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #query run
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
