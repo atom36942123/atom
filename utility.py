@@ -80,6 +80,7 @@ async def function_utility_delete_s3_key(request:Request,url:str):
    return {"status":1,"message":output}
 
 #empty s3 bucket
+from config import config_key_root
 from fastapi import Request
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 import boto3
