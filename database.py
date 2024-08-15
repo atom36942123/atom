@@ -168,6 +168,9 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
+   for index,object in enumerate(values_list):
+      for k,v in object.items():
+         
    for 
    #logic
    query=f"delete from {table} where id=:id;"
