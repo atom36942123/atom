@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router = APIRouter(tags=["database"])
 
-#import
+#import common
 from config import *
 from fastapi import Request
 from fastapi.responses import JSONResponse
