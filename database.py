@@ -92,7 +92,7 @@ async def function_database_init(request:Request):
 
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
-from fastapi import File,UploadFile
+from fastapi import UploadFile
 import csv
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,file:UploadFile):
@@ -107,9 +107,19 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    values_list=[]
    for row in file_csv:values_list.append(row)
    #sanitization
-   response=await function_sa(request.state.postgres_object,body)
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
+   values_list=response["message"]
+   #logic
+   column_to_insert_list=file_column_list
+   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+   values=values_list
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   #final
+   await file.close()
+   return {"status":1,"message":output}
+
+
 
    
 
@@ -130,12 +140,6 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    
 
 
-   #logic
-   if mode=="create":
-      column_to_insert_list=file_column_list
-      query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
    if mode=="read":
       ids_to_read=','.join([str(item["id"]) for item in values_list])
       query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
@@ -150,8 +154,5 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
       query=f"delete from {table} where id=:id;"
       values=values_list
       output=await request.state.postgres_object.execute_many(query=query,values=values)
-   #final
-   await file.close()
-   return {"status":1,"message":output}
 
 
