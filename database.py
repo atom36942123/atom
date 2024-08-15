@@ -4,6 +4,7 @@ router = APIRouter(tags=["database"])
 
 #import
 from config import *
+from function import *
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
