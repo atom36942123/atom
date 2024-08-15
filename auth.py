@@ -18,10 +18,11 @@ async def function_auth_signup(request:Request):
 
 #login
 from config import config_key_jwt
-from fastapi import Request
-import hashlib,json,jwt,time
+import jwt,time,json
 from datetime import datetime
 from datetime import timedelta
+import hashlib
+from fastapi import Request
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #prework
@@ -42,10 +43,11 @@ async def function_auth_login(request:Request):
 
 #login google
 from config import config_key_jwt
-from fastapi import Request
-import hashlib,json,jwt,time
+import jwt,time,json
 from datetime import datetime
 from datetime import timedelta
+import hashlib
+from fastapi import Request
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request,google_id:str):
    #read user
@@ -73,10 +75,10 @@ async def function_auth_google(request:Request,google_id:str):
 
 #login email
 from config import config_key_jwt
-from fastapi import Request
-import json,jwt,time
+import jwt,time,json
 from datetime import datetime
 from datetime import timedelta
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/email")
@@ -112,10 +114,10 @@ async def function_auth_email(request:Request,email:str,otp:int):
 
 #login mobile
 from config import config_key_jwt
-from fastapi import Request
-import json,jwt,time
+import jwt,time,json
 from datetime import datetime
 from datetime import timedelta
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/mobile")
@@ -151,10 +153,10 @@ async def function_auth_mobile(request:Request,mobile:str,otp:int):
 
 #token refresh
 from config import config_key_jwt
-from fastapi import Request
-import json,jwt,time
+import jwt,time,json
 from datetime import datetime
 from datetime import timedelta
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/auth/token-refresh")
