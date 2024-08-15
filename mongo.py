@@ -2,8 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["mongo"])
 
-from bson import ObjectId
-
 #create object
 from fastapi import Request
 import motor.motor_asyncio
@@ -19,10 +17,12 @@ async def function_mongo_create_object(request:Request,database:str,table:str):
    #final
    return {"status":1,"message":repr(output.inserted_id)}
 
+
 #read object
 from fastapi import Request
 import motor.motor_asyncio
 from config import config_mongo_server_uri
+from bson import ObjectId
 @router.get("/{x}/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
    #prework
@@ -38,6 +38,7 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
 from fastapi import Request
 import motor.motor_asyncio
 from config import config_mongo_server_uri
+from bson import ObjectId
 @router.put("/{x}/mongo/update-object")
 async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
    #prework
@@ -53,6 +54,7 @@ async def function_mongo_update_object(request:Request,database:str,table:str,id
 from fastapi import Request
 import motor.motor_asyncio
 from config import config_mongo_server_uri
+from bson import ObjectId
 @router.delete("/{x}/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
    #prework
