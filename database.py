@@ -195,8 +195,8 @@ async def function_database_read_csv(request:Request,table:str,file:UploadFile):
    #logic
    ids_to_read=','.join([str(item["id"]) for item in values_list])
    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
-   query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
-   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   values={}
+   output=await request.state.postgres_object.execute_many(query=query,values={})
    #final
    await file.close()
    return {"status":1,"message":output}
