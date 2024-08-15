@@ -147,8 +147,8 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    query_param=dict(request.query_params)
    #where
    query_param["created_by_id"]=f"{user['id']},="
-   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
-   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
+   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","page"]}
    key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
    where=f"where {key_joined}" if key_joined else ""
    #sanitization
