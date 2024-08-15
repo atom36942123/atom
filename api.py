@@ -17,57 +17,6 @@ from elasticsearch import Elasticsearch
 
 
 
-@router.post("/{x}/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_csv(request:Request,file:UploadFile):
-   #prework
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
-   #column datatype
-   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   column_datatype={item["column_name"]:item["datatype"] for item in output}
-   #file
-   filename=file.filename.split(".")[0]
-   mode=filename.rsplit("_",1)[1]
-   table=filename.rsplit("_",1)[0]
-   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   file_column_list=file_csv.fieldnames
-   #values
-   values_list=[]
-   for row in file_csv:values_list.append(row)
-   #sanitized values
-   for index,object in enumerate(values_list):
-      for k,v in object.items():
-         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
-         if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
-         if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
-         if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
-         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
-   #logic
-   if mode=="create":
-      column_to_insert_list=file_column_list
-      query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
-   if mode=="read":
-      ids_to_read=','.join([str(item["id"]) for item in values_list])
-      query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   if mode=="update":
-      column_to_update_list=[item for item in file_column_list if item not in ["id"]]
-      query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
-   if mode=="delete":
-      query=f"delete from {table} where id=:id;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
-   #final
-   await file.close()
-   return {"status":1,"message":output}
 
 
 
