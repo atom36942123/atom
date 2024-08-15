@@ -3,26 +3,7 @@ import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
 
-@router.get("/{x}/feed")
-@cache(expire=60,key_builder=function_read_redis_key)
-async def function_feed(request:Request):
-   #prework
-   body=dict(request.query_params)
-   if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #read object
-   response=await function_read_object(request.state.postgres_object,body)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(request.state.postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(request.state.postgres_object,output,body["table"],"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
+
 
 
 
