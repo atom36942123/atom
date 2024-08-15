@@ -1,5 +1,4 @@
 
-import boto3,uuid
 import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
