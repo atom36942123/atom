@@ -106,6 +106,11 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    #values
    values_list=[]
    for row in file_csv:values_list.append(row)
+   #sanitization
+   response=await function_sa(request.state.postgres_object,body)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
+
    
 
 
