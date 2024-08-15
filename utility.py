@@ -2,8 +2,9 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-
-@router.get("/{x}/pcache")
+#pcache
+from fastapi import Request
+@router.get("/{x}/utility/pcache")
 @cache(expire=60)
 async def function_pcache(request:Request):   
    #logic
