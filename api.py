@@ -1,5 +1,4 @@
 
-from fastapi_cache.decorator import cache
 import random,boto3,uuid
 import motor.motor_asyncio
 from bson import ObjectId
