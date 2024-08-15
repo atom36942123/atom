@@ -9,7 +9,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-@router.post("/{x}/admin/update-cell")
+@router.put("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request,table:str,id:int,column:str,value:str):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
