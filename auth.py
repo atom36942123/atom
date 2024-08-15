@@ -4,6 +4,7 @@ router=APIRouter(tags=["auth"])
 
 #api
 from fastapi import Request
+import hashlib
 @router.post("/{x}/auth/signup")
 async def function_auth_signup(request:Request):
    body=await request.json()
