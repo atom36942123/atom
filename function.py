@@ -41,6 +41,16 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#where
+async def function_prepare_where(postgres_object,query_param):
+  try:
+    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+    values={}
+    output=await postgres_object.fetch_all(query=query,values=values)
+    column_datatype={item["column_name"]:item["datatype"] for item in output}
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":values_list}
+
 #sanitization
 import hashlib,json
 from datetime import datetime
