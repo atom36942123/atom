@@ -140,18 +140,20 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/my/read-object")
-async def function_my_read_object(request:Request,table:str,page:int=1,limit:int=100,order:str="id desc"):
+async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   body=await request.json()
+   query_param=dict(request.query_params)
    #where
-   where_dict={k:v for k,v in body.items() if "_operator" not in k)}
-   key_joined=' and'.join([f"({k} {body[f'{k}_operator']} :{k} or :{k} is null)" if f"{k}_operator" in body else f"({k} = :{k} or :{k} is null)" for k,v in where_dict.items()])
-   where=f"where {key_joined}" if key_joined else ""
+   query_param["created_by_id"]=user["id"]
+   key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
+   key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
+   key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
+   where=f"where {}" if key_joined else ""
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=where_dict
+   values=key_1
    output=await postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
 
@@ -159,10 +161,7 @@ async def function_my_read_object(request:Request,table:str,page:int=1,limit:int
    
 
    
-   body["created_by_id"]=user["id"]
-   response=await function_read_object(request.state.postgres_object,body)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
+   
    #final
    return {"status":1,"message":output}
 
@@ -191,7 +190,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/message-inbox")
-async def function_my_message_inbox(request:Request,page:int=1,limit:int=100):
+async def function_my_message_inbox(request:Request,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -209,7 +208,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/message-inbox-unread")
-async def function_my_message_inbox_unread(request:Request,page:int=1,limit:int=100):
+async def function_my_message_inbox_unread(request:Request,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -227,7 +226,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/message-received")
-async def function_my_message_received(request:Request,page:int=1,limit:int=100):
+async def function_my_message_received(request:Request,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -247,7 +246,7 @@ from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from fastapi import BackgroundTasks
 @router.get("/{x}/my/message-thread")
-async def function_my_message_thread(request:Request,background:BackgroundTasks,user_id:int,page:int=1,limit:int=100):
+async def function_my_message_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -269,7 +268,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/message-received")
-async def function_my_message_received(request:Request,page:int=1,limit:int=100):
+async def function_my_message_received(request:Request,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -287,7 +286,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-read")
-async def function_my_parent_read(request:Request,table:str,parent_table:str,page:int=1,limit:int=100):
+async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -309,7 +308,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-check")
-async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,page:int=1,limit:int=100):
+async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
