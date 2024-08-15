@@ -43,7 +43,6 @@ async def function_database_clean(request:Request):
    
 #database init
 from config import config_key_root
-from config import config_database_table,config_database_column,config_database_column_not_null,config_database_query,config_database_index
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
