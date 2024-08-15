@@ -95,7 +95,7 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi import UploadFile
 import csv
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_database_insert_csv(request:Request,file:UploadFile):
+async def function_database_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
@@ -107,7 +107,6 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #logic
-   table=file.filename.split(".")[0]
    column_to_insert_list=file_csv.fieldnames
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    values=values_list
@@ -137,19 +136,19 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    
 
 
-   if mode=="read":
-      ids_to_read=','.join([str(item["id"]) for item in values_list])
-      query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   if mode=="update":
-      column_to_update_list=[item for item in file_column_list if item not in ["id"]]
-      query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
-   if mode=="delete":
-      query=f"delete from {table} where id=:id;"
-      values=values_list
-      output=await request.state.postgres_object.execute_many(query=query,values=values)
+   # if mode=="read":
+   #    ids_to_read=','.join([str(item["id"]) for item in values_list])
+   #    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
+   #    values={}
+   #    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   # if mode=="update":
+   #    column_to_update_list=[item for item in file_column_list if item not in ["id"]]
+   #    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+   #    values=values_list
+   #    output=await request.state.postgres_object.execute_many(query=query,values=values)
+   # if mode=="delete":
+   #    query=f"delete from {table} where id=:id;"
+   #    values=values_list
+   #    output=await request.state.postgres_object.execute_many(query=query,values=values)
 
 
