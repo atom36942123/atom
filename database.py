@@ -86,8 +86,10 @@ async def function_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
+from fastapi import File,UploadFile
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,file:UploadFile):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
