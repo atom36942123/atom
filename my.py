@@ -51,9 +51,5 @@ async def function_my_stats(request:Request):
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       if "count" in k:temp[k]=output[0]["count"]
       else:temp[k]=output
-   #background
-   query="update users set last_active_at=:last_active_at where id=:id;"
-   values={"last_active_at":datetime.now(),"id":user["id"]}
-   background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
    return {"status":1,"message":temp}
