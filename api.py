@@ -6,7 +6,7 @@ from function import *
 from fastapi import BackgroundTasks
 
 from fastapi_cache.decorator import cache
-import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
+import hashlib,json,random,codecs,jwt,time,boto3,uuid
 from datetime import datetime,timedelta
 import motor.motor_asyncio
 from bson import ObjectId
