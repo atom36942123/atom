@@ -146,7 +146,7 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
    #where
-   query_param["created_by_id"]=user["id"]
+   query_param["created_by_id"]=f"{user["id"]},="
    key_1={k:v.rsplit(',',1)[0] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
    key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
    key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
