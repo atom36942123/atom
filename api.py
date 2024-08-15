@@ -7,9 +7,12 @@ from config import *
 from function import *
 
 #import
-from fastapi import Request,Response,BackgroundTasks,Depends,Body,File,UploadFile
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+
+
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import File,UploadFile
+
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
 import hashlib,json,random,csv,codecs,jwt,time,boto3,uuid
@@ -17,8 +20,6 @@ from datetime import datetime,timedelta
 import motor.motor_asyncio
 from bson import ObjectId
 from elasticsearch import Elasticsearch
-
-
 
 @router.get("/{x}/database")
 async def function_database(request:Request):
