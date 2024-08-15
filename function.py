@@ -65,10 +65,9 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 from datetime import datetime
 async def function_read_object(postgres_object,table,where,order,limit,offset):
   try:
-    #query set
-    where_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
-    key_joined=' and'.join([f"({k} {body[f'{k}_operator']} :{k} or :{k} is null)" if f"{k}_operator" in body else f"({k} = :{k} or :{k} is null)" for k,v in where_dict.items()])
-    where=f"where {key_joined}" if key_joined else ""
+ 
+  
+    
     #sanitization
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
