@@ -1,3 +1,27 @@
+import hashlib,json
+async def function_sanitization_values_list(postgres_object,values_list):
+  query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+  values={}
+  output=await request.state.postgres_object.fetch_all(query=query,values=values)
+  column_datatype={item["column_name"]:item["datatype"] for item in output}
+  for index,object in enumerate(values_list):
+     for k,v in object.items():
+        if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+        if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+        if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
+        if column_datatype[k] in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
+        if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
+        if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
+
+    
+
+  
+
+     
+   
+
+
+
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
@@ -53,10 +77,10 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#principle=select * from :table :where :olo;
+#operator not allowed=in
 #body min={"table":"post"}
 #body max={"table":"post","order":"id desc","limit":100,"page":100,"id":100,"id_operator":">="}
-#principle=select * from :table :where :olo;
-#wont work for in operator
 from datetime import datetime
 async def function_read_object(postgres_object,body):
   try:
@@ -69,12 +93,11 @@ async def function_read_object(postgres_object,body):
     where_dict={k:v for k,v in body.items() if (k not in ["table","order","limit","page"] and "_operator" not in k and v not in [None,""," "])}
     key_joined=' and'.join([f"({k} {body[f'{k}_operator']} :{k} or :{k} is null)" if f"{k}_operator" in body else f"({k} = :{k} or :{k} is null)" for k,v in where_dict.items()])
     where=f"where {key_joined}" if key_joined else ""
-    #column datatype
+    #sanitization
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
     output=await postgres_object.fetch_all(query=query,values=values)
     column_datatype={item["column_name"]:item["datatype"] for item in output}
-    #santized where
     for k,v in where_dict.items():
       if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
       if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
