@@ -1,11 +1,6 @@
-import jwt
-from datetime import timedelta
-async def function_token_encode(user):
 
-   
-   
-   expiry_time=time.mktime((datetime.now()+timedelta(days=100000)).timetuple())
-   payload={"exp":expiry_time,"data":data}
+async def function_token_encode(user):
+   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
    token=jwt.encode(payload,config_key_jwt)
 
 import hashlib,json
