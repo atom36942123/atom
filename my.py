@@ -81,3 +81,34 @@ router=APIRouter(tags=["my"])
 #    output=await request.state.postgres_object.fetch_all(query=query,values=values)
 #    #final
 #    return {"status":1,"message":output}
+
+#update object
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from datetime import datetime
+@router.post("/{x}/my/update-object")
+async def function_my_update_object(request:Request,table:str,id:int):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   body=await request.json()
+   #query set
+   column_to_update_list=[item for item in [*body] if item not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]]+["updated_at","updated_by_id"]
+   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   #values
+   values={}
+   for item in column_to_update_list:
+      if item in body:values[item]=body[item]
+      else:values[item]=None
+   values["updated_at"]=datetime.now()
+   values["updated_by_id"]=user["id"]
+   values["id"]=user["id"] if table=="users" else id
+   values["created_by_id"]=None if table=="users" else user["id"]
+   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
+   #query run
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
