@@ -148,7 +148,9 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    query_param=dict(request.query_params)
    query_param["created_by_id"]=f"{user['id']},="
    #where
-   
+   response=await function_prepare_where(request.state.postgres_object,query_param)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=key_1
