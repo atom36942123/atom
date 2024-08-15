@@ -1,3 +1,13 @@
+import jwt
+async def function_token_encode(user):
+
+   
+   user_extra={"created_at_token":datetime.today().strftime('%Y-%m-%d')}
+   data=json.dumps(user|user_extra,default=str)
+   expiry_time=time.mktime((datetime.now()+timedelta(days=100000)).timetuple())
+   payload={"exp":expiry_time,"data":data}
+   token=jwt.encode(payload,config_key_jwt)
+
 import hashlib,json
 from datetime import datetime
 async def function_sanitization_values_list(postgres_object,values_list):
