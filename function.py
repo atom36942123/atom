@@ -1,8 +1,3 @@
-
-async def function_token_encode(user):
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
-
 import hashlib,json
 from datetime import datetime
 async def function_sanitization_values_list(postgres_object,values_list):
