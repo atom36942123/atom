@@ -159,7 +159,16 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
 
 
    
-
+ #sanitization
+    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+    values={}
+    output=await postgres_object.fetch_all(query=query,values=values)
+    column_datatype={item["column_name"]:item["datatype"] for item in output}
+    for k,v in where_dict.items():
+      if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
+      if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
+      if column_datatype[k] in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
+      if column_datatype[k] in ["date","timestamp with time zone"]:where_dict[k]=datetime.strptime(v,'%Y-%m-%d')
    
    
    #final
