@@ -139,7 +139,7 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/my/delete-message-all")
+@router.delete("/{x}/my/delete-message-all")
 async def function_my_delete_message_all(request:Request):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
