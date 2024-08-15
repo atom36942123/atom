@@ -146,6 +146,7 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
+   query_param["created_by_id"]=f"{user['id']},="
    
    #final
    return {"status":1,"message":output}
