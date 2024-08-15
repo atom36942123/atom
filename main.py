@@ -69,6 +69,8 @@ async def function_root():
 #router
 from database import router as router_database
 app.include_router(router_database)
+from auth import router as router_auth
+app.include_router(router_auth)
 
 #server start
 import uvicorn,asyncio
