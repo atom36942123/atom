@@ -1,6 +1,6 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["zzz"])
+router=APIRouter(tags=["mongo"])
 
 from bson import ObjectId
 
