@@ -151,26 +151,21 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","offset"]}
    key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
    where=f"where {}" if key_joined else ""
+   #sanitization
+   query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+   values={}
+   output=await postgres_object.fetch_all(query=query,values=values)
+   column_datatype={item["column_name"]:item["datatype"] for item in output}
+   for k,v in key_1.items():
+      if column_datatype[k] in ["ARRAY"]:key_1[k]=v.split(",")
+      if column_datatype[k] in ["integer","bigint"]:key_1[k]=int(v)
+      if column_datatype[k] in ["decimal","numeric","real","double precision"]:key_1[k]=float(v)
+      if column_datatype[k] in ["date","timestamp with time zone"]:key_1[k]=datetime.strptime(v,'%Y-%m-%d')
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=key_1
    output=await postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
-
-
-   
- #sanitization
-    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-    values={}
-    output=await postgres_object.fetch_all(query=query,values=values)
-    column_datatype={item["column_name"]:item["datatype"] for item in output}
-    for k,v in where_dict.items():
-      if column_datatype[k] in ["ARRAY"]:where_dict[k]=v.split(",")
-      if column_datatype[k] in ["integer","bigint"]:where_dict[k]=int(v)
-      if column_datatype[k] in ["decimal","numeric","real","double precision"]:where_dict[k]=float(v)
-      if column_datatype[k] in ["date","timestamp with time zone"]:where_dict[k]=datetime.strptime(v,'%Y-%m-%d')
-   
-   
    #final
    return {"status":1,"message":output}
 
