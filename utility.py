@@ -64,6 +64,7 @@ async def function_utility_create_presigned_url(request:Request,filename:str):
    return {"status":1,"message":output}
 
 #delete s3 key
+from config import config_key_root
 from fastapi import Request
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 import boto3
