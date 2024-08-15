@@ -67,8 +67,8 @@ async def function_root():
    return {"status":1,"message":f"welcome to {[*postgres_object]}"}
   
 #router
-from api import router
-app.include_router(router)
+from api_database import router as router_database
+app.include_router(router_database)
 
 #server start
 import uvicorn,asyncio
