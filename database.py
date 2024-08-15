@@ -178,28 +178,25 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    await file.close()
    return {"status":1,"message":output}
 
-
-
-
-
-    
-   
-    
-   
-   
-   
-   
-
-
-   # if mode=="read":
-   #    ids_to_read=','.join([str(item["id"]) for item in values_list])
-   #    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
-   #    values={}
-   #    output=await request.state.postgres_object.fetch_all(query=query,values=values)
-
-      
-      
-      
-  
-
-
+from config import config_key_root
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from fastapi import UploadFile
+import csv,codecs
+@router.post("/{x}/database/read-csv")
+async def function_database_read_csv(request:Request,table:str,file:UploadFile):
+   #prework
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   #values
+   values_list=[]
+   for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
+   #logic
+   ids_to_read=','.join([str(item["id"]) for item in values_list])
+   query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
+   query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
+   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   #final
+   await file.close()
+   return {"status":1,"message":output}
