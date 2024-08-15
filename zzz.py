@@ -4,22 +4,19 @@ router=APIRouter(tags=["zzz"])
 
 from bson import ObjectId
 
-
-
-
 #create object
+from fastapi import Request
 import motor.motor_asyncio
+from config import config_mongo_server_uri
 @router.post("/{x}/mongo/create-object")
-async def function_mongo_create_object(request:Request):
+async def function_mongo_create_object(request:Request,database:str,table:str):
    #prework
    body=await request.json()
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
-   if body["mode"]=="create":
-      object={k:v for k,v in body.items() if k not in ["mode"]}
-      output=await mongo_object.test.users.insert_one(object)
+   if database=="test" and table=="users":
+      output=await mongo_object.test.users.insert_one(body)
       response={"status":1,"message":repr(output.inserted_id)}
-  
    #final
    return response
 
