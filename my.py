@@ -263,7 +263,7 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,pag
    values={"parent_table":parent_table,"created_by_id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    parent_ids=[item["parent_id"] for item in output]
-   query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+   query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
    values={}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
@@ -281,7 +281,8 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
-   query=f"select parent_id from {table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
+   parent_ids_list=[int(item) for item in parent_ids.split(",")]
+   query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
    values={"parent_table":parent_table,"created_by_id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
