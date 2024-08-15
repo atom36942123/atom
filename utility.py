@@ -4,12 +4,14 @@ router=APIRouter(tags=["utility"])
 
 
 #feed
-
-@router.get("/{x}/feed")
+from fastapi import Request
+from fastapi_cache.decorator import cache
+from function import function_read_redis_key
+@router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
-async def function_feed(request:Request):
+async def function_utility_feed(request:Request):
    #prework
-   body=dict(request.query_params)
+   body=dict(requesty.query_params)
    if body['table'] not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #read object
    response=await function_read_object(request.state.postgres_object,body)
