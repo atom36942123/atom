@@ -74,6 +74,8 @@ from fastapi import Request
 import json,jwt,time
 from datetime import datetime
 from datetime import timedelta
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request,email:str,otp:int):
    #verify otp
