@@ -4,7 +4,7 @@ async def function_sanitization_values_list(postgres_object,values_list):
   try:
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
-    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+    output=await postgres_object.fetch_all(query=query,values=values)
     column_datatype={item["column_name"]:item["datatype"] for item in output}
     for index,object in enumerate(values_list):
       for k,v in object.items():
