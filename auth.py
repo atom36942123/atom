@@ -19,7 +19,6 @@ router=APIRouter(tags=["auth"])
 from fastapi import Request
 import hashlib,json
 from datetime import datetime
-
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #prework
@@ -31,8 +30,9 @@ async def function_auth_login(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #logic
-   user={"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user|user_extra,default=str)
+   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+   data=json.dumps(user,default=str)
+
    return {"status":1,"message":output}
  
 
