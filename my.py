@@ -3,6 +3,8 @@ from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
 #profile
+from fastapi import Request
+
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
    #prework
