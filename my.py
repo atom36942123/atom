@@ -147,6 +147,11 @@ async def function_my_read_object(request:Request,table:str,page:int=1,limit:int
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    body=await request.json()
    #read object
+   query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
+   values=where_dict
+   output=await postgres_object.fetch_all(query=query,values=values)
+   output=[dict(item) for item in output]
+
 
    
 
