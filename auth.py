@@ -77,7 +77,19 @@ from datetime import timedelta
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request,email:str,otp:int):
    #verify otp
+   query="select otp from otp where email=:email order by id desc limit 1;"
+   values={"email":email}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   if not output:return {"status":0,"message":"otp not exist"}
    
+ 
+      
+  
+    
+    
+    if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatched"}
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":"done"}
 
 
    
