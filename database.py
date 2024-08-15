@@ -11,14 +11,18 @@ from fastapi.encoders import jsonable_encoder
 #api
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
+   #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #logic
    query=query
    values={}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
    return output
 
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
+   #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
@@ -92,17 +96,6 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi import File,UploadFile
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,file:UploadFile):
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-  
-   #final
-   return {"status":1,"message":"done"}
-
-
-
-
-
-
-
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
@@ -113,10 +106,26 @@ async def function_database_insert_csv(request:Request,file:UploadFile):
    column_datatype={item["column_name"]:item["datatype"] for item in output}
    #file
    filename=file.filename.split(".")[0]
-   mode=filename.rsplit("_",1)[1]
-   table=filename.rsplit("_",1)[0]
+   #values
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    file_column_list=file_csv.fieldnames
+   
+
+
+  
+   #final
+   return {"status":1,"message":"done"}
+
+
+
+
+
+
+
+   
+   
+   
+   
    #values
    values_list=[]
    for row in file_csv:values_list.append(row)
