@@ -113,41 +113,143 @@ router=APIRouter(tags=["my"])
 #    #final
 #    return {"status":1,"message":output}
 
-#delete object
+# #delete object
+# from config import config_key_jwt
+# import jwt,json
+# from fastapi import Request
+# from fastapi.responses import JSONResponse
+# from fastapi.encoders import jsonable_encoder
+# @router.delete("/{x}/my/delete-object")
+# async def function_my_delete_object(request:Request,table:str,id:int):
+#    #prework
+#    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+#    #logic
+#    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+#    values={}
+#    values["id"]=user["id"] if table=="users" else id
+#    values["created_by_id"]=None if table=="users" else user["id"]
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    #final
+#    return {"status":1,"message":output}
+
+# #delete message
+# from config import config_key_jwt
+# import jwt,json
+# from fastapi import Request
+# from fastapi.responses import JSONResponse
+# from fastapi.encoders import jsonable_encoder
+# @router.delete("/{x}/my/delete-message-all")
+# async def function_my_delete_message_all(request:Request):
+#    #prework
+#    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+#    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+#    #logic
+#    query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+#    values={"created_by_id":user['id'],"parent_id":user['id']}
+#    output=await request.state.postgres_object.fetch_all(query=query,values=values)
+#    #final
+#    return {"status":1,"message":output}
+
+#message inbox
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.delete("/{x}/my/delete-object")
-async def function_my_delete_object(request:Request,table:str,id:int):
+@router.get("/{x}/my/message-inbox")
+async def function_my_message_inbox(request:Request,page:int=1,limit:int=100):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
-   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-   values={}
-   values["id"]=user["id"] if table=="users" else id
-   values["created_by_id"]=None if table=="users" else user["id"]
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
+   values={"created_by_id":user["id"],"parent_id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
 
-#delete message
+#message inbox unread
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.delete("/{x}/my/delete-message-all")
-async def function_my_delete_message_all(request:Request):
+@router.get("/{x}/my/message-inbox-unread")
+async def function_my_message_inbox_unread(request:Request,page:int=1,limit:int=100):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
-   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-   values={"created_by_id":user['id'],"parent_id":user['id']}
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
+   values={"created_by_id":user["id"],"parent_id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
+
+#message received
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.get("/{x}/my/message-received")
+async def function_my_message_received(request:Request,page:int=1,limit:int=100):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
+   values={"parent_id":user["id"]}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
+#message thread
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from datetime import datetime
+@router.get("/{x}/my/message-thread")
+async def function_my_message_thread(request:Request,user_id:int,page:int=1,limit:int=100):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit {limit} offset {(page-1)*limit};"
+   values={"user_1":user["id"],"user_2":user_id}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #background
+   query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   values={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
+   background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
+   #final
+   return {"status":1,"message":output}
+
+
+
+@router.post("/{x}/my")
+async def function_my(request:Request,background:BackgroundTasks):
+   #body={"mode":"message_thread","user_id":2}
+   if body["mode"]=="message_thread":
+   #body={"mode":"parent_read","table":"likes","parent_table":"post"}
+   if body["mode"]=="parent_read":
+      query=f"select parent_id from {body['table']} where parent_table=:parent_table and created_by_id=:created_by_id order by {order} limit {limit} offset {offset};"
+      values={"parent_table":body["parent_table"],"created_by_id":user["id"]}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      parent_ids=[item["parent_id"] for item in output]
+      query=f"select * from {body['parent_table']} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+      values={}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #body={"mode":"parent_check","table":"likes","parent_table":"post","parent_ids":[1,2,3]}
+   if body["mode"]=="parent_check":
+      query=f"select parent_id from {body['table']} join unnest(array{body['parent_ids']}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
+      values={"parent_table":body["parent_table"],"created_by_id":user["id"]}
+      output=await request.state.postgres_object.fetch_all(query=query,values=values)
+      output=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+   #final
+   return {"status":1,"message":output}
+
 
