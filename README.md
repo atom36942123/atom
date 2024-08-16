@@ -1,3 +1,7 @@
+![image](https://github.com/user-attachments/assets/66fc747c-8799-450c-b303-3b7eb217482e)
+
+ 
+ 
  # what is atom
 
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
