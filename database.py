@@ -167,7 +167,7 @@ from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi import UploadFile
 import csv,codecs 
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.post("/{x}/database/insert-csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_database_insert_csv(request:Request,table:str,file:UploadFile):
    #prework
@@ -177,7 +177,7 @@ async def function_database_insert_csv(request:Request,table:str,file:UploadFile
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #logic
@@ -196,7 +196,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.put("/{x}/database/update-csv")
 async def function_database_update_csv(request:Request,table:str,file:UploadFile):
    #prework
@@ -206,7 +206,7 @@ async def function_database_update_csv(request:Request,table:str,file:UploadFile
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
    #sanitization
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"update")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #logic
