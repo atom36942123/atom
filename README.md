@@ -27,6 +27,7 @@
 13. aws s3,ses setup included
 14. object level api's without any opinions on the objects
 15. rback included
+16. location based schema included using postgis
     
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
@@ -48,6 +49,7 @@
 11. postman
 12. retool
 13. sentry
+14. postgis
     
 # api collection = database
 ![image](https://github.com/user-attachments/assets/7934135c-bf1b-4153-a8c8-9da337d49656)
