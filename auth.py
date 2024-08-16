@@ -30,6 +30,7 @@ async def function_auth_login(request:Request,username:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #token encode
+   output=a
  
    #final
    return {"status":1,"message":token}
