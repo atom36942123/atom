@@ -96,7 +96,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-@router.post("/{x}/my/update-object")
+@router.put("/{x}/my/update-object")
 async def function_my_update_object(request:Request,table:str,id:int):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
