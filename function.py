@@ -74,13 +74,10 @@ async def function_sanitization_values_list(postgres_object,values_list):
         datatype=column_datatype[k]
         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
         if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
-        if datatype in ["numeric","decimal","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
-
-        
-        if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
-        if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
-        
-        if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
+        if datatype in ["numeric"]:values_list[index][k]=round(float(v),3) if v else None
+        if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
+        if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+        if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
   
