@@ -23,7 +23,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #background
    query="update users set last_active_at=:last_active_at where id=:id;"
-   values={"last_active_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"id":user["id"]}
+   values={"last_active_at":datetime.now(),"id":user["id"]}
    background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
    return {"status":1,"message":user}
@@ -239,7 +239,7 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #background
    query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-   values={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"updated_by_id":user['id']}
+   values={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
    background.add_task(await request.state.postgres_object.fetch_all(query=query,values=values))
    #final
    return {"status":1,"message":output}
