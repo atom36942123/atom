@@ -16,9 +16,6 @@ async def function_auth_signup(request:Request,username:str,password:str):
 
 #login
 from config import config_key_jwt
-import jwt,time,json
-from datetime import datetime
-from datetime import timedelta
 import hashlib
 from fastapi import Request
 @router.get("/{x}/auth/login")
@@ -30,8 +27,9 @@ async def function_auth_login(request:Request,username:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #token encode
-   output=a
- 
+   response=await function_add_creator_key(request.state.postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #final
    return {"status":1,"message":token}
 
