@@ -6,7 +6,7 @@ router=APIRouter(tags=["utility"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_sanitization_values_list
+from function import function_sanitization
 from function import function_add_creator_key
 from function import function_add_action_count
 from fastapi_cache.decorator import cache
@@ -26,7 +26,7 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    where=f"where {key_joined}" if key_joined else ""
    #sanitization
    values_list=[where_param_values]
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
@@ -53,7 +53,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.put("/{x}/utility/update-cell")
 async def function_utility_update_cell(request:Request,table:str,id:int,column:str,value:str):
    #prework
@@ -62,7 +62,7 @@ async def function_utility_update_cell(request:Request,table:str,id:int,column:s
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #sanitization
    values_list=[{column:value}]
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
