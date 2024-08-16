@@ -123,6 +123,7 @@ async def function_my_update_object(request:Request,table:str,id:int):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
+   return values
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
