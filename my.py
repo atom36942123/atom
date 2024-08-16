@@ -163,12 +163,12 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
    #where
+   query_param["created_by_id"]=f"{user['id']},="
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   where_param["created_by_id"]=f"{user['id']},="
    where_param_values={k:v.rsplit(',',1)[0] for k,v in where_param.items()}
-   where_param_operator={k:v.rsplit(',',1)[0] for k,v in where_param.items()}
+   where_param_operator={k:v.rsplit(',',1)[1] for k,v in where_param.items()}
    key_list=[f"({k}{where_param_operator[k]}:{k} or :{k} is null)" for k,v in where_param_values.items()]
-   key_joined=' and'.join(key_list)
+   key_joined=' and '.join(key_list)
    where=f"where {key_joined}" if key_joined else ""
    #sanitization
    values_list=[where_param_values]
