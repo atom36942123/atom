@@ -6,8 +6,8 @@ def function_read_redis_key(func,namespace:str="",*,request:Request=None,respons
 
 #creator key
 async def function_add_creator_key(postgres_object,object_list):
-  if not object_list:return {"status":1,"message":object_list}
   try:
+    if not object_list:return {"status":1,"message":object_list}
     object_list=[item|{"created_by_username":None} for item in object_list]
     user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
     if user_ids:
@@ -24,8 +24,8 @@ async def function_add_creator_key(postgres_object,object_list):
 
 #action count
 async def function_add_action_count(postgres_object,object_list,object_table,action_table):
-  if not object_list:return {"status":1,"message":object_list}
   try:
+    if not object_list:return {"status":1,"message":object_list}
     key_name=f"{action_table}_count"
     object_list=[item|{key_name:0} for item in object_list]
     parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
@@ -48,7 +48,6 @@ async def function_prepare_where(postgres_object,query_param):
     key_2={k:v.rsplit(',',1)[1] for k,v in query_param.items() if k not in ["table","order","limit","page"]}
     key_joined=' and'.join([f"({k}{key_2[k]}:{k} or :{k} is null)" for k,v in key_1.items()])
     where=f"where {key_joined}" if key_joined else ""
-    #sanitization
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
     output=await postgres_object.fetch_all(query=query,values=values)
@@ -80,3 +79,4 @@ async def function_sanitization_values_list(postgres_object,values_list):
         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
+  
