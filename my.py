@@ -74,7 +74,8 @@ async def function_my_create_object(request:Request,table:str):
    values={}
    for item in column_to_insert_list:values[item]=None
    #values assign
-   for k,v in values.items():if k in body:values[k]=body[k]
+   for k,v in values.items():
+      if k in body:values[k]=body[k]
    values["created_by_id"]=user["id"]
    #sanitization
    values_list=[values]
