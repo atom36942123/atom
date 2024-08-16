@@ -144,7 +144,8 @@ async def function_database_init(request:Request):
    "parent_id":"btree",
    "email":"btree",
    "password":"btree",
-   "created_at":"brin"
+   "created_at":"brin",
+   "location":"GIST"
    }
    for k,v in config_database_column.items():
       for table in v[1]:
