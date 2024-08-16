@@ -77,8 +77,11 @@ async def function_my_create_object(request:Request,table:str):
    for k,v in values.items():if k in body:values[k]=body[k]
    values["created_by_id"]=user["id"]
    #sanitization
-   
-   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
+   values_list=[values]
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   values_list=response["message"]
+   values=values_list[0]
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
