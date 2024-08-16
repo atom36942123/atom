@@ -27,7 +27,7 @@ async def function_auth_login(request:Request,username:str,password:str):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #token encode
+   #create token
    response=await function_create_token(user,request,config_key_jwt)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    token=response["message"]
@@ -35,12 +35,10 @@ async def function_auth_login(request:Request,username:str,password:str):
    return {"status":1,"message":token}
 
 #login google
-from config import config_key_jwt
-import jwt,time,json
-from datetime import datetime
-from datetime import timedelta
-import hashlib
 from fastapi import Request
+import hashlib
+from config import config_key_jwt
+from function import function_create_token
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request,google_id:str):
    #read user
@@ -58,22 +56,19 @@ async def function_auth_google(request:Request,google_id:str):
       values={"id":user_id}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0]
-   #token encode
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
+   #create token
+   response=await function_create_token(user,request,config_key_jwt)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   token=response["message"]
    #final
    return {"status":1,"message":token}
 
 #login email
-from config import config_key_jwt
-import jwt,time,json
-from datetime import datetime
-from datetime import timedelta
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from config import config_key_jwt
+from function import function_create_token
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request,email:str,otp:int):
    #verify otp
@@ -97,22 +92,19 @@ async def function_auth_email(request:Request,email:str,otp:int):
       values={"id":user_id}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0]
-   #token encode
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
+   #create token
+   response=await function_create_token(user,request,config_key_jwt)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   token=response["message"]
    #final
    return {"status":1,"message":token}
 
 #login mobile
-from config import config_key_jwt
-import jwt,time,json
-from datetime import datetime
-from datetime import timedelta
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from config import config_key_jwt
+from function import function_create_token
 @router.post("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request,mobile:str,otp:int):
    #verify otp
@@ -136,22 +128,19 @@ async def function_auth_mobile(request:Request,mobile:str,otp:int):
       values={"id":user_id}
       output=await request.state.postgres_object.fetch_all(query=query,values=values)
       user=output[0]
-   #token encode
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
+   #create token
+   response=await function_create_token(user,request,config_key_jwt)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   token=response["message"]
    #final
    return {"status":1,"message":token}
 
 #refresh
-from config import config_key_jwt
-import jwt,time,json
-from datetime import datetime
-from datetime import timedelta
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from config import config_key_jwt
+from function import function_create_token
 @router.get("/{x}/auth/refresh")
 async def function_auth_refresh(request:Request):
    #prework
@@ -163,10 +152,9 @@ async def function_auth_refresh(request:Request):
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #token encode
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
+   #create token
+   response=await function_create_token(user,request,config_key_jwt)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   token=response["message"]
    #final
    return {"status":1,"message":token}
