@@ -25,6 +25,8 @@
 10. deployment using ec2/jenkins included
 12. Authentication/others basic services prebuilt
 13. aws s3,ses setup included
+14. object level api's without any opinions on the objects
+15. rback included
     
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
