@@ -30,10 +30,7 @@ async def function_auth_login(request:Request,username:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #token encode
-   user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-   data=json.dumps(user,default=str)
-   payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
-   token=jwt.encode(payload,config_key_jwt)
+ 
    #final
    return {"status":1,"message":token}
 
