@@ -92,6 +92,7 @@ async def function_database_init(request:Request):
    "rating":["numeric",["rating"]],
    "location":["geography(POINT)",["users","post","box","atom"]],
    "tag_array":["text[]",["atom"]],
+   "date_of_birth":["date",["users"]],
    }
    for k,v in config_database_column.items():
       for table in v[1]:
