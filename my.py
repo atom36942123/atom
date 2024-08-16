@@ -96,6 +96,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+from function import function_sanitization_values_list
 @router.put("/{x}/my/update-object")
 async def function_my_update_object(request:Request,table:str,id:int):
    #prework
@@ -154,20 +155,27 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_prepare_where
+from function import function_sanitization_values_list
 @router.get("/{x}/my/read-object")
 async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
-   query_param["created_by_id"]=f"{user['id']},="
    #where
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_prepare_where(request.state.postgres_object,where_param)
+   where_param["created_by_id"]=f"{user['id']},="
+   where_param_values={k:v.rsplit(',',1)[0] for k,v in where_param.items()}
+   where_param_operator={k:v.rsplit(',',1)[0] for k,v in where_param.items()}
+   key_list=[f"({k}{where_param_operator[k]}:{k} or :{k} is null)" for k,v in where_param_values.items()]
+   key_joined=' and'.join(key_list)
+   where=f"where {key_joined}" if key_joined else ""
+   #sanitization
+   values_list=[where_param_values]
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   where=response["message"][0]
-   values=response["message"][1]
+   values_list=response["message"]
+   values=values_list[0]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=values
