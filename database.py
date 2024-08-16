@@ -197,7 +197,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
 from function import function_sanitization_values_list
-@router.post("/{x}/database/update-csv")
+@router.put("/{x}/database/update-csv")
 async def function_database_update_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -225,7 +225,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
-@router.post("/{x}/database/delete-csv")
+@router.delete("/{x}/database/delete-csv")
 async def function_database_delete_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -251,7 +251,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 import csv,codecs
-@router.post("/{x}/database/read-csv")
+@router.get("/{x}/database/read-csv")
 async def function_database_read_csv(request:Request,table:str,file:UploadFile):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
