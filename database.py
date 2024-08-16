@@ -90,6 +90,7 @@ async def function_database_init(request:Request):
    "link":["text",["post","box","atom"]],
    "file":["text",["post","box","atom"]],
    "rating":["numeric",["rating"]],
+   "location":["geography(POINT)",["atom"]],
    }
    for k,v in config_database_column.items():
       for table in v[1]:
