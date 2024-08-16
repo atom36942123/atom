@@ -61,7 +61,7 @@ async def function_utility_update_cell(request:Request,table:str,id:int,column:s
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #sanitization
-   values_list=[{column:values}]
+   values_list=[{column:value}]
    response=await function_sanitization_values_list(request.state.postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
