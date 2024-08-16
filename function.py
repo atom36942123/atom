@@ -1,3 +1,16 @@
+#token
+from datetime import datetime
+import json,jwt
+from datetime import timedelta
+async def function_create_token(user,request,config_key_jwt):
+  try:
+    user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"x":str(request.url.path).split("/")[1],"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+    data=json.dumps(user,default=str)
+    payload={"exp":time.mktime((datetime.now()+timedelta(days=100000)).timetuple()),"data":data}
+    token=jwt.encode(payload,config_key_jwt)
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":token}
+  
 #redis key
 from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
