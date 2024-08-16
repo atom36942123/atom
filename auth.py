@@ -21,7 +21,7 @@ from datetime import datetime
 from datetime import timedelta
 import hashlib
 from fastapi import Request
-@router.post("/{x}/auth/login")
+@router.get("/{x}/auth/login")
 async def function_auth_login(request:Request,username:str,password:str):
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
