@@ -80,4 +80,3 @@ async def function_sanitization_values_list(postgres_object,values_list):
         if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
-  
