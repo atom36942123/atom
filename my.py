@@ -113,7 +113,7 @@ async def function_my_update_object(request:Request,table:str,id:int):
    #values assign
    for k,v in values.items():
       if k in body:values[k]=body[k]
-   values["updated_at"]=datetime.now()
+   values["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    values["updated_by_id"]=user["id"]
    values["id"]=user["id"] if table=="users" else id
    values["created_by_id"]=None if table=="users" else user["id"]
