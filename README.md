@@ -33,10 +33,20 @@
 4. Email = atom36942@gmail.com
 
 # tech stack
-
-![image](https://github.com/user-attachments/assets/493bcd35-fffb-4906-b6f9-ea98493a74d4)
-
-
+1. python
+2. fastapi
+3. postgres
+4. redis
+5. mongodb
+6. elasticsearch
+7. ec2
+8. s3
+9. ses
+10. jenkins
+11. postman
+12. retool
+13. sentry
+    
 # api collection = database
 ![image](https://github.com/user-attachments/assets/7934135c-bf1b-4153-a8c8-9da337d49656)
 
