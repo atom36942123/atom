@@ -65,7 +65,7 @@ import hashlib,json
 from datetime import datetime
 async def function_sanitization_values_list(postgres_object,values_list):
   try:
-    query="select column_name,count(*),max(udt_name) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
     output=await postgres_object.fetch_all(query=query,values=values)
     column_datatype={item["column_name"]:item["datatype"] for item in output}
@@ -73,12 +73,13 @@ async def function_sanitization_values_list(postgres_object,values_list):
       for k,v in object.items():
         datatype=column_datatype[k]
         if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-        if "int" in datatype:values_list[index][k]=int(v) if v else None
+        if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
+        if datatype in ["numeric","decimal","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
+
         
         if column_datatype[k] in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
         if column_datatype[k] in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
         
-        if column_datatype[k] in ["decimal","numeric","real","double precision"]:values_list[index][k]=round(float(v),3) if v else None
         if column_datatype[k] in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%d') if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
