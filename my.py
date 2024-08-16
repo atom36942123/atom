@@ -107,14 +107,22 @@ async def function_my_update_object(request:Request,table:str,id:int):
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    #values
    values={}
-   for item in column_to_update_list:
-      if item in body:values[item]=body[item]
-      else:values[item]=None
+   for item in column_to_update_list:values[item]=None
+   values["id"]=None
+   values["created_by_id"]=None
+   #values assign
+   for k,v in values.items():
+      if k in body:values[k]=body[k]
    values["updated_at"]=datetime.now()
    values["updated_by_id"]=user["id"]
    values["id"]=user["id"] if table=="users" else id
    values["created_by_id"]=None if table=="users" else user["id"]
-   if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
+   #sanitization
+   values_list=[values]
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   values_list=response["message"]
+   values=values_list[0]
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
