@@ -89,7 +89,7 @@ async def function_database_init(request:Request):
    "tag":["text",["users","post","box","atom"]],
    "link":["text",["post","box","atom"]],
    "file":["text",["post","box","atom"]],
-   "rating":["numeric",["rating"]],
+   "rating":["numeric",["rating","atom"]],
    "location":["geography(POINT)",["users","post","box","atom"]],
    "tag_array":["text[]",["atom"]],
    "date_of_birth":["date",["users"]],
