@@ -4,12 +4,13 @@ router=APIRouter(tags=["utility"])
 
 #feed
 from fastapi import Request
-from fastapi_cache.decorator import cache
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_read_redis_key
+from function import function_sanitization_values_list
 from function import function_add_creator_key
 from function import function_add_action_count
+from fastapi_cache.decorator import cache
+from function import function_read_redis_key
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -17,10 +18,18 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    query_param=dict(request.query_params)
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #where
-   response=await function_prepare_where(request.state.postgres_object,query_param)
+   where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   where_param_values={k:v.rsplit(',',1)[0] for k,v in where_param.items()}
+   where_param_operator={k:v.rsplit(',',1)[1] for k,v in where_param.items()}
+   key_list=[f"({k}{where_param_operator[k]}:{k} or :{k} is null)" for k,v in where_param_values.items()]
+   key_joined=' and '.join(key_list)
+   where=f"where {key_joined}" if key_joined else ""
+   #sanitization
+   values_list=[where_param_values]
+   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   where=response["message"][0]
-   values=response["message"][1]
+   values_list=response["message"]
+   values=values_list[0]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=values
