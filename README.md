@@ -10,7 +10,7 @@
 2. Tech stack = Stack=Python, FastAPI, Postgres, MongoDB, Redis, EC2, S3, Elasticsearch
 3. atom is non opionated. Its more like a boilerplate that can help you to build ~50% of your project within few weeks.
 4. atom is fully scalable as per need
-5. for example - tinder backend can be build with atom with-in ~1 week
+5. for example - tinder backend can be build with atom with-in ~2 week
 
 # salient features
 1. postgres as core database
