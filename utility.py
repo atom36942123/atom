@@ -8,7 +8,6 @@ from fastapi_cache.decorator import cache
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_read_redis_key
-from function import function_prepare_where
 from function import function_add_creator_key
 from function import function_add_action_count
 @router.get("/{x}/utility/feed")
