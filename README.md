@@ -33,5 +33,6 @@ Email = atom36942@gmail.com
 5. run python main.py
 
 
-# api collection
-![image](https://github.com/user-attachments/assets/e5fc0318-167a-412a-a40a-c90e0819541b)
+# api collection = database
+![image](https://github.com/user-attachments/assets/3b80b7da-9748-4d1e-8ee6-6a23058f4593)
+
