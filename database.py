@@ -126,7 +126,9 @@ async def function_database_init(request:Request):
    "create extension postgis",
    ]
    for query in config_database_query:
-      if len(query.split())>5 and query.split()[5] not in constraint_name_list:
+      if len(query.split())>5 and query.split()[5] in constraint_name_list:
+         continue
+      else:
          query=query
          values={}
          await request.state.postgres_object.fetch_all(query=query,values=values)
