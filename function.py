@@ -57,7 +57,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 #sanitization
 import hashlib,json
 from datetime import datetime
-async def function_sanitization_values_list(postgres_object,values_list):
+async def function_sanitization(postgres_object,values_list):
   try:
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
