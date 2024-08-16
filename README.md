@@ -1,9 +1,4 @@
-![image](https://github.com/user-attachments/assets/66fc747c-8799-450c-b303-3b7eb217482e)
-
- 
- 
- # what is atom
-
+# what is atom
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
 2. Tech stack = Stack=Python, FastAPI, Postgres, MongoDB, Redis, EC2, S3, Elasticsearch
 3. atom is non opionated. Its more like a boilerplate that can help you to build ~50% of your project within few days.
@@ -13,9 +8,9 @@
 # salient features
 1. postgres as core database
 2. scalability in terms of database schema
-3. redis caching included for any endpoint
-4. provision to throw non-relational data in mongodb
-5. databses indexing and other stratgey to make queries faster incldued
+3. redis caching included
+4. provision for non-relational data in mongodb
+5. databses indexing and other stratgey to make queries faster
 6. master/slave replica to route queries
 7. staging/prod env with as many as development enviornments
 8. Authentication system prebuilt
@@ -36,3 +31,7 @@ Email = atom36942@gmail.com
 3. create .env file as per config.py
 4. start postgres/redis server added in .env
 5. run python main.py
+
+
+# api collection
+![image](https://github.com/user-attachments/assets/e5fc0318-167a-412a-a40a-c90e0819541b)
