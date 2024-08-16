@@ -184,24 +184,6 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    #final
    return {"status":1,"message":output}
 
-#delete message
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.delete("/{x}/my/delete-message-all")
-async def function_my_delete_message_all(request:Request):
-   #prework
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #logic
-   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-   values={"created_by_id":user['id'],"parent_id":user['id']}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
-
 #message inbox
 from config import config_key_jwt
 import jwt,json
@@ -234,24 +216,6 @@ async def function_my_message_inbox_unread(request:Request,limit:int=100,page:in
    #logic
    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
    values={"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   #final
-   return {"status":1,"message":output}
-
-#message received
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/my/message-received")
-async def function_my_message_received(request:Request,limit:int=100,page:int=1):
-   #prework
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #logic
-   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
-   values={"parent_id":user["id"]}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
@@ -298,6 +262,24 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
    #final
    return {"status":1,"message":output}
 
+#delete message all
+from config import config_key_jwt
+import jwt,json
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.delete("/{x}/my/delete-message-all")
+async def function_my_delete_message_all(request:Request):
+   #prework
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   values={"created_by_id":user['id'],"parent_id":user['id']}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   #final
+   return {"status":1,"message":output}
+
 #parent read
 from config import config_key_jwt
 import jwt,json
@@ -327,7 +309,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-check")
-async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,limit:int=100,page:int=1):
+async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
