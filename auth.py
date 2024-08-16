@@ -39,7 +39,7 @@ from fastapi import Request
 import hashlib
 from config import config_key_jwt
 from function import function_create_token
-@router.post("/{x}/auth/google")
+@router.get("/{x}/auth/google")
 async def function_auth_google(request:Request,google_id:str):
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
@@ -69,7 +69,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from config import config_key_jwt
 from function import function_create_token
-@router.post("/{x}/auth/email")
+@router.get("/{x}/auth/email")
 async def function_auth_email(request:Request,email:str,otp:int):
    #verify otp
    query="select otp from otp where email=:email order by id desc limit 1;"
@@ -105,7 +105,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from config import config_key_jwt
 from function import function_create_token
-@router.post("/{x}/auth/mobile")
+@router.get("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request,mobile:str,otp:int):
    #verify otp
    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
