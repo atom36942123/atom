@@ -65,7 +65,7 @@ async def function_my_create_object(request:Request,table:str):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   if table in ["users","atom","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    body=await request.json()
    #query set
    column_to_insert_list=[item for item in [*body] if item not in ["id","created_at","is_active","is_verified","password","google_id","otp"]]+["created_by_id"]
