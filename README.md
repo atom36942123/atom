@@ -34,5 +34,8 @@ Email = atom36942@gmail.com
 
 
 # api collection = database
-![image](https://github.com/user-attachments/assets/3b80b7da-9748-4d1e-8ee6-6a23058f4593)
+![image](https://github.com/user-attachments/assets/7934135c-bf1b-4153-a8c8-9da337d49656)
+
+# api collection = auth
+
 
