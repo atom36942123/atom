@@ -163,7 +163,7 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    query_param=dict(request.query_params)
    query_param["created_by_id"]=f"{user['id']},="
    #where
-   where_param=
+   where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
    response=await function_prepare_where(request.state.postgres_object,where_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    where=response["message"][0]
