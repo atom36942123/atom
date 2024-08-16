@@ -60,7 +60,7 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.post("/{x}/my/create-object")
 async def function_my_create_object(request:Request,table:str):
    #prework
@@ -80,7 +80,7 @@ async def function_my_create_object(request:Request,table:str):
    values["created_by_id"]=user["id"]
    #sanitization
    values_list=[values]
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
@@ -96,7 +96,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.put("/{x}/my/update-object")
 async def function_my_update_object(request:Request,table:str,id:int):
    #prework
@@ -120,7 +120,7 @@ async def function_my_update_object(request:Request,table:str,id:int):
    values["created_by_id"]=None if table=="users" else user["id"]
    #sanitization
    values_list=[values]
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"update")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
@@ -155,7 +155,7 @@ import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_sanitization_values_list
+from function import function_sanitization
 @router.get("/{x}/my/read-object")
 async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
@@ -172,7 +172,7 @@ async def function_my_read_object(request:Request,table:str,order:str="id desc",
    where=f"where {key_joined}" if key_joined else ""
    #sanitization
    values_list=[where_param_values]
-   response=await function_sanitization_values_list(request.state.postgres_object,values_list)
+   response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
