@@ -6,9 +6,9 @@ router=APIRouter(tags=["my"])
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
-from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
