@@ -27,7 +27,7 @@
 13. aws s3,ses setup included
 14. object level api's without any opinions on the objects
 15. rback included
-16. location based schema included using postgis
+16. postgis included for lat/long use-cases
     
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
