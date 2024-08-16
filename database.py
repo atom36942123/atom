@@ -123,7 +123,7 @@ async def function_database_init(request:Request):
    "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
    "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
    "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
-   "create extension postgis;
+   "create extension postgis;"
    ]
    for query in config_database_query:
       if query.split()[5] not in constraint_name_list:
