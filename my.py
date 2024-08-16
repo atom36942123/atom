@@ -72,10 +72,12 @@ async def function_my_create_object(request:Request,table:str):
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    #values
    values={}
-   for item in column_to_insert_list:
-      if item in body:values[item]=body[item]
-      else:values[item]=None
+   for item in column_to_insert_list:values[item]=None
+   #values assign
+   for k,v in values.items():if k in body:values[k]=body[k]
    values["created_by_id"]=user["id"]
+   #sanitization
+   
    if "metadata" in values:values["metadata"]=json.dumps(values["metadata"],default=str)
    #query run
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
