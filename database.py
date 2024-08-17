@@ -135,6 +135,8 @@ async def function_database_init(request:Request):
    "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
    "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
    "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);"
+   "insert into users (username,password,type,is_protected) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;",
+   "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
    ]
    for query in config_database_query:
       if len(query.split())>5 and query.split()[5] in constraint_name_list:
