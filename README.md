@@ -51,27 +51,11 @@
 13. sentry
 14. postgis
 
+# api collection
+![Screenshot 2024-08-17 at 4 27 12 PM](https://github.com/user-attachments/assets/4a6f1377-e239-4473-8614-577fcaf34003)
 
-# api collection = mongo
-![image](https://github.com/user-attachments/assets/cbe672ec-ef57-443a-a520-1b9570df79a5)
 
-# api collection = elasticsearch
-![image](https://github.com/user-attachments/assets/8c1e3cfa-6cb0-4899-b1fe-5bfaaf52eb9f)
 
-# api collection = aws
-![Screenshot 2024-08-17 at 10 40 06 AM](https://github.com/user-attachments/assets/d98d2549-2fd1-46fc-906b-e3d507bf7c21)
-
-# api collection = auth
-![image](https://github.com/user-attachments/assets/d29b5e8a-58d9-4bc3-a6cb-12349f4e4271)
-
-# api collection = message
-![image](https://github.com/user-attachments/assets/3655420d-48df-483e-b682-196516452229)
-
-# api collection = utility
-![Screenshot 2024-08-17 at 10 41 19 AM](https://github.com/user-attachments/assets/f1f67922-5ef2-4f05-bce3-ae823936433d)
-
-# api collection = admin
-![Screenshot 2024-08-17 at 10 41 32 AM](https://github.com/user-attachments/assets/700bc006-326d-4f88-9aab-8f78c709b091)
 
 
 
