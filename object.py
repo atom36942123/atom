@@ -104,7 +104,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
-from function import function_where
+from function import function_prepare_where
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
@@ -112,17 +112,19 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
    #where
-   query_param["created_by_id"]=f"=,{user['id']}"
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   where_param=where_param|{"created_by_id":f"=,{user['id']}"}
+   response=await function_prepare_where(where_param)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   where=response["message"][0]
+   values=response["message"][1]
    #sanitization
-   values_list=[where_param_values]
-   response=await function_sanitization(request.state.postgres_object,values_list,"read")
+   response=await function_sanitization(request.state.postgres_object,[values],"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   values=values_list[0]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=values
+   values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
    #final
