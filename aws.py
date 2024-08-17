@@ -24,7 +24,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key,config_
 import boto3
 @router.delete("/{x}/aws/delete-s3-key")
 async def function_aws_delete_s3_key(request:Request,url:str):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    buckey_key=url.rsplit("/",1)[1]
@@ -40,7 +40,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key,config_
 import boto3
 @router.delete("/{x}/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
