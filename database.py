@@ -139,7 +139,7 @@ async def function_database_init(request:Request):
    "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
    ]
    for query in config_database_query:
-      if len(query.split())>5 and query.split()[5] in constraint_name_list:
+      if "add constraint" in query and query.split()[5] in constraint_name_list:
          continue
       else:
          query=query
