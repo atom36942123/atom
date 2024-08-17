@@ -1,4 +1,4 @@
-![Screenshot 2024-08-17 at 4 28 17 PM](https://github.com/user-attachments/assets/29a954a0-e315-43f8-b410-c7958d512f15)![Screenshot 2024-08-17 at 4 28 17 PM](https://github.com/user-attachments/assets/7e007809-defa-4466-be43-c8efdc2c8a20)# how to run
+# how to run
 1. download atom repo
 2. install requirement.txt
 3. create .env file as per config.py
