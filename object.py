@@ -2,15 +2,15 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["object"])
 
-#create object
+#create
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
-@router.post("/{x}/my/create-object")
-async def function_my_create_object(request:Request,table:str):
+@router.post("/{x}/object/create")
+async def function_object_create(request:Request,table:str):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -37,7 +37,7 @@ async def function_my_create_object(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-#update object
+#update
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
@@ -45,8 +45,8 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from function import function_sanitization
-@router.put("/{x}/my/update-object")
-async def function_my_update_object(request:Request,table:str,id:int):
+@router.put("/{x}/object/update")
+async def function_object_update(request:Request,table:str,id:int):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -77,14 +77,14 @@ async def function_my_update_object(request:Request,table:str,id:int):
    #final
    return {"status":1,"message":output}
 
-#delete object
+#delete
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.delete("/{x}/my/delete-object")
-async def function_my_delete_object(request:Request,table:str,id:int):
+@router.delete("/{x}/object/delete")
+async def function_object_delete(request:Request,table:str,id:int):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
@@ -97,15 +97,15 @@ async def function_my_delete_object(request:Request,table:str,id:int):
    #final
    return {"status":1,"message":output}
 
-#read object
+#read
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
-@router.get("/{x}/my/read-object")
-async def function_my_read_object(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/{x}/object/read")
+async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
