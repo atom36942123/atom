@@ -73,14 +73,20 @@ app.include_router(router_mongo)
 from elastic import router as router_elasticsearch
 app.include_router(router_elasticsearch)
 
+from auth import router as router_auth
+app.include_router(router_auth)
+
 from message import router as router_message
 app.include_router(router_message)
+
+
+
+
 
 from database import router as router_database
 app.include_router(router_database)
 
-from auth import router as router_auth
-app.include_router(router_auth)
+
 
 from my import router as router_my
 app.include_router(router_my)
