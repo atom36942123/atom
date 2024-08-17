@@ -1,6 +1,6 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["utility"])
+router=APIRouter(tags=["feed"])
 
 #feed
 from fastapi import Request
