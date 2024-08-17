@@ -74,6 +74,6 @@ async def function_sanitization(postgres_object,values_list,mode):
           if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
           if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
         if mode in ["create","update"]:
-          if datatype in ["jsonb"]:values_list[index][k]=json.dumps(json.loads(v)) if v else None
+          if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
