@@ -54,6 +54,11 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":object_list}
 
+#where
+async def function_prepare_where(where_param):
+  
+
+
 #sanitization
 import hashlib,json
 from datetime import datetime
