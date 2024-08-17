@@ -94,14 +94,12 @@ app.include_router(router_utility)
 from admin import router as router_admin
 app.include_router(router_admin)
 
-
-
+from feed import router as router_feed
+app.include_router(router_feed)
 
 from database import router as router_database
 app.include_router(router_database)
 
-from feed import router as router_feed
-app.include_router(router_feed)
 
 #server start
 import uvicorn,asyncio
