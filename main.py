@@ -82,6 +82,9 @@ app.include_router(router_auth)
 from message import router as router_message
 app.include_router(router_message)
 
+from object import router as router_object
+app.include_router(router_object)
+
 from utility import router as router_utility
 app.include_router(router_utility)
 
