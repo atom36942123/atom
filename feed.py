@@ -20,15 +20,18 @@ async def function_feed_general(request:Request,table:str,order:str="id desc",li
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #where
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_prepare_where(where_param)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   where=response["message"][0]
+   values=response["message"][1]
    #sanitization
-   values_list=[where_param_values]
+   values_list=[values]
    response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   values=values_list[0]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=values
+   values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
    #add creator key
