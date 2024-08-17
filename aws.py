@@ -8,11 +8,12 @@ from config import config_aws_access_key_id,config_aws_secret_access_key,config_
 import boto3,uuid
 @router.get("/{x}/aws/create-presigned-url")
 async def function_aws_create_presigned_url(request:Request,filename:str):
-   #logic
-   s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   #param
    buckey_key=str(uuid.uuid4())+"-"+filename
    size_kb=250
    expire_secs=10
+   #logic
+   s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=buckey_key,ExpiresIn=expire_secs,Conditions=[['content-length-range',1,size_kb*1024]])
    #final
    return {"status":1,"message":output}
@@ -26,8 +27,9 @@ import boto3
 async def function_aws_delete_s3_key(request:Request,url:str):
    #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #logic
+   #param
    buckey_key=url.rsplit("/",1)[1]
+   #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Object(config_s3_bucket_name,buckey_key).delete()
    #final
