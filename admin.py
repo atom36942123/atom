@@ -11,11 +11,17 @@ from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from function import function_sanitization
 @router.put("/{x}/admin/update-cell")
-async def function_admin_update_cell(request:Request,table:str,id:int,column:str,value:str):
+async def function_admin_update_cell(request:Request):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   body=await request.json()
+   #body unpack
+   table=body["table"]
+   id=body["id"]
+   column=body["column"]
+   value=body["value"]
    #sanitization
    values_list=[{column:value}]
    response=await function_sanitization(request.state.postgres_object,values_list,"update")
