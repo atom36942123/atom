@@ -51,11 +51,6 @@
 13. sentry
 14. postgis
 
-# api collection
-[api pdf.pdf](https://github.com/user-attachments/files/16643298/api.pdf.pdf)
-
-
-    
 # api collection = database
 ![image](https://github.com/user-attachments/assets/7934135c-bf1b-4153-a8c8-9da337d49656)
 
@@ -65,8 +60,14 @@
 # api collection = logged-in user
 ![image](https://github.com/user-attachments/assets/320fadd1-3317-4152-b987-b5d86ed893ca)
 
+# api collection = admin
+
 # api collection = utility
 ![image](https://github.com/user-attachments/assets/07e549c8-418c-42ec-8d96-4dc732d45785)
+
+# api collection = feed
+
+# api collection = aws
 
 # api collection = mongo
 ![image](https://github.com/user-attachments/assets/cbe672ec-ef57-443a-a520-1b9570df79a5)
