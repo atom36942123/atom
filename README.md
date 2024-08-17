@@ -71,7 +71,8 @@
 ![Screenshot 2024-08-17 at 10 41 19 AM](https://github.com/user-attachments/assets/f1f67922-5ef2-4f05-bce3-ae823936433d)
 
 # api collection = admin
-![Uploading Screenshot 2024-08-17 at 10.41.32 AM.png…]()
+![Screenshot 2024-08-17 at 10 41 32 AM](https://github.com/user-attachments/assets/700bc006-326d-4f88-9aab-8f78c709b091)
+
 
 
 
