@@ -52,30 +52,17 @@
 14. postgis
 
 
-# api collection
-
-## mongo
+# api collection = mongo
 ![image](https://github.com/user-attachments/assets/cbe672ec-ef57-443a-a520-1b9570df79a5)
 
 # api collection = elasticsearch
 ![image](https://github.com/user-attachments/assets/8c1e3cfa-6cb0-4899-b1fe-5bfaaf52eb9f)
 
+# api collection = message
+![image](https://github.com/user-attachments/assets/3655420d-48df-483e-b682-196516452229)
 
 
-# api collection = auth
-![image](https://github.com/user-attachments/assets/73307c67-e79c-442d-b4d7-ca96538e3d32)
 
-# api collection = logged-in user
-![image](https://github.com/user-attachments/assets/320fadd1-3317-4152-b987-b5d86ed893ca)
-
-# api collection = admin
-
-# api collection = utility
-![image](https://github.com/user-attachments/assets/07e549c8-418c-42ec-8d96-4dc732d45785)
-
-# api collection = feed
-
-# api collection = aws
 
 
 
