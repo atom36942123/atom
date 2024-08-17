@@ -76,6 +76,9 @@ app.include_router(router_auth)
 from my import router as router_my
 app.include_router(router_my)
 
+from admin import router as router_admin
+app.include_router(router_admin)
+
 from utility import router as router_utility
 app.include_router(router_utility)
 
