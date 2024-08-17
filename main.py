@@ -82,6 +82,9 @@ app.include_router(router_admin)
 from utility import router as router_utility
 app.include_router(router_utility)
 
+from feed import router as router_feed
+app.include_router(router_feed)
+
 from aws import router as router_aws
 app.include_router(router_aws)
 
