@@ -6,11 +6,12 @@ router=APIRouter(tags=["feed"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi_cache.decorator import cache
+from function import function_read_redis_key
+from function import function_prepare_where
 from function import function_sanitization
 from function import function_add_creator_key
 from function import function_add_action_count
-from fastapi_cache.decorator import cache
-from function import function_read_redis_key
 @router.get("/{x}/feed/general")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_feed_general(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -19,11 +20,6 @@ async def function_feed_general(request:Request,table:str,order:str="id desc",li
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #where
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   where_param_values={k:v.split(',',1)[1] for k,v in where_param.items()}
-   where_param_operator={k:v.split(',',1)[0] for k,v in where_param.items()}
-   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param_values.items()]
-   key_joined=' and '.join(key_list)
-   where=f"where {key_joined}" if key_joined else ""
    #sanitization
    values_list=[where_param_values]
    response=await function_sanitization(request.state.postgres_object,values_list,"read")
