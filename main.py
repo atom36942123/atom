@@ -73,6 +73,9 @@ app.include_router(router_mongo)
 from elastic import router as router_elasticsearch
 app.include_router(router_elasticsearch)
 
+from aws import router as router_aws
+app.include_router(router_aws)
+
 from auth import router as router_auth
 app.include_router(router_auth)
 
@@ -102,8 +105,7 @@ app.include_router(router_admin)
 from feed import router as router_feed
 app.include_router(router_feed)
 
-from aws import router as router_aws
-app.include_router(router_aws)
+
 
 
 
