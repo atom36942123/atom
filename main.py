@@ -97,9 +97,11 @@ app.include_router(router_admin)
 from feed import router as router_feed
 app.include_router(router_feed)
 
+from csv import router as router_csv
+app.include_router(router_csv)
+
 from database import router as router_database
 app.include_router(router_database)
-
 
 #server start
 import uvicorn,asyncio
