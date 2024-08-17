@@ -79,11 +79,14 @@ app.include_router(router_aws)
 from auth import router as router_auth
 app.include_router(router_auth)
 
-from message import router as router_message
-app.include_router(router_message)
+from my import router as router_my
+app.include_router(router_my)
 
 from object import router as router_object
 app.include_router(router_object)
+
+from message import router as router_message
+app.include_router(router_message)
 
 from utility import router as router_utility
 app.include_router(router_utility)
@@ -96,9 +99,6 @@ app.include_router(router_admin)
 
 from database import router as router_database
 app.include_router(router_database)
-
-from my import router as router_my
-app.include_router(router_my)
 
 from feed import router as router_feed
 app.include_router(router_feed)
