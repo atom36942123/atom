@@ -56,8 +56,15 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 
 #where
 async def function_prepare_where(where_param):
-  
-
+  try:
+    where_param_values={k:v.split(',',1)[1] for k,v in where_param.items()}
+    where_param_operator={k:v.split(',',1)[0] for k,v in where_param.items()}
+    key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param_values.items()]
+    key_joined=' and '.join(key_list)
+    where=f"where {key_joined}" if key_joined else ""
+    values=where_param_values
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":[where,values]}
 
 #sanitization
 import hashlib,json
