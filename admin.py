@@ -1,8 +1,6 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["utility"])
-
-
+router=APIRouter(tags=["admin"])
 
 #update cell
 from config import config_key_jwt
@@ -12,8 +10,8 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from function import function_sanitization
-@router.put("/{x}/utility/update-cell")
-async def function_utility_update_cell(request:Request,table:str,id:int,column:str,value:str):
+@router.put("/{x}/admin/update-cell")
+async def function_admin_update_cell(request:Request,table:str,id:int,column:str,value:str):
    #prework
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
