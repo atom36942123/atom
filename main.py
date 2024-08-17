@@ -67,6 +67,15 @@ async def function_root():
    return {"status":1,"message":f"welcome to {[*postgres_object]}"}
   
 #router
+from mongo import router as router_mongo
+app.include_router(router_mongo)
+
+from elastic import router as router_elasticsearch
+app.include_router(router_elasticsearch)
+
+from message import router as router_message
+app.include_router(router_message)
+
 from database import router as router_database
 app.include_router(router_database)
 
@@ -75,9 +84,6 @@ app.include_router(router_auth)
 
 from my import router as router_my
 app.include_router(router_my)
-
-from message import router as router_message
-app.include_router(router_message)
 
 from admin import router as router_admin
 app.include_router(router_admin)
@@ -91,11 +97,7 @@ app.include_router(router_feed)
 from aws import router as router_aws
 app.include_router(router_aws)
 
-from mongo import router as router_mongo
-app.include_router(router_mongo)
 
-from elastic import router as router_elasticsearch
-app.include_router(router_elasticsearch)
 
 #server start
 import uvicorn,asyncio
