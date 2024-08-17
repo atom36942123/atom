@@ -76,6 +76,9 @@ app.include_router(router_auth)
 from my import router as router_my
 app.include_router(router_my)
 
+from message import router as router_message
+app.include_router(router_message)
+
 from admin import router as router_admin
 app.include_router(router_admin)
 
