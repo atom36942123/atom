@@ -18,7 +18,7 @@ async def function_admin_update_cell(request:Request,table:str,id:int,column:str
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #sanitization
    values_list=[{column:value}]
-   response=await function_sanitization(request.state.postgres_object,values_list,"read")
+   response=await function_sanitization(request.state.postgres_object,values_list,"update")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    values=values_list[0]
