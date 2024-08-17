@@ -31,8 +31,8 @@ async def function_object_create(request:Request,table:str):
    response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   values=values_list[0]
    #query run
+   values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
@@ -71,8 +71,8 @@ async def function_object_update(request:Request,table:str,id:int):
    response=await function_sanitization(request.state.postgres_object,values_list,"update")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   values=values_list[0]
    #query run
+   values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
@@ -112,14 +112,14 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    query_param=dict(request.query_params)
    #where
-   where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   where_param=where_param|{"created_by_id":f"=,{user['id']}"}
+   where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}|{"created_by_id":f"=,{user['id']}"}
    response=await function_prepare_where(where_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    where=response["message"][0]
    values=response["message"][1]
    #sanitization
-   response=await function_sanitization(request.state.postgres_object,[values],"read")
+   values_list=[values]
+   response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    #read object
