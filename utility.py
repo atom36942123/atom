@@ -9,7 +9,9 @@ from fastapi_cache.decorator import cache
 @cache(expire=60)
 async def function_utility_pcache(request:Request): 
    #logic
-   config_pcache={"user_count":"select count(*) from users;"}
+   config_pcache={
+   "user_count":"select count(*) from users;"
+   }
    temp={}
    for k,v in config_pcache.items():
       query=v
