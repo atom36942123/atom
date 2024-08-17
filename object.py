@@ -11,10 +11,12 @@ from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
 @router.post("/{x}/object/create")
 async def function_object_create(request:Request,table:str):
-   #prework
+   #token check
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #table check
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #body
    body=await request.json()
    #query set
    column_to_insert_list=[item for item in [*body] if item not in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]]+["created_by_id"]
@@ -47,9 +49,10 @@ from datetime import datetime
 from function import function_sanitization
 @router.put("/{x}/object/update")
 async def function_object_update(request:Request,table:str,id:int):
-   #prework
+   #token check
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #body
    body=await request.json()
    #query set
    column_to_update_list=[item for item in [*body] if item not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]]+["updated_at","updated_by_id"]
@@ -85,7 +88,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
-   #prework
+   #token check
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
@@ -107,9 +110,10 @@ from function import function_sanitization
 from function import function_prepare_where
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #prework
+   #token check
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #query param
    query_param=dict(request.query_params)
    #where
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}|{"created_by_id":f"=,{user['id']}"}
