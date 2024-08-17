@@ -104,6 +104,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
+from function import function_where
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #prework
@@ -113,11 +114,6 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #where
    query_param["created_by_id"]=f"=,{user['id']}"
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   where_param_values={k:v.split(',',1)[1] for k,v in where_param.items()}
-   where_param_operator={k:v.split(',',1)[0] for k,v in where_param.items()}
-   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param_values.items()]
-   key_joined=' and '.join(key_list)
-   where=f"where {key_joined}" if key_joined else ""
    #sanitization
    values_list=[where_param_values]
    response=await function_sanitization(request.state.postgres_object,values_list,"read")
