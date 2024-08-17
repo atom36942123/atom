@@ -8,8 +8,9 @@ import motor.motor_asyncio
 from config import config_mongo_server_uri
 @router.post("/{x}/mongo/create-object")
 async def function_mongo_create_object(request:Request,database:str,table:str):
-   #prework
+   #body
    body=await request.json()
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -24,7 +25,7 @@ from config import config_mongo_server_uri
 from bson import ObjectId
 @router.get("/{x}/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
-   #prework
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -40,8 +41,9 @@ from config import config_mongo_server_uri
 from bson import ObjectId
 @router.put("/{x}/mongo/update-object")
 async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
-   #prework
+   #body
    body=await request.json()
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -56,7 +58,7 @@ from config import config_mongo_server_uri
 from bson import ObjectId
 @router.delete("/{x}/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
-   #prework
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
