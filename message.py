@@ -20,7 +20,7 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
    #final
    return {"status":1,"message":output}
 
-#message inbox unread
+#inbox unread
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
@@ -38,7 +38,7 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
    #final
    return {"status":1,"message":output}
 
-#message thread
+#thread
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
@@ -62,7 +62,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
    #final
    return {"status":1,"message":output}
 
-#message received
+#received
 from config import config_key_jwt
 import jwt,json
 from fastapi import Request
