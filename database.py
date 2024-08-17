@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=query
@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
@@ -48,7 +48,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/init")
 async def function_database_init(request:Request):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #extension
    config_database_extension=[
