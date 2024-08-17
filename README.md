@@ -1,4 +1,4 @@
-# how to run
+![Screenshot 2024-08-17 at 4 28 17 PM](https://github.com/user-attachments/assets/29a954a0-e315-43f8-b410-c7958d512f15)![Screenshot 2024-08-17 at 4 28 17 PM](https://github.com/user-attachments/assets/7e007809-defa-4466-be43-c8efdc2c8a20)# how to run
 1. download atom repo
 2. install requirement.txt
 3. create .env file as per config.py
@@ -54,8 +54,13 @@
 # api collection
 ![Screenshot 2024-08-17 at 4 27 12 PM](https://github.com/user-attachments/assets/4a6f1377-e239-4473-8614-577fcaf34003)
 
+![Screenshot 2024-08-17 at 4 28 01 PM](https://github.com/user-attachments/assets/7812ad3a-01f7-4486-a8f8-02a92dc75c01)
 
+![Uploading image.png…]()
 
+![Screenshot 2024-08-17 at 4 28 35 PM](https://github.com/user-attachments/assets/2f826f8d-37fb-4c9b-8866-683b86b6e458)
+
+![Uploading Screenshot 2024-08-17 at 4.28.49 PM.png…]()
 
 
 
