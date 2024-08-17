@@ -7,8 +7,8 @@ from config import config_key_root
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/query-runner")
-async def function_database_query_runner(request:Request,query:str):
+@router.get("/{x}/database/qrunner")
+async def function_database_qrunner(request:Request,query:str):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
@@ -70,29 +70,30 @@ async def function_database_init(request:Request):
    "is_active":["int",["users","post"]],
    "is_verified":["int",["users","post"]],
    "is_protected":["int",["users","post","box","atom"]],
+   "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
+   "parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
    "type":["text",["users","post","box","atom","helpdesk"]],
    "status":["text",["report","helpdesk","message"]],
    "remark":["text",["report","helpdesk"]],
+   "rating":["numeric",["rating","atom"]],
    "metadata":["jsonb",["users","post","box","atom"]],
-   "parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
-   "parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
-   "last_active_at":["timestamptz",["users"]],
-   "google_id":["text",["users"]],
-   "otp":["int",["otp"]],
    "username":["text",["users"]],
    "password":["text",["users"]],
+   "google_id":["text",["users"]],
+   "profile_pic_url":["text",["users"]],
+   "last_active_at":["timestamptz",["users"]],
    "name":["text",["users"]],
    "email":["text",["users","post","box","atom","otp"]],
    "mobile":["text",["users","post","box","atom","otp"]],
+   "date_of_birth":["date",["users"]],
    "title":["text",["users","post","box","atom"]],
    "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
+   "file_url":["text",["post","box","atom"]],
+   "link_url":["text",["post","box","atom"]],
    "tag":["text",["users","post","box","atom"]],
-   "link":["text",["post","box","atom"]],
-   "file":["text",["post","box","atom"]],
-   "rating":["numeric",["rating","atom"]],
-   "location":["geography(POINT)",["users","post","box","atom"]],
+   "otp":["int",["otp"]],
    "tag_array":["text[]",["atom"]],
-   "date_of_birth":["date",["users"]],
+   "location":["geography(POINT)",["users","post","box","atom"]],
    }
    for k,v in config_database_column.items():
       for table in v[1]:
@@ -125,8 +126,7 @@ async def function_database_init(request:Request):
    "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
    "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
    "alter table report add constraint constraint_unique_report unique (created_by_id,parent_table,parent_id);",
-   "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);",
-   "create extension if not exists postgis;",
+   "alter table block add constraint constraint_unique_block unique (created_by_id,parent_table,parent_id);"
    ]
    for query in config_database_query:
       if len(query.split())>5 and query.split()[5] in constraint_name_list:
