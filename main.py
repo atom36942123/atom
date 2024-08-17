@@ -79,6 +79,9 @@ app.include_router(router_auth)
 from message import router as router_message
 app.include_router(router_message)
 
+from utility import router as router_utility
+app.include_router(router_utility)
+
 
 
 
@@ -94,8 +97,7 @@ app.include_router(router_my)
 from admin import router as router_admin
 app.include_router(router_admin)
 
-from utility import router as router_utility
-app.include_router(router_utility)
+
 
 from feed import router as router_feed
 app.include_router(router_feed)
