@@ -14,8 +14,9 @@ import csv,codecs
 from function import function_sanitization
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #values
    values_list=[]
@@ -43,8 +44,9 @@ import csv,codecs
 from function import function_sanitization
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #values
    values_list=[]
@@ -71,8 +73,9 @@ from fastapi import UploadFile
 import csv,codecs
 @router.get("/{x}/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #values
    values_list=[]
@@ -95,8 +98,9 @@ from fastapi import UploadFile
 import csv,codecs
 @router.delete("/{x}/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
-   #prework
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #values
    values_list=[]
