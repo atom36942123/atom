@@ -40,7 +40,7 @@ async def function_database_clean(request:Request):
          output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":"done"}
-   
+
 #database init
 from config import config_key_root
 from fastapi import Request
@@ -55,6 +55,14 @@ async def function_database_init(request:Request):
    values={}
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    constraint_name_list=[item["constraint_name"] for item in output]
+   #extension
+   config_database_extension=[
+   "create extension if not exists postgis;",
+   ]
+   for item in config_database_extension:
+      query=item
+      values={}
+      await request.state.postgres_object.fetch_all(query=query,values=values)
    #table
    config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
    for table in config_database_table:
