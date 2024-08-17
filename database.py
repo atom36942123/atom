@@ -50,11 +50,6 @@ from fastapi.encoders import jsonable_encoder
 async def function_database_init(request:Request):
    #prework
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #constraint name list
-   query="select constraint_name from information_schema.constraint_column_usage;"
-   values={}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
-   constraint_name_list=[item["constraint_name"] for item in output]
    #extension
    config_database_extension=[
    "create extension if not exists postgis;",
@@ -63,6 +58,11 @@ async def function_database_init(request:Request):
       query=item
       values={}
       await request.state.postgres_object.fetch_all(query=query,values=values)
+   #constraint name list
+   query="select constraint_name from information_schema.constraint_column_usage;"
+   values={}
+   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   constraint_name_list=[item["constraint_name"] for item in output]
    #table
    config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
    for table in config_database_table:
