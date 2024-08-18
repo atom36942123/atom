@@ -7,7 +7,7 @@ import traceback
 
 #logic
 @app.middleware("http")
-async def middleware(request:Request,api_function):
+async def function_middleware(request:Request,api_function):
   #url split (4th position)
   key_4th=str(request.url.path).split("/")[1]
   #x check
