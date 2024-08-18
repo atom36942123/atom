@@ -15,7 +15,7 @@ async def function_action_post(request:Request,title:str=None,description:str,fi
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
    query="insert into post (title,description,file_url,link_url,tag) values (:title,:description,:file_url,:link_url,:tag) returning *;"
-   values=
+   values=dict(request.query_params)
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
