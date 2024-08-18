@@ -1,3 +1,7 @@
+#logging
+import logging
+logging.basicConfig(level="INFO")
+
 #import
 from app import app
 import uvicorn
