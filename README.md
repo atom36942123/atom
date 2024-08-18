@@ -1,16 +1,15 @@
-# how to run
-1. download atom repo
-2. install requirement.txt
-3. create .env file as per config.py
-4. start postgres/redis server added in .env
-5. run python main.py
-
 # what is atom
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
 2. Tech stack = Stack=Python, FastAPI, Postgres, MongoDB, Redis, EC2, S3, Elasticsearch
 3. atom is non opionated. Its more like a boilerplate that can help you to build ~50% of your project within few weeks.
 4. atom is fully scalable as per need
 5. for example - tinder backend can be build with atom with-in ~2 week
+
+# vision
+1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
+2. Primary motivation  is to build as many applications using atom code and help startup founders.
+3. If you are an aspiring founder, then you can email me to build your tech using atom.
+4. Email = atom36942@gmail.com
 
 # salient features
 1. postgres as core database
@@ -29,12 +28,6 @@
 15. rback included
 16. postgis included for lat/long use-cases
     
-# vision
-1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
-2. Primary motivation  is to build as many applications using atom code and help startup founders.
-3. If you are an aspiring founder, then you can email me to build your tech using atom.
-4. Email = atom36942@gmail.com
-
 # tech stack
 1. python
 2. fastapi
@@ -50,6 +43,13 @@
 12. retool
 13. sentry
 14. postgis
+
+# how to run
+1. download atom repo
+2. install requirement.txt
+3. create .env file as per config.py
+4. start postgres/redis server added in .env
+5. run python main.py
 
 # api collection
 ![Screenshot 2024-08-17 at 4 27 12 PM](https://github.com/user-attachments/assets/4a6f1377-e239-4473-8614-577fcaf34003)
