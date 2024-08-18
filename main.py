@@ -17,6 +17,9 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
+#middleware
+from middleware import 
+
 #root api
 @app.get("/")
 async def function_root():
