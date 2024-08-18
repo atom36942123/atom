@@ -9,10 +9,9 @@ from lifespan import function_lifespan
 from fastapi import FastAPI
 app=FastAPI(lifespan=function_lifespan,title="atom")
 
-
-
-#middleware
-from middleware import function_middleware
+#app import
+from cors import *
+from middleware import *
 
 #root api
 @app.get("/")
