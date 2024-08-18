@@ -1,6 +1,8 @@
-#import
+#config
 from config import config_redis_server_uri
 from config import postgres_object_dict
+
+#import
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
