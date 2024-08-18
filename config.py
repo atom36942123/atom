@@ -1,7 +1,9 @@
-#env
+#env read
 from environs import Env
 env=Env()
 env.read_env()
+
+#env unpack
 config_postgres_database_uri=env("config_postgres_database_uri")
 config_redis_server_uri=env("config_redis_server_uri")
 config_mongo_server_uri=env("config_mongo_server_uri")
