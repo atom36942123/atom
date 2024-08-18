@@ -8,16 +8,6 @@ import sentry_sdk
 if False:
   sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
-#postgres object
-from config import config_postgres_database_uri
-from databases import Database
-postgres_object_dict={}
-postgres_url_list=config_postgres_database_uri.split(",")
-for item in postgres_url_list:
-  object=Database(item,min_size=1,max_size=100)
-  x=item.split("/")[-1]
-  postgres_object_dict={x:object}
-
 #app
 from lifespan import function_lifespan
 from fastapi import FastAPI
