@@ -13,10 +13,7 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 from cors import *
 from middleware import *
 
-#root api
-@app.get("/")
-async def function_root():
-   return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
+
   
 #router
 from database import router as router_database
