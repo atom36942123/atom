@@ -113,7 +113,8 @@ from elastic import router as router_elasticsearch
 app.include_router(router_elasticsearch)
 
 #server start
-import uvicorn,asyncio
+import uvicorn
+import asyncio
 if __name__=="__main__":
   uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
   loop=asyncio.new_event_loop()
