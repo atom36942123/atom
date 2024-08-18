@@ -29,9 +29,10 @@ async def function_object_create(request:Request,table:str):
    response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
+   column_to_insert_dict=values_list[0]
    #logic 
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
-   values=values_list[0]
+   values=column_to_insert_dict
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
    return {"status":1,"message":output}
@@ -53,7 +54,6 @@ async def function_object_update(request:Request,table:str,id:int):
    body=await request.json()
    #query set
    column_to_update_list=[item for item in [*body] if item not in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]]+["updated_at","updated_by_id"]
-   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    #values
    values={}
    for item in column_to_update_list:values[item]=None
@@ -71,7 +71,8 @@ async def function_object_update(request:Request,table:str,id:int):
    response=await function_sanitization(request.state.postgres_object,values_list,"update")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   #query run
+   #logic
+   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
