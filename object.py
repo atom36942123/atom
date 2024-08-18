@@ -18,7 +18,7 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #column to insert
+   #column to insert dict
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
    config_column_create_not_allowed=["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]
