@@ -1,5 +1,6 @@
 #import
 from postgres import postgres_object_dict
+from app import app
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
