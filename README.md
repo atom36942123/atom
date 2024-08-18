@@ -1,9 +1,8 @@
 # what is atom
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
-2. Tech stack = Stack=Python, FastAPI, Postgres, MongoDB, Redis, EC2, S3, Elasticsearch
-3. atom is non opionated. Its more like a boilerplate that can help you to build ~50% of your project within few weeks.
-4. atom is fully scalable as per need
-5. for example - tinder backend can be build with atom with-in ~2 week
+2. atom is non opionated. Its more like a boilerplate that can help you to build ~70-80%% of your project within few weeks.
+3. atom is fully scalable as per need.
+4. for example - tinder backend can be build with atom with-in ~2 week
 
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
