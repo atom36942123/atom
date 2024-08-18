@@ -30,9 +30,10 @@ async def function_feed_general(request:Request,table:str,order:str="id desc",li
    response=await function_sanitization(request.state.postgres_object,values_list,"read")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
+   values=values_list[0]
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
-   values=values_list[0]
+   values=values
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    output=[dict(item) for item in output]
    #add creator key
