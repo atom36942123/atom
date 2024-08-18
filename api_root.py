@@ -1,4 +1,10 @@
-#root api
-@app.get("/")
+#router
+from fastapi import APIRouter
+router=APIRouter(tags=["root"])
+
+#root
+from postgres import postgres_object_dict
+@router.get("/")
 async def function_root():
-   return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
+   x_list=[*postgres_object_dict]
+   return {"status":1,"message":f"welcome to {x_list}"}
