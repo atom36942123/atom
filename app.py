@@ -1,7 +1,3 @@
-#logging
-import logging
-logging.basicConfig(level="INFO")
-
 #sentry
 from config import config_sentry_dsn
 import sentry_sdk
