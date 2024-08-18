@@ -18,22 +18,19 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #query set
-   column_to_insert_list=[item for item in [*body] if item not in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]]+["created_by_id"]
-   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-   #values
-   values={}
-   for item in column_to_insert_list:values[item]=None
-   #values assign
-   for k,v in values.items():
-      if k in body:values[k]=body[k]
-   values["created_by_id"]=user["id"]
+   #column to insert
+   column_to_insert_dict=body
+   column_to_insert_dict["created_by_id"]=user["id"]
+   config_column_create_not_allowed=["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]
+   for k,v in column_to_insert_dict.items():
+      if k in config_column_create_not_allowed:column_to_insert_dict.pop(k)
    #sanitization
-   values_list=[values]
+   values_list=[column_to_insert_dict]
    response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
-   #query run
+   #logic 
+   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
    values=values_list[0]
    output=await request.state.postgres_object.fetch_all(query=query,values=values)
    #final
