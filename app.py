@@ -1,7 +1,7 @@
 #sentry
 from config import config_sentry_dsn
 import sentry_sdk
-if False:
+if True:
   sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #app
