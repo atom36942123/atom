@@ -5,13 +5,19 @@ logging.basicConfig(level="INFO")
 #sentry
 from config import config_sentry_dsn
 import sentry_sdk
-if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
+if False:
+  sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #postgres object
 from config import config_postgres_database_uri
 from databases import Database
-postgres_object={item.split("/")[-1]:Database(item,min_size=1,max_size=100) for item in config_postgres_database_uri.split(",")}
-
+postgres_object_dict={}
+postgres_url_list=config_postgres_database_uri.split(",")
+for item in postgres_url_list:
+  object=Database(item,min_size=1,max_size=100)
+  x=item.split("/")[-1]
+  postgres_object_dict={x:object}
+  
 #lifespan
 from config import config_redis_server_uri
 from fastapi import FastAPI
@@ -27,11 +33,11 @@ async def function_lifespan(app:FastAPI):
   #redis rate limiter
   await FastAPILimiter.init(aioredis.from_url(config_redis_server_uri,encoding="utf-8",decode_responses=True))
   #postgres connect
-  for k,v in postgres_object.items():await v.connect()
+  for k,v in postgres_object_dict.items():await v.connect()
   #shutdown
   yield
   #postgres disconnect
-  for k,v in postgres_object.items():await v.disconnect()
+  for k,v in postgres_object_dict.items():await v.disconnect()
 
 #app
 from fastapi import FastAPI
@@ -50,9 +56,9 @@ import traceback
 async def middleware(request:Request,api_function):
   #x check
   key_4th=str(request.url.path).split("/")[1]
-  if key_4th not in ["","docs","openapi.json","redoc"]+[*postgres_object]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
+  if key_4th not in ["","docs","openapi.json","redoc"]+[*postgres_object_dict]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
   #postgres object assgin
-  if key_4th in postgres_object:request.state.postgres_object=postgres_object[key_4th]
+  if key_4th in postgres_object_dict:request.state.postgres_object_dict=postgres_object_dict[key_4th]
   #api response
   try:response=await api_function(request)
   except Exception as e:
@@ -64,7 +70,7 @@ async def middleware(request:Request,api_function):
 #root api
 @app.get("/")
 async def function_root():
-   return {"status":1,"message":f"welcome to {[*postgres_object]}"}
+   return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
   
 #router
 from database import router as router_database
