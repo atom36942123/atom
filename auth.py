@@ -51,7 +51,7 @@ from function import function_create_token
 async def function_auth_google(request:Request):
    #body
    body=await request.json()
-   google_id=body["google_id"]
+   google_id=str(body["google_id"])
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
    values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
