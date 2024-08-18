@@ -66,6 +66,7 @@ from elastic import router as router_elasticsearch
 app.include_router(router_elasticsearch)
 
 #server start
+from app import app
 import uvicorn
 import asyncio
 if __name__=="__main__":
