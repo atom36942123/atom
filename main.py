@@ -20,7 +20,7 @@ for item in postgres_url_list:
 
 #app
 from fastapi import FastAPI
-from lifespan import lifespan
+from lifespan import function_lifespan
 app=FastAPI(lifespan=function_lifespan,title="atom")
 
 #cors
