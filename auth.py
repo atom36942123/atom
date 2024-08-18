@@ -10,7 +10,7 @@ async def function_auth_signup(request:Request):
    #body
    body=await request.json()
    username=body["username"]
-   password=body["password"]
+   password=str(body["password"])
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
    values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -28,7 +28,7 @@ async def function_auth_login(request:Request):
    #body
    body=await request.json()
    username=body["username"]
-   password=body["password"]
+   password=str(body["password"])
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
    values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
