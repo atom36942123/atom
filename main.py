@@ -19,8 +19,8 @@ for item in postgres_url_list:
   postgres_object_dict={x:object}
 
 #app
-from fastapi import FastAPI
 from lifespan import function_lifespan
+from fastapi import FastAPI
 app=FastAPI(lifespan=function_lifespan,title="atom")
 
 #cors
