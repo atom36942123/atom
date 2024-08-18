@@ -6,7 +6,11 @@ router=APIRouter(tags=["auth"])
 from fastapi import Request
 import hashlib
 @router.post("/{x}/auth/signup")
-async def function_auth_signup(request:Request,username:str,password:str):
+async def function_auth_signup(request:Request):
+   #body
+   body=await request.json()
+   username=body["username"]
+   password=body["password"]
    #logic
    query="insert into users (username,password) values (:username,:password) returning *;"
    values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -19,8 +23,12 @@ from fastapi import Request
 import hashlib
 from config import config_key_jwt
 from function import function_create_token
-@router.get("/{x}/auth/login")
-async def function_auth_login(request:Request,username:str,password:str):
+@router.post("/{x}/auth/login")
+async def function_auth_login(request:Request):
+   #body
+   body=await request.json()
+   username=body["username"]
+   password=body["password"]
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
    values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -34,13 +42,16 @@ async def function_auth_login(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":token}
 
-#login google
+#google
 from fastapi import Request
 import hashlib
 from config import config_key_jwt
 from function import function_create_token
-@router.get("/{x}/auth/google")
-async def function_auth_google(request:Request,google_id:str):
+@router.post("/{x}/auth/google")
+async def function_auth_google(request:Request):
+   #body
+   body=await request.json()
+   google_id=body["google_id"]
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
    values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
@@ -63,14 +74,18 @@ async def function_auth_google(request:Request,google_id:str):
    #final
    return {"status":1,"message":token}
 
-#login email
+#email
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from config import config_key_jwt
 from function import function_create_token
-@router.get("/{x}/auth/email")
-async def function_auth_email(request:Request,email:str,otp:int):
+@router.post("/{x}/auth/email")
+async def function_auth_email(request:Request):
+   #body
+   body=await request.json()
+   email=body["email"]
+   otp=body["otp"]
    #verify otp
    query="select otp from otp where email=:email order by id desc limit 1;"
    values={"email":email}
@@ -99,14 +114,18 @@ async def function_auth_email(request:Request,email:str,otp:int):
    #final
    return {"status":1,"message":token}
 
-#login mobile
+#mobile
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from config import config_key_jwt
 from function import function_create_token
-@router.get("/{x}/auth/mobile")
-async def function_auth_mobile(request:Request,mobile:str,otp:int):
+@router.post("/{x}/auth/mobile")
+async def function_auth_mobile(request:Request):
+   #body
+   body=await request.json()
+   mobile=body["mobile"]
+   otp=body["otp"]
    #verify otp
    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
    values={"mobile":mobile}
