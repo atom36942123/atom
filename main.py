@@ -17,30 +17,10 @@ for item in postgres_url_list:
   object=Database(item,min_size=1,max_size=100)
   x=item.split("/")[-1]
   postgres_object_dict={x:object}
-  
-#lifespan
-from config import config_redis_server_uri
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from redis import asyncio as aioredis
-from fastapi_limiter import FastAPILimiter
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-@asynccontextmanager
-async def function_lifespan(app:FastAPI):
-  #redis cache
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_uri)))
-  #redis rate limiter
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_uri,encoding="utf-8",decode_responses=True))
-  #postgres connect
-  for k,v in postgres_object_dict.items():await v.connect()
-  #shutdown
-  yield
-  #postgres disconnect
-  for k,v in postgres_object_dict.items():await v.disconnect()
 
 #app
 from fastapi import FastAPI
+from lifespan import lifespan
 app=FastAPI(lifespan=function_lifespan,title="atom")
 
 #cors
