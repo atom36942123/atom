@@ -79,6 +79,9 @@ app.include_router(router_my)
 from object import router as router_object
 app.include_router(router_object)
 
+from action import router as router_action
+app.include_router(router_action)
+
 from message import router as router_message
 app.include_router(router_message)
 
