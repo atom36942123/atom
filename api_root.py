@@ -6,6 +6,6 @@ router=APIRouter(tags=["root"])
 from postgres import postgres_object_dict
 from fastapi import Request
 @router.get("/")
-async def function_root():
+async def function_root(request:Request):
    x_list=[*postgres_object_dict]
    return {"status":1,"message":f"welcome to {x_list}"}
