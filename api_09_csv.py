@@ -38,36 +38,21 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    #query set
    column_to_insert_dict=column_to_insert_dict_list[0]
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
-   query_param=column_to_insert_dict_list
+   query_param_list=column_to_insert_dict_list
    #sanitization query_param
-   response=await function_sanitization_query_param_list(postgres_object,"create",query_param)
+   response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   query_param=response["message"][0]
-
-
-
-
-
-
-   
-
-   #logic
-   column_to_insert_list=[*values_list[0]]
-   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-   values=values_list
-   output=await postgres_object.execute_many(query=query,values=values)
+   query_param_list=response["message"]
+   #query run
+   output=await postgres_object.execute_many(query=query,values=query_param_list)
    #final
    await file.close()
    return {"status":1,"message":output}
 
 #update
-from config import config_key_root
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
-import csv,codecs
-from function import function_sanitization
+from function import function_sanitization_query_param_list
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
    #token check
