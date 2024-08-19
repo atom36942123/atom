@@ -16,7 +16,7 @@ from fastapi import Request
 from function import function_sanitization_query_param_list
 @router.post("/{x}/object/create")
 async def function_object_create(request:Request,table:str):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -51,7 +51,7 @@ from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/object/update")
 async def function_object_update(request:Request,table:str,id:int):
-   #database 
+   #postgres object  
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -86,7 +86,7 @@ async def function_object_update(request:Request,table:str,id:int):
 from fastapi import Request
 @router.delete("/{x}/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
-   #database 
+   #postgres object  
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -105,7 +105,7 @@ from function import function_sanitization_query_param_list
 from function import function_prepare_where
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #database 
+   #postgres object  
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
