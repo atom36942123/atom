@@ -15,7 +15,7 @@ import json
 from fastapi import Request
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -31,7 +31,7 @@ async def function_action_post(request:Request,description:str,title:str=None,fi
 from fastapi import Request
 @router.post("/{x}/action/helpdesk")
 async def function_action_helpdesk(request:Request,type:str,description:str):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -47,7 +47,7 @@ async def function_action_helpdesk(request:Request,type:str,description:str):
 from fastapi import Request
 @router.post("/{x}/action/like")
 async def function_action_like(request:Request,parent_table:str,parent_id:int):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -64,7 +64,7 @@ async def function_action_like(request:Request,parent_table:str,parent_id:int):
 from fastapi import Request
 @router.post("/{x}/action/bookmark")
 async def function_action_bookmark(request:Request,parent_table:str,parent_id:int):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -81,7 +81,7 @@ async def function_action_bookmark(request:Request,parent_table:str,parent_id:in
 from fastapi import Request
 @router.post("/{x}/action/block")
 async def function_action_block(request:Request,parent_table:str,parent_id:int,description:str=None):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -98,7 +98,7 @@ async def function_action_block(request:Request,parent_table:str,parent_id:int,d
 from fastapi import Request
 @router.post("/{x}/action/comment")
 async def function_action_comment(request:Request,parent_table:str,parent_id:int,description:str,file_url:str=None,):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -115,7 +115,7 @@ async def function_action_comment(request:Request,parent_table:str,parent_id:int
 from fastapi import Request
 @router.post("/{x}/action/message")
 async def function_action_message(request:Request,parent_table:str,parent_id:int,description:str):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -132,7 +132,7 @@ async def function_action_message(request:Request,parent_table:str,parent_id:int
 from fastapi import Request
 @router.post("/{x}/action/rating")
 async def function_action_rating(request:Request,parent_table:str,parent_id:int,rating:str):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -150,7 +150,7 @@ async def function_action_rating(request:Request,parent_table:str,parent_id:int,
 from fastapi import Request
 @router.post("/{x}/action/report")
 async def function_action_report(request:Request,parent_table:str,parent_id:int,description:str=None):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
