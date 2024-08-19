@@ -2,11 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-#import raise error
+#import for raising error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-#cache
+#import for redis cache
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 
