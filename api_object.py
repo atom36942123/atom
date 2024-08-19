@@ -25,7 +25,7 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #create object query
+   #create object general query
    column_to_insert_dict={}
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
    query_param_dict=column_to_insert_dict
@@ -42,7 +42,7 @@ async def function_object_create(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    column_to_insert_dict=values_list[0]
-   #logic 
+   #logic
    values=column_to_insert_dict
    output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
