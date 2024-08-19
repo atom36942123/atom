@@ -2,12 +2,17 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["mongo"])
 
-#create object
-from fastapi import Request
+#import for mongo object
 import motor.motor_asyncio
 from config import config_mongo_server_uri
+
+#create object
+from fastapi import Request
 @router.post("/{x}/mongo/create-object")
 async def function_mongo_create_object(request:Request,database:str,table:str):
+   #database
+   postgres_object=request.state.postgres_object
+
    #body
    body=await request.json()
    #mongo object
