@@ -30,15 +30,13 @@ async def function_admin_update_cell(request:Request):
    id=body["id"]
    column=body["column"]
    value=body["value"]
-   #sanitization
-   values_list=[{column:value}]
-   response=await function_sanitization(request.state.postgres_object,values_list,"update")
+   #sanitization query_param
+   response=await function_sanitization_query_param_list(postgres_object,"update",[{column:value}])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   values_list=response["message"]
-   value=values_list[0][column]
+   value=response["message"][0][column]
    #logic
    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   values={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
