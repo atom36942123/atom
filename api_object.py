@@ -105,9 +105,9 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #query param
    query_param=dict(request.query_params)
    #prepare where
-   where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
-   where_param["created_by_id"]=f"=,{user['id']}"
-   response=await function_prepare_where_param(where_param)
+   where_param_raw={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   where_param_raw["created_by_id"]=f"=,{user['id']}"
+   response=await function_prepare_where_param(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    where_string=response["message"][0]
    where_param=response["message"][1]
