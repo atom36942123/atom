@@ -2,12 +2,17 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
-#profile
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
+#import raise error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+
+#import auth check jwt
+from config import config_key_jwt
+import jwt
+import json
+
+#profile
+from fastapi import Request
 from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/{x}/my/profile")
