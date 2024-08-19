@@ -49,16 +49,39 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    await file.close()
    return {"status":1,"message":output}
 
+
+   #prepare column_to_update_list
+   column_to_update_dict=body
+   column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+   column_to_update_dict["updated_by_id"]=user["id"]
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in column_to_update_dict:column_to_update_dict.pop(item)
+   #query set
+   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in [*column_to_update_dict]])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   query_param=column_to_update_dict|{"id":id,"created_by_id":user["id"]}
+   if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
+   #sanitization query_param
+   response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   query_param=response["message"][0]
+   #query run
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 #update
 from fastapi import Request
 from fastapi import UploadFile
 from function import function_sanitization_query_param_list
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
-   #token check
+   #database
+   postgres_object=request.state.postgres_object
+   #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   
    #values
    values_list=[]
    for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
