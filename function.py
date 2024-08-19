@@ -78,9 +78,9 @@ async def function_prepare_where(where_param):
 import hashlib
 import json
 from datetime import datetime
-async def function_sanitization(postgres_object,values_list,mode):
-  if mode not in ["create","read","update"]:return {"status":0,"message":"wrong mode"}
+async def function_sanitization(postgres_object,query_type,query_param):
   try:
+    if query_type not in ["create","update","read"]:return {"status":0,"message":"query_type"}
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
     output=await postgres_object.fetch_all(query=query,values=values)
@@ -88,13 +88,13 @@ async def function_sanitization(postgres_object,values_list,mode):
     for index,object in enumerate(values_list):
       for k,v in object.items():
         datatype=column_datatype[k]
-        if mode in ["create","read","update"]:
+        if query_type in ["create","read","update"]:
           if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
           if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
           if datatype in ["numeric"]:values_list[index][k]=round(float(v),3) if v else None
           if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
           if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-        if mode in ["create","update"]:
+        if query_type in ["create","update"]:
           if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":values_list}
