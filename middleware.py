@@ -32,6 +32,14 @@ async def function_middleware(request:Request,api_function):
     if k in path:
       if v=="root":
         if token!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
+      if v=="jwt":
+        
+        
+        
+        
+       user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+
   #api response
   try:
     response=await api_function(request)
