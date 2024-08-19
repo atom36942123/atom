@@ -29,8 +29,6 @@ app.include_router(router_utility)
 from api_admin import router as router_admin
 app.include_router(router_admin)
 
-
-
 #database
 from api_database import router as router_database
 app.include_router(router_database)
