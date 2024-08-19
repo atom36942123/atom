@@ -78,23 +78,23 @@ async def function_prepare_where(where_param):
 import hashlib
 import json
 from datetime import datetime
-async def function_sanitization(postgres_object,query_type,query_param):
+async def function_sanitization_query_param(postgres_object,query_type,query_param_list):
   try:
     if query_type not in ["create","update","read"]:return {"status":0,"message":"query_type"}
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     values={}
     output=await postgres_object.fetch_all(query=query,values=values)
     column_datatype={item["column_name"]:item["datatype"] for item in output}
-    for index,object in enumerate(values_list):
+    for index,object in enumerate(query_param_list):
       for k,v in object.items():
         datatype=column_datatype[k]
         if query_type in ["create","read","update"]:
-          if k in ["password","google_id"]:values_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-          if datatype in ["integer","bigint"]:values_list[index][k]=int(v) if v else None
-          if datatype in ["numeric"]:values_list[index][k]=round(float(v),3) if v else None
-          if datatype in ["ARRAY"]:values_list[index][k]=v.split(",") if v else None
-          if datatype in ["date","timestamp with time zone"]:values_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+          if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+          if datatype in ["integer","bigint"]:query_param_list[index][k]=int(v) if v else None
+          if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+          if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+          if datatype in ["date","timestamp with time zone"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
         if query_type in ["create","update"]:
-          if datatype in ["jsonb"]:values_list[index][k]=json.dumps(v) if v else None
+          if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
   except Exception as e:return {"status":0,"message":e.args}
-  return {"status":1,"message":values_list}
+  return {"status":1,"message":query_param_list}
