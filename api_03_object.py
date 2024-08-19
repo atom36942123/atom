@@ -55,7 +55,7 @@ async def function_object_update(request:Request,table:str,id:int):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #body
    body=await request.json()
-   #prepare column_to_update_list
+   #prepare column_to_update_dict
    column_to_update_dict=body
    column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    column_to_update_dict["updated_by_id"]=user["id"]
