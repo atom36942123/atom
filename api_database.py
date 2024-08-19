@@ -3,11 +3,16 @@ from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
 #query runner
+from config import config_key_root
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi import Request
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
-   #inherit
+   #database
    postgres_object=request.state.postgres_object
+   #auth
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #logic
    query=query
    values={}
@@ -17,9 +22,9 @@ async def function_database_qrunner(request:Request,query:str):
 
 #database clean
 from config import config_key_root
-from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi import Request
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
    #token check
