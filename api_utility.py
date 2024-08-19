@@ -42,6 +42,8 @@ from function import function_add_action_count
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #database
+   postgres_object=request.state.postgres_object
    #query param
    query_param=dict(request.query_params)
    #table check
