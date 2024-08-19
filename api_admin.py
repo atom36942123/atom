@@ -2,12 +2,17 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
-#update cell
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
+#import raise error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+
+#import auth check jwt
+from config import config_key_jwt
+import jwt
+import json
+
+#update cell
+from fastapi import Request
 from datetime import datetime
 from function import function_sanitization
 @router.put("/{x}/admin/update-cell")
