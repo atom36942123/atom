@@ -25,18 +25,21 @@ async def function_auth_signup(request:Request):
 #login
 from fastapi import Request
 import hashlib
-
 from function import function_create_token
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
+   #database
+   postgres_object=request.state.postgres_object
    #body
    body=await request.json()
    username=body["username"]
    password=str(body["password"])
+   #conversion
+   password=hashlib.sha256(password.encode()).hexdigest()
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
-   values={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
-   output=await postgres_object.fetch_all(query=query,values=values)
+   query_param_dict={"username":username,"password":password}
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #create token
