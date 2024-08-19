@@ -17,7 +17,7 @@ from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
