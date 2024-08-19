@@ -13,4 +13,8 @@ app.include_router(router_auth)
 from api_my import router as router_my
 app.include_router(router_my)
 
+#object
+from api_object import router as router_object
+app.include_router(router_object)
+
 
