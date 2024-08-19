@@ -20,13 +20,16 @@ async def function_middleware(request:Request,api_function):
   #postgres object assgin
   if key_4th in postgres_object_dict:
     request.state.postgres_object=postgres_object_dict[key_4th]
-  #auth check root
-  root_api=["database/qrunner"]
+  #auth check
+  auth_api_dict={
+  "database/qrunner":"root",
+  }
   path=str(request.url.path)
   token=request.headers.get("Authorization").split(" ",1)[1]
-  for item in root_api:
-    if item in path:
-      if token!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
+  for k,v in auth_api_dict.items():
+    if k in path:
+      if v=="root":
+        if token!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
   #api response
   try:
     response=await api_function(request)
