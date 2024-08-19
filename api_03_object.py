@@ -34,7 +34,7 @@ async def function_object_create(request:Request,table:str):
    #query_param set
    query_param={}
    for item in column_to_insert_list:
-      if k in body:query_param[item]=body[item]
+      if item in body:query_param[item]=body[item]
    query_param["created_by_id"]=user["id"]
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
@@ -67,7 +67,7 @@ async def function_object_update(request:Request,table:str,id:int):
    #query_param set
    query_param={}
    for item in column_to_update_list:
-      if k in body:query_param[item]=body[item]
+      if item in body:query_param[item]=body[item]
    query_param["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    query_param["updated_by_id"]=user["id"]
    query_param["id"]=id
