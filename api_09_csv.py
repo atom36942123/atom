@@ -39,7 +39,7 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    #query_param set
    query_param_list=file_row_list
-   #sanitization query_param
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param_list=response["message"]
@@ -71,7 +71,7 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
    #query_param set
    query_param_list=file_row_list
-   #sanitization query_param
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param_list=response["message"]
@@ -120,16 +120,15 @@ async def function_csv_delete(request:Request,table:str,file:UploadFile):
    file_row_list=[]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    for row in file_csv:file_row_list.append(row)
-   #sanitization query_param
+   #query set
+   query=f"delete from {table} where id=:id;"
+   query_param_list=file_row_list
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param_list=response["message"]
-
-      
-   #logic
-   query=f"delete from {table} where id=:id;"
-   values=values_list
-   output=await postgres_object.execute_many(query=query,values=values)
+   #query run
+   output=await postgres_object.execute_many(query=query,values=query_param_list)
    #final
    await file.close()
    return {"status":1,"message":output}
