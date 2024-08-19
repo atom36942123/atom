@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#common import auth check root
+#import auth check root
 from config import config_key_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
