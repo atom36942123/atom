@@ -21,4 +21,8 @@ app.include_router(router_object)
 from api_action import router as router_action
 app.include_router(router_action)
 
+#message
+from api_message import router as router_message
+app.include_router(router_message)
+
 
