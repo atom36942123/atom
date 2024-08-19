@@ -7,7 +7,9 @@ from fastapi import Request
 from fastapi_cache.decorator import cache
 @router.get("/{x}/utility/pcache")
 @cache(expire=60)
-async def function_utility_pcache(request:Request): 
+async def function_utility_pcache(request:Request):
+   #database
+   postgres_object=request.state.postgres_object
    #config
    config_pcache={
    "user_count":"select count(*) from users;"
@@ -17,14 +19,11 @@ async def function_utility_pcache(request:Request):
    #logic
    for k,v in config_pcache.items():
       query=v
-      values={}
-      output=await request.state.postgres_object.fetch_all(query=query,values=values)
-      if "count" in k:temp[k]=output[0]["count"]
-      else:temp[k]=output
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output
    #final
    return {"status":1,"message":temp}
-
-
 
 #feed
 from fastapi import Request
