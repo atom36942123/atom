@@ -23,7 +23,7 @@ from fastapi import UploadFile
 from function import function_sanitization_query_param_list
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -55,7 +55,7 @@ from fastapi import UploadFile
 from function import function_sanitization_query_param_list
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -87,7 +87,7 @@ from fastapi import Request
 from fastapi import UploadFile
 @router.get("/{x}/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -111,7 +111,7 @@ from fastapi import Request
 from fastapi import UploadFile
 @router.delete("/{x}/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
