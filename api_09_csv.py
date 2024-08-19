@@ -66,7 +66,8 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    for row in file_csv:file_row_list.append(row)
    #column_to_update_list
-   column_to_update_list=[*file_row_list[0]].remove("id")
+   column_to_update_list=[*file_row_list[0]]
+   column_to_update_list.remove("id")
    #query set
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
    #query_param set
