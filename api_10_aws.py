@@ -17,7 +17,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name,config_s3_region_name
 @router.get("/{x}/aws/create-presigned-url")
 async def function_aws_create_presigned_url(request:Request,filename:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #config
    size_kb=250
@@ -37,7 +37,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name
 @router.delete("/{x}/aws/delete-s3-key")
 async def function_aws_delete_s3_key(request:Request,url:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -56,7 +56,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name
 @router.delete("/{x}/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
