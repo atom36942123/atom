@@ -39,7 +39,7 @@ async def function_action_post(request:Request,parent_table:str,parent_id:int):
    #logic
    query="insert into likes (created_by_id,parent_table,parent_id) values (:created_by_id,:parent_table,:parent_id) returning *;"
    query_param=dict(request.query_params)|{"created_by_id":user["id"]}
-   print(query_param)
+   query_param["parent_id"]=int(query_param["parent_id"])
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
