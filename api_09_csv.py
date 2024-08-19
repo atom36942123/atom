@@ -39,6 +39,11 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param=response["message"][0]
 
+   #query set
+   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
+   query_param=column_to_insert_dict
+
+
 
 
    
