@@ -17,7 +17,7 @@ async def function_database_qrunner(request:Request,query:str):
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #qrunner
+   #logic
    query=query
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
