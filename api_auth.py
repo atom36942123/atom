@@ -25,7 +25,7 @@ async def function_auth_signup(request:Request):
 #login
 from fastapi import Request
 import hashlib
-from config import config_key_jwt
+
 from function import function_create_token
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
