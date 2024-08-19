@@ -140,6 +140,7 @@ async def function_action_rating(request:Request,parent_table:str,parent_id:int,
    #logic
    query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
    query_param={"created_by_id":user["id"]}|dict(request.query_params)
+   query_param["parent_id"]=int(query_param["parent_id"])
    query_param["rating"]=float(query_param["rating"])
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
