@@ -29,7 +29,7 @@ async def function_object_create(request:Request,table:str):
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in column_to_insert_dict:column_to_insert_dict.pop(k)
+      if item in column_to_insert_dict:column_to_insert_dict.pop(item)
    #query set
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
    query_param=column_to_insert_dict
@@ -60,7 +60,7 @@ async def function_object_update(request:Request,table:str,id:int):
    column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    column_to_update_dict["updated_by_id"]=user["id"]
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in column_to_update_dict:column_to_update_dict.pop(k)
+      if item in column_to_update_dict:column_to_update_dict.pop(item)
    #query set
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in [*column_to_update_dict]])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    query_param=column_to_update_dict|{"id":id,"created_by_id":user["id"]}
