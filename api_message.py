@@ -70,14 +70,12 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
    return {"status":1,"message":output}
 
 #received
-from config import config_key_jwt
-import jwt,json
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
-   #token check
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
@@ -88,14 +86,12 @@ async def function_received(request:Request,limit:int=100,page:int=1):
    return {"status":1,"message":output}
 
 #delete message all
-from config import config_key_jwt
-import jwt,json
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/message/delete-all")
 async def function_delete_all(request:Request):
-   #token check
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
