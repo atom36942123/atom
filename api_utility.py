@@ -36,7 +36,7 @@ async def function_utility_pcache(request:Request):
 #feed
 from fastapi import Request
 from function import function_prepare_where
-from function import function_sanitization
+from function import function_sanitization_query_param_list
 from function import function_add_creator_key
 from function import function_add_action_count
 @router.get("/{x}/utility/feed")
