@@ -20,7 +20,9 @@ import csv,codecs
 from function import function_sanitization
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
-   #token check
+   #database
+   postgres_object=request.state.postgres_object
+   #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
