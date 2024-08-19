@@ -37,4 +37,18 @@ app.include_router(router_database)
 from api_csv import router as router_csv
 app.include_router(router_csv)
 
+#aws
+from api_aws import router as router_aws
+app.include_router(router_aws)
+
+#mongo
+from api_mongo import router as router_mongo
+app.include_router(router_mongo)
+
+#elasticsearch
+from api_elasticsearch import router as router_elasticsearch
+app.include_router(router_elasticsearch)
+
+
+
 
