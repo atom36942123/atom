@@ -25,7 +25,7 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #prepare column_to_insert_dict
+   #column_to_insert_dict
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
@@ -55,7 +55,7 @@ async def function_object_update(request:Request,table:str,id:int):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #body
    body=await request.json()
-   #prepare column_to_update_dict
+   #column_to_update_dict
    column_to_update_dict=body
    column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    column_to_update_dict["updated_by_id"]=user["id"]
