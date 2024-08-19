@@ -15,7 +15,7 @@ from fastapi import Request
 async def function_database_qrunner(request:Request,query:str):
    #database
    postgres_object=request.state.postgres_object
-   #auth
+   #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #qrunner
    query=query
@@ -30,7 +30,7 @@ from fastapi import Request
 async def function_database_clean(request:Request):
    #database
    postgres_object=request.state.postgres_object
-   #auth
+   #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
@@ -52,7 +52,7 @@ from fastapi import Request
 async def function_database_init(request:Request):
    #database
    postgres_object=request.state.postgres_object
-   #auth
+   #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #create extension
    config_database_extension=[
