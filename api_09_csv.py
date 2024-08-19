@@ -13,11 +13,14 @@ from config import config_key_root
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 
+#import file to csv converter
+import csv
+import codecs
+
 #create
 from fastapi import Request
 from fastapi import UploadFile
-import csv,codecs 
-from function import function_sanitization
+from function import function_sanitization_query_param_list
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
    #database
@@ -26,9 +29,11 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   #file to csv
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    #values
    values_list=[]
-   for row in csv.DictReader(codecs.iterdecode(file.file,'utf-8')):values_list.append(row)
+   for row in :values_list.append(row)
    #sanitization
    response=await function_sanitization(request.state.postgres_object,values_list,"create")
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
