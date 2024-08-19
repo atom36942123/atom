@@ -13,3 +13,5 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 from cors import *
 from middleware import *
 from router import *
+
+#root api
