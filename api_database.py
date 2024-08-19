@@ -6,9 +6,11 @@ router=APIRouter(tags=["database"])
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
+#import auth root
+from config import config_key_root
+
 #qrunner
 from fastapi import Request
-from config import config_key_root
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
    #database
@@ -24,7 +26,6 @@ async def function_database_qrunner(request:Request,query:str):
 
 #clean
 from fastapi import Request
-from config import config_key_root
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
    #database
@@ -47,7 +48,6 @@ async def function_database_clean(request:Request):
 
 #database init
 from fastapi import Request
-from config import config_key_root
 @router.get("/{x}/database/init")
 async def function_database_init(request:Request):
    #database
