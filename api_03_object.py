@@ -71,7 +71,7 @@ async def function_object_update(request:Request,table:str,id:int):
    query_param["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    query_param["updated_by_id"]=user["id"]
    query_param["id"]=id
-   query_param["created_by_id"]=user["id"]}
+   query_param["created_by_id"]=user["id"]
    if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
