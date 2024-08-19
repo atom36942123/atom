@@ -21,8 +21,10 @@ async def function_middleware(request:Request,api_function):
     request.state.postgres_object=postgres_object_dict[key_4th]
   #auth check root
   root_api=["database/qrunner"]
+  path=str(request.url.path)
   for item in root_api:
-    if item in 
+    if item in path:
+      
   #api response
   try:
     response=await api_function(request)
