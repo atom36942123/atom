@@ -12,7 +12,8 @@ from config import config_elasticsearch_password
 from fastapi import Request
 @router.post("/{x}/elasticsearch/create-object")
 async def function_elasticsearch_create_object(request:Request,table:str,id:int):
-   #data
+   #database
+   postgres_object=request.state.postgres_object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #body
    body=await request.json()
@@ -27,7 +28,8 @@ from elasticsearch import Elasticsearch
 from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.get("/{x}/elasticsearch/read-object")
 async def function_elasticsearch_read_object(request:Request,table:str,id:int):
-   #mongo object
+   #database
+   postgres_object=request.state.postgres_object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
    response=elasticsearch_object.get(index=table,id=id)
