@@ -41,9 +41,10 @@ async def function_auth_login(request:Request):
    query_param_dict={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    user=output[0] if output else None
+   #raise error
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #create token
-   response=await function_create_token(user,request,config_key_jwt)
+   response=await function_create_token(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    token=response["message"]
    #final
