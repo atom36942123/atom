@@ -2,11 +2,13 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#query runner
-from fastapi import Request
+#common import auth check root
 from config import config_key_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+
+#qrunner
+from fastapi import Request
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
    #database
@@ -20,37 +22,35 @@ async def function_database_qrunner(request:Request,query:str):
    #final
    return output
 
-#database clean
-from config import config_key_root
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+#clean
 from fastapi import Request
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
-   #token check
+   #database
+   postgres_object=request.state.postgres_object
+   #auth
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
-   #creator null
+   #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
-      values={}
-      output=await postgres_object.fetch_all(query=query,values=values)
-   #parent null
+      query_param_dict={}
+      output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   #delete object having  parent null
    for table in ["likes","bookmark","report","block","rating","comment","message"]:
       for parent_table in ["users","post","comment"]:
          query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-         values={}
-         output=await postgres_object.fetch_all(query=query,values=values)
+         query_param_dict={}
+         output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
    return {"status":1,"message":"done"}
 
 #database init
-from config import config_key_root
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/init")
 async def function_database_init(request:Request):
-   #token check
+   #database
+   postgres_object=request.state.postgres_object
+   #auth
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #extension
    config_database_extension=[
@@ -58,19 +58,19 @@ async def function_database_init(request:Request):
    ]
    for item in config_database_extension:
       query=item
-      values={}
-      await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={}
+      await postgres_object.fetch_all(query=query,values=query_param_dict)
    #constraint name list
    query="select constraint_name from information_schema.constraint_column_usage;"
-   values={}
-   output=await postgres_object.fetch_all(query=query,values=values)
+   query_param_dict={}
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    constraint_name_list=[item["constraint_name"] for item in output]
    #table
    config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
    for table in config_database_table:
       query=f"create table if not exists {table} (id bigint primary key generated always as identity);"
-      values={}
-      await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={}
+      await postgres_object.fetch_all(query=query,values=query_param_dict)
    #column
    config_database_column={
    "created_at":["timestamptz",config_database_table],
@@ -108,18 +108,18 @@ async def function_database_init(request:Request):
    for k,v in config_database_column.items():
       for table in v[1]:
          query=f"alter table {table} add column if not exists {k} {v[0]};"
-         values={}
-         await postgres_object.fetch_all(query=query,values=values)
+         query_param_dict={}
+         await postgres_object.fetch_all(query=query,values=query_param_dict)
    #created_at default
    for table in config_database_table:
       query=f"alter table {table} alter column created_at set default now();"
-      values={}
-      await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={}
+      await postgres_object.fetch_all(query=query,values=query_param_dict)
    #protected rows
    for table in config_database_column["is_protected"][1]:
       query=f"create or replace rule rule_delete_disable_{table} as on delete to {table} where old.is_protected=1 do instead nothing;"
-      values={}
-      await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={}
+      await postgres_object.fetch_all(query=query,values=query_param_dict)
    #not null
    config_database_column_not_null={
    "parent_table":["likes","bookmark","report","block","rating","comment","message"],
@@ -128,8 +128,8 @@ async def function_database_init(request:Request):
    for k,v in config_database_column_not_null.items():
       for table in v:
          query=f"alter table {table} alter column {k} set not null;"
-         values={}
-         await postgres_object.fetch_all(query=query,values=values)
+         query_param_dict={}
+         await postgres_object.fetch_all(query=query,values=query_param_dict)
    #query
    config_database_query=[
    "alter table users add constraint constraint_unique_users unique (username);",
@@ -145,8 +145,8 @@ async def function_database_init(request:Request):
          continue
       else:
          query=query
-         values={}
-         await postgres_object.fetch_all(query=query,values=values)
+         query_param_dict={}
+         await postgres_object.fetch_all(query=query,values=query_param_dict)
    #index
    config_database_index={
    "type":"btree",
@@ -165,7 +165,7 @@ async def function_database_init(request:Request):
       for table in v[1]:
          if k in config_database_index:
             query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
-            values={}
-            await postgres_object.fetch_all(query=query,values=values)
+            query_param_dict={}
+            await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
    return {"status":1,"message":"done"}
