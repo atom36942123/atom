@@ -2,6 +2,14 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
+#import raise error
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+#cache
+from fastapi_cache.decorator import cache
+from function import function_read_redis_key
+
 #pcache
 from fastapi import Request
 from fastapi_cache.decorator import cache
@@ -27,15 +35,13 @@ async def function_utility_pcache(request:Request):
 
 #feed
 from fastapi import Request
-from fastapi_cache.decorator import cache
-from function import function_read_redis_key
 from function import function_prepare_where
 from function import function_sanitization
 from function import function_add_creator_key
 from function import function_add_action_count
-@router.get("/{x}/feed/general")
+@router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
-async def function_feed_general(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #query param
    query_param=dict(request.query_params)
    #table check
