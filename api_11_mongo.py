@@ -10,8 +10,9 @@ import motor.motor_asyncio
 from fastapi import Request
 @router.post("/{x}/mongo/create-object")
 async def function_mongo_create_object(request:Request,database:str,table:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #body
    body=await request.json()
@@ -26,8 +27,9 @@ from fastapi import Request
 from bson import ObjectId
 @router.get("/{x}/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -41,8 +43,9 @@ from fastapi import Request
 from bson import ObjectId
 @router.put("/{x}/mongo/update-object")
 async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #body
    body=await request.json()
@@ -57,8 +60,9 @@ from fastapi import Request
 from bson import ObjectId
 @router.delete("/{x}/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
+   #mongo object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
