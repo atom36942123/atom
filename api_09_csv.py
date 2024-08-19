@@ -31,17 +31,19 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #file to csv
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   #values
-   values_list=[]
-   for row in :values_list.append(row)
+   #column_to_insert_dict_list
+   column_to_insert_dict_list=[]
+   for row in file_csv:
+      column_to_insert_dict_list.append(row)
+      #query set
+   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
+   query_param=column_to_insert_dict
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param=response["message"][0]
 
-   #query set
-   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
-   query_param=column_to_insert_dict
+
 
 
 
