@@ -25,14 +25,17 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #column_to_insert_dict
-   column_to_insert_dict=body
-   column_to_insert_dict["created_by_id"]=user["id"]
+   #column_to_insert_list
+   column_to_insert_list=[*body]+["created_by_id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in column_to_insert_dict:column_to_insert_dict.pop(item)
+      if item in column_to_insert_list:column_to_insert_list.remove(item)
    #query set
-   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
-   query_param=column_to_insert_dict
+   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+   #query_param set
+   query_param={}
+   for item in column_to_insert_list:
+      query_param[item]=body[item]
+   query_param["created_by_id"]=user["id"]
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
@@ -55,15 +58,20 @@ async def function_object_update(request:Request,table:str,id:int):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #body
    body=await request.json()
-   #column_to_update_dict
-   column_to_update_dict=body
-   column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-   column_to_update_dict["updated_by_id"]=user["id"]
+   #column_to_update_list
+   column_to_update_list=[*body]+["updated_at","updated_by_id"]
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in column_to_update_dict:column_to_update_dict.pop(item)
+      if item in column_to_update_list:column_to_update_list.remove(item)
    #query set
-   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in [*column_to_update_dict]])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   query_param=column_to_update_dict|{"id":id,"created_by_id":user["id"]}
+   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+   #query_param set
+   query_param={}
+   for item in column_to_update_list:
+      query_param[item]=body[item]
+   query_param["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+   query_param["updated_by_id"]=user["id"]
+   query_param["id"]=id
+   query_param["created_by_id"]=user["id"]}
    if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
