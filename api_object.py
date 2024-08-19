@@ -38,7 +38,7 @@ async def function_object_create(request:Request,table:str):
       if k in config_column_create_not_allowed:column_to_insert_dict.pop(k)
    #sanitization
    values_list=[column_to_insert_dict]
-   response=await function_sanitization(request.state.postgres_object,values_list,"create")
+   response=await function_sanitization("create",postgres_object,values_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    values_list=response["message"]
    column_to_insert_dict=values_list[0]
