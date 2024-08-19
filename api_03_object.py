@@ -36,7 +36,7 @@ async def function_object_create(request:Request,table:str):
    for item in column_to_insert_list:
       if item in body:query_param[item]=body[item]
    query_param["created_by_id"]=user["id"]
-   #sanitization query_param
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param=response["message"][0]
@@ -73,7 +73,7 @@ async def function_object_update(request:Request,table:str,id:int):
    query_param["id"]=id
    query_param["created_by_id"]=user["id"]
    if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
-   #sanitization query_param
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param=response["message"][0]
@@ -122,7 +122,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #query set
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
-   #sanitization query_param
+   #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    query_param=response["message"][0]
