@@ -12,24 +12,27 @@ import jwt
 import json
 
 #create
-from config import config_key_jwt
-import jwt,json
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from function import function_sanitization
 @router.post("/{x}/object/create")
 async def function_object_create(request:Request,table:str):
-   #token check
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #table check
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #column to insert dict
+   #create object query
+   column_to_insert_dict={}
+   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
+   query_param_dict=column_to_insert_dict
+   #prepare column_to_insert_dict
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
+   #remove now allowed keys
    config_column_create_not_allowed=["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]
    for k,v in column_to_insert_dict.items():
       if k in config_column_create_not_allowed:column_to_insert_dict.pop(k)
@@ -40,7 +43,6 @@ async def function_object_create(request:Request,table:str):
    values_list=response["message"]
    column_to_insert_dict=values_list[0]
    #logic 
-   query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
    values=column_to_insert_dict
    output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
