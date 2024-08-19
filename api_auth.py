@@ -2,6 +2,10 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["auth"])
 
+#import raise error
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
 #singup
 from fastapi import Request
 import hashlib
@@ -53,30 +57,33 @@ async def function_auth_login(request:Request):
 #google
 from fastapi import Request
 import hashlib
-from config import config_key_jwt
 from function import function_create_token
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request):
+   #database
+   postgres_object=request.state.postgres_object
    #body
    body=await request.json()
    google_id=str(body["google_id"])
+   #conversion
+   google_id=hashlib.sha256(google_id.encode()).hexdigest()
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
-   values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
-   output=await postgres_object.fetch_all(query=query,values=values)
+   query_param_dict={"google_id":google_id}
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    user=output[0] if output else None
    #create user
    if not user:
       query="insert into users (google_id) values (:google_id) returning *;"
-      values={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
-      output=await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={"google_id":google_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param_dict)
       user_id=output[0]["id"]
       query="select * from users where id=:id;"
-      values={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=values)
+      query_param_dict={"id":user_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param_dict)
       user=output[0]
    #create token
-   response=await function_create_token(user,request,config_key_jwt)
+   response=await function_create_token(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    token=response["message"]
    #final
@@ -84,8 +91,6 @@ async def function_auth_google(request:Request):
 
 #email
 from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from config import config_key_jwt
 from function import function_create_token
 @router.post("/{x}/auth/email")
