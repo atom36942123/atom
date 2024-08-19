@@ -1,6 +1,7 @@
 #import
 from postgres import postgres_object_dict
 from config import config_key_root
+from config import config_key_jwt
 from app import app
 from fastapi import Request
 from fastapi.responses import JSONResponse
