@@ -62,7 +62,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
    query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit {limit} offset {(page-1)*limit};"
    query_param={"user_1":user["id"],"user_2":user_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   #background
+   #mark message status read
    query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
    query_param={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
    background.add_task(await request.state.postgres_object.fetch_all(query=query,values=query_param))
