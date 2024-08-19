@@ -15,7 +15,7 @@ import json
 from fastapi import Request
 @router.get("/{x}/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -35,7 +35,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -53,7 +53,7 @@ from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/{x}/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -73,7 +73,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 from fastapi import Request
 @router.get("/{x}/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -89,7 +89,7 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 from fastapi import Request
 @router.delete("/{x}/message/delete-all")
 async def function_delete_all(request:Request):
-   #database 
+   #postgres object 
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
