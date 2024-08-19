@@ -17,7 +17,7 @@ from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
-   #database 
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -40,7 +40,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
 from fastapi import Request
 @router.get("/{x}/my/stats")
 async def function_my_stats(request:Request):
-   #database 
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -65,7 +65,7 @@ async def function_my_stats(request:Request):
 from fastapi import Request
 @router.get("/{x}/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
-   #database 
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
@@ -86,7 +86,7 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
 from fastapi import Request
 @router.get("/{x}/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #database 
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
