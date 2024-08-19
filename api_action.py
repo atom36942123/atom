@@ -2,12 +2,17 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["action"])
 
-#post
-from config import config_key_jwt
-import jwt,json
-from fastapi import Request
+#import raise error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+
+#import auth check jwt
+from config import config_key_jwt
+import jwt
+import json
+
+#post
+from fastapi import Request
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
    #token check
