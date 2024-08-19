@@ -60,3 +60,20 @@ async def function_action_bookmark(request:Request,parent_table:str,parent_id:in
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#block
+from fastapi import Request
+@router.post("/{x}/action/block")
+async def function_action_block(request:Request,parent_table:str,parent_id:int,description:str=None):
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query="insert into block (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
+   query_param=dict(request.query_params)|{"created_by_id":user["id"]}
+   query_param["parent_id"]=int(query_param["parent_id"])
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
