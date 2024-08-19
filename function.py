@@ -5,12 +5,12 @@ import json
 import time
 from datetime import datetime
 from datetime import timedelta
-async def function_create_token(user,request):
+async def function_create_token(request,user):
   try:
-    user_key={"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
     x={"x":str(request.url.path).split("/")[1]}
     created_at_token={"created_at_token":datetime.today().strftime('%Y-%m-%d')}
-    data=user_key|x|created_at_token
+    user_key={"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+    data=x|created_at_token|user_key
     data=json.dumps(data,default=str)
     expiry_time=time.mktime((datetime.now()+timedelta(days=100000)).timetuple())
     payload={"exp":expiry_time,"data":data}
