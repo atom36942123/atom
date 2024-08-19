@@ -33,9 +33,6 @@ app.include_router(router_utility)
 from api_admin import router as router_admin
 app.include_router(router_admin)
 
-#feed
-from api_feed import router as router_feed
-app.include_router(router_feed)
 
 
 
