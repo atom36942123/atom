@@ -17,9 +17,12 @@ from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
-      #token check
+      #database
+      postgres_object=request.state.postgres_object
+         #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+
 
    #read user
    query="select * from users where id=:id;"
