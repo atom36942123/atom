@@ -15,7 +15,9 @@ import json
 from fastapi import Request
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
-   #token check
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #logic
