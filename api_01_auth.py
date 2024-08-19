@@ -16,7 +16,7 @@ from fastapi import Request
 import hashlib
 @router.post("/{x}/auth/signup")
 async def function_auth_signup(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #body
    body=await request.json()
@@ -37,7 +37,7 @@ import hashlib
 from function import function_create_token
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #body
    body=await request.json()
@@ -65,7 +65,7 @@ import hashlib
 from function import function_create_token
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #body
    body=await request.json()
@@ -99,7 +99,7 @@ from fastapi import Request
 from function import function_create_token
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #body
    body=await request.json()
@@ -138,7 +138,7 @@ from fastapi import Request
 from function import function_create_token
 @router.post("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #body
    body=await request.json()
@@ -177,7 +177,7 @@ from fastapi import Request
 from function import function_create_token
 @router.get("/{x}/auth/refresh")
 async def function_auth_refresh(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
