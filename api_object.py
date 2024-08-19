@@ -42,7 +42,7 @@ async def function_object_create(request:Request,table:str):
    #logic 
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
    values=column_to_insert_dict
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
    return {"status":1,"message":output}
 
@@ -83,7 +83,7 @@ async def function_object_update(request:Request,table:str,id:int):
    #logic
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    values=values_list[0]
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
    return {"status":1,"message":output}
 
@@ -103,7 +103,7 @@ async def function_object_delete(request:Request,table:str,id:int):
    values={}
    values["id"]=user["id"] if table=="users" else id
    values["created_by_id"]=None if table=="users" else user["id"]
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    #final
    return {"status":1,"message":output}
 
@@ -136,7 +136,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=values_list[0]
-   output=await request.state.postgres_object.fetch_all(query=query,values=values)
+   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
    output=[dict(item) for item in output]
    #final
    return {"status":1,"message":output}
