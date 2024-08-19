@@ -13,7 +13,7 @@ from config import config_key_root
 from fastapi import Request
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -28,7 +28,7 @@ async def function_database_qrunner(request:Request,query:str):
 from fastapi import Request
 @router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
@@ -46,11 +46,11 @@ async def function_database_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-#database init
+#postgres object init
 from fastapi import Request
 @router.get("/{x}/database/init")
 async def function_database_init(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
