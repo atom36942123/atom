@@ -32,7 +32,7 @@ async def function_object_create(request:Request,table:str):
    #prepare column_to_insert_dict
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
-   #remove now allowed keys
+   #remove not allowed keys
    config_column_create_not_allowed=["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]
    for k,v in column_to_insert_dict.items():
       if k in config_column_create_not_allowed:column_to_insert_dict.pop(k)
