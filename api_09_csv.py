@@ -34,15 +34,20 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    #values
    values_list=[]
    for row in :values_list.append(row)
-   #sanitization
-   response=await function_sanitization(request.state.postgres_object,values_list,"create")
+   #sanitization query_param
+   response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   values_list=response["message"]
+   query_param=response["message"][0]
+
+
+
+   
+
    #logic
    column_to_insert_list=[*values_list[0]]
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    values=values_list
-   output=await request.state.postgres_object.execute_many(query=query,values=values)
+   output=await postgres_object.execute_many(query=query,values=values)
    #final
    await file.close()
    return {"status":1,"message":output}
