@@ -2,13 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#token root check import
+#query runner
+from fastapi import Request
 from config import config_key_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
-#query runner
-from fastapi import Request
 @router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
    #database
