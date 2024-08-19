@@ -127,3 +127,37 @@ async def function_action_message(request:Request,parent_table:str,parent_id:int
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#rating
+from fastapi import Request
+@router.post("/{x}/action/rating")
+async def function_action_rating(request:Request,parent_table:str,parent_id:int,rating:str):
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
+   query_param={"created_by_id":user["id"]}|dict(request.query_params)
+   query_param["rating"]=float(query_param["rating"])
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#report
+from fastapi import Request
+@router.post("/{x}/action/report")
+async def function_action_report(request:Request,parent_table:str,parent_id:int,description:str=None):
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #logic
+   query="insert into report (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
+   query_param={"created_by_id":user["id"]}|dict(request.query_params)
+   query_param["parent_id"]=int(query_param["parent_id"])
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
