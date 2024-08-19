@@ -94,7 +94,7 @@ async def function_object_delete(request:Request,table:str,id:int):
 #read
 from fastapi import Request
 from function import function_sanitization_query_param_list
-from function import function_prepare_where
+from function import function_prepare_where_param
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #database 
@@ -107,7 +107,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #prepare where
    where_param={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
    where_param["created_by_id"]=f"=,{user['id']}"
-   response=await function_prepare_where(where_param)
+   response=await function_prepare_where_param(where_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    where=response["message"][0]
    values=response["message"][1]
