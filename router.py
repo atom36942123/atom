@@ -25,4 +25,18 @@ app.include_router(router_action)
 from api_message import router as router_message
 app.include_router(router_message)
 
+#utility
+from api_utility import router as router_utility
+app.include_router(router_utility)
+
+#admin
+from api_admin import router as router_admin
+app.include_router(router_admin)
+
+#feed
+from api_feed import router as router_feed
+app.include_router(router_feed)
+
+
+
 
