@@ -26,8 +26,8 @@ async def function_auth_signup(request:Request):
    password=hashlib.sha256(password.encode()).hexdigest()
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
-   query_value={"username":username,"password":password}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"username":username,"password":password}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -47,8 +47,8 @@ async def function_auth_login(request:Request):
    password=hashlib.sha256(password.encode()).hexdigest()
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
-   query_value={"username":username,"password":password}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"username":username,"password":password}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #raise error
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
@@ -74,18 +74,18 @@ async def function_auth_google(request:Request):
    google_id=hashlib.sha256(google_id.encode()).hexdigest()
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
-   query_value={"google_id":google_id}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"google_id":google_id}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #create user
    if not user:
       query="insert into users (google_id) values (:google_id) returning *;"
-      query_value={"google_id":google_id}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"google_id":google_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user_id=output[0]["id"]
       query="select * from users where id=:id;"
-      query_value={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"id":user_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #create token
    response=await function_create_token(request,user)
@@ -107,24 +107,24 @@ async def function_auth_email(request:Request):
    otp=body["otp"]
    #verify otp
    query="select otp from otp where email=:email order by id desc limit 1;"
-   query_value={"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
    if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatch"}))
    #read user
    query="select * from users where email=:email order by id desc limit 1;"
-   query_value={"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #create user
    if not user:
       query="insert into users (email) values (:email) returning *;"
-      query_value={"email":email}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"email":email}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user_id=output[0]["id"]
       query="select * from users where id=:id;"
-      query_value={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"id":user_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #create token
    response=await function_create_token(request,user)
@@ -146,24 +146,24 @@ async def function_auth_mobile(request:Request):
    otp=body["otp"]
    #verify otp
    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
-   query_value={"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
    if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatch"}))
    #read user
    query="select * from users where mobile=:mobile order by id desc limit 1;"
-   query_value={"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #create user
    if not user:
       query="insert into users (mobile) values (:mobile) returning *;"
-      query_value={"mobile":mobile}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"mobile":mobile}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user_id=output[0]["id"]
       query="select * from users where id=:id;"
-      query_value={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_value)
+      query_param={"id":user_id}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #create token
    response=await function_create_token(request,user)
@@ -184,8 +184,8 @@ async def function_auth_refresh(request:Request):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
-   query_value={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_value)
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #raise error
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
