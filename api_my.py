@@ -24,15 +24,15 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read user
    query="select * from users where id=:id;"
-   query_param_dict={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #raise error
    if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
    #background update last active at
    query="update users set last_active_at=:last_active_at where id=:id;"
-   query_param_dict={"last_active_at":datetime.now(),"id":user["id"]}
-   background.add_task(await postgres_object.fetch_all(query=query,values=query_param_dict))
+   query_param={"last_active_at":datetime.now(),"id":user["id"]}
+   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":user}
 
@@ -55,8 +55,8 @@ async def function_my_stats(request:Request):
    #logic
    for k,v in user_stats.items():
       query=v
-      query_param_dict={"user_id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+      query_param={"user_id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
       temp[k]=output[0]["count"]
    #final
    return {"status":1,"message":temp}
@@ -72,13 +72,13 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
    #read parent_ids from table
    query=f"select parent_id from {table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param_dict={"parent_table":parent_table,"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    parent_ids=[item["parent_id"] for item in output]
    #read parent_ids object
    query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-   query_param_dict={}
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -95,8 +95,8 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    parent_ids_list=[int(item) for item in parent_ids.split(",")]
    #read parent_ids from table
    query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
-   query_param_dict={"parent_table":parent_table,"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    parent_ids=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
    return {"status":1,"message":parent_ids}
