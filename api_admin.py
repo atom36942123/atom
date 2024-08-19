@@ -14,7 +14,7 @@ import json
 #update cell
 from fastapi import Request
 from datetime import datetime
-from function import function_sanitization
+from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #token check
