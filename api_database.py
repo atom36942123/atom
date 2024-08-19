@@ -5,8 +5,6 @@ router=APIRouter(tags=["database"])
 #query runner
 from config import config_key_root
 from fastapi import Request
-
-
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/qrunner")
