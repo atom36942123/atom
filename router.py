@@ -5,14 +5,6 @@ from app import app
 from api_auth import router as router_auth
 app.include_router(router_auth)
 
-#database
-from api_database import router as router_database
-app.include_router(router_database)
-
-#csv
-from api_csv import router as router_csv
-app.include_router(router_csv)
-
 #my
 from api_my import router as router_my
 app.include_router(router_my)
@@ -39,5 +31,12 @@ app.include_router(router_admin)
 
 
 
+#database
+from api_database import router as router_database
+app.include_router(router_database)
+
+#csv
+from api_csv import router as router_csv
+app.include_router(router_csv)
 
 
