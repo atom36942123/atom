@@ -16,7 +16,7 @@ from fastapi_cache.decorator import cache
 @router.get("/{x}/utility/pcache")
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #config
    config_pcache={
@@ -42,7 +42,7 @@ from function import function_add_action_count
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #database
+   #postgres object
    postgres_object=request.state.postgres_object
    #table check
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
