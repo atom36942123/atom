@@ -3,8 +3,8 @@ from fastapi import APIRouter
 router=APIRouter(tags=["mongo"])
 
 #import for mongo object
-import motor.motor_asyncio
 from config import config_mongo_server_uri
+import motor.motor_asyncio
 
 #create object
 from fastapi import Request
@@ -12,11 +12,9 @@ from fastapi import Request
 async def function_mongo_create_object(request:Request,database:str,table:str):
    #database
    postgres_object=request.state.postgres_object
-
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #body
    body=await request.json()
-   #mongo object
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
       output=await mongo_object.test.users.insert_one(body)
@@ -25,12 +23,11 @@ async def function_mongo_create_object(request:Request,database:str,table:str):
 
 #read object
 from fastapi import Request
-import motor.motor_asyncio
-from config import config_mongo_server_uri
 from bson import ObjectId
 @router.get("/{x}/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
-   #mongo object
+   #database
+   postgres_object=request.state.postgres_object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
@@ -41,15 +38,14 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
 
 #update object
 from fastapi import Request
-import motor.motor_asyncio
-from config import config_mongo_server_uri
 from bson import ObjectId
 @router.put("/{x}/mongo/update-object")
 async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
+   #database
+   postgres_object=request.state.postgres_object
+   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #body
    body=await request.json()
-   #mongo object
-   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
       output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":body})
@@ -58,12 +54,11 @@ async def function_mongo_update_object(request:Request,database:str,table:str,id
 
 #delete object
 from fastapi import Request
-import motor.motor_asyncio
-from config import config_mongo_server_uri
 from bson import ObjectId
 @router.delete("/{x}/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
-   #mongo object
+   #database
+   postgres_object=request.state.postgres_object
    mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_uri)
    #logic
    if database=="test" and table=="users":
