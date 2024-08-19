@@ -1,8 +1,5 @@
 #import
 from postgres import postgres_object_dict
-from config import config_key_root
-from config import config_key_jwt
-import jwt,json
 from app import app
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -22,24 +19,6 @@ async def function_middleware(request:Request,api_function):
   #postgres object assgin
   if key_4th in postgres_object_dict:
     request.state.postgres_object=postgres_object_dict[key_4th]
-  #auth check
-  auth_api_dict={
-  "database/qrunner":"root",
-  }
-  path=str(request.url.path)
-  token=request.headers.get("Authorization").split(" ",1)[1]
-  for k,v in auth_api_dict.items():
-    if k in path:
-      if v=="root":
-        if token!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
-      if v=="jwt":
-        
-        
-        
-        
-       user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-
   #api response
   try:
     response=await api_function(request)
