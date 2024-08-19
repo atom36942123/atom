@@ -15,7 +15,7 @@ async def function_auth_signup(request:Request):
    password=str(body["password"])
    #conversion
    password=hashlib.sha256(password.encode()).hexdigest()
-   #qrunner
+   #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param_dict={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param_dict)
