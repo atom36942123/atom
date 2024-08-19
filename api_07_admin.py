@@ -2,11 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
-#import raise error
+#import for raising error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-#import auth check jwt
+#import for auth check jwt
 from config import config_key_jwt
 import jwt
 import json
