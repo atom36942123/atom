@@ -17,9 +17,12 @@ from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request):
-   #token check
+   #database 
+   postgres_object=request.state.postgres_object
+   #auth check jwt
    user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
    if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #body
    body=await request.json()
