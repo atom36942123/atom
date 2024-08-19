@@ -25,10 +25,10 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #body
    body=await request.json()
-   #create object general query
+   #create object query
    column_to_insert_dict={}
    query=f"insert into {table} ({','.join([*column_to_insert_dict])}) values ({','.join([':'+item for item in [*column_to_insert_dict]])}) returning *;"
-   query_param_dict=column_to_insert_dict
+   query_param=column_to_insert_dict
    #prepare column_to_insert_dict
    column_to_insert_dict=body
    column_to_insert_dict["created_by_id"]=user["id"]
@@ -44,7 +44,7 @@ async def function_object_create(request:Request,table:str):
    column_to_insert_dict=values_list[0]
    #logic
    values=column_to_insert_dict
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -85,7 +85,7 @@ async def function_object_update(request:Request,table:str,id:int):
    #logic
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
    values=values_list[0]
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -105,7 +105,7 @@ async def function_object_delete(request:Request,table:str,id:int):
    values={}
    values["id"]=user["id"] if table=="users" else id
    values["created_by_id"]=None if table=="users" else user["id"]
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -138,7 +138,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #read object
    query=f"select * from {table} {where} order by {order} limit {limit} offset {(page-1)*limit};"
    values=values_list[0]
-   output=await postgres_object.fetch_all(query=query,values=query_param_dict)
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    output=[dict(item) for item in output]
    #final
    return {"status":1,"message":output}
