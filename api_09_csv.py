@@ -2,11 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["csv"])
 
-#import raise error
+#import for raising error
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-#import auth check root
+#import for auth check root
 from config import config_key_root
 
 #import ratelimiter
