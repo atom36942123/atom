@@ -19,6 +19,10 @@ async def function_middleware(request:Request,api_function):
   #postgres object assgin
   if key_4th in postgres_object_dict:
     request.state.postgres_object=postgres_object_dict[key_4th]
+  #auth check root
+  root_api=["database/qrunner"]
+  for item in root_api:
+    if item in 
   #api response
   try:
     response=await api_function(request)
