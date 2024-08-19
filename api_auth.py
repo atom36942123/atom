@@ -6,6 +6,11 @@ router=APIRouter(tags=["auth"])
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
+#import auth check jwt
+from config import config_key_jwt
+import jwt
+import json
+
 #singup
 from fastapi import Request
 import hashlib
@@ -170,9 +175,6 @@ async def function_auth_mobile(request:Request):
 #refresh
 from fastapi import Request
 from function import function_create_token
-
-import jwt,json
-from config import config_key_jwt
 @router.get("/{x}/auth/refresh")
 async def function_auth_refresh(request:Request):
    #database
