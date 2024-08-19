@@ -15,3 +15,9 @@ from middleware import *
 from router import *
 
 #root api
+from postgres import postgres_object_dict
+from fastapi import Request
+@app.get("/")
+async def function_root(request:Request):
+   x_list=[*postgres_object_dict]
+   return {"status":1,"message":f"welcome to {x_list}"}
