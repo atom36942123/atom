@@ -100,7 +100,7 @@ async def function_database_init(request:Request):
    "date_of_birth":["date",["users"]],
    "title":["text",["users","post","box","atom"]],
    "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
-   "file_url":["text",["post","box","atom"]],
+   "file_url":["text",["post","box","atom","comment"]],
    "link_url":["text",["post","box","atom"]],
    "tag":["text",["users","post","box","atom"]],
    "otp":["int",["otp"]],
