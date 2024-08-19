@@ -2,9 +2,9 @@
 from postgres import postgres_object_dict
 from app import app
 from fastapi import Request
+import traceback
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-import traceback
 
 #logic
 @app.middleware("http")
