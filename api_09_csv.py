@@ -50,6 +50,10 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    return {"status":1,"message":output}
 
 
+
+
+
+   
    column_to_update_dict=body
    column_to_update_dict["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    column_to_update_dict["updated_by_id"]=user["id"]
@@ -80,7 +84,14 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   #file to csv
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    #column_to_update_dict_list
+   column_to_update_dict_list=[]
+   for row in file_csv:
+      
+      column_to_update_dict_list.append(row)
+   
    
    #values
    values_list=[]
