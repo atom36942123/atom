@@ -69,7 +69,8 @@ async def function_root(request:Request):
 import os
 import glob
 dir_path=os.path.dirname(os.path.realpath(__file__))
-mylist=[f for f in glob.glob(f"{dir_path}/*.py")]
+file_path_list=[item for item in glob.glob(f"{dir_path}/*.py")]
+file_name_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_path_list]
 print(mylist)
 
 #server start
