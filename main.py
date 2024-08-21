@@ -70,6 +70,10 @@ for entry in os.scandir('.'):
     if entry.is_file():
         print(entry.name)
 
+from pathlib import Path
+x = Path('./')
+print(list(filter(lambda y:y.is_file(), x.iterdir())))
+
 #api root
 from postgres import postgres_object_dict
 from fastapi import Request
