@@ -58,9 +58,6 @@ async def function_middleware(request:Request,api_function):
   #final
   return response
 
-app import
-from router import *
-
 import glob
 mylist = [f for f in glob.glob("/Users/atom/atom/*.py")]
 print(mylist)
