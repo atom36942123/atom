@@ -73,7 +73,6 @@ async def function_root(request:Request):
   return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
 
 #server start
-from app import app
 import uvicorn
 import asyncio
 if __name__=="__main__":
