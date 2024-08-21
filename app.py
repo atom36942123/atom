@@ -9,8 +9,16 @@ from lifespan import function_lifespan
 from fastapi import FastAPI
 app=FastAPI(lifespan=function_lifespan,title="atom")
 
+#cors
+from app import app
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+  CORSMiddleware,allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],allow_headers=["*"]
+)
+
 #app import
-from cors import *
 from middleware import *
 from router import *
 
