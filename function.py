@@ -1,3 +1,20 @@
+#lifespan
+from config import config_redis_server_uri
+from postgres import postgres_object_dict
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from redis import asyncio as aioredis
+from fastapi_limiter import FastAPILimiter
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+@asynccontextmanager
+async def function_lifespan(app:FastAPI):
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_uri)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_uri,encoding="utf-8",decode_responses=True))
+  for k,v in postgres_object_dict.items():await v.connect()
+  yield
+  for k,v in postgres_object_dict.items():await v.disconnect()
+    
 #create token
 from config import config_key_jwt
 import jwt
