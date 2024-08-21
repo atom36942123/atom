@@ -59,7 +59,10 @@ async def function_middleware(request:Request,api_function):
   return response
 
 #app import
-from router import *
+# from router import *
+
+mylist = [f for f in glob.glob("*.txt")]
+print(mylist)
 
 #api root
 from postgres import postgres_object_dict
