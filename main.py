@@ -61,18 +61,23 @@ async def function_middleware(request:Request,api_function):
 #app import
 # from router import *
 
-import glob
-mylist = [f for f in glob.glob("*.py")]
-print(mylist)
+# import glob
+# mylist = [f for f in glob.glob("*.py")]
+# print(mylist)
 
-import os
-for entry in os.scandir('.'):
-    if entry.is_file():
-        print(entry.name)
+# import os
+# for entry in os.scandir('.'):
+#     if entry.is_file():
+#         print(entry.name)
 
-from pathlib import Path
-x = Path('./')
-print(list(filter(lambda y:y.is_file(), x.iterdir())))
+# from pathlib import Path
+# x = Path('./')
+# print(list(filter(lambda y:y.is_file(), x.iterdir())))
+
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+print(dir_path)
+
 
 #api root
 from postgres import postgres_object_dict
