@@ -65,6 +65,11 @@ import glob
 mylist = [f for f in glob.glob("*.py")]
 print(mylist)
 
+import os
+for entry in os.scandir('.'):
+    if entry.is_file():
+        print(entry.name)
+
 #api root
 from postgres import postgres_object_dict
 from fastapi import Request
