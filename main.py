@@ -58,30 +58,19 @@ async def function_middleware(request:Request,api_function):
   #final
   return response
 
-import glob
-mylist = [f for f in glob.glob("/Users/atom/atom/*.py")]
-print(mylist)
-
-# import os
-# for entry in os.scandir('.'):
-#     if entry.is_file():
-#         print(entry.name)
-
-# from pathlib import Path
-# x = Path('./')
-# print(list(filter(lambda y:y.is_file(), x.iterdir())))
-
-# import os 
-# dir_path = os.path.dirname(os.path.realpath(__file__))
-# print(dir_path)
-
-
 #api root
 from postgres import postgres_object_dict
 from fastapi import Request
 @app.get("/")
 async def function_root(request:Request):
   return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
+
+#router
+import os
+import glob
+dir_path=os.path.dirname(os.path.realpath(__file__))
+mylist=[f for f in glob.glob(f"{dir_path}/*.py")]
+print(my_list)
 
 #server start
 import uvicorn
