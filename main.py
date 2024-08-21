@@ -75,7 +75,7 @@ file_name_api_list=[item for item in file_name_list if "api" in item]
 print(file_name_api_list)
 for item in file_name_api_list:
   x=__import__(item)
-  print ([item for item in dir(x) if not item.startswith("__")])
+  print ([item for item in dir(x) if not item.startswith("__") and item=="router"])
 
 #server start
 import uvicorn
