@@ -71,6 +71,8 @@ import glob
 dir_path=os.path.dirname(os.path.realpath(__file__))
 file_path_list=[item for item in glob.glob(f"{dir_path}/*.py")]
 file_name_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_path_list]
+file_name_api_list=[item for item in file_name_list if "api" in item]
+
 print(file_name_list)
 
 #server start
