@@ -22,4 +22,3 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 
 
 
-
