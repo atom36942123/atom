@@ -1,12 +1,10 @@
-#import
+#middleware
 from postgres import postgres_object_dict
 from app import app
 from fastapi import Request
 import traceback
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
-#logic
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   #key_4th
