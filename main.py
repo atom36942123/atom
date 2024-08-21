@@ -62,7 +62,7 @@ async def function_middleware(request:Request,api_function):
 # from router import *
 
 import glob
-mylist = [f for f in glob.glob("*.txt")]
+mylist = [f for f in glob.glob("*.py")]
 print(mylist)
 
 #api root
