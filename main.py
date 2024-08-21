@@ -58,12 +58,12 @@ async def function_middleware(request:Request,api_function):
   #final
   return response
 
-#app import
-# from router import *
+app import
+from router import *
 
-# import glob
-# mylist = [f for f in glob.glob("*.py")]
-# print(mylist)
+import glob
+mylist = [f for f in glob.glob("/Users/atom/atom/*.py")]
+print(mylist)
 
 # import os
 # for entry in os.scandir('.'):
@@ -74,9 +74,9 @@ async def function_middleware(request:Request,api_function):
 # x = Path('./')
 # print(list(filter(lambda y:y.is_file(), x.iterdir())))
 
-import os 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-print(dir_path)
+# import os 
+# dir_path = os.path.dirname(os.path.realpath(__file__))
+# print(dir_path)
 
 
 #api root
