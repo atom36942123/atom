@@ -70,7 +70,7 @@ import os
 import glob
 dir_path=os.path.dirname(os.path.realpath(__file__))
 mylist=[f for f in glob.glob(f"{dir_path}/*.py")]
-print(my_list)
+print(mylist)
 
 #server start
 import uvicorn
