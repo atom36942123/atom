@@ -7,7 +7,7 @@ from fastapi import Request
 from function import function_token_check_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/database/qrunner")
+@router.get("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
    #postgres object
    postgres_object=request.state.postgres_object
@@ -26,7 +26,7 @@ from fastapi import Request
 from function import function_token_check_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/database/clean")
+@router.get("/{x}/database/clean")
 async def function_database_clean(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
@@ -52,7 +52,7 @@ from fastapi import Request
 from function import function_token_check_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/database/init")
+@router.get("/{x}/database/init")
 async def function_database_init(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
