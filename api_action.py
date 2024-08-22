@@ -153,7 +153,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/rating")
-async def function_action_rating(request:Request,parent_table:str,parent_id:int,rating:str):
+async def function_action_rating(request:Request,parent_table:str,parent_id:int,rating:int):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
@@ -163,6 +163,7 @@ async def function_action_rating(request:Request,parent_table:str,parent_id:int,
    #logic
    query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
    query_param={"created_by_id":user["id"]}|dict(request.query_params)
+   return query_param
    query_param["parent_id"]=int(query_param["parent_id"])
    query_param["rating"]=float(query_param["rating"])
    output=await postgres_object.fetch_all(query=query,values=query_param)
