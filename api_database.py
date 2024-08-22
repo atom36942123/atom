@@ -11,8 +11,7 @@ async def function_database_init(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
-   response=await function_token_check_root(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
    #create extension
    config_database_extension=[
    "create extension if not exists postgis;",
