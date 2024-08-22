@@ -177,7 +177,7 @@ from function import function_token_check_jwt
 from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/auth/refresh")
+@router.post("/{x}/auth/refresh")
 async def function_auth_refresh(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
