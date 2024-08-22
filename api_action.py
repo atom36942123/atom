@@ -45,9 +45,11 @@ async def function_action_helpdesk(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   type=request_body["type"]
+   description=request_body["description"]
    #logic
    query="insert into helpdesk (created_by_id,type,description) values (:created_by_id,:type,:description) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"type":type,"description":description}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -67,9 +69,11 @@ async def function_action_like(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
    #logic
    query="insert into likes (created_by_id,parent_table,parent_id) values (:created_by_id,:parent_table,:parent_id) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -89,9 +93,11 @@ async def function_action_bookmark(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
    #logic
    query="insert into bookmark (created_by_id,parent_table,parent_id) values (:created_by_id,:parent_table,:parent_id) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -111,9 +117,12 @@ async def function_action_block(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
+   description=request_body["description"]
    #logic
    query="insert into block (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -133,9 +142,13 @@ async def function_action_comment(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
+   description=request_body["description"]
+   file_url=request_body["file_url"]
    #logic
    query="insert into comment (created_by_id,parent_table,parent_id,description,file_url) values (:created_by_id,:parent_table,:parent_id,:description,:file_url) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description,"file_url":file_url}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -155,9 +168,12 @@ async def function_action_message(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
+   description=request_body["description"]
    #logic
    query="insert into message (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -177,9 +193,12 @@ async def function_action_rating(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
+   rating=request_body["rating"]
    #logic
    query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"rating":rating}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -199,9 +218,12 @@ async def function_action_report(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   parent_table=request_body["parent_table"]
+   parent_id=request_body["parent_id"]
+   description=request_body["description"]
    #logic
    query="insert into report (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
