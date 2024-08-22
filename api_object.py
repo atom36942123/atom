@@ -12,7 +12,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_create(request:Request,table:str):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -51,7 +51,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_update(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -90,7 +90,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_delete(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -113,7 +113,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
