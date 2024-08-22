@@ -4,7 +4,6 @@ router=APIRouter(tags=["database"])
 
 #init
 from fastapi import Request
-from function import function_token_check_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/init")
