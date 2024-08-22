@@ -4,7 +4,7 @@ router=APIRouter(tags=["message"])
 
 #inbox
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox")
@@ -12,7 +12,7 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
@@ -24,7 +24,7 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
 
 #inbox unread
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox-unread")
@@ -32,7 +32,7 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
@@ -44,7 +44,7 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
 
 #thread
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -54,7 +54,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
@@ -70,7 +70,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 
 #received
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/received")
@@ -78,7 +78,7 @@ async def function_received(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
@@ -90,7 +90,7 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 
 #delete message all
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/message/delete-all")
@@ -98,7 +98,7 @@ async def function_delete_all(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
