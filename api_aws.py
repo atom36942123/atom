@@ -6,9 +6,6 @@ router=APIRouter(tags=["aws"])
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-#import for auth check root
-from config import config_key_root
-
 #presigned url
 from fastapi import Request
 import boto3
