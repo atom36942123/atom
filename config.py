@@ -5,8 +5,8 @@ env.read_env()
 
 #env unpack
 config_postgres_database=env("config_postgres_database")
-config_mongo_server=env("config_mongo_server")
 config_redis_server=env("config_redis_server")
+config_mongo_server=env("config_mongo_server")
 config_sentry_dsn=env("config_sentry_dsn")
 config_key_root=env("config_key_root")
 config_key_jwt=env("config_key_jwt")
