@@ -8,13 +8,10 @@ import boto3
 import uuid
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name,config_s3_region_name
-@router.post("/{x}/aws/create-presigned-url")
-async def function_aws_create_presigned_url(request:Request):
+@router.get("/{x}/aws/create-presigned-url")
+async def function_aws_create_presigned_url(request:Request,filename:str):
    #postgres object
    postgres_object=request.state.postgres_object
-   #request body
-   request_body=await request.json()
-   filename=request_body["filename"]
    #config
    size_kb=250
    expire_secs=10
@@ -34,16 +31,13 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/aws/delete-s3-url")
-async def function_aws_delete_s3_url(request:Request):
+@router.delete("/{x}/aws/delete-s3-url")
+async def function_aws_delete_s3_url(request:Request,url:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
    response=await function_token_check_root(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #request body
-   request_body=await request.json()
-   url=request_body["url"]
    #buckey key
    buckey_key=url.rsplit("/",1)[1]
    #logic
@@ -59,16 +53,13 @@ import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/aws/empty-s3-bucket")
-async def function_aws_empty_s3_bucket(request:Request):
+@router.delete("/{x}/aws/empty-s3-bucket")
+async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
    response=await function_token_check_root(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #request body
-   request_body=await request.json()
-   bucket_name=request_body["bucket_name"]
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Bucket(bucket_name).objects.all().delete()
