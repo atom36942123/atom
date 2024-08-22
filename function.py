@@ -1,19 +1,3 @@
-#token check jwt
-import jwt
-import json
-from config import config_key_jwt
-async def function_token_check_jwt(request):
-   try:
-      header_authorization=request.headers.get("Authorization")
-      if not header_authorization:return {"status":0,"message":"authorization header is must"}
-      token=request.headers.get("Authorization").split(" ",1)[1]
-      payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-      data=payload["data"]
-      user=json.loads(data)
-      if user["x"]!=str(request.url.path).split("/")[1]:return {"status":0,"message":"token x mismatch"}
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":user}
-
 #token check root
 import jwt
 import json
@@ -46,6 +30,22 @@ async def function_token_create(request,user):
     token=jwt.encode(payload,config_key_jwt)
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":token}
+
+#token check
+import jwt
+import json
+from config import config_key
+async def function_token_check_jwt(request):
+   try:
+      header_authorization=request.headers.get("Authorization")
+      if not header_authorization:return {"status":0,"message":"authorization header is must"}
+      token=request.headers.get("Authorization").split(" ",1)[1]
+      payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+      data=payload["data"]
+      user=json.loads(data)
+      if user["x"]!=str(request.url.path).split("/")[1]:return {"status":0,"message":"token x mismatch"}
+   except Exception as e:return {"status":0,"message":e.args}
+   return {"status":1,"message":user}
   
 #redis key
 from fastapi import Request
