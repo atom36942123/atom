@@ -122,7 +122,6 @@ async def function_csv_read(request:Request,table:str,file:UploadFile):
    #final
    return {"status":1,"message":output}
 
-
 #delete
 from fastapi import Request
 from fastapi import UploadFile
