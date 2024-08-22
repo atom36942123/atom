@@ -1,11 +1,19 @@
-#create token
+   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+
+#check token
+async def function_check_token_jwt(request,user):
+
+
+
+#token create
 from config import config_key_jwt
 import jwt
 import json
 import time
 from datetime import datetime
 from datetime import timedelta
-async def function_create_token(request,user):
+async def function_token_create(request,user):
   try:
     x={"x":str(request.url.path).split("/")[1]}
     created_at_token={"created_at_token":datetime.today().strftime('%Y-%m-%d')}
