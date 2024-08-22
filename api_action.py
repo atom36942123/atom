@@ -2,17 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["action"])
 
-#import for raising error
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-#import for auth check jwt
-from config import config_key_jwt
-import jwt
-import json
-
 #post
 from fastapi import Request
+from function import token_check_jwt
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
    #postgres object
