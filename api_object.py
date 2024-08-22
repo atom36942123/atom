@@ -11,13 +11,14 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_create(request:Request,table:str):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #table check
    if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #body
-   body=await request.json()
+   #request body
+   request_body=await request.json()
    #column_to_insert_list
    column_to_insert_list=[*body]+["created_by_id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
@@ -48,11 +49,12 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_update(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
-   #body
-   body=await request.json()
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
+   #request body
+   request_body=await request.json()
    #column_to_update_list
    column_to_update_list=[*body]+["updated_at","updated_by_id"]
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
@@ -85,9 +87,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_delete(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #delete object
    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
    query_param={"id":id,"created_by_id":user["id"]}
@@ -106,9 +109,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #postgres object  
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #query param
    query_param=dict(request.query_params)
    #prepare where
