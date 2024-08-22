@@ -34,7 +34,7 @@ async def function_token_create(request,user):
 #token check
 import jwt
 import json
-from config import config_key
+from config import config_key_jwt
 async def function_token_check(request):
    try:
       header_authorization=request.headers.get("Authorization")
