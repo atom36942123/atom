@@ -107,3 +107,23 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    parent_ids=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
    return {"status":1,"message":parent_ids}
+
+#read bulk
+from fastapi import Request
+from function import function_token_check
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.get("/{x}/my/read-bulk")
+async def function_my_read_bulk(request:Request,table:str,ids:str):
+   #postgres object
+   postgres_object=request.state.postgres_object
+   #token check
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
+   #logic
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
