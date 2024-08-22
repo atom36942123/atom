@@ -12,7 +12,7 @@ async def function_action_post(request:Request,description:str,title:str=None,fi
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_add_creator_key(request.state.postgres_object,output)
+   response=await function_token_check_jwt(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    output=response["message"]
    #logic
