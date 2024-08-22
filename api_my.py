@@ -4,7 +4,7 @@ router=APIRouter(tags=["my"])
 
 #profile
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -14,7 +14,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #read user
@@ -33,7 +33,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
 
 #stats
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/stats")
@@ -41,7 +41,7 @@ async def function_my_stats(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #config
@@ -62,7 +62,7 @@ async def function_my_stats(request:Request):
 
 #parent read
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-read")
@@ -70,7 +70,7 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #read parent_ids from table
@@ -87,7 +87,7 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
 
 #parent check
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-check")
@@ -95,7 +95,7 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #conversion
