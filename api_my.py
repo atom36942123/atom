@@ -122,8 +122,8 @@ async def function_my_read_bulk(request:Request,table:str,ids:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #logic
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
+   query=f"select * from {table} where created_by_id=:created_by_id id in ({ids}) order by id desc;"
+   query_param={"created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
