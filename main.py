@@ -7,7 +7,7 @@ from config import config_sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
-#postgres
+#postgres object dict
 from config import config_postgres_database
 from databases import Database
 postgres_object_dict={}
@@ -20,7 +20,6 @@ for item in postgres_url_list:
 
 #lifespan
 from config import config_redis_server
-from postgres import postgres_object_dict
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
@@ -30,9 +29,9 @@ from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
   #redis cache
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_uri)))
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server)))
   #redis rate limiter
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_uri,encoding="utf-8",decode_responses=True))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server,encoding="utf-8",decode_responses=True))
   #postgres object connect
   for k,v in postgres_object_dict.items():await v.connect()
   yield
@@ -48,7 +47,6 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
 #middleware
-from postgres import postgres_object_dict
 from fastapi import Request
 import traceback
 from fastapi.responses import JSONResponse
@@ -71,7 +69,6 @@ async def function_middleware(request:Request,api_function):
   return response
 
 #api root
-from postgres import postgres_object_dict
 from fastapi import Request
 @app.get("/")
 async def function_root(request:Request):
