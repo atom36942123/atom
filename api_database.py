@@ -47,7 +47,7 @@ async def function_database_clean(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-#postgres object init
+#init
 from fastapi import Request
 from function import function_token_check_root
 from fastapi.responses import JSONResponse
