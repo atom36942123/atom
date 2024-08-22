@@ -26,7 +26,7 @@ async def function_aws_create_presigned_url(request:Request):
    #final
    return {"status":1,"message":output}
 
-#delete s3 key
+#delete s3 url
 from fastapi import Request
 from function import function_token_check_root
 import boto3
@@ -34,8 +34,8 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.post("/{x}/aws/delete-s3-key")
-async def function_aws_delete_s3_key(request:Request):
+@router.post("/{x}/aws/delete-s3-url")
+async def function_aws_delete_s3_url(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
