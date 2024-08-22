@@ -2,15 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
-#import for raising error
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-#import for auth check jwt
-from config import config_key_jwt
-import jwt
-import json
-
 #update cell
 from fastapi import Request
 from datetime import datetime
