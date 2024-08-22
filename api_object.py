@@ -117,10 +117,10 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    response=await function_token_check_jwt(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
-   #query param
-   query_param=dict(request.query_params)
+   #request query param
+   request_query_param=dict(request.query_params)
    #prepare where
-   where_param_raw={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    where_param_raw["created_by_id"]=f"=,{user['id']}"
    response=await function_prepare_where(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
