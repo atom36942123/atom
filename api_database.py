@@ -21,32 +21,6 @@ async def function_database_qrunner(request:Request,query:str):
    #final
    return output
 
-#clean
-from fastapi import Request
-from function import function_token_check_root
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/clean")
-async def function_database_clean(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check root
-   response=await function_token_check_root(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #delete object having creator null
-   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-      query=f"delete from {table} where created_by_id not in (select id from users);"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   #delete object having  parent null
-   for table in ["likes","bookmark","report","block","rating","comment","message"]:
-      for parent_table in ["users","post","comment"]:
-         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"done"}
-
 #init
 from fastapi import Request
 from function import function_token_check_root
