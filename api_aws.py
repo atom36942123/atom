@@ -12,8 +12,8 @@ import boto3
 import uuid
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_s3_bucket_name,config_s3_region_name
-@router.get("/{x}/aws/create-presigned-url")
-async def function_aws_create_presigned_url(request:Request,filename:str):
+@router.post("/{x}/aws/create-presigned-url")
+async def function_aws_create_presigned_url(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #config
