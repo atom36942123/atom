@@ -85,6 +85,6 @@ async def function_elasticsearch_search(request:Request,table:str,key:str,keywor
    #elasticsearch object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
-   response=elasticsearch_object.search(index=table,request_body={"query":{"match":{key:keyword}},"size":limit})
+   response=elasticsearch_object.search(index=table,body={"query":{"match":{key:keyword}},"size":limit})
    #final
    return response
