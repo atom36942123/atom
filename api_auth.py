@@ -173,7 +173,7 @@ async def function_auth_mobile(request:Request):
 
 #refresh
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -182,7 +182,7 @@ async def function_auth_refresh(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #read user
