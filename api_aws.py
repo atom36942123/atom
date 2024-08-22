@@ -67,7 +67,6 @@ async def function_aws_empty_s3_bucket(request:Request):
    #token check root
    response=await function_token_check_root(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   request_body=await request.json()
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
