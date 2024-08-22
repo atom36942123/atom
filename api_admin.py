@@ -51,12 +51,11 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    user=response["message"]
    #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
-   
-  
-  ids_to_read=','.join([str(item["id"]) for item in file_row_list])
+   #table check
+   if table in ["users"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #logic
-   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   query=f"delete from {table} where id in ({ids}) order by id desc;"
+   query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
