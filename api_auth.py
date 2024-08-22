@@ -25,9 +25,9 @@ async def function_auth_signup(request:Request):
 #login
 from fastapi import Request
 import hashlib
+from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_token_create
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #postgres object
