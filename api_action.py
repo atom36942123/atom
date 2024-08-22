@@ -96,7 +96,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/block")
-async def function_action_block(request:Request,parent_table:str,parent_id:int,description:str=None):
+async def function_action_block(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
@@ -118,7 +118,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/comment")
-async def function_action_comment(request:Request,parent_table:str,parent_id:int,description:str,file_url:str=None,):
+async def function_action_comment(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
@@ -140,7 +140,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/message")
-async def function_action_message(request:Request,parent_table:str,parent_id:int,description:str):
+async def function_action_message(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
@@ -162,7 +162,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/rating")
-async def function_action_rating(request:Request,parent_table:str,parent_id:int,rating:int):
+async def function_action_rating(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
@@ -186,7 +186,7 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/report")
-async def function_action_report(request:Request,parent_table:str,parent_id:int,description:str=None):
+async def function_action_report(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
