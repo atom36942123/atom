@@ -173,8 +173,6 @@ async def function_action_rating(request:Request):
    request_body=await request.json()
    #logic
    query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
-   query_param={"created_by_id":user["id"]}|dict(request.query_params)
-   return query_param
    query_param=request_body|{"created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
