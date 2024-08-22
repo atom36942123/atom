@@ -2,17 +2,10 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["utility"])
 
-#import for raising error
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-#import for redis cache
-from fastapi_cache.decorator import cache
-from function import function_read_redis_key
-
 #pcache
 from fastapi import Request
 from fastapi_cache.decorator import cache
+from function import function_read_redis_key
 @router.get("/{x}/utility/pcache")
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
@@ -35,10 +28,14 @@ async def function_utility_pcache(request:Request):
 
 #feed
 from fastapi import Request
+from fastapi_cache.decorator import cache
+from function import function_read_redis_key
 from function import function_prepare_where
 from function import function_sanitization_query_param_list
 from function import function_add_creator_key
 from function import function_add_action_count
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -46,10 +43,10 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    postgres_object=request.state.postgres_object
    #table check
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
-   #query param
-   query_param=dict(request.query_params)
+   #request query param
+   request_query_param=dict(request.query_params)
    #prepare where
-   where_param_raw={k:v for k,v in query_param.items() if k not in ["table","order","limit","page"]}
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    response=await function_prepare_where(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    where_string=response["message"][0]
