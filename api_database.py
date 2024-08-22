@@ -2,21 +2,18 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#import for raising error
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-#import for auth check root
-from config import config_key_root
-
 #qrunner
 from fastapi import Request
-@router.get("/{x}/database/qrunner")
+from function import function_token_check_root
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.post("/{x}/database/qrunner")
 async def function_database_qrunner(request:Request,query:str):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #logic
    query=query
    query_param={}
@@ -26,12 +23,16 @@ async def function_database_qrunner(request:Request,query:str):
 
 #clean
 from fastapi import Request
-@router.get("/{x}/database/clean")
+from function import function_token_check_root
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.post("/{x}/database/clean")
 async def function_database_clean(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
@@ -48,12 +49,16 @@ async def function_database_clean(request:Request):
 
 #postgres object init
 from fastapi import Request
-@router.get("/{x}/database/init")
+from function import function_token_check_root
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.post("/{x}/database/init")
 async def function_database_init(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #create extension
    config_database_extension=[
    "create extension if not exists postgis;",
