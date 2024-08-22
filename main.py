@@ -1,14 +1,17 @@
+#config
+from config import config_sentry_dsn
+from config import config_postgres_database
+from config import config_redis_server
+
 #logging
 import logging
 logging.basicConfig(level="INFO")
 
 #sentry
-from config import config_sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #postgres object dict
-from config import config_postgres_database
 from databases import Database
 postgres_object_dict={}
 postgres_url_list=config_postgres_database.split(",")
@@ -19,7 +22,6 @@ for item in postgres_url_list:
   postgres_object_dict={database_name:postgres_object}
 
 #lifespan
-from config import config_redis_server
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
