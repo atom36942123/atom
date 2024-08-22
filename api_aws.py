@@ -57,7 +57,6 @@ from fastapi import Request
 from function import function_token_check_root
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_s3_bucket_name
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/aws/empty-s3-bucket")
@@ -67,9 +66,12 @@ async def function_aws_empty_s3_bucket(request:Request):
    #token check root
    response=await function_token_check_root(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   #request body
+   request_body=await request.json()
+   bucket_name=request_body["bucket_name"]
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-   output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+   output=s3_resource.Bucket(bucket_name).objects.all().delete()
    #final
    return {"status":1,"message":output}
 
