@@ -100,7 +100,8 @@ async def function_csv_read(request:Request,table:str,file:UploadFile):
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
    for row in file_csv:file_row_list.append(row)
    #logic
-   ids_to_read=','.join([str(item["id"]) for item in file_row_list])
+   ids_list=[str(item["id"]) for item in file_row_list]
+   ids_to_read=','.join(ids_list)
    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
