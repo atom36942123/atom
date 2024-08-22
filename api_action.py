@@ -17,9 +17,15 @@ async def function_action_post(request:Request):
    user=response["message"]
    #request body
    request_body=await request.json()
+   type=request_body["type"]
+   title=request_body["title"]
+   description=request_body["description"]
+   file_url=request_body["file_url"]
+   link_url=request_body["link_url"]
+   tag=request_body["tag"]
    #logic
    query="insert into post (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
-   query_param=request_body|{"created_by_id":user["id"]}
+   query_param={"created_by_id":user["id"],"type":type,"title":title,"description":description,"file_url":file_url,"link_url":link_url,"tag":tag}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
