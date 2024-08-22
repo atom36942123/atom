@@ -16,6 +16,9 @@ from config import config_s3_bucket_name,config_s3_region_name
 async def function_aws_create_presigned_url(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
+   #request body
+   request_body=await request.json()
+   filename=request_body["filename"]
    #config
    size_kb=250
    expire_secs=10
@@ -38,6 +41,9 @@ async def function_aws_delete_s3_key(request:Request,url:str):
    postgres_object=request.state.postgres_object
    #auth check root
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #request body
+   request_body=await request.json()
+   filename=request_body["filename"]
    #buckey key
    buckey_key=url.rsplit("/",1)[1]
    #logic
