@@ -51,6 +51,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    user=response["message"]
    #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   
   
   
    #logic
