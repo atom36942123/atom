@@ -35,7 +35,7 @@ async def function_token_create(request,user):
 import jwt
 import json
 from config import config_key
-async def function_token_check_jwt(request):
+async def function_token_check(request):
    try:
       header_authorization=request.headers.get("Authorization")
       if not header_authorization:return {"status":0,"message":"authorization header is must"}
