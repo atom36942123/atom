@@ -4,6 +4,7 @@ router=APIRouter(tags=["my"])
 
 #profile
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -31,6 +32,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
 
 #stats
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/stats")
@@ -58,6 +60,7 @@ async def function_my_stats(request:Request):
 
 #parent read
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-read")
@@ -81,6 +84,7 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
 
 #parent check
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/parent-check")
