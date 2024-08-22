@@ -36,7 +36,7 @@ async def function_elasticsearch_read_object(request:Request,table:str,id:int):
 #update object
 from fastapi import Request
 from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
-@router.post("/{x}/elasticsearch/update-object")
+@router.put("/{x}/elasticsearch/update-object")
 async def function_elasticsearch_update_object(request:Request,table:str,id:int):
    #postgres object
    postgres_object=request.state.postgres_object
@@ -52,7 +52,7 @@ async def function_elasticsearch_update_object(request:Request,table:str,id:int)
 #delete object
 from fastapi import Request
 from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
-@router.post("/{x}/elasticsearch/delete-object")
+@router.delete("/{x}/elasticsearch/delete-object")
 async def function_elasticsearch_delete_object(request:Request,table:str,id:int):
    #postgres object
    postgres_object=request.state.postgres_object
@@ -65,7 +65,7 @@ async def function_elasticsearch_delete_object(request:Request,table:str,id:int)
 
 #refresh table
 from fastapi import Request
-@router.post("/{x}/elasticsearch/refresh-table")
+@router.get("/{x}/elasticsearch/refresh-table")
 async def function_elasticsearch_refresh_table(request:Request,table:str):
    #postgres object
    postgres_object=request.state.postgres_object
