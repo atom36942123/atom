@@ -65,8 +65,8 @@ from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/clean")
-async def function_database_clean(request:Request):
+@router.get("/{x}/admin/database-clean")
+async def function_admin_database_clean(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
