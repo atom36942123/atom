@@ -53,6 +53,8 @@
 # api collection
 ![Screenshot 2024-08-22 at 10 04 01 PM](https://github.com/user-attachments/assets/67fd8127-364c-43ac-bc20-95c7faab8014)
 
+![Screenshot 2024-08-22 at 10 05 36 PM](https://github.com/user-attachments/assets/56b20dfe-cf20-48d5-97c8-01faaa9b31a4)![Screenshot 2024-08-22 at 10 05 08 PM](https://github.com/user-attachments/assets/5406b652-b526-46ae-80d7-efb7c2623e75)
+
 
 
 
