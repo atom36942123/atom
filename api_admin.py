@@ -69,9 +69,12 @@ from fastapi.encoders import jsonable_encoder
 async def function_database_clean(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #token check root
-   response=await function_token_check_root(request)
+   #token check
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
+   #admin check
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
