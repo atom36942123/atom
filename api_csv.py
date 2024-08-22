@@ -2,13 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["csv"])
 
-#import for raising error
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-#import for auth check root
-from config import config_key_root
-
 #import ratelimiter
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
@@ -21,12 +14,15 @@ import codecs
 from fastapi import Request
 from fastapi import UploadFile
 from function import function_sanitization_query_param_list
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #file read
@@ -53,12 +49,15 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
 from fastapi import Request
 from fastapi import UploadFile
 from function import function_sanitization_query_param_list
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #file read
@@ -85,12 +84,15 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
 #read
 from fastapi import Request
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #file read
@@ -109,12 +111,15 @@ async def function_csv_read(request:Request,table:str,file:UploadFile):
 #delete
 from fastapi import Request
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token issue"}))
+   #token check root
+   response=await function_token_check_root(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
    #file read
