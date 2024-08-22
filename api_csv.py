@@ -40,8 +40,9 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
-   #final
+   #file close
    await file.close()
+   #final
    return {"status":1,"message":output}
 
 #update
@@ -81,9 +82,11 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
-   #final
+   #file close
    await file.close()
+   #final
    return {"status":1,"message":output}
+
 
 #read
 from fastapi import Request
@@ -114,9 +117,11 @@ async def function_csv_read(request:Request,table:str,file:UploadFile):
    query=f"select * from {table} where id in ({ids_to_read}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
+   #file close
    await file.close()
+   #final
    return {"status":1,"message":output}
+
 
 #delete
 from fastapi import Request
@@ -150,6 +155,8 @@ async def function_csv_delete(request:Request,table:str,file:UploadFile):
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
-   #final
+   #file close
    await file.close()
+   #final
    return {"status":1,"message":output}
+
