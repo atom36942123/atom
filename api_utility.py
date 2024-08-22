@@ -78,8 +78,11 @@ from fastapi import Request
 async def function_utility_read_bulk(request:Request,table:str,ids:str):
    #postgres object
    postgres_object=request.state.postgres_object
- 
- 
+   #table check
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   #logic
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":temp}
-
+   return {"status":1,"message":output}
