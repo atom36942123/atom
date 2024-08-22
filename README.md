@@ -51,13 +51,12 @@
 5. run python main.py
 
 # api collection
-![Screenshot 2024-08-20 at 12 27 50 AM](https://github.com/user-attachments/assets/2da8b6b3-15ba-457c-8bb7-6b5d03e8ee17)
+![image](https://github.com/user-attachments/assets/c4dbc84f-f300-4192-a407-a9b8a5180743)
 
-![image](https://github.com/user-attachments/assets/9f5e1209-884f-4067-b90b-81cbf91dc3fe)
+![image](https://github.com/user-attachments/assets/f3044d49-a008-4def-8707-59960f267f86)
 
-![image](https://github.com/user-attachments/assets/19a6ba52-1bbb-457b-bb22-e3fac73088c2)
+![image](https://github.com/user-attachments/assets/cc4427da-d632-4ac5-b838-0c99f8b5cf4d)
 
-![image](https://github.com/user-attachments/assets/9579b256-9dbf-494e-8429-222cdd041550)
 
 
 
