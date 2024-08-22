@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from function import function_sanitization_query_param_list
-@router.put("/{x}/admin/update-cell")
+@router.post("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
