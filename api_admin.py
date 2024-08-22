@@ -4,7 +4,7 @@ router=APIRouter(tags=["admin"])
 
 #update cell
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
@@ -14,7 +14,7 @@ async def function_admin_update_cell(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #admin check
@@ -38,7 +38,7 @@ async def function_admin_update_cell(request:Request):
 
 #delete bulk
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/admin/delete-bulk")
@@ -46,7 +46,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #admin check
@@ -62,7 +62,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
 
 #database clean
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/database/clean")
