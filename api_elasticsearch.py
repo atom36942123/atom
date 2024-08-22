@@ -2,22 +2,18 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["elasticsearch"])
 
-#import for elasticsearch object
-from elasticsearch import Elasticsearch
-from config import config_elasticsearch_cloud_id
-from config import config_elasticsearch_username
-from config import config_elasticsearch_password
-
 #create object
 from fastapi import Request
+from elasticsearch import Elasticsearch
+from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.post("/{x}/elasticsearch/create-object")
 async def function_elasticsearch_create_object(request:Request,table:str,id:int):
    #postgres object
    postgres_object=request.state.postgres_object
    #elasticsearch object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
-   #body
-   body=await request.json()
+   #request body
+   request_body=await request.json()
    #logic
    response=elasticsearch_object.index(index=table,id=id,document=body)
    #final
@@ -25,6 +21,7 @@ async def function_elasticsearch_create_object(request:Request,table:str,id:int)
 
 #read object
 from fastapi import Request
+from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.get("/{x}/elasticsearch/read-object")
 async def function_elasticsearch_read_object(request:Request,table:str,id:int):
    #postgres object
@@ -38,14 +35,15 @@ async def function_elasticsearch_read_object(request:Request,table:str,id:int):
 
 #update object
 from fastapi import Request
+from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.put("/{x}/elasticsearch/update-object")
 async def function_elasticsearch_update_object(request:Request,table:str,id:int):
    #postgres object
    postgres_object=request.state.postgres_object
    #elasticsearch object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
-   #body
-   body=await request.json()
+   #request body
+   request_body=await request.json()
    #logic
    response=elasticsearch_object.update(index=table,id=id,doc=body)
    #final
@@ -53,6 +51,7 @@ async def function_elasticsearch_update_object(request:Request,table:str,id:int)
 
 #delete object
 from fastapi import Request
+from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
 @router.delete("/{x}/elasticsearch/delete-object")
 async def function_elasticsearch_delete_object(request:Request,table:str,id:int):
    #postgres object
@@ -86,6 +85,6 @@ async def function_elasticsearch_search(request:Request,table:str,key:str,keywor
    #elasticsearch object
    elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #logic
-   response=elasticsearch_object.search(index=table,body={"query":{"match":{key:keyword}},"size":limit})
+   response=elasticsearch_object.search(index=table,request_body={"query":{"match":{key:keyword}},"size":limit})
    #final
    return response
