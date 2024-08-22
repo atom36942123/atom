@@ -4,7 +4,7 @@ router=APIRouter(tags=["object"])
 
 #create
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -13,7 +13,7 @@ async def function_object_create(request:Request,table:str):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #table check
@@ -43,7 +43,7 @@ async def function_object_create(request:Request,table:str):
 #update
 from fastapi import Request
 from datetime import datetime
-from function import function_token_check_jwt
+from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -52,7 +52,7 @@ async def function_object_update(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #request body
@@ -83,7 +83,7 @@ async def function_object_update(request:Request,table:str,id:int):
 
 #delete
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/object/delete")
@@ -91,7 +91,7 @@ async def function_object_delete(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #delete object
@@ -104,7 +104,7 @@ async def function_object_delete(request:Request,table:str,id:int):
 
 #read
 from fastapi import Request
-from function import function_token_check_jwt
+from function import function_token_check
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
@@ -114,7 +114,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check jwt
-   response=await function_token_check_jwt(request)
+   response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
    #request query param
