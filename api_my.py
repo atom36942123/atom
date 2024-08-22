@@ -13,9 +13,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_my_profile(request:Request,background:BackgroundTasks):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
@@ -39,9 +40,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_my_stats(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #config
    user_stats={
    "post_count":"select count(*) as count from post where created_by_id=:user_id;",
@@ -67,9 +69,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #read parent_ids from table
    query=f"select parent_id from {table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":parent_table,"created_by_id":user["id"]}
@@ -91,9 +94,10 @@ from fastapi.encoders import jsonable_encoder
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check jwt
-   user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   #token check jwt
+   response=await function_token_check_jwt(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #conversion
    parent_ids_list=[int(item) for item in parent_ids.split(",")]
    #read parent_ids from table
