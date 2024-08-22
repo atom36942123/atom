@@ -20,7 +20,7 @@ async def function_object_create(request:Request,table:str):
    #request body
    request_body=await request.json()
    #column_to_insert_list
-   column_to_insert_list=[*body]+["created_by_id"]
+   column_to_insert_list=[*request_body]+["created_by_id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in column_to_insert_list:column_to_insert_list.remove(item)
    #query set
@@ -56,7 +56,7 @@ async def function_object_update(request:Request,table:str,id:int):
    #request body
    request_body=await request.json()
    #column_to_update_list
-   column_to_update_list=[*body]+["updated_at","updated_by_id"]
+   column_to_update_list=[*request_body]+["updated_at","updated_by_id"]
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in column_to_update_list:column_to_update_list.remove(item)
    #query set
