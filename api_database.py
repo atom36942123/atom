@@ -2,25 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
-#qrunner
-from fastapi import Request
-from function import function_token_check_root
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/qrunner")
-async def function_database_qrunner(request:Request,query:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check root
-   response=await function_token_check_root(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   #logic
-   query=query
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return output
-
 #init
 from fastapi import Request
 from function import function_token_check_root
