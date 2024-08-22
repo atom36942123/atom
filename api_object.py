@@ -4,6 +4,7 @@ router=APIRouter(tags=["object"])
 
 #create
 from fastapi import Request
+from function import function_token_check_jwt
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -42,6 +43,7 @@ async def function_object_create(request:Request,table:str):
 #update
 from fastapi import Request
 from datetime import datetime
+from function import function_token_check_jwt
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -81,6 +83,7 @@ async def function_object_update(request:Request,table:str,id:int):
 
 #delete
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/object/delete")
@@ -101,6 +104,7 @@ async def function_object_delete(request:Request,table:str,id:int):
 
 #read
 from fastapi import Request
+from function import function_token_check_jwt
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
