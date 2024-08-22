@@ -50,7 +50,6 @@ async def function_action_helpdesk(request:Request):
    #logic
    query="insert into helpdesk (created_by_id,type,description) values (:created_by_id,:type,:description) returning *;"
    query_param={"created_by_id":user["id"],"type":type,"description":description}
-   print(query_param)
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
