@@ -71,3 +71,15 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    output=response["message"]
    #final
    return {"status":1,"message":output}
+
+#read bulk
+from fastapi import Request
+@router.get("/{x}/utility/read-bulk")
+async def function_utility_read_bulk(request:Request,table:str,ids:str):
+   #postgres object
+   postgres_object=request.state.postgres_object
+ 
+ 
+   #final
+   return {"status":1,"message":temp}
+
