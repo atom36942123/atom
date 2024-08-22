@@ -1,3 +1,8 @@
+async def function_database(postgres_object,query_type,query_param_list):
+
+
+
+
 #token create
 import jwt
 import json
