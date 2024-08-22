@@ -1,12 +1,15 @@
-#check token
+#check token jwt
 from config import config_key_jwt
 import json
 async def function_token_check_jwt(request):
-   token=request.headers.get("Authorization").split(" ",1)[1]
-   payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-   data=payload["data"]
-   user=json.loads(data)
-   if user["x"]!=str(request.url.path).split("/")[1]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token x mismatch"}))
+   try:
+      token=request.headers.get("Authorization").split(" ",1)[1]
+      payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+      data=payload["data"]
+      user=json.loads(data)
+      if user["x"]!=str(request.url.path).split("/")[1]:return {"status":0,"message":"token x mismatch"}
+   except Exception as e:return {"status":0,"message":e.args}
+   return {"status":1,"message":user}
 
 #token create
 from config import config_key_jwt
