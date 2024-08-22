@@ -1,16 +1,3 @@
-#token check root
-import jwt
-import json
-from config import config_key_root
-async def function_token_check_root(request):
-   try:
-      header_authorization=request.headers.get("Authorization")
-      if not header_authorization:return {"status":0,"message":"authorization header is must"}
-      token=request.headers.get("Authorization").split(" ",1)[1]
-      if token!=config_key_root:return {"status":0,"message":"token root mismatch"}
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":"done"}
-
 #token create
 import jwt
 import json
