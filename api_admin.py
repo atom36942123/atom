@@ -54,7 +54,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #table check
    if table in ["users"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
    #logic
-   query=f"delete from {table} where id in ({ids}) order by id desc;"
+   query=f"delete from {table} where id in ({ids});"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
