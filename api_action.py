@@ -4,14 +4,17 @@ router=APIRouter(tags=["action"])
 
 #post
 from fastapi import Request
-from function import token_check_jwt
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
    #postgres object
    postgres_object=request.state.postgres_object
-   #auth check jwt
+   #token check jwt
+   response=await function_add_creator_key(request.state.postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   output=response["message"]
    #logic
    query="insert into post (created_by_id,title,description,file_url,link_url,tag) values (:created_by_id,:title,:description,:file_url,:link_url,:tag) returning *;"
    query_param={"created_by_id":user["id"]}|dict(request.query_params)
