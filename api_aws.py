@@ -4,10 +4,8 @@ router=APIRouter(tags=["aws"])
 
 #presigned url
 from fastapi import Request
-import boto3
-import uuid
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_s3_bucket_name,config_s3_region_name
+import boto3,uuid
+from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name,config_s3_region_name
 @router.get("/{x}/aws/create-presigned-url")
 async def function_aws_create_presigned_url(request:Request,filename:str):
    #postgres object
@@ -23,12 +21,30 @@ async def function_aws_create_presigned_url(request:Request,filename:str):
    #final
    return {"status":1,"message":output}
 
+#send-email-ses
+from fastapi import Request
+import boto3
+from config import config_aws_access_key_id,config_aws_secret_access_key,config_ses_sender_email,config_ses_region_name
+@router.post("/{x}/aws/send-email-ses")
+async def function_aws_send_email_ses(request:Request):
+   #postgres object
+   postgres_object=request.state.postgres_object
+   #request body
+   request_body=await request.json()
+   to=request_body["to"]
+   title=request_body["title"]
+   description=request_body["description"]
+   #logic
+   ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+   output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+   #final
+   return {"status":1,"message":output}
+
 #delete s3 url
 from fastapi import Request
-from function import function_token_check_root
+from function import function_token_check
 import boto3
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_s3_bucket_name
+from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/aws/delete-s3-url")
@@ -48,7 +64,7 @@ async def function_aws_delete_s3_url(request:Request,url:str):
 
 #empty s3 bucket
 from fastapi import Request
-from function import function_token_check_root
+from function import function_token_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
@@ -63,25 +79,5 @@ async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Bucket(bucket_name).objects.all().delete()
-   #final
-   return {"status":1,"message":output}
-
-#send-email-ses
-from fastapi import Request
-import boto3
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_ses_sender_email,config_ses_region_name
-@router.post("/{x}/aws/send-email-ses")
-async def function_aws_send_email_ses(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #request body
-   request_body=await request.json()
-   to=request_body["to"]
-   title=request_body["title"]
-   description=request_body["description"]
-   #logic
-   ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-   output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
    #final
    return {"status":1,"message":output}
