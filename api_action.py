@@ -11,7 +11,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_post(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -39,7 +39,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_helpdesk(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -63,7 +63,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_like(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -87,7 +87,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_bookmark(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -111,7 +111,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_block(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -136,7 +136,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_comment(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -162,7 +162,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_message(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -187,7 +187,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_rating(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
@@ -212,7 +212,7 @@ from fastapi.encoders import jsonable_encoder
 async def function_action_report(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
-   #token check jwt
+   #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
