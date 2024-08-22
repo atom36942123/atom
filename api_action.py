@@ -14,7 +14,7 @@ async def function_action_post(request:Request,description:str,title:str=None,fi
    #token check jwt
    response=await function_token_check_jwt(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   output=response["message"]
+   user=response["message"]
    #logic
    query="insert into post (created_by_id,title,description,file_url,link_url,tag) values (:created_by_id,:title,:description,:file_url,:link_url,:tag) returning *;"
    query_param={"created_by_id":user["id"]}|dict(request.query_params)
