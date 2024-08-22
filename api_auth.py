@@ -55,9 +55,9 @@ async def function_auth_login(request:Request):
 #google
 from fastapi import Request
 import hashlib
+from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_token_create
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request):
    #postgres object
@@ -91,9 +91,9 @@ async def function_auth_google(request:Request):
 
 #email
 from fastapi import Request
+from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_token_create
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request):
    #postgres object
@@ -132,9 +132,9 @@ async def function_auth_email(request:Request):
 
 #mobile
 from fastapi import Request
+from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from function import function_token_create
 @router.post("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request):
    #postgres object
@@ -174,6 +174,8 @@ async def function_auth_mobile(request:Request):
 #refresh
 from fastapi import Request
 from function import function_token_create
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/auth/refresh")
 async def function_auth_refresh(request:Request):
    #postgres object
