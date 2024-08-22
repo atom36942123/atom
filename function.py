@@ -1,6 +1,7 @@
 #check token jwt
-from config import config_key_jwt
+import jwt
 import json
+from config import config_key_jwt
 async def function_token_check_jwt(request):
    try:
       token=request.headers.get("Authorization").split(" ",1)[1]
@@ -12,12 +13,12 @@ async def function_token_check_jwt(request):
    return {"status":1,"message":user}
 
 #token create
-from config import config_key_jwt
 import jwt
 import json
 import time
 from datetime import datetime
 from datetime import timedelta
+from config import config_key_jwt
 async def function_token_create(request,user):
   try:
     x={"x":str(request.url.path).split("/")[1]}
