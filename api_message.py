@@ -4,6 +4,7 @@ router=APIRouter(tags=["message"])
 
 #inbox
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox")
@@ -21,9 +22,8 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
    return {"status":1,"message":output}
 
 #inbox unread
-from config import config_key_jwt
-import jwt,json
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox-unread")
@@ -42,6 +42,7 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
 
 #thread
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -66,6 +67,7 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 
 #received
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/received")
@@ -84,6 +86,7 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 
 #delete message all
 from fastapi import Request
+from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/message/delete-all")
