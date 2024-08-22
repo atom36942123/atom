@@ -20,7 +20,7 @@ async def function_action_post(request:Request):
    #logic
    query="insert into post (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
    query_param={"created_by_id":user["id"]}|body
-   output=await postgres_object.fetch_all(query=query,values=body)
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
