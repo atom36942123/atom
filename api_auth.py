@@ -9,10 +9,10 @@ import hashlib
 async def function_auth_signup(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #body
-   body=await request.json()
-   username=body["username"]
-   password=str(body["password"])
+   #request body
+   request_body=await request.json()
+   username=request_body["username"]
+   password=str(request_body["password"])
    #conversion
    password=hashlib.sha256(password.encode()).hexdigest()
    #create user
@@ -30,10 +30,10 @@ from function import function_token_create
 async def function_auth_login(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #body
-   body=await request.json()
-   username=body["username"]
-   password=str(body["password"])
+   #request body
+   request_body=await request.json()
+   username=request_body["username"]
+   password=str(request_body["password"])
    #conversion
    password=hashlib.sha256(password.encode()).hexdigest()
    #read user
@@ -58,9 +58,9 @@ from function import function_token_create
 async def function_auth_google(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #body
-   body=await request.json()
-   google_id=str(body["google_id"])
+   #request body
+   request_body=await request.json()
+   google_id=str(request_body["google_id"])
    #conversion
    google_id=hashlib.sha256(google_id.encode()).hexdigest()
    #read user
@@ -92,10 +92,10 @@ from function import function_token_create
 async def function_auth_email(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #body
-   body=await request.json()
-   email=body["email"]
-   otp=body["otp"]
+   #request body
+   request_body=await request.json()
+   email=request_body["email"]
+   otp=request_body["otp"]
    #verify otp
    query="select otp from otp where email=:email order by id desc limit 1;"
    query_param={"email":email}
@@ -131,10 +131,10 @@ from function import function_token_create
 async def function_auth_mobile(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
-   #body
-   body=await request.json()
-   mobile=body["mobile"]
-   otp=body["otp"]
+   #request body
+   request_body=await request.json()
+   mobile=request_body["mobile"]
+   otp=request_body["otp"]
    #verify otp
    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
    query_param={"mobile":mobile}
