@@ -8,16 +8,18 @@ from function import function_token_check_jwt
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/post")
-async def function_action_post(request:Request,description:str,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
+async def function_action_post(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check jwt
    response=await function_token_check_jwt(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
    user=response["message"]
+   #body
+   body=await request.json()
    #logic
-   query="insert into post (created_by_id,title,description,file_url,link_url,tag) values (:created_by_id,:title,:description,:file_url,:link_url,:tag) returning *;"
-   query_param={"created_by_id":user["id"],"title":title,"description":description,"file_url":file_url,"link_url":link_url,"tag":tag}
+   query="insert into post (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
+   query_param={"created_by_id":user["id"]}|body
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
