@@ -1,14 +1,14 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["database"])
+router=APIRouter(tags=["root"])
 
 #qrunner
 from fastapi import Request
 from config import config_key_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/qrunner")
-async def function_database_qrunner(request:Request,query:str):
+@router.get("/{x}/root/qrunner")
+async def function_root_qrunner(request:Request,query:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
@@ -20,13 +20,13 @@ async def function_database_qrunner(request:Request,query:str):
    #final
    return output
 
-#init
+#database init
 from fastapi import Request
 from config import config_key_root
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/database/init")
-async def function_database_init(request:Request):
+@router.get("/{x}/root/database-init")
+async def function_root_database_init(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
