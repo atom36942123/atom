@@ -81,10 +81,10 @@ async def function_root(request:Request):
 import os
 import glob
 current_directory_path=os.path.dirname(os.path.realpath(__file__))
-file_all_path_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-file_all_name_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_all_path_list]
-file_api_name_list=[item for item in file_all_name_list if "api" in item]
-for item in file_api_name_list:
+file_path_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
+file_name_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_path_all_list]
+file_name_api_list=[item for item in file_name_all_list if "api" in item]
+for item in file_name_api_list:
   x=__import__(item)
   app.include_router(x.router)
 
