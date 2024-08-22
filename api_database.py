@@ -2,6 +2,24 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["database"])
 
+#qrunner
+from fastapi import Request
+from config import config_key_root
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+@router.get("/{x}/database/qrunner")
+async def function_database_qrunner(request:Request,query:str):
+   #postgres object
+   postgres_object=request.state.postgres_object
+   #token check root
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
+   #logic
+   query=query
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return output
+
 #init
 from fastapi import Request
 from config import config_key_root
