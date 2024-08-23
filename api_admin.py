@@ -6,7 +6,6 @@ router=APIRouter(tags=["admin"])
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import 
 from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
@@ -40,7 +39,6 @@ async def function_admin_update_cell(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import 
 @router.delete("/{x}/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #postgres object
@@ -64,7 +62,6 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import 
 @router.delete("/{x}/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #postgres object
