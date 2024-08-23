@@ -33,7 +33,6 @@ async def function_action_post(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/helpdesk")
 async def function_action_helpdesk(request:Request):
    #postgres object 
@@ -57,7 +56,6 @@ async def function_action_helpdesk(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/like")
 async def function_action_like(request:Request):
    #postgres object 
@@ -81,7 +79,6 @@ async def function_action_like(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/bookmark")
 async def function_action_bookmark(request:Request):
    #postgres object 
@@ -105,7 +102,6 @@ async def function_action_bookmark(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/block")
 async def function_action_block(request:Request):
    #postgres object 
@@ -130,7 +126,6 @@ async def function_action_block(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/comment")
 async def function_action_comment(request:Request):
    #postgres object 
@@ -156,7 +151,6 @@ async def function_action_comment(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/message")
 async def function_action_message(request:Request):
    #postgres object 
@@ -181,7 +175,6 @@ async def function_action_message(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/rating")
 async def function_action_rating(request:Request):
    #postgres object 
@@ -206,7 +199,6 @@ async def function_action_rating(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/action/report")
 async def function_action_report(request:Request):
    #postgres object 
