@@ -7,17 +7,16 @@ from fastapi import Request
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/object/create")
 async def function_object_create(request:Request,table:str):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #table check
-   if table in ["users","otp"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #request body
    request_body=await request.json()
    #column_to_insert_list
@@ -33,7 +32,7 @@ async def function_object_create(request:Request,table:str):
    query_param["created_by_id"]=user["id"]
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -46,14 +45,13 @@ from datetime import datetime
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.put("/{x}/object/update")
 async def function_object_update(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request body
    request_body=await request.json()
@@ -74,7 +72,7 @@ async def function_object_update(request:Request,table:str,id:int):
    if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -85,14 +83,13 @@ async def function_object_update(request:Request,table:str,id:int):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #delete object
    query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
@@ -108,14 +105,13 @@ from function import function_token_check
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #postgres object  
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request query param
    request_query_param=dict(request.query_params)
@@ -123,7 +119,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    where_param_raw["created_by_id"]=f"=,{user['id']}"
    response=await function_prepare_where(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string=response["message"][0]
    where_param=response["message"][1]
    #query set
@@ -131,7 +127,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    query_param=where_param
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
    output=await postgres_object.fetch_all(query=query,values=query_param)
