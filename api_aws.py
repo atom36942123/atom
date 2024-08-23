@@ -46,17 +46,16 @@ from function import function_token_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/aws/delete-s3-url")
 async def function_aws_delete_s3_url(request:Request,url:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #buckey key
    buckey_key=url.rsplit("/",1)[1]
    #logic
@@ -71,17 +70,16 @@ from function import function_token_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Bucket(bucket_name).objects.all().delete()
