@@ -6,14 +6,13 @@ router=APIRouter(tags=["message"])
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
@@ -26,14 +25,13 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
@@ -48,14 +46,13 @@ from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit {limit} offset {(page-1)*limit};"
@@ -72,14 +69,13 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
@@ -92,14 +88,13 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/message/delete-all")
 async def function_delete_all(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
