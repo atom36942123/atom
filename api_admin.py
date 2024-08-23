@@ -6,7 +6,7 @@ router=APIRouter(tags=["admin"])
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+from fastapi.encoders import 
 from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
@@ -15,10 +15,10 @@ async def function_admin_update_cell(request:Request):
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #request body
    request_body=await request.json()
    table=request_body["table"]
@@ -27,7 +27,7 @@ async def function_admin_update_cell(request:Request):
    value=request_body["value"]
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"update",[{column:value}])
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    value=response["message"][0][column]
    #logic
    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
@@ -40,19 +40,19 @@ async def function_admin_update_cell(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+from fastapi.encoders import 
 @router.delete("/{x}/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #table check
-   if table in ["users"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    #logic
    query=f"delete from {table} where id in ({ids});"
    query_param={}
@@ -64,17 +64,17 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+from fastapi.encoders import 
 @router.delete("/{x}/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
