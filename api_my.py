@@ -4,6 +4,7 @@ router=APIRouter(tags=["my"])
 
 #token refresh
 from fastapi import Request
+from function import function_token_check
 from function import function_token_create
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -12,7 +13,9 @@ async def function_my_token_refresh(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
-   user=request.state.user
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
@@ -31,6 +34,7 @@ async def function_my_token_refresh(request:Request):
 from fastapi import Request
 from fastapi import BackgroundTasks
 from datetime import datetime
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/my/profile")
@@ -38,7 +42,9 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
-   user=request.state.user
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   user=response["message"]
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
