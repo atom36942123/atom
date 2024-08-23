@@ -103,8 +103,8 @@ async def function_auth_email(request:Request):
    query="select otp from otp where email=:email order by id desc limit 1;"
    query_param={"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatch"}))
+   if not output:return JSONResponse(status_code=400,content={"status":0,"message":"otp not exist"})
+   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content={"status":0,"message":"otp mismatch"})
    #read user
    query="select * from users where email=:email order by id desc limit 1;"
    query_param={"email":email}
@@ -143,8 +143,8 @@ async def function_auth_mobile(request:Request):
    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
    query_param={"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   if not output:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp not exist"}))
-   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"otp mismatch"}))
+   if not output:return JSONResponse(status_code=400,content={"status":0,"message":"otp not exist"})
+   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content={"status":0,"message":"otp mismatch"})
    #read user
    query="select * from users where mobile=:mobile order by id desc limit 1;"
    query_param={"mobile":mobile}
