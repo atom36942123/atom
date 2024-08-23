@@ -170,31 +170,3 @@ async def function_auth_mobile(request:Request):
    token=response["message"]
    #final
    return {"status":1,"message":token}
-
-#refresh
-from fastapi import Request
-from function import function_token_check
-from function import function_token_create
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-@router.get("/{x}/auth/refresh")
-async def function_auth_refresh(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check
-   response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   #raise error
-   if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
-   #create token
-   response=await function_token_create(request,user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   token=response["message"]
-   #final
-   return {"status":1,"message":token}
