@@ -4,7 +4,6 @@ router=APIRouter(tags=["my"])
 
 #profile
 from fastapi import Request
-from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -14,9 +13,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
-   response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
-   user=response["message"]
+   user=request.state.user
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
