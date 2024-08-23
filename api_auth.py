@@ -27,7 +27,6 @@ from fastapi import Request
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
    #postgres object
@@ -47,7 +46,7 @@ async def function_auth_login(request:Request):
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #create token
    response=await function_token_create(request,user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
    return {"status":1,"message":token}
@@ -57,7 +56,6 @@ from fastapi import Request
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request):
    #postgres object
@@ -84,7 +82,7 @@ async def function_auth_google(request:Request):
       user=output[0]
    #create token
    response=await function_token_create(request,user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
    return {"status":1,"message":token}
@@ -93,7 +91,6 @@ async def function_auth_google(request:Request):
 from fastapi import Request
 from function import function_token_create
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request):
    #postgres object
@@ -125,7 +122,7 @@ async def function_auth_email(request:Request):
       user=output[0]
    #create token
    response=await function_token_create(request,user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
    return {"status":1,"message":token}
@@ -134,7 +131,6 @@ async def function_auth_email(request:Request):
 from fastapi import Request
 from function import function_token_create
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request):
    #postgres object
@@ -166,7 +162,7 @@ async def function_auth_mobile(request:Request):
       user=output[0]
    #create token
    response=await function_token_create(request,user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
    return {"status":1,"message":token}
