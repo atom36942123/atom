@@ -35,20 +35,19 @@ from function import function_sanitization_query_param_list
 from function import function_add_creator_key
 from function import function_add_action_count
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #postgres object
    postgres_object=request.state.postgres_object
    #table check
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #request query param
    request_query_param=dict(request.query_params)
    #prepare where
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    response=await function_prepare_where(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string=response["message"][0]
    where_param=response["message"][1]
    #query set
@@ -56,18 +55,18 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    query_param=where_param
    #sanitization query_param
    response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
    output=await postgres_object.fetch_all(query=query,values=query_param)
    output=[dict(item) for item in output]
    #add creator key
    response=await function_add_creator_key(request.state.postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #add action count
    response=await function_add_action_count(request.state.postgres_object,output,table,"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
    return {"status":1,"message":output}
@@ -79,7 +78,7 @@ async def function_utility_read_bulk(request:Request,table:str,ids:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #table check
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"table not allowed"}))
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
    query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
