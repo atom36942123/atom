@@ -67,7 +67,7 @@ async def function_middleware(request:Request,api_function):
     response=await api_function(request)
   except Exception as e:
     print(traceback.format_exc())
-    return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
+    return JSONResponse(status_code=400,content={"status":0,"message":e.args})
   #final
   return response
 
