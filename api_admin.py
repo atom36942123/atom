@@ -85,3 +85,39 @@ async def function_admin_database_clean(request:Request):
          output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":"done"}
+
+#feed
+from fastapi import Request
+from function import function_token_check
+from function import function_prepare_where
+from function import function_sanitization_query_param_list
+from fastapi.responses import JSONResponse
+@router.get("/{x}/admin/feed")
+async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #postgres object
+   postgres_object=request.state.postgres_object
+   #token check
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #admin check
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
+   #request query param
+   request_query_param=dict(request.query_params)
+   #prepare where
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_prepare_where(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string=response["message"][0]
+   where_param=response["message"][1]
+   #query set
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   #sanitization query_param
+   response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query_param=response["message"][0]
+   #query run
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
