@@ -13,7 +13,7 @@ async def function_action_post(request:Request):
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request body
    request_body=await request.json()
