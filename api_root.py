@@ -6,13 +6,12 @@ router=APIRouter(tags=["root"])
 from fastapi import Request
 from config import config_key_root
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/root/qrunner")
 async def function_root_qrunner(request:Request,query:str):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #logic
    query=query
    query_param={}
@@ -24,13 +23,12 @@ async def function_root_qrunner(request:Request,query:str):
 from fastapi import Request
 from config import config_key_root
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/root/database-init")
 async def function_root_database_init(request:Request):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check root
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"token root issue"}))
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #create extension
    config_database_extension=[
    "create extension if not exists postgis;",
