@@ -21,7 +21,7 @@ async def function_my_token_refresh(request:Request):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #raise error
-   if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #create token
    response=await function_token_create(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -49,7 +49,7 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    #raise error
-   if not user:return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"no user"}))
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
    query="update users set last_active_at=:last_active_at where id=:id;"
    query_param={"last_active_at":datetime.now(),"id":user["id"]}
