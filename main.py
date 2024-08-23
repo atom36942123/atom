@@ -63,7 +63,8 @@ async def function_middleware(request:Request,api_function):
   #postgres object assgin
   if key_4th in postgres_object_dict:request.state.postgres_object=postgres_object_dict[key_4th]
   #api response
-  try:response=await api_function(request)
+  try:
+    response=await api_function(request)
   except Exception as e:
     print(traceback.format_exc())
     return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
