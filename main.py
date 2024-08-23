@@ -51,6 +51,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 #middleware
 from fastapi import Request
 import traceback
+from function import function_token_check
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 @app.middleware("http")
@@ -62,8 +63,16 @@ async def function_middleware(request:Request,api_function):
     return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"wrong x"}))
   #postgres object assgin
   if key_4th in postgres_object_dict:request.state.postgres_object=postgres_object_dict[key_4th]
+  #token check
+  for item in ["my/"]:
+    if item in str(request.url.path):
+      response=await function_token_check(request)
+      if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+      user=response["message"]
+      request.state.user=user
   #api response
-  try:response=await api_function(request)
+  try:
+    response=await api_function(request)
   except Exception as e:
     print(traceback.format_exc())
     return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":e.args}))
