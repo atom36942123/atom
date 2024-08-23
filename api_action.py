@@ -187,7 +187,7 @@ async def function_action_rating(request:Request):
    request_body=await request.json()
    parent_table=request_body["parent_table"]
    parent_id=request_body["parent_id"]
-   rating=request_body["rating"]
+   rating=round(request_body["rating"],3)
    #logic
    query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
    query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"rating":rating}
