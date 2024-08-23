@@ -11,19 +11,18 @@ from function import function_sanitization_query_param_list
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #file extension check
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
    #file read
    file_row_list=[]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -36,7 +35,7 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    query_param_list=file_row_list
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
@@ -52,19 +51,18 @@ import csv,codecs
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #file extension check
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
    #file read
    file_row_list=[]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -78,7 +76,7 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
    query_param_list=file_row_list
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
@@ -94,19 +92,18 @@ from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.get("/{x}/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #file extension check
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
    #file read
    file_row_list=[]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -128,19 +125,18 @@ from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 @router.delete("/{x}/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
    #postgres object
    postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"admin issue"}))
+   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #file extension check
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content=jsonable_encoder({"status":0,"message":"file type issue"}))
+   if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
    #file read
    file_row_list=[]
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -150,7 +146,7 @@ async def function_csv_delete(request:Request,table:str,file:UploadFile):
    query_param_list=file_row_list
    #sanitization query_param_list
    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=jsonable_encoder(response))
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param_list=response["message"]
    #query run
    output=await postgres_object.execute_many(query=query,values=query_param_list)
