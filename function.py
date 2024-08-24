@@ -1,9 +1,6 @@
 #token create
-import jwt
-import json
-import time
-from datetime import datetime
-from datetime import timedelta
+import jwt,json,time
+from datetime import datetime,timedelta
 from config import config_key_jwt
 async def function_token_create(request,user):
   try:
@@ -19,8 +16,7 @@ async def function_token_create(request,user):
   return {"status":1,"message":token}
 
 #token check
-import jwt
-import json
+import jwt,json
 from config import config_key_jwt
 async def function_token_check(request):
    try:
