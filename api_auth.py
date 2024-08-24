@@ -42,7 +42,7 @@ async def function_auth_login(request:Request):
    user=output[0] if output else None
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   #create token
+   #token create
    response=await function_token_create(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
@@ -77,7 +77,7 @@ async def function_auth_google(request:Request):
       query_param={"id":user_id}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
-   #create token
+   #token create
    response=await function_token_create(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
@@ -116,7 +116,7 @@ async def function_auth_email(request:Request):
       query_param={"id":user_id}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
-   #create token
+   #token create
    response=await function_token_create(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
@@ -155,7 +155,7 @@ async def function_auth_mobile(request:Request):
       query_param={"id":user_id}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
-   #create token
+   #token create
    response=await function_token_create(request,user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
