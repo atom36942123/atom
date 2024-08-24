@@ -12,7 +12,7 @@ from function import function_sanitization_query_param_list
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import JSONResponse
-@router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+@router.post("/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
    #token check
    response=await function_token_check(request)
@@ -51,7 +51,7 @@ import csv,codecs
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-@router.put("/{x}/csv/update")
+@router.put("/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
    #token check
    response=await function_token_check(request)
@@ -91,7 +91,7 @@ from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/csv/read")
+@router.get("/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
    #token check
    response=await function_token_check(request)
@@ -123,7 +123,7 @@ from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/csv/delete")
+@router.delete("/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
    #token check
    response=await function_token_check(request)
