@@ -7,16 +7,6 @@ import sentry_sdk
 from config import config_sentry_dsn
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
-#postgres object dict
-from databases import Database
-postgres_object_dict={}
-postgres_url_list=config_postgres_database.split(",")
-for item in postgres_url_list:
-  postgres_object=Database(item,min_size=1,max_size=100)
-  database_name=item.split("/")[-1]
-  database_name=database_name.replace("_","-")
-  postgres_object_dict={database_name:postgres_object}
-
 #lifespan
 from config import config_redis_server
 from fastapi import FastAPI
