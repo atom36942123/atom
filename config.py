@@ -2,7 +2,7 @@
 from environs import Env
 env=Env()
 env.read_env()
-config_postgres_database=env("config_postgres_database")
+config_postgres_database_url=env("config_postgres_database_url")
 config_redis_server=env("config_redis_server")
 config_mongo_server=env("config_mongo_server")
 config_sentry_dsn=env("config_sentry_dsn")
@@ -20,4 +20,4 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 
 #postgres object
 from databases import Database
-postgres_object=Database(config_postgres_database,min_size=1,max_size=100)
+postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
