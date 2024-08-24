@@ -6,7 +6,7 @@ router=APIRouter(tags=["auth"])
 from fastapi import Request
 from config import postgres_object
 import hashlib
-@router.post("/{x}/auth/signup")
+@router.post("/auth/signup")
 async def function_auth_signup(request:Request):
    #request body
    request_body=await request.json()
@@ -27,7 +27,7 @@ from config import postgres_object
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
-@router.post("/{x}/auth/login")
+@router.post("/auth/login")
 async def function_auth_login(request:Request):
    #request body
    request_body=await request.json()
@@ -55,7 +55,7 @@ from config import postgres_object
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
-@router.post("/{x}/auth/google")
+@router.post("/auth/google")
 async def function_auth_google(request:Request):
    #request body
    request_body=await request.json()
@@ -89,7 +89,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_create
 from fastapi.responses import JSONResponse
-@router.post("/{x}/auth/email")
+@router.post("/auth/email")
 async def function_auth_email(request:Request):
    #request body
    request_body=await request.json()
@@ -128,7 +128,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_create
 from fastapi.responses import JSONResponse
-@router.post("/{x}/auth/mobile")
+@router.post("/auth/mobile")
 async def function_auth_mobile(request:Request):
    #request body
    request_body=await request.json()
