@@ -26,3 +26,6 @@ postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 from elasticsearch import Elasticsearch
 elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
 
+#mongo object
+import motor.motor_asyncio
+mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
