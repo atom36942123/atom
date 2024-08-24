@@ -17,3 +17,8 @@ config_ses_region_name=env("config_ses_region_name")
 config_elasticsearch_username=env("config_elasticsearch_username")
 config_elasticsearch_password=env("config_elasticsearch_password")
 config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
+
+#middleware
+config_auth={
+"action/":"jwt"
+}
