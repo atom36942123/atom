@@ -9,7 +9,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-post")
 async def function_action_create_post(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -35,7 +35,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-helpdesk")
 async def function_action_create_helpdesk(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -59,7 +59,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-like")
 async def function_action_create_like(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -81,7 +81,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-bookmark")
 async def function_action_create_bookmark(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -103,7 +103,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-block")
 async def function_action_create_block(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -126,7 +126,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-comment")
 async def function_action_create_comment(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -150,7 +150,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-message")
 async def function_action_create_message(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -174,7 +174,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-rating")
 async def function_action_create_rating(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -197,7 +197,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/action/create-report")
 async def function_action_create_report(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
