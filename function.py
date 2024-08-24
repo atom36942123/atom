@@ -30,7 +30,6 @@ async def function_token_check(request):
       payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
       data=payload["data"]
       user=json.loads(data)
-      if user["x"]!=str(request.url.path).split("/")[1]:return {"status":0,"message":"token x mismatch"}
    except Exception as e:return {"status":0,"message":e.args}
    return {"status":1,"message":user}
   
