@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
-@router.get("/{x}/utility/pcache")
+@router.get("/utility/pcache")
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
    #config
@@ -35,7 +35,7 @@ from function import function_sanitization_query_param_list
 from function import function_add_creator_key
 from function import function_add_action_count
 from fastapi.responses import JSONResponse
-@router.get("/{x}/utility/feed")
+@router.get("/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #table check
@@ -72,7 +72,7 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
 #read bulk
 from fastapi import Request
 from config import postgres_object
-@router.get("/{x}/utility/read-bulk")
+@router.get("/utility/read-bulk")
 async def function_utility_read_bulk(request:Request,table:str,ids:str):
    #table check
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
