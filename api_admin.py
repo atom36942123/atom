@@ -11,7 +11,7 @@ from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -41,7 +41,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -65,7 +65,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -94,7 +94,7 @@ from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
