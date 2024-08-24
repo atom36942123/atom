@@ -10,7 +10,7 @@ from function import function_token_create
 from fastapi.responses import JSONResponse
 @router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -37,7 +37,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -62,7 +62,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/stats")
 async def function_my_stats(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -89,7 +89,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -112,7 +112,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -133,7 +133,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/read-bulk")
 async def function_my_read_bulk(request:Request,table:str,ids:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
