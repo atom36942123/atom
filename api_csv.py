@@ -4,6 +4,7 @@ router=APIRouter(tags=["csv"])
 
 #create
 from fastapi import Request
+from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
@@ -13,8 +14,6 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import JSONResponse
 @router.post("/{x}/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -46,6 +45,7 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
 
 #update
 from fastapi import Request
+from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
@@ -53,8 +53,6 @@ from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/{x}/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -88,14 +86,13 @@ async def function_csv_update(request:Request,table:str,file:UploadFile):
 
 #read
 from fastapi import Request
+from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -121,14 +118,13 @@ async def function_csv_read(request:Request,table:str,file:UploadFile):
 
 #delete
 from fastapi import Request
+from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/{x}/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
