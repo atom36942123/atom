@@ -14,7 +14,7 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import JSONResponse
 @router.post("/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -53,7 +53,7 @@ from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/csv/update")
 async def function_csv_update(request:Request,table:str,file:UploadFile):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -93,7 +93,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/csv/read")
 async def function_csv_read(request:Request,table:str,file:UploadFile):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -125,7 +125,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/csv/delete")
 async def function_csv_delete(request:Request,table:str,file:UploadFile):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
