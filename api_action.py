@@ -2,10 +2,10 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["action"])
 
-#post
+#create post
 from fastapi import Request
-@router.post("/{x}/action/post")
-async def function_action_post(request:Request):
+@router.post("/{x}/action/create-post")
+async def function_action_create_post(request:Request):
    #request body
    request_body=await request.json()
    type=request_body["type"]
@@ -25,8 +25,8 @@ async def function_action_post(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/helpdesk")
-async def function_action_helpdesk(request:Request):
+@router.post("/{x}/action/create-helpdesk")
+async def function_action_create_helpdesk(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -48,8 +48,8 @@ async def function_action_helpdesk(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/like")
-async def function_action_like(request:Request):
+@router.post("/{x}/action/create-like")
+async def function_action_create_like(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -71,8 +71,8 @@ async def function_action_like(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/bookmark")
-async def function_action_bookmark(request:Request):
+@router.post("/{x}/action/create-bookmark")
+async def function_action_create_bookmark(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -94,8 +94,8 @@ async def function_action_bookmark(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/block")
-async def function_action_block(request:Request):
+@router.post("/{x}/action/create-block")
+async def function_action_create_block(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -118,8 +118,8 @@ async def function_action_block(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/comment")
-async def function_action_comment(request:Request):
+@router.post("/{x}/action/create-comment")
+async def function_action_create_comment(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -143,8 +143,8 @@ async def function_action_comment(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/message")
-async def function_action_message(request:Request):
+@router.post("/{x}/action/create-message")
+async def function_action_create_message(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -167,8 +167,8 @@ async def function_action_message(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/rating")
-async def function_action_rating(request:Request):
+@router.post("/{x}/action/create-rating")
+async def function_action_create_rating(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
@@ -191,8 +191,8 @@ async def function_action_rating(request:Request):
 from fastapi import Request
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/report")
-async def function_action_report(request:Request):
+@router.post("/{x}/action/create-report")
+async def function_action_create_report(request:Request):
    #postgres object 
    postgres_object=request.state.postgres_object
    #token check
