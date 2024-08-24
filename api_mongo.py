@@ -5,7 +5,7 @@ router=APIRouter(tags=["mongo"])
 #create object
 from fastapi import Request
 from config import mongo_object
-@router.post("/{x}/mongo/create-object")
+@router.post("/mongo/create-object")
 async def function_mongo_create_object(request:Request,database:str,table:str):
    #request body
    request_body=await request.json()
@@ -19,7 +19,7 @@ async def function_mongo_create_object(request:Request,database:str,table:str):
 from fastapi import Request
 from config import mongo_object
 from bson import ObjectId
-@router.get("/{x}/mongo/read-object")
+@router.get("/mongo/read-object")
 async def function_mongo_read_object(request:Request,database:str,table:str,id:str):
    #logic
    if database=="test" and table=="users":
@@ -32,7 +32,7 @@ async def function_mongo_read_object(request:Request,database:str,table:str,id:s
 from fastapi import Request
 from config import mongo_object
 from bson import ObjectId
-@router.put("/{x}/mongo/update-object")
+@router.put("/mongo/update-object")
 async def function_mongo_update_object(request:Request,database:str,table:str,id:str):
    #request body
    request_body=await request.json()
@@ -46,7 +46,7 @@ async def function_mongo_update_object(request:Request,database:str,table:str,id
 from fastapi import Request
 from config import mongo_object
 from bson import ObjectId
-@router.delete("/{x}/mongo/delete-object")
+@router.delete("/mongo/delete-object")
 async def function_mongo_delete_object(request:Request,database:str,table:str,id:str):
    #logic
    if database=="test" and table=="users":
