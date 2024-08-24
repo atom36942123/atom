@@ -5,7 +5,7 @@ router=APIRouter(tags=["elasticsearch"])
 #create object
 from fastapi import Request
 from config import elasticsearch_object
-@router.post("/{x}/elasticsearch/create-object")
+@router.post("/elasticsearch/create-object")
 async def function_elasticsearch_create_object(request:Request,table:str,id:int):
    #request body
    request_body=await request.json()
@@ -17,7 +17,7 @@ async def function_elasticsearch_create_object(request:Request,table:str,id:int)
 #read object
 from fastapi import Request
 from config import elasticsearch_object
-@router.get("/{x}/elasticsearch/read-object")
+@router.get("/elasticsearch/read-object")
 async def function_elasticsearch_read_object(request:Request,table:str,id:int):
    #logic
    response=elasticsearch_object.get(index=table,id=id)
@@ -27,7 +27,7 @@ async def function_elasticsearch_read_object(request:Request,table:str,id:int):
 #update object
 from fastapi import Request
 from config import elasticsearch_object
-@router.put("/{x}/elasticsearch/update-object")
+@router.put("/elasticsearch/update-object")
 async def function_elasticsearch_update_object(request:Request,table:str,id:int):
    #request body
    request_body=await request.json()
@@ -39,7 +39,7 @@ async def function_elasticsearch_update_object(request:Request,table:str,id:int)
 #delete object
 from fastapi import Request
 from config import elasticsearch_object
-@router.delete("/{x}/elasticsearch/delete-object")
+@router.delete("/elasticsearch/delete-object")
 async def function_elasticsearch_delete_object(request:Request,table:str,id:int):
    #logic
    response=elasticsearch_object.delete(index=table,id=id)
@@ -49,7 +49,7 @@ async def function_elasticsearch_delete_object(request:Request,table:str,id:int)
 #refresh table
 from fastapi import Request
 from config import elasticsearch_object
-@router.get("/{x}/elasticsearch/refresh-table")
+@router.get("/elasticsearch/refresh-table")
 async def function_elasticsearch_refresh_table(request:Request,table:str):
    #logic
    response=elasticsearch_object.indices.refresh(index=table)
@@ -59,7 +59,7 @@ async def function_elasticsearch_refresh_table(request:Request,table:str):
 #search
 from fastapi import Request
 from config import elasticsearch_object
-@router.get("/{x}/elasticsearch/search")
+@router.get("/elasticsearch/search")
 async def function_elasticsearch_search(request:Request,table:str,key:str,keyword:str,limit:int=100):
    #logic
    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:keyword}},"size":limit})
