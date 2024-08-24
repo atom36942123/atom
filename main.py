@@ -1,18 +1,15 @@
-#import from other files
-from config import config_sentry_dsn
-from config import config_redis_server
-from database import postgres_object
-from config import config_auth
-
 #logging
 import logging
 logging.basicConfig(level="INFO")
 
 #sentry
 import sentry_sdk
+from config import config_sentry_dsn
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
+from config import config_redis_server
+from config import postgres_object
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from redis import asyncio as aioredis
@@ -42,7 +39,6 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 #middleware
 from fastapi import Request
 import traceback
-from function import function_token_check
 from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
