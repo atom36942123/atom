@@ -85,8 +85,7 @@ async def function_prepare_where(where_param_raw):
   return {"status":1,"message":[where_string,where_param]}
 
 #sanitization
-import hashlib
-import json
+import hashlib,json
 from datetime import datetime
 async def function_sanitization_query_param_list(postgres_object,query_type,query_param_list):
   try:
