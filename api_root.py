@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 from config import config_key_root
 from fastapi.responses import JSONResponse
-@router.get("/{x}/root/qrunner")
+@router.get("/root/qrunner")
 async def function_root_qrunner(request:Request,query:str):
    #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
@@ -23,7 +23,7 @@ from fastapi import Request
 from config import postgres_object
 from config import config_key_root
 from fastapi.responses import JSONResponse
-@router.get("/{x}/root/database-init")
+@router.get("/root/database-init")
 async def function_root_database_init(request:Request):
    #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
