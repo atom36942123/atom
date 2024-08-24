@@ -25,10 +25,10 @@ async def function_lifespan(app:FastAPI):
   #redis rate limiter
   await FastAPILimiter.init(aioredis.from_url(config_redis_server,encoding="utf-8",decode_responses=True))
   #postgres object connect
-  for k,v in postgres_object_dict.items():await v.connect()
+  await postgres_object.connect()
   yield
   #postgres object disconnect
-  for k,v in postgres_object_dict.items():await v.disconnect()
+  await postgres_object.disconnect()
 
 #app
 from fastapi import FastAPI
@@ -44,13 +44,6 @@ import traceback
 from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
-  #key_4th
-  key_4th=str(request.url.path).split("/")[1]
-  #key_4th check
-  if key_4th not in ["","docs","openapi.json","redoc"]+[*postgres_object_dict]:
-    return JSONResponse(status_code=400,content={"status":0,"message":"wrong x"})
-  #postgres object assgin
-  if key_4th in postgres_object_dict:request.state.postgres_object=postgres_object_dict[key_4th]
   #api response
   try:
     response=await api_function(request)
@@ -60,11 +53,11 @@ async def function_middleware(request:Request,api_function):
   #final
   return response
 
-#api root
+#root api
 from fastapi import Request
 @app.get("/")
 async def function_root(request:Request):
-  return {"status":1,"message":f"welcome to {[*postgres_object_dict]}"}
+  return {"status":1,"message":"welcome to atom"}
 
 #router
 import os
