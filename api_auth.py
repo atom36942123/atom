@@ -4,11 +4,10 @@ router=APIRouter(tags=["auth"])
 
 #singup
 from fastapi import Request
+from config import postgres_object
 import hashlib
 @router.post("/{x}/auth/signup")
 async def function_auth_signup(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #request body
    request_body=await request.json()
    username=request_body["username"]
@@ -24,13 +23,12 @@ async def function_auth_signup(request:Request):
 
 #login
 from fastapi import Request
+from config import postgres_object
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
 @router.post("/{x}/auth/login")
 async def function_auth_login(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #request body
    request_body=await request.json()
    username=request_body["username"]
@@ -53,13 +51,12 @@ async def function_auth_login(request:Request):
 
 #google
 from fastapi import Request
+from config import postgres_object
 import hashlib
 from function import function_token_create
 from fastapi.responses import JSONResponse
 @router.post("/{x}/auth/google")
 async def function_auth_google(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #request body
    request_body=await request.json()
    google_id=str(request_body["google_id"])
@@ -89,12 +86,11 @@ async def function_auth_google(request:Request):
 
 #email
 from fastapi import Request
+from config import postgres_object
 from function import function_token_create
 from fastapi.responses import JSONResponse
 @router.post("/{x}/auth/email")
 async def function_auth_email(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #request body
    request_body=await request.json()
    email=request_body["email"]
@@ -129,12 +125,11 @@ async def function_auth_email(request:Request):
 
 #mobile
 from fastapi import Request
+from config import postgres_object
 from function import function_token_create
 from fastapi.responses import JSONResponse
 @router.post("/{x}/auth/mobile")
 async def function_auth_mobile(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #request body
    request_body=await request.json()
    mobile=request_body["mobile"]
