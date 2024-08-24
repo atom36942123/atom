@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/message/inbox")
+@router.get("/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
@@ -25,7 +25,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/message/inbox-unread")
+@router.get("/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
@@ -45,7 +45,7 @@ from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
-@router.get("/{x}/message/thread")
+@router.get("/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
@@ -67,7 +67,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/message/received")
+@router.get("/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
@@ -85,7 +85,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/message/delete-all")
+@router.delete("/message/delete-all")
 async def function_delete_all(request:Request):
    #token check
    response=await function_token_check(request)
