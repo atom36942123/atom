@@ -48,6 +48,10 @@ async def function_middleware(request:Request,api_function):
   try:
     #token check
     
+    response=await function_token_check(request)
+    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+    user=response["message"]
+    
     #api response
     response=await api_function(request)
   except Exception as e:
