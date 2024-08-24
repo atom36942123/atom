@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-post")
+@router.post("/action/create-post")
 async def function_action_create_post(request:Request):
    #token check
    response=await function_token_check(request)
@@ -33,7 +33,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-helpdesk")
+@router.post("/action/create-helpdesk")
 async def function_action_create_helpdesk(request:Request):
    #token check
    response=await function_token_check(request)
@@ -57,7 +57,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-like")
+@router.post("/action/create-like")
 async def function_action_create_like(request:Request):
    #token check
    response=await function_token_check(request)
@@ -79,7 +79,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-bookmark")
+@router.post("/action/create-bookmark")
 async def function_action_create_bookmark(request:Request):
    #token check
    response=await function_token_check(request)
@@ -101,7 +101,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-block")
+@router.post("/action/create-block")
 async def function_action_create_block(request:Request):
    #token check
    response=await function_token_check(request)
@@ -124,7 +124,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-comment")
+@router.post("/action/create-comment")
 async def function_action_create_comment(request:Request):
    #token check
    response=await function_token_check(request)
@@ -148,7 +148,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-message")
+@router.post("/action/create-message")
 async def function_action_create_message(request:Request):
    #token check
    response=await function_token_check(request)
@@ -172,7 +172,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-rating")
+@router.post("/action/create-rating")
 async def function_action_create_rating(request:Request):
    #token check
    response=await function_token_check(request)
@@ -195,7 +195,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.post("/{x}/action/create-report")
+@router.post("/action/create-report")
 async def function_action_create_report(request:Request):
    #token check
    response=await function_token_check(request)
