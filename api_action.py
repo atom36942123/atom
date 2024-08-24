@@ -6,12 +6,6 @@ router=APIRouter(tags=["action"])
 from fastapi import Request
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check
-   response=await function_token_check(request)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
    #request body
    request_body=await request.json()
    type=request_body["type"]
