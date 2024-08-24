@@ -10,7 +10,7 @@ from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/object/create")
 async def function_object_create(request:Request,table:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -47,7 +47,7 @@ from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/object/update")
 async def function_object_update(request:Request,table:str,id:int):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -84,7 +84,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -105,7 +105,7 @@ from function import function_prepare_where
 from fastapi.responses import JSONResponse
 @router.get("/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
