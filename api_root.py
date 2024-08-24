@@ -4,13 +4,12 @@ router=APIRouter(tags=["root"])
 
 #qrunner
 from fastapi import Request
+from config import postgres_object
 from config import config_key_root
 from fastapi.responses import JSONResponse
 @router.get("/{x}/root/qrunner")
 async def function_root_qrunner(request:Request,query:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check root
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #logic
    query=query
@@ -21,13 +20,12 @@ async def function_root_qrunner(request:Request,query:str):
 
 #database init
 from fastapi import Request
+from config import postgres_object
 from config import config_key_root
 from fastapi.responses import JSONResponse
 @router.get("/{x}/root/database-init")
 async def function_root_database_init(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
-   #token check root
+   #token check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #create extension
    config_database_extension=[
