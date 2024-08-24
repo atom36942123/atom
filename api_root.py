@@ -2,22 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["root"])
 
-#qrunner
-from fastapi import Request
-from config import postgres_object
-from config import config_key_root
-from fastapi.responses import JSONResponse
-@router.get("/root/qrunner")
-async def function_root_qrunner(request:Request,query:str):
-   #auth check
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #logic
-   query=query
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return output
-
 #database init
 from fastapi import Request
 from config import postgres_object
