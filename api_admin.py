@@ -4,14 +4,13 @@ router=APIRouter(tags=["admin"])
 
 #update cell
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from function import function_sanitization_query_param_list
 @router.put("/{x}/admin/update-cell")
 async def function_admin_update_cell(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -37,12 +36,11 @@ async def function_admin_update_cell(request:Request):
 
 #delete bulk
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/{x}/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -51,6 +49,8 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #table check
    if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   #check
+   if len(ids)>10000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
    #logic
    query=f"delete from {table} where id in ({ids});"
    query_param={}
@@ -60,12 +60,11 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
 
 #database clean
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/{x}/admin/database-clean")
 async def function_admin_database_clean(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -88,14 +87,13 @@ async def function_admin_database_clean(request:Request):
 
 #feed
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from function import function_prepare_where
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.get("/{x}/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
