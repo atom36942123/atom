@@ -47,7 +47,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key,config_
 from fastapi.responses import JSONResponse
 @router.delete("/aws/delete-s3-url")
 async def function_aws_delete_s3_url(request:Request,url:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -70,7 +70,7 @@ from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
 @router.delete("/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
