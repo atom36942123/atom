@@ -43,9 +43,11 @@ async def function_action_create_helpdesk(request:Request):
    request_body=await request.json()
    type=request_body["type"]
    description=request_body["description"]
+   email=request_body["email"]
+   mobile=request_body["mobile"]
    #logic
-   query="insert into helpdesk (created_by_id,type,description) values (:created_by_id,:type,:description) returning *;"
-   query_param={"created_by_id":user["id"],"type":type,"description":description}
+   query="insert into helpdesk (created_by_id,type,description,email,mobile) values (:created_by_id,:type,:description,:email,:mobile) returning *;"
+   query_param={"created_by_id":user["id"],"type":type,"description":description,"email":email,"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -157,9 +159,10 @@ async def function_action_create_message(request:Request):
    parent_table=request_body["parent_table"]
    parent_id=request_body["parent_id"]
    description=request_body["description"]
+   file_url=request_body["file_url"]
    #logic
-   query="insert into message (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
-   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
+   query="insert into message (created_by_id,parent_table,parent_id,description,file_url) values (:created_by_id,:parent_table,:parent_id,:description,:file_url) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description,"file_url":file_url}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
