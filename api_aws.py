@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 import boto3,uuid
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name,config_s3_region_name
-@router.get("/{x}/aws/create-presigned-url")
+@router.get("/aws/create-presigned-url")
 async def function_aws_create_presigned_url(request:Request,filename:str):
    #config
    size_kb=250
@@ -25,7 +25,7 @@ from fastapi import Request
 from config import postgres_object
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_ses_sender_email,config_ses_region_name
-@router.post("/{x}/aws/send-email-ses")
+@router.post("/aws/send-email-ses")
 async def function_aws_send_email_ses(request:Request):
    #request body
    request_body=await request.json()
@@ -45,7 +45,7 @@ from function import function_token_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/aws/delete-s3-url")
+@router.delete("/aws/delete-s3-url")
 async def function_aws_delete_s3_url(request:Request,url:str):
    #token check
    response=await function_token_check(request)
@@ -68,7 +68,7 @@ from function import function_token_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/aws/empty-s3-bucket")
+@router.delete("/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
    #token check
    response=await function_token_check(request)
