@@ -9,7 +9,7 @@ from config import config_key_root
 from fastapi.responses import JSONResponse
 @router.get("/root/qrunner")
 async def function_root_qrunner(request:Request,query:str):
-   #token check
+   #auth check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #logic
    query=query
@@ -25,7 +25,7 @@ from config import config_key_root
 from fastapi.responses import JSONResponse
 @router.get("/root/database-init")
 async def function_root_database_init(request:Request):
-   #token check
+   #auth check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #create extension
    config_database_extension=[
