@@ -9,7 +9,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -27,7 +27,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -47,7 +47,7 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 @router.get("/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -69,7 +69,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -87,7 +87,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/message/delete-all")
 async def function_delete_all(request:Request):
-   #token check
+   #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
