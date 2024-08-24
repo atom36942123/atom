@@ -18,7 +18,6 @@ config_elasticsearch_username=env("config_elasticsearch_username")
 config_elasticsearch_password=env("config_elasticsearch_password")
 config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 
-#middleware
-config_auth={
-"action/":"jwt"
-}
+#postgres object
+from databases import Database
+postgres_object=Database(config_postgres_database,min_size=1,max_size=100)
