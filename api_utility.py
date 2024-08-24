@@ -59,11 +59,11 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    output=await postgres_object.fetch_all(query=query,values=query_param)
    output=[dict(item) for item in output]
    #add creator key
-   response=await function_add_creator_key(request.state.postgres_object,output)
+   response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #add action count
-   response=await function_add_action_count(request.state.postgres_object,output,table,"likes")
+   response=await function_add_action_count(postgres_object,output,table,"likes")
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
