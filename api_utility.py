@@ -4,13 +4,12 @@ router=APIRouter(tags=["utility"])
 
 #pcache
 from fastapi import Request
+from config import postgres_object
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 @router.get("/{x}/utility/pcache")
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #config
    config_pcache={
    "user_count":"select count(*) from users;"
@@ -28,6 +27,7 @@ async def function_utility_pcache(request:Request):
 
 #feed
 from fastapi import Request
+from config import postgres_object
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 from function import function_prepare_where
@@ -38,8 +38,6 @@ from fastapi.responses import JSONResponse
 @router.get("/{x}/utility/feed")
 @cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #table check
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #request query param
@@ -73,10 +71,9 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
 
 #read bulk
 from fastapi import Request
+from config import postgres_object
 @router.get("/{x}/utility/read-bulk")
 async def function_utility_read_bulk(request:Request,table:str,ids:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #table check
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
