@@ -4,14 +4,11 @@ router=APIRouter(tags=["elasticsearch"])
 
 #create object
 from fastapi import Request
-from elasticsearch import Elasticsearch
-from config import config_elasticsearch_cloud_id,config_elasticsearch_username,config_elasticsearch_password
+from config import postgres_object
+from config import elasticsearch_object
 @router.post("/{x}/elasticsearch/create-object")
 async def function_elasticsearch_create_object(request:Request,table:str,id:int):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #elasticsearch object
-   elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
    #request body
    request_body=await request.json()
    #logic
