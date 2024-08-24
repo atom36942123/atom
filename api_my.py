@@ -8,7 +8,7 @@ from config import postgres_object
 from function import function_token_check
 from function import function_token_create
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/token-refresh")
+@router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
    #token check
    response=await function_token_check(request)
@@ -35,7 +35,7 @@ from fastapi import BackgroundTasks
 from datetime import datetime
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/profile")
+@router.get("/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
    #token check
    response=await function_token_check(request)
@@ -60,7 +60,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/stats")
+@router.get("/my/stats")
 async def function_my_stats(request:Request):
    #token check
    response=await function_token_check(request)
@@ -87,7 +87,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/parent-read")
+@router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
@@ -110,7 +110,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/parent-check")
+@router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
    #token check
    response=await function_token_check(request)
@@ -131,7 +131,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.get("/{x}/my/read-bulk")
+@router.get("/my/read-bulk")
 async def function_my_read_bulk(request:Request,table:str,ids:str):
    #token check
    response=await function_token_check(request)
