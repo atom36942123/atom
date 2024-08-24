@@ -4,8 +4,6 @@ router=APIRouter(tags=["action"])
 
 #post
 from fastapi import Request
-from function import function_token_check
-from fastapi.responses import JSONResponse
 @router.post("/{x}/action/post")
 async def function_action_post(request:Request):
    #postgres object
