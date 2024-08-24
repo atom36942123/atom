@@ -18,7 +18,7 @@
 5. mongodb included for non-relational data use-cases
 6. elastiscsearch api's included
 7. redis caching included
-8. staging/prod env with as many as development enviornments setup included
+8. staging/prod env with as many as development enviornments
 9. complete api collection/runner on postman with automated testing
 10. deployment using ec2/jenkins included
 12. Authentication/others basic services prebuilt
