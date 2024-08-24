@@ -4,8 +4,15 @@ router=APIRouter(tags=["action"])
 
 #create post
 from fastapi import Request
+from config import postgres_object
+from function import function_token_check
+from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-post")
 async def function_action_create_post(request:Request):
+   #token check
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #request body
    request_body=await request.json()
    type=request_body["type"]
@@ -23,12 +30,11 @@ async def function_action_create_post(request:Request):
 
 #helpdesk
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-helpdesk")
 async def function_action_create_helpdesk(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -46,12 +52,11 @@ async def function_action_create_helpdesk(request:Request):
 
 #like
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-like")
 async def function_action_create_like(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -69,12 +74,11 @@ async def function_action_create_like(request:Request):
 
 #bookmark
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-bookmark")
 async def function_action_create_bookmark(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -92,12 +96,11 @@ async def function_action_create_bookmark(request:Request):
 
 #block
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-block")
 async def function_action_create_block(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -116,12 +119,11 @@ async def function_action_create_block(request:Request):
 
 #comment
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-comment")
 async def function_action_create_comment(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -141,12 +143,11 @@ async def function_action_create_comment(request:Request):
 
 #message
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-message")
 async def function_action_create_message(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -165,12 +166,11 @@ async def function_action_create_message(request:Request):
 
 #rating
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-rating")
 async def function_action_create_rating(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -189,12 +189,11 @@ async def function_action_create_rating(request:Request):
 
 #report
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.post("/{x}/action/create-report")
 async def function_action_create_report(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
