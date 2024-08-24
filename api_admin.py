@@ -9,7 +9,7 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from function import function_sanitization_query_param_list
-@router.put("/{x}/admin/update-cell")
+@router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #token check
    response=await function_token_check(request)
@@ -39,7 +39,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/admin/delete-bulk")
+@router.delete("/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #token check
    response=await function_token_check(request)
@@ -63,7 +63,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/admin/database-clean")
+@router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #token check
    response=await function_token_check(request)
@@ -92,7 +92,7 @@ from function import function_token_check
 from function import function_prepare_where
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-@router.get("/{x}/admin/feed")
+@router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
