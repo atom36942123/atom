@@ -45,11 +45,10 @@ from function import function_token_check
 from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
-  #token check
-  
-
-  #api response
   try:
+    #token check
+    
+    #api response
     response=await api_function(request)
   except Exception as e:
     print(traceback.format_exc())
