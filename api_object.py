@@ -4,13 +4,12 @@ router=APIRouter(tags=["object"])
 
 #create
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/{x}/object/create")
 async def function_object_create(request:Request,table:str):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -41,14 +40,13 @@ async def function_object_create(request:Request,table:str):
 
 #update
 from fastapi import Request
+from config import postgres_object
 from datetime import datetime
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/{x}/object/update")
 async def function_object_update(request:Request,table:str,id:int):
-   #postgres object  
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -81,12 +79,11 @@ async def function_object_update(request:Request,table:str,id:int):
 
 #delete
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/{x}/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
-   #postgres object  
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -101,14 +98,13 @@ async def function_object_delete(request:Request,table:str,id:int):
 
 #read
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
 @router.get("/{x}/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #postgres object  
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
