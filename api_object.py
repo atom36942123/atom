@@ -8,7 +8,7 @@ from config import postgres_object
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-@router.post("/{x}/object/create")
+@router.post("/object/create")
 async def function_object_create(request:Request,table:str):
    #token check
    response=await function_token_check(request)
@@ -45,7 +45,7 @@ from datetime import datetime
 from function import function_token_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
-@router.put("/{x}/object/update")
+@router.put("/object/update")
 async def function_object_update(request:Request,table:str,id:int):
    #token check
    response=await function_token_check(request)
@@ -82,7 +82,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
-@router.delete("/{x}/object/delete")
+@router.delete("/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
    #token check
    response=await function_token_check(request)
@@ -103,7 +103,7 @@ from function import function_token_check
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
-@router.get("/{x}/object/read")
+@router.get("/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #token check
    response=await function_token_check(request)
