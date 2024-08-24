@@ -4,12 +4,11 @@ router=APIRouter(tags=["message"])
 
 #inbox
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -23,12 +22,11 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
 
 #inbox unread
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -42,14 +40,13 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
 
 #thread
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
 @router.get("/{x}/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -67,12 +64,11 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 
 #received
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -86,12 +82,11 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 
 #delete message all
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.delete("/{x}/message/delete-all")
 async def function_delete_all(request:Request):
-   #postgres object 
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
