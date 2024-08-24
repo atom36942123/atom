@@ -41,9 +41,13 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 #middleware
 from fastapi import Request
 import traceback
+from function import function_token_check
 from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
+  #token check
+  
+
   #api response
   try:
     response=await api_function(request)
