@@ -30,14 +30,13 @@ async def function_my_token_refresh(request:Request):
 
 #profile
 from fastapi import Request
+from config import postgres_object
 from fastapi import BackgroundTasks
 from datetime import datetime
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -58,12 +57,11 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
 
 #stats
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/my/stats")
 async def function_my_stats(request:Request):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -86,12 +84,11 @@ async def function_my_stats(request:Request):
 
 #parent read
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -110,12 +107,11 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
 
 #parent check
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -132,12 +128,11 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
 
 #read bulk
 from fastapi import Request
+from config import postgres_object
 from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/{x}/my/read-bulk")
 async def function_my_read_bulk(request:Request,table:str,ids:str):
-   #postgres object
-   postgres_object=request.state.postgres_object
    #token check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
