@@ -109,6 +109,7 @@ from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from function import function_token_check
 from function import function_csv
+from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
@@ -118,7 +119,7 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    user=response["message"]
    if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #function csv
-   response=await function_csv(postgres_object,mode,table,file)
+   response=await function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return responnse
