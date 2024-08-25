@@ -75,6 +75,9 @@ config_database_not_null={
 config_database_identity={
 "id":config_database_table
 }
+config_database_default={
+"created_at":["now()",config_database_table]
+}
 config_database_index={
 "id":"btree",
 "created_at":"brin",
