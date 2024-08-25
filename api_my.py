@@ -22,7 +22,7 @@ async def function_my_token_refresh(request:Request):
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await function_token_create(request,user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -66,14 +66,12 @@ async def function_my_stats(request:Request):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #config
-   user_stats={
+   #logic
+   config_user_stats={
    "post_count":"select count(*) as count from post where created_by_id=:user_id;",
    "message_unread_count":"select count(*) as count from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
-   #temp
    temp={}
-   #logic
    for k,v in user_stats.items():
       query=v
       query_param={"user_id":user["id"]}
