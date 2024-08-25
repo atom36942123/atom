@@ -15,18 +15,18 @@ async def function_admin_database_init(request:Request):
    #create
    for item in config_database_extension:await postgres_object.fetch_all(query=item,values={})
    for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item};",values={})
-   # [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
-   # [await postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
-   # #alter   
-   # for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column created_at set default now();",values={})
-   # for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-   # [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_column_not_null.items() for table in v]
-   # #query misc
-   # output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-   # schema_constraint_name_list=[item["constraint_name"] for item in output]
-   # for item in config_database_query_misc:
-   #    if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
-   #    else:await postgres_object.fetch_all(query=item,values={})
+   [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
+   [await postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
+   #alter   
+   for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column created_at set default now();",values={})
+   for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
+   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_column_not_null.items() for table in v]
+   #query misc
+   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+   schema_constraint_name_list=[item["constraint_name"] for item in output]
+   for item in config_database_query_misc:
+      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
+      else:await postgres_object.fetch_all(query=item,values={})
    #final
    return {"status":1,"message":"done"}
 
