@@ -19,7 +19,7 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
 
    #column_to_insert_list
-   column_to_insert_list=[*file_row_list[0]]
+   
    #query set
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
    #query_param set
