@@ -14,10 +14,11 @@ async def function_admin_database_init(request:Request):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #create
    for item in config_database_extension:await postgres_object.fetch_all(query=item,values={})
-   for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item};",values={})
+   for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item} ();",values={})
    [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
    [await postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
-   #alter   
+   #alter
+   for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column id add generated always as identity;",values={})
    for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column created_at set default now();",values={})
    for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_column_not_null.items() for table in v]
