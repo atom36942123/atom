@@ -18,7 +18,6 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #file extension check
    if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
