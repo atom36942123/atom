@@ -218,3 +218,27 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#read bulk
+from fastapi import Request
+from config import postgres_object
+from function import function_token_check
+from fastapi.responses import JSONResponse
+@router.get("/admin/read-bulk")
+async def function_admin_read_bulk(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_token_check(request)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #admin check
+   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
+
+   
+   #table check
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #logic
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
