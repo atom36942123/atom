@@ -1,4 +1,4 @@
-#csv insert
+#csv
 import csv,codecs
 from function import function_sanitization_query_param_list
 async def function_csv(postgres_object,file,mode):
