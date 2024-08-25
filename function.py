@@ -1,3 +1,9 @@
+#csv insert
+async def function_csv_insert(postgres_object,function_sanitization_query_param_list):
+  try:
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":"done"}
+
 #delete index all
 async def function_delete_index_all(postgres_object):
   try:
