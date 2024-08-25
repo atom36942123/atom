@@ -17,13 +17,13 @@ async def function_csv(postgres_object,file,mode):
       column_to_update_list.remove("id")
       query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
       query_param=file_row_list
-   response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
-   if response["status"]==0:return response
-   query_param=response["message"]
-   output=await postgres_object.execute_many(query=query,values=query_param)
-   await file.close()
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":"done"}
+    response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
+    if response["status"]==0:return response
+    query_param=response["message"]
+    output=await postgres_object.execute_many(query=query,values=query_param)
+    await file.close()
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":"done"}
 
 #delete index all
 async def function_delete_index_all(postgres_object):
