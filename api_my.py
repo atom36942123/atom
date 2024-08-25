@@ -68,15 +68,15 @@ async def function_my_stats(request:Request):
    user=response["message"]
    #logic
    config_user_stats={
-   "post_count":"select count(*) as count from post where created_by_id=:user_id;",
-   "message_unread_count":"select count(*) as count from message where parent_table='users' and parent_id=:user_id and status is null;"
+   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
+   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
    temp={}
-   for k,v in user_stats.items():
+   for k,v in config_user_stats.items():
       query=v
       query_param={"user_id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output[0]["count"]
+      temp[k]=output[0]["x"]
    #final
    return {"status":1,"message":temp}
 
