@@ -14,7 +14,9 @@ async def function_admin_database_init(request:Request):
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #extension
    for item in config_database_extension:
-      await postgres_object.fetch_all(query=item,values={})
+      query=f"create extension if not exists {item};"
+      query_param={}
+      await postgres_object.fetch_all(query=item,values=query_param)
    #table
    for item in config_database_table:
       query=f"create table if not exists {item} ();"
