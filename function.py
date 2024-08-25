@@ -109,7 +109,7 @@ async def function_sanitization_query_param_list(postgres_object,query_type,quer
           if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
           if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
           if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-          if "[]" datatype:query_param_list[index][k]=v.split(",") if v else None
+          if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
           if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
         if query_type in ["create","update"]:
           if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
