@@ -114,7 +114,6 @@ async def function_admin_update_cell(request:Request):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #request body
    request_body=await request.json()
@@ -144,7 +143,6 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #table check
    if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
@@ -168,7 +166,6 @@ async def function_admin_database_clean(request:Request):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
@@ -197,7 +194,6 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #request query param
    request_query_param=dict(request.query_params)
@@ -230,12 +226,7 @@ async def function_admin_read_bulk(request:Request,table:str,ids:str):
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
-
-   
-   #table check
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
    query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
