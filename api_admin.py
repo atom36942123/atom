@@ -16,7 +16,7 @@ async def function_admin_database_init(request:Request):
    for item in config_database_extension:await postgres_object.fetch_all(query=item,values={})
    for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item} ();",values={})
    [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
-   [await postgres_object.fetch_all(query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
+   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
    #alter
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_not_null.items() for table in v]
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} add generated always as identity;",values={}) for k,v in config_database_identity.items() for table in v]
