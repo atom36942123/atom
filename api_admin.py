@@ -6,7 +6,7 @@ router=APIRouter(tags=["admin"])
 from fastapi import Request
 from config import postgres_object
 from config import config_key_root
-from config import config_database_extension,config_database_table,config_database_column,config_database_not_null,config_database_identity,config_database_index,config_database_query
+from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_not_null,config_database_identity,config_database_default,config_database_query
 from fastapi.responses import JSONResponse
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
@@ -20,7 +20,7 @@ async def function_admin_database_init(request:Request):
    #alter
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_not_null.items() for table in v]
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} add generated always as identity;",values={}) for k,v in config_database_identity.items() for table in v]
-   for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column created_at set default now();",values={})
+   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[0]};",values={}) for k,v in config_database_default.items() for table in v[1]]
    for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
    #query
    output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
