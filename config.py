@@ -31,7 +31,7 @@ import motor.motor_asyncio
 mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
 
 #database
-config_database_extension=["create extension if not exists postgis;"]
+config_database_extension=["postgis"]
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
 config_database_column={
 "id":["bigint",config_database_table],
