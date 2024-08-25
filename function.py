@@ -1,7 +1,6 @@
 #csv
 import csv,codecs
-from function import function_sanitization_query_param_list
-async def function_csv(postgres_object,mode,table,file):
+async def function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list):
   try:
     if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
     if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
