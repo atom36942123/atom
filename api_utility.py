@@ -10,10 +10,9 @@ from function import function_read_redis_key
 @router.get("/utility/pcache")
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
-   #config
+   #logic
    config_pcache={"user_count":"select count(*) from users;"}
    temp={}
-   #logic
    for k,v in config_pcache.items():
       query=v
       query_param={}
