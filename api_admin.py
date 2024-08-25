@@ -24,7 +24,7 @@ async def function_admin_database_init(request:Request):
    #query misc
    output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
    constraint_name_list=[item["constraint_name"] for item in output]
-   [continue (if "add constraint" in item and item.split()[5] in constraint_name_list) else await postgres_object.fetch_all(query=item,values={}) for item in config_database_query_misc] 
+   [continue if ("add constraint" in item and item.split()[5] in constraint_name_list) else await postgres_object.fetch_all(query=item,values={}) for item in config_database_query_misc] 
    #final
    return {"status":1,"message":"done"}
 
