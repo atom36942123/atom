@@ -65,7 +65,6 @@ async def function_admin_database_init(request:Request):
    for k,v in config_database_not_null.items():
       for table in v:
          state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
-         return state
          if state[0]=="YES":
             query=f"alter table {table} alter column {k} set not null;"
             query_param={}
