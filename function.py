@@ -1,7 +1,7 @@
 #csv
 import csv,codecs
 from function import function_sanitization_query_param_list
-async def function_csv(postgres_object,file,mode):
+async def function_csv(postgres_object,mode,table,file):
   try:
     if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
     if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
@@ -11,12 +11,12 @@ async def function_csv(postgres_object,file,mode):
     if mode=="create":
       column_to_insert_list=[*file_row_list[0]]
       query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-      query_param=file_row_list
+      query_param_list=file_row_list
     if mode=="update":
       column_to_update_list=[*file_row_list[0]]
       column_to_update_list.remove("id")
       query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-      query_param=file_row_list
+      query_param_list=file_row_list
     response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
     if response["status"]==0:return response
     query_param=response["message"]
