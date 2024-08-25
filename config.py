@@ -94,4 +94,4 @@ config_database_query_misc=[
 ]
 
 #schema datatype
-config
+config_schema_column_datatype={}
