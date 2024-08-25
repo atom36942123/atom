@@ -93,5 +93,5 @@ config_database_query_misc=[
 "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
 ]
 
-#schema datatype
+#schema
 config_schema_column_datatype={}
