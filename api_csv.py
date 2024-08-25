@@ -9,7 +9,6 @@ from fastapi import UploadFile
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from function import function_token_check
-from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_csv_create(request:Request,table:str,file:UploadFile):
@@ -18,12 +17,7 @@ async def function_csv_create(request:Request,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
-   #file extension check
-   if file.content_type!="text/csv":return JSONResponse(status_code=400,content={"status":0,"message":"file extension issue"})
-   #file read
-   file_row_list=[]
-   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   for row in file_csv:file_row_list.append(row)
+
    #column_to_insert_list
    column_to_insert_list=[*file_row_list[0]]
    #query set
