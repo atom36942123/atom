@@ -12,35 +12,72 @@ from fastapi.responses import JSONResponse
 async def function_admin_database_init(request:Request):
    #auth check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   #schema constraint
+   query="select constraint_name from information_schema.constraint_column_usage;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=item,values=query_param)
+   schema_constraint_name_list=[item["constraint_name"] for item in output]
+   #schema column
+   query="select * from information_schema.columns where table_schema='public';"
+   query_param={}
+   output=await postgres_object.fetch_all(query=item,values=query_param)
+   schema_column=output
    #extension
    for item in config_database_extension:
       query=f"create extension if not exists {item};"
       query_param={}
-      await postgres_object.fetch_all(query=item,values=query_param)
+      output=await postgres_object.fetch_all(query=item,values=query_param)
    #table
    for item in config_database_table:
       query=f"create table if not exists {item} ();"
       query_param={}
-      await postgres_object.fetch_all(query=item,values=query_param)
+      output=await postgres_object.fetch_all(query=item,values=query_param)
    #column
    for k,v in config_database_column.items():
       for table in v[1]:
          query=f"alter table {table} add column if not exists {k} {v[0]};"
          query_param={}
-         await postgres_object.fetch_all(query=item,values=query_param)
-   
-   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
-   #alter
-   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_not_null.items() for table in v]
-   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} add generated always as identity;",values={}) for k,v in config_database_identity.items() for table in v]
-   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set default {v[0]};",values={}) for k,v in config_database_default.items() for table in v[1]]
-   for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
+         output=await postgres_object.fetch_all(query=item,values=query_param)
+   #index
+   for k,v in config_database_column.items():
+      if k in config_database_index:
+         for table in v[1]:
+            query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
+            query_param={}
+            output=await postgres_object.fetch_all(query=item,values=query_param)
+   #not null
+   for k,v in config_database_not_null.items():
+      for table in v:
+         state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+         if state[0]=="YES":
+            query=f"alter table {table} alter column {k} set not null;"
+            query_param={}
+            output=await postgres_object.fetch_all(query=item,values=query_param)
+   #identity
+   for k,v in config_database_identity.items():
+      for table in v:
+         state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+         if state[0]=="NO":
+            query=f"alter table {table} alter column {k} add generated always as identity;"
+            query_param={}
+            output=await postgres_object.fetch_all(query=item,values=query_param)
+   #default
+   for k,v in config_database_default.items():
+      for table in v[1]:
+         state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+         if state[0]==None:
+            query=f"alter table {table} alter column {k} set default {v[0]};"
+            query_param={}
+            output=await postgres_object.fetch_all(query=item,values=query_param)
+   #protected
+   for item in config_database_column["is_protected"][1]:
+      query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
+      query_param={}
+      output=await postgres_object.fetch_all(query=item,values=query_param)
    #query
-   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-   schema_constraint_name_list=[item["constraint_name"] for item in output]
    for item in config_database_query:
       if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
-      else:await postgres_object.fetch_all(query=item,values={})
+      else:output=await postgres_object.fetch_all(query=item,values=query_param)
    #final
    return {"status":1,"message":"done"}
 
