@@ -28,16 +28,6 @@ from fastapi.responses import JSONResponse
 async def function_admin_database_init(request:Request):
    #auth check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #schema constraint
-   query="select constraint_name from information_schema.constraint_column_usage;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   schema_constraint_name_list=[item["constraint_name"] for item in output]
-   #schema column
-   query="select * from information_schema.columns where table_schema='public';"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   schema_column=output
    #extension
    for item in config_database_extension:
       query=f"create extension if not exists {item};"
@@ -61,6 +51,16 @@ async def function_admin_database_init(request:Request):
             query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
             query_param={}
             output=await postgres_object.fetch_all(query=query,values=query_param)
+   #schema constraint
+   query="select constraint_name from information_schema.constraint_column_usage;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   schema_constraint_name_list=[item["constraint_name"] for item in output]
+   #schema column
+   query="select * from information_schema.columns where table_schema='public';"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   schema_column=output
    #not null
    for k,v in config_database_not_null.items():
       for table in v:
