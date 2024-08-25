@@ -100,7 +100,7 @@ import hashlib,json
 from datetime import datetime
 async def function_sanitization_query_param_list(postgres_object,query_type,query_param_list):
   try:
-    if query_type not in ["create","update","read"]:return {"status":0,"message":"query_type"}
+    if query_type not in ["create","update","read"]:return {"status":0,"message":"wrong query_type"}
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
