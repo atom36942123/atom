@@ -37,19 +37,32 @@ async def function_delete_index_all(postgres_object):
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":"done"}
 
+# #token create
+# import jwt,json,time
+# from datetime import datetime,timedelta
+# from config import config_key_jwt
+# async def function_token_create(user):
+#   try:
+#     data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+#     data=json.dumps(data,default=str)
+#     config_token_expiry_days=10000
+#     expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+#     payload={"exp":expiry_time,"data":data}
+#     token=jwt.encode(payload,config_key_jwt)
+#   except Exception as e:return {"status":0,"message":e.args}
+#   return {"status":1,"message":token}
+
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
 from config import config_key_jwt
 async def function_token_create(user):
-  try:
-    data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-    data=json.dumps(data,default=str)
-    config_token_expiry_days=10000
-    expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-    payload={"exp":expiry_time,"data":data}
-    token=jwt.encode(payload,config_key_jwt)
-  except Exception as e:return {"status":0,"message":e.args}
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
   return {"status":1,"message":token}
 
 #token check
