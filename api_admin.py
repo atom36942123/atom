@@ -122,7 +122,7 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    response=await function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return responnse
+   return response
 
 #update cell
 from fastapi import Request
