@@ -101,7 +101,7 @@ async def function_admin_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
-#create
+#csv
 from fastapi import Request
 from config import postgres_object
 from fastapi import UploadFile
@@ -110,18 +110,18 @@ from fastapi_limiter.depends import RateLimiter
 from function import function_token_check
 from function import function_csv
 from fastapi.responses import JSONResponse
-@router.post("/csv/create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_csv_create(request:Request,table:str,file:UploadFile):
+@router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+async def function_admin_csv(request:Request,table:str,mode:str,file:UploadFile):
    #auth check
    response=await function_token_check(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
+   #function csv
+   response=await function_csv(postgres_object,file,mode)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
-
-function_csv(postgres_object,file,mode):
-
+   return responnse
 
 #update cell
 from fastapi import Request
@@ -143,7 +143,7 @@ async def function_admin_update_cell(request:Request):
    id=request_body["id"]
    column=request_body["column"]
    value=request_body["value"]
-   #sanitization query_param
+   #function sanitization
    response=await function_sanitization_query_param_list(postgres_object,"update",[{column:value}])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    value=response["message"][0][column]
