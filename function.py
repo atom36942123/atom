@@ -104,13 +104,13 @@ async def function_sanitization_query_param_list(postgres_object,query_type,quer
     if query_type not in ["create","update","read"]:return {"status":0,"message":"wrong query_type"}
     for index,object in enumerate(query_param_list):
       for k,v in object.items():
-        datatype=config_database_column[k]
+        datatype=config_database_column[k][0]
         if query_type in ["create","read","update"]:
           if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-          if datatype in ["integer","bigint"]:query_param_list[index][k]=int(v) if v else None
+          if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
           if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-          if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
-          if datatype in ["date","timestamp with time zone"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+          if "[]" datatype:query_param_list[index][k]=v.split(",") if v else None
+          if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
         if query_type in ["create","update"]:
           if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
   except Exception as e:return {"status":0,"message":e.args}
