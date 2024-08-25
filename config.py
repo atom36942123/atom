@@ -90,7 +90,9 @@ config_database_index={
 "status":"btree",
 "email":"btree",
 "password":"btree",
-"location":"gist"
+"location":"gist",
+"tag":"btree",
+"tag_array":"gin",
 }
 config_database_query=[
 "alter table users add constraint constraint_unique_users unique (username);",
