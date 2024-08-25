@@ -20,8 +20,15 @@ async def function_admin_database_init(request:Request):
    #table
    for item in config_database_table:
       query=f"create table if not exists {item} ();"
-      await postgres_object.fetch_all(query=query,values={})
-   [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
+      query_param={}
+      await postgres_object.fetch_all(query=item,values=query_param)
+   #column
+   for k,v in config_database_column.items():
+      for table in v[1]:
+         query=f"alter table {table} add column if not exists {k} {v[0]};"
+         query_param={}
+         await postgres_object.fetch_all(query=item,values=query_param)
+   
    [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
    #alter
    [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_not_null.items() for table in v]
