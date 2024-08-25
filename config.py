@@ -68,6 +68,7 @@ config_database_column={
 "location":["geography(POINT)",["users","post","box","atom"]],
 }
 config_database_column_not_null={
+"id":config_database_table,
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
 }
