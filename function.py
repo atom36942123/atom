@@ -110,8 +110,8 @@ async def function_sanitization_query_param_list(postgres_object,query_type,quer
           if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
           if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
           if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-        if query_type in ["create","update"]:
           if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+        if query_type in ["create","update"]:
           if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":query_param_list}
