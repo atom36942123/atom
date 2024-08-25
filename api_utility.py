@@ -11,10 +11,7 @@ from function import function_read_redis_key
 @cache(expire=60)
 async def function_utility_pcache(request:Request):
    #config
-   config_pcache={
-   "user_count":"select count(*) from users;"
-   }
-   #temp
+   config_pcache={"user_count":"select count(*) from users;"}
    temp={}
    #logic
    for k,v in config_pcache.items():
