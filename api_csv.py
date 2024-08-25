@@ -142,4 +142,3 @@ async def function_csv_delete(request:Request,table:str,file:UploadFile):
    await file.close()
    #final
    return {"status":1,"message":output}
-
