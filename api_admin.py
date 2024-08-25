@@ -6,6 +6,7 @@ router=APIRouter(tags=["admin"])
 from fastapi import Request
 from config import postgres_object
 from config import config_key_root
+from config import config_database_extension,config_database_table,config_database_column,config_database_column_not_null,config_database_index,config_database_query_misc
 from fastapi.responses import JSONResponse
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
