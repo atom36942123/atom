@@ -31,9 +31,9 @@ async def function_my_token_refresh(request:Request):
 #profile
 from fastapi import Request
 from config import postgres_object
+from function import function_token_check
 from fastapi import BackgroundTasks
 from datetime import datetime
-from function import function_token_check
 from fastapi.responses import JSONResponse
 @router.get("/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
