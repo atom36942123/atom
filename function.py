@@ -48,8 +48,7 @@ async def function_token_check(request):
   return {"status":1,"message":user}
   
 #redis key
-from fastapi import Request
-from fastapi import Response
+from fastapi import Request,Response
 def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
   return ":".join(param)
