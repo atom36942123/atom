@@ -42,7 +42,7 @@ config_database_column_not_null={
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
 }
-config_database_query=[
+config_database_query_misc=[
 "alter table users add constraint constraint_unique_users unique (username);",
 "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
 "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
@@ -51,58 +51,18 @@ config_database_query=[
 "insert into users (username,password,type,is_protected) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;",
 "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
 ]
+config_database_index={
+"type":"btree",
+"is_verified":"btree",
+"is_active":"btree",
+"created_by_id":"btree",
+"status":"btree",
+"parent_table":"btree",
+"parent_id":"btree",
+"email":"btree",
+"password":"btree",
+"created_at":"brin",
+"location":"gist"
+}
 
-#database init
-from fastapi import Request
-from config import postgres_object
-from config import config_key_root
-from fastapi.responses import JSONResponse
-@router.get("/root/database-init")
-async def function_root_database_init(request:Request):
-   #auth check
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #create
-   for item in config_database_extension:await postgres_object.fetch_all(query=item,values={})
-   for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint primary key generated always as identity);",values={})
-   [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
-   #alter   
-   for item in config_database_table:await postgres_object.fetch_all(query=f"alter table {item} alter column created_at set default now();",values={})
-   for item in config_database_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-   [await postgres_object.fetch_all(query=f"alter table {table} alter column {k} set not null;",values={}) for k,v in config_database_column_not_null.items() for table in v]
-      
-         
-   #run extra query
-   query="select constraint_name from information_schema.constraint_column_usage;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   constraint_name_list=[item["constraint_name"] for item in output]
-   
-   for query in config_database_query:
-      if "add constraint" in query and query.split()[5] in constraint_name_list:
-         continue
-      else:
-         query=query
-         query_param={}
-         await postgres_object.fetch_all(query=query,values=query_param)
-   #create index
-   config_database_index={
-   "type":"btree",
-   "is_verified":"btree",
-   "is_active":"btree",
-   "created_by_id":"btree",
-   "status":"btree",
-   "parent_table":"btree",
-   "parent_id":"btree",
-   "email":"btree",
-   "password":"btree",
-   "created_at":"brin",
-   "location":"gist"
-   }
-   for k,v in config_database_column.items():
-      for table in v[1]:
-         if k in config_database_index:
-            query=f"create index if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
-            query_param={}
-            await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"done"}
+
