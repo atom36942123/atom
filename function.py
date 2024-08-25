@@ -98,13 +98,10 @@ async def function_prepare_where(where_param_raw):
 #sanitization
 import hashlib,json
 from datetime import datetime
+from config import config_database_column
 async def function_sanitization_query_param_list(postgres_object,query_type,query_param_list):
   try:
     if query_type not in ["create","update","read"]:return {"status":0,"message":"wrong query_type"}
-    query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    column_datatype={item["column_name"]:item["datatype"] for item in output}
     for index,object in enumerate(query_param_list):
       for k,v in object.items():
         datatype=column_datatype[k]
