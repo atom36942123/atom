@@ -67,10 +67,13 @@ config_database_column={
 "tag_array":["text[]",["atom"]],
 "location":["geography(POINT)",["users","post","box","atom"]],
 }
-config_database_column_not_null={
+config_database_not_null={
 "id":config_database_table,
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
+}
+config_database_identity={
+"id":config_database_table
 }
 config_database_index={
 "id":"btree",
@@ -86,7 +89,7 @@ config_database_index={
 "password":"btree",
 "location":"gist"
 }
-config_database_query_misc=[
+config_database_query=[
 "alter table users add constraint constraint_unique_users unique (username);",
 "alter table likes add constraint constraint_unique_likes unique (created_by_id,parent_table,parent_id);",
 "alter table bookmark add constraint constraint_unique_bookmark unique (created_by_id,parent_table,parent_id);",
