@@ -6,7 +6,6 @@ router=APIRouter(tags=["csv"])
 from fastapi import Request
 from config import postgres_object
 from fastapi import UploadFile
-import csv,codecs
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from function import function_token_check
