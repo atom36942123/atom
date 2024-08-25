@@ -18,14 +18,14 @@ async def function_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #request body
    request_body=await request.json()
-   #column_to_insert_list
+   #column to insert list
    column_to_insert_list=[*request_body]+["created_by_id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in column_to_insert_list:column_to_insert_list.remove(item)
    #query set
    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-   #query_param set
    query_param={}
+   #query_param set
    for item in column_to_insert_list:
       if item in request_body:query_param[item]=request_body[item]
    query_param["created_by_id"]=user["id"]
@@ -53,14 +53,14 @@ async def function_object_update(request:Request,table:str,id:int):
    user=response["message"]
    #request body
    request_body=await request.json()
-   #column_to_update_list
+   #column to update list
    column_to_update_list=[*request_body]+["updated_at","updated_by_id"]
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in column_to_update_list:column_to_update_list.remove(item)
    #query set
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-   #query_param set
    query_param={}
+   #query_param set
    for item in column_to_update_list:
       if item in request_body:query_param[item]=request_body[item]
    query_param["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
