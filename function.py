@@ -1,11 +1,12 @@
 #csv insert
 import csv,codecs
 from function import function_sanitization_query_param_list
-async def function_csv_insert(postgres_object,file):
+async def function_csv(postgres_object,file,mode):
   try:
     if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
-    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
     file_row_list=[]
+    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+    
    for row in file_csv:file_row_list.append(row)
   except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":"done"}
