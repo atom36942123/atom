@@ -14,7 +14,7 @@ async def function_delete_index_all(postgres_object):
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
-from config import config_key_jwt,config_token_expiry_days
+from config import config_key_jwt
 async def function_token_create(request,user):
   try:
     x={"x":str(request.url.path).split("/")[1]}
@@ -22,7 +22,7 @@ async def function_token_create(request,user):
     user_key={"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
     data=x|created_at_token|user_key
     data=json.dumps(data,default=str)
-    expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+    expiry_time=time.mktime((datetime.now()+timedelta(days=10000)).timetuple())
     payload={"exp":expiry_time,"data":data}
     token=jwt.encode(payload,config_key_jwt)
   except Exception as e:return {"status":0,"message":e.args}
