@@ -105,9 +105,9 @@ async def function_admin_qrunner(request:Request,query:str):
 from fastapi import Request
 from config import postgres_object
 from function import function_token_check
-from fastapi.responses import JSONResponse
 from datetime import datetime
 from function import function_sanitization_query_param_list
+from fastapi.responses import JSONResponse
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #auth check
@@ -148,7 +148,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #table check
    if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   #check
+   #length check
    if len(ids)>10000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
    #logic
    query=f"delete from {table} where id in ({ids});"
