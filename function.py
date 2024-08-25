@@ -1,14 +1,14 @@
 #delete index all
 async def function_delete_index_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  values={}
-  try:output=await postgres_object.fetch_all(query=query,values=values)
+  try:
+    query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    if output[0]["output"]:
+      query=output[0]["output"]
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
   except Exception as e:return {"status":0,"message":e.args}
-  if output[0]["output"]:
-    query=output[0]["output"]
-    values={}
-    try:output=await postgres_object.fetch_all(query=query,values=values)
-    except Exception as e:return {"status":0,"message":e.args}
   return {"status":1,"message":"done"}
 
 #token create
@@ -17,11 +17,10 @@ from datetime import datetime,timedelta
 from config import config_key_jwt
 async def function_token_create(user):
   try:
-    created_at_token={"created_at_token":datetime.today().strftime('%Y-%m-%d')}
-    user_key={"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-    data=created_at_token|user_key
+    data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
     data=json.dumps(data,default=str)
-    expiry_time=time.mktime((datetime.now()+timedelta(days=10000)).timetuple())
+    config_token_expiry_days=10000
+    expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
     payload={"exp":expiry_time,"data":data}
     token=jwt.encode(payload,config_key_jwt)
   except Exception as e:return {"status":0,"message":e.args}
@@ -31,15 +30,15 @@ async def function_token_create(user):
 import jwt,json
 from config import config_key_jwt
 async def function_token_check(request):
-   try:
-      header_authorization=request.headers.get("Authorization")
-      if not header_authorization:return {"status":0,"message":"authorization header is must"}
-      token=request.headers.get("Authorization").split(" ",1)[1]
-      payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-      data=payload["data"]
-      user=json.loads(data)
-   except Exception as e:return {"status":0,"message":e.args}
-   return {"status":1,"message":user}
+  try:
+    header_authorization=request.headers.get("Authorization")
+    if not header_authorization:return {"status":0,"message":"authorization header is must"}
+    token=request.headers.get("Authorization").split(" ",1)[1]
+    payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+    data=payload["data"]
+    user=json.loads(data)
+  except Exception as e:return {"status":0,"message":e.args}
+  return {"status":1,"message":user}
   
 #redis key
 from fastapi import Request
@@ -56,8 +55,8 @@ async def function_add_creator_key(postgres_object,object_list):
     user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
     if user_ids:
       query=f"select * from users where id in ({user_ids});"
-      values={}
-      object_user_list=await postgres_object.fetch_all(query=query,values=values)
+      query_param={}
+      object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
       for x in object_list:
         for y in object_user_list:
            if x["created_by_id"]==y["id"]:
@@ -75,8 +74,8 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
     parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
     if parent_ids:
       query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
-      values={"parent_table":object_table}
-      object_action_list=await postgres_object.fetch_all(query=query,values=values)
+      query_param={"parent_table":object_table}
+      object_action_list=await postgres_object.fetch_all(query=query,values=query_param)
       for x in object_list:
         for y in object_action_list:
           if x["id"]==y["parent_id"]:
@@ -103,8 +102,8 @@ async def function_sanitization_query_param_list(postgres_object,query_type,quer
   try:
     if query_type not in ["create","update","read"]:return {"status":0,"message":"query_type"}
     query="select column_name,count(*),max(data_type) as datatype from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
-    values={}
-    output=await postgres_object.fetch_all(query=query,values=values)
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
     column_datatype={item["column_name"]:item["datatype"] for item in output}
     for index,object in enumerate(query_param_list):
       for k,v in object.items():
