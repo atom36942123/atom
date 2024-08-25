@@ -12,9 +12,13 @@ from fastapi.responses import JSONResponse
 async def function_admin_database_init(request:Request):
    #auth check
    if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #create
-   for item in config_database_extension:await postgres_object.fetch_all(query=item,values={})
-   for item in config_database_table:await postgres_object.fetch_all(query=f"create table if not exists {item} ();",values={})
+   #extension
+   for item in config_database_extension:
+      await postgres_object.fetch_all(query=item,values={})
+   #table
+   for item in config_database_table:
+      query=f"create table if not exists {item} ();"
+      await postgres_object.fetch_all(query=query,values={})
    [await postgres_object.fetch_all(query=f"alter table {table} add column if not exists {k} {v[0]};",values={}) for k,v in config_database_column.items() for table in v[1]]
    [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});",values={}) for k,v in config_database_column.items() for table in v[1] if k in config_database_index]
    #alter
