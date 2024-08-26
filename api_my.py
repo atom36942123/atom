@@ -19,7 +19,6 @@ async def function_my_token(request:Request):
    query_param={"id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
    #token create
    response=await function_token_create_jwt(user)
