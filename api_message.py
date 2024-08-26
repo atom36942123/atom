@@ -43,6 +43,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
+from fastapi import BackgroundTasks
 @router.get("/message/thread")
 async def function_message_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #auth check
