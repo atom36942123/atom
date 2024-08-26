@@ -27,11 +27,6 @@ async def function_object_update(postgres_object,user_id,table,id,payload,functi
 #csv
 import csv,codecs
 async def function_csv(postgres_object,mode,table,file,function_sanitization):
-  if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
-  if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
-  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-  file_row_list=[]
-  for row in file_csv:file_row_list.append(row)
   if mode=="create":
     column_to_insert_list=[*file_row_list[0]]
     query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
