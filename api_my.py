@@ -107,9 +107,8 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #check
+   #param prepare
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #payload
    payload=await request.json()
    payload["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
