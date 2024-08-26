@@ -33,6 +33,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from function import function_update_last_active_at
 from fastapi import BackgroundTasks
 @router.get("/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
@@ -48,8 +49,6 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
-   query="update users set last_active_at=:last_active_at where id=:id;"
-   query_param={"last_active_at":datetime.now(),"id":user["id"]}
    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":user}
