@@ -7,7 +7,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_token_create_jwt
+from function import function_token_create
 @router.get("/my/token")
 async def function_my_token(request:Request):
    #auth check
@@ -21,7 +21,7 @@ async def function_my_token(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
    #token create
-   response=await function_token_create_jwt(user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -157,12 +157,12 @@ async def function_my_object_create(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-#object create
+#object update
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_object_create
+from function import function_object_update
 from function import function_sanitization
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
