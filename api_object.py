@@ -19,6 +19,8 @@ async def function_object_create(request:Request,table:str):
    #request body
    request_body=await request.json()
    #column to insert list
+
+   
    column_to_insert_list=[*request_body]+["created_by_id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in column_to_insert_list:column_to_insert_list.remove(item)
