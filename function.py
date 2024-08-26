@@ -9,6 +9,21 @@ async def function_object_create(postgres_object,table,payload,function_sanitiza
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
+#object update
+from datetime import datetime
+async def function_object_update(postgres_object,user_id,table,id,payload,function_sanitization):
+  for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+    if item in payload:payload.remove(item)
+  column_to_update_list=[*payload]+["updated_at","updated_by_id"]
+  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
+  query_param=payload|{"updated_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"updated_by_id":user_id}|{"id":id,"created_by_id":user_id}
+  if table=="users":query_param["id"],query_param["created_by_id"]=user_id,None
+  response=await function_sanitization("create",[query_param])
+  if response["status"]==0:return response
+  query_param=response["message"][0]
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
 #csv
 import csv,codecs
 async def function_csv(postgres_object,mode,table,file,function_sanitization):
@@ -33,21 +48,6 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization):
   await file.close()
   return {"status":1,"message":"done"}
 
-#object update
-from datetime import datetime
-async def function_object_update(postgres_object,user_id,table,id,payload,function_sanitization):
-  for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-    if item in payload:payload.remove(item)
-  column_to_update_list=[*payload]+["updated_at","updated_by_id"]
-  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
-  query_param=payload|{"updated_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"updated_by_id":user_id}|{"id":id,"created_by_id":user_id}
-  if table=="users":query_param["id"],query_param["created_by_id"]=user_id,None
-  response=await function_sanitization("create",[query_param])
-  if response["status"]==0:return response
-  query_param=response["message"][0]
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-  
 #update last active at
 from fastapi import BackgroundTasks
 from datetime import datetime
