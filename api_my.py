@@ -47,10 +47,6 @@ async def function_my_profile(request:Request):
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
-   background=BackgroundTasks()
-   query="update users set last_active_at=:last_active_at where id=:id;"
-   query_param={"last_active_at":datetime.now(),"id":user["id"]}
-   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":user}
 
