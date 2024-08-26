@@ -111,7 +111,7 @@ async def function_my_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #payload
    payload=await request.json()
-   payload["created_by_id"]=user_id
+   payload["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in payload:payload.remove(item)
    #logic
