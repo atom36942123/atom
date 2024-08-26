@@ -5,13 +5,13 @@ router=APIRouter(tags=["object"])
 #create
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/object/create")
 async def function_object_create(request:Request,table:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #table check
@@ -42,13 +42,13 @@ async def function_object_create(request:Request,table:str):
 from fastapi import Request
 from config import postgres_object
 from datetime import datetime
-from function import function_token_check
+from function import function_auth_check
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/object/update")
 async def function_object_update(request:Request,table:str,id:int):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request body
@@ -80,12 +80,12 @@ async def function_object_update(request:Request,table:str,id:int):
 #delete
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.delete("/object/delete")
 async def function_object_delete(request:Request,table:str,id:int):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #delete object
@@ -99,14 +99,14 @@ async def function_object_delete(request:Request,table:str,id:int):
 #read
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from function import function_sanitization_query_param_list
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
 @router.get("/object/read")
 async def function_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request query param
