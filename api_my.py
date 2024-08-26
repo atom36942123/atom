@@ -6,7 +6,7 @@ router=APIRouter(tags=["my"])
 from fastapi import Request
 from config import postgres_object
 from function import function_token_check
-from function import function_token_create
+from function import function_token_create_jwt
 from fastapi.responses import JSONResponse
 @router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
@@ -22,7 +22,7 @@ async def function_my_token_refresh(request:Request):
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await function_token_create(user)
+   response=await function_token_create_jwt(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
