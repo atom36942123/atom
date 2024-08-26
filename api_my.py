@@ -111,6 +111,7 @@ async def function_my_object_create(request:Request,table:str):
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
    payload=await request.json()
+   payload["created_by_id"]=user_id
    response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
