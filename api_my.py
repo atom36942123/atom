@@ -82,18 +82,18 @@ from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 @router.get("/my/parent-read")
-async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
+async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #read parent_ids from table
-   query=f"select parent_id from {table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
+   #logic
+   query=f"select parent_id from {base_table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":parent_table,"created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   parent_ids=[item["parent_id"] for item in output]
-   #read parent_ids object
-   query=f"select * from {parent_table} join unnest(array{parent_ids}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+   parent_ids_list=[item["parent_id"] for item in output]
+   parent_ids_string=",".join(parent_ids_list)
+   query=f"select * from {parent_table} where id in ({parent_ids_string}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
