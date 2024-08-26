@@ -177,3 +177,23 @@ async def function_my_object_update(request:Request,table:str,id:int):
    output=response["message"]
    #final
    return {"status":1,"message":output}
+
+#object delete
+from fastapi import Request
+from config import postgres_object
+from function import function_auth_check
+from fastapi.responses import JSONResponse
+@router.delete("/object/delete")
+async def function_object_delete(request:Request,table:str,id:int):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #delete object
+   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
+   query_param={"id":id,"created_by_id":user["id"]}
+   if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
