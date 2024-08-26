@@ -14,9 +14,8 @@ async def function_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #table check
+   #misc
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #request body
    request_body=await request.json()
    #column to insert list
 
