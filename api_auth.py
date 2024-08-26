@@ -96,11 +96,7 @@ async def function_auth_email(request:Request):
    email=request_body["email"]
    otp=request_body["otp"]
    #verify otp
-   query="select otp from otp where email=:email order by id desc limit 1;"
-   query_param={"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   if not output:return JSONResponse(status_code=400,content={"status":0,"message":"otp not exist"})
-   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content={"status":0,"message":"otp mismatch"})
+   
    #read user
    query="select * from users where email=:email order by id desc limit 1;"
    query_param={"email":email}
