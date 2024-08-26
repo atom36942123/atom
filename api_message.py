@@ -8,7 +8,7 @@ from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox")
-async def function_inbox(request:Request,limit:int=100,page:int=1):
+async def function_message_inbox(request:Request,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -26,7 +26,7 @@ from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox-unread")
-async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
+async def function_message_inbox_unread(request:Request,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -44,7 +44,7 @@ from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/thread")
-async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
+async def function_message_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -66,7 +66,7 @@ from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/received")
-async def function_received(request:Request,limit:int=100,page:int=1):
+async def function_message_received(request:Request,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -84,7 +84,7 @@ from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.delete("/message/delete-all")
-async def function_delete_all(request:Request):
+async def function_message_delete_all(request:Request):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
