@@ -40,7 +40,6 @@ async def function_auth_login(request:Request):
    query_param={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
    response=await function_token_create_jwt(user)
