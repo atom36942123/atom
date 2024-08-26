@@ -149,8 +149,10 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #misc
-   request_body=await request.json()
+   #object create
+   payload=await request.json()
+   response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
    return {"status":1,"message":output}
-
