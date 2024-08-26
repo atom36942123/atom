@@ -92,7 +92,7 @@ async def function_auth_check(request,mode,user_type_allowed_list):
       if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
-#token check
+#token check(not needed)
 import jwt,json
 from config import config_key_jwt
 async def function_token_check(request):
