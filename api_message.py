@@ -5,12 +5,12 @@ router=APIRouter(tags=["message"])
 #inbox
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox")
 async def function_inbox(request:Request,limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -23,12 +23,12 @@ async def function_inbox(request:Request,limit:int=100,page:int=1):
 #inbox unread
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/inbox-unread")
 async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -41,14 +41,14 @@ async def function_inbox_unread(request:Request,limit:int=100,page:int=1):
 #thread
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
 @router.get("/message/thread")
 async def function_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -65,12 +65,12 @@ async def function_thread(request:Request,background:BackgroundTasks,user_id:int
 #received
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/message/received")
 async def function_received(request:Request,limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -83,12 +83,12 @@ async def function_received(request:Request,limit:int=100,page:int=1):
 #delete message all
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.delete("/message/delete-all")
 async def function_delete_all(request:Request):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
