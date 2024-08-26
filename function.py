@@ -57,7 +57,7 @@ import jwt,json,time
 from datetime import datetime,timedelta
 from config import config_key_jwt
 async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  dataa={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
   config_token_expiry_days=10000
   expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
