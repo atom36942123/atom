@@ -33,8 +33,6 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from fastapi import BackgroundTasks
-from datetime import datetime
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth check
