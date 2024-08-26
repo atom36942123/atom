@@ -94,26 +94,6 @@ async def function_my_metric(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#parent check
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-@router.get("/my/parent-check")
-async def function_my_parent_check(request:Request,base_table:str,parent_table:str,parent_ids:str):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   parent_ids_list=[int(item) for item in parent_ids.split(",")]
-   query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
-   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-   #final
-   return {"status":1,"message":parent_ids_filtered}
-
 #object create
 from fastapi import Request
 from config import postgres_object
@@ -177,6 +157,26 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#parent check
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/my/parent-check")
+async def function_my_parent_check(request:Request,base_table:str,parent_table:str,parent_ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   parent_ids_list=[int(item) for item in parent_ids.split(",")]
+   query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
+   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+   #final
+   return {"status":1,"message":parent_ids_filtered}
 
 #read bulk
 from fastapi import Request
