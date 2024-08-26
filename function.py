@@ -1,9 +1,14 @@
-#verify otp
+#background task
 from fastapi import BackgroundTasks
 from datetime import datetime
-async def function_update_last_active_at(postgres_object,user_id):
+async def function_background_task_user(postgres_object,mode,user_id):
+  background=BackgroundTasks()
+  if mode=="update_users_last_active_at":
+    query="update users set last_active_at=:last_active_at where id=:id;"
+    query_param={"last_active_at":datetime.now(),"id":user_id}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
-  
+
 #verify otp
 async def function_otp_verify(postgres_object,mode,contact,otp):
   if mode not in ["email","mobile"]:return {"status":0,"message":"wrong mode"}
