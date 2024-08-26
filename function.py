@@ -1,3 +1,18 @@
+#object create
+async def function_object_create(postgres_object,user_id,table,payload,function_sanitization):
+  if table in ["users","otp"]:return {"status":0,"message":"table not allowed"}
+  payload["created_by_id"]=user_id
+  for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+    if item in payload:payload.remove(item)
+  column_to_insert_list=[*payload]
+  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+  query_param=payload
+  response=await function_sanitization("create",[query_param])
+  if response["status"]==0:return response
+  query_param=response["message"][0]
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+  
 #update last active at
 from fastapi import BackgroundTasks
 from datetime import datetime
