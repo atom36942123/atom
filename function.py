@@ -22,12 +22,25 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization_que
   await file.close()
   return {"status":1,"message":"done"}
 
+#auth check
+import jwt,json
+from config import config_key_jwt,config_key_root
+async def function_auth_check(request,mode,user_type):
+  if
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=request.headers.get("Authorization").split(" ",1)[1]
+  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+  data=payload["data"]
+  user=json.loads(data)
+  return {"status":1,"message":user}
+
 #token check jwt
 import jwt,json
 from config import config_key_jwt
 async def function_token_check_jwt(request):
-  header_authorization=request.headers.get("Authorization")
-  if not header_authorization:return {"status":0,"message":"authorization header is must"}
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=request.headers.get("Authorization").split(" ",1)[1]
   payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
   data=payload["data"]
