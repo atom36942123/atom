@@ -1,4 +1,4 @@
-#router
+e#router
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
@@ -121,7 +121,7 @@ from fastapi import UploadFile
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 from function import function_csv
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 from fastapi.responses import JSONResponse
 @router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
@@ -130,7 +130,7 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #function csv
-   response=await function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list)
+   response=await function_csv(postgres_object,mode,table,file,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -140,7 +140,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
 from datetime import datetime
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 from fastapi.responses import JSONResponse
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
@@ -155,7 +155,7 @@ async def function_admin_update_cell(request:Request):
    column=request_body["column"]
    value=request_body["value"]
    #function sanitization
-   response=await function_sanitization_query_param_list(postgres_object,"update",[{column:value}])
+   response=await function_sanitization("update",[{column:value}])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    value=response["message"][0][column]
    #logic
@@ -217,7 +217,7 @@ from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
 from function import function_prepare_where
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 from fastapi.responses import JSONResponse
 @router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -237,7 +237,7 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    #sanitization query_param
-   response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
+   response=await function_sanitization("read",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
