@@ -25,7 +25,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 import hashlib
-from function import function_token_create_jwt
+from function import function_token_create
 @router.post("/auth/login")
 async def function_auth_login(request:Request):
    #request body
@@ -40,7 +40,7 @@ async def function_auth_login(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await function_token_create_jwt(user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -51,7 +51,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 import hashlib
-from function import function_token_create_jwt
+from function import function_token_create
 @router.post("/auth/google")
 async def function_auth_google(request:Request):
    #request body
@@ -74,7 +74,7 @@ async def function_auth_google(request:Request):
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #token create
-   response=await function_token_create_jwt(user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -85,7 +85,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_otp_verify
-from function import function_token_create_jwt
+from function import function_token_create
 @router.post("/auth/email")
 async def function_auth_email(request:Request):
    #request body
@@ -111,7 +111,7 @@ async def function_auth_email(request:Request):
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #token create
-   response=await function_token_create_jwt(user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -122,7 +122,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_otp_verify
-from function import function_token_create_jwt
+from function import function_token_create
 @router.post("/auth/mobile")
 async def function_auth_mobile(request:Request):
    #request body
@@ -148,7 +148,7 @@ async def function_auth_mobile(request:Request):
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0]
    #token create
-   response=await function_token_create_jwt(user)
+   response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
