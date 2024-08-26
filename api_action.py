@@ -28,7 +28,7 @@ async def function_action_create_post(request:Request):
    #final
    return {"status":1,"message":output}
 
-#helpdesk
+#create helpdesk
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -52,7 +52,7 @@ async def function_action_create_helpdesk(request:Request):
    #final
    return {"status":1,"message":output}
 
-#like
+#create like
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -74,7 +74,7 @@ async def function_action_create_like(request:Request):
    #final
    return {"status":1,"message":output}
 
-#bookmark
+#create bookmark
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -96,7 +96,7 @@ async def function_action_create_bookmark(request:Request):
    #final
    return {"status":1,"message":output}
 
-#block
+#create block
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -119,7 +119,7 @@ async def function_action_create_block(request:Request):
    #final
    return {"status":1,"message":output}
 
-#comment
+#create comment
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -143,7 +143,7 @@ async def function_action_create_comment(request:Request):
    #final
    return {"status":1,"message":output}
 
-#message
+#create message
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -167,7 +167,7 @@ async def function_action_create_message(request:Request):
    #final
    return {"status":1,"message":output}
 
-#rating
+#create rating
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -190,7 +190,7 @@ async def function_action_create_rating(request:Request):
    #final
    return {"status":1,"message":output}
 
-#report
+#create report
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
@@ -208,6 +208,27 @@ async def function_action_create_report(request:Request):
    description=request_body["description"]
    #logic
    query="insert into report (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#update password
+from fastapi import Request
+from config import postgres_object
+from function import function_auth_check
+from fastapi.responses import JSONResponse
+@router.post("/action/create-report")
+async def function_action_create_report(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #request body
+   request_body=await request.json()
+   password=request_body["password"]
+   #logic
+   query=" (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
    query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
