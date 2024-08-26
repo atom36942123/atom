@@ -12,6 +12,30 @@ async def function_object_create(postgres_object,user_id,table,payload,function_
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
+#csv
+import csv,codecs
+async def function_csv(postgres_object,mode,table,file,function_sanitization):
+  if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
+  if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  file_row_list=[]
+  for row in file_csv:file_row_list.append(row)
+  if mode=="create":
+    column_to_insert_list=[*file_row_list[0]]
+    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+    query_param_list=file_row_list
+  if mode=="update":
+    column_to_update_list=[*file_row_list[0]]
+    column_to_update_list.remove("id")
+    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+    query_param_list=file_row_list
+  response=await function_sanitization("create",query_param_list)
+  if response["status"]==0:return response
+  query_param=response["message"]
+  output=await postgres_object.execute_many(query=query,values=query_param)
+  await file.close()
+  return {"status":1,"message":"done"}
+
 #object update
 from datetime import datetime
 async def function_object_update(postgres_object,user_id,table,id,payload,function_sanitization):
@@ -48,30 +72,6 @@ async def function_otp_verify(postgres_object,mode,contact,otp):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
-#csv
-import csv,codecs
-async def function_csv(postgres_object,mode,table,file,function_sanitization):
-  if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
-  if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
-  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-  file_row_list=[]
-  for row in file_csv:file_row_list.append(row)
-  if mode=="create":
-    column_to_insert_list=[*file_row_list[0]]
-    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-    query_param_list=file_row_list
-  if mode=="update":
-    column_to_update_list=[*file_row_list[0]]
-    column_to_update_list.remove("id")
-    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-    query_param_list=file_row_list
-  response=await function_sanitization("create",query_param_list)
-  if response["status"]==0:return response
-  query_param=response["message"]
-  output=await postgres_object.execute_many(query=query,values=query_param)
-  await file.close()
-  return {"status":1,"message":"done"}
-
 #auth check
 import jwt,json
 from config import config_key_jwt,config_key_root
