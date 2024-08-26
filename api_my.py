@@ -156,3 +156,24 @@ async def function_my_object_create(request:Request,table:str):
    output=response["message"]
    #final
    return {"status":1,"message":output}
+
+#object create
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_object_create
+from function import function_sanitization
+@router.post("/my/object-create")
+async def function_my_object_create(request:Request,table:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #object create
+   payload=await request.json()
+   response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
