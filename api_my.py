@@ -149,7 +149,7 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #object create
+   #logic
    payload=await request.json()
    response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -165,14 +165,14 @@ from function import function_auth_check
 from function import function_object_update
 from function import function_sanitization
 @router.post("/my/object-create")
-async def function_my_object_create(request:Request,table:str):
+async def function_my_object_create(request:Request,table:str,id:int):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #object create
+   #logic
    payload=await request.json()
-   response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
+   response=await function_object_update(postgres_object,user["id"],table,id,payload,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
