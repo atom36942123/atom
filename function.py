@@ -92,18 +92,6 @@ async def function_auth_check(request,mode,user_type_allowed_list):
       if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
-#token check(not needed)
-import jwt,json
-from config import config_key_jwt
-async def function_token_check(request):
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=request.headers.get("Authorization").split(" ",1)[1]
-  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-  data=payload["data"]
-  user=json.loads(data)
-  return {"status":1,"message":user}
-
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
