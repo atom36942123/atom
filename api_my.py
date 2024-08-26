@@ -33,7 +33,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_background_task_user
+from function import function_background_update_last_active_at
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth check
@@ -48,7 +48,7 @@ async def function_my_profile(request:Request):
    #raise error
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #background task
-   response=await function_background_task_user(postgres_object,"update_last_active_at",user["id"])
+   response=await function_background_update_last_active_at(postgres_object,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
