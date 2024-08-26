@@ -11,7 +11,7 @@ async def function_object_create(postgres_object,user_id,table,payload,function_
   if response["status"]==0:return response
   query_param=response["message"][0]
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
+  return {"status":1,"message":output}
   
 #update last active at
 from fastapi import BackgroundTasks
