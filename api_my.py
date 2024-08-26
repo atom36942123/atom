@@ -5,13 +5,13 @@ router=APIRouter(tags=["my"])
 #token refresh
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from function import function_token_create_jwt
 from fastapi.responses import JSONResponse
 @router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -31,14 +31,14 @@ async def function_my_token_refresh(request:Request):
 #profile
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi import BackgroundTasks
 from datetime import datetime
 from fastapi.responses import JSONResponse
 @router.get("/my/profile")
 async def function_my_profile(request:Request,background:BackgroundTasks):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -58,12 +58,12 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
 #stats
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/my/stats")
 async def function_my_stats(request:Request):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -83,12 +83,12 @@ async def function_my_stats(request:Request):
 #parent read
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read parent_ids from table
@@ -106,12 +106,12 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
 #parent check
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #conversion
@@ -127,12 +127,12 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
 #read bulk
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/my/read-bulk")
 async def function_my_read_bulk(request:Request,table:str,ids:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
