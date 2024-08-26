@@ -218,8 +218,9 @@ from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
 from fastapi.responses import JSONResponse
-@router.post("/action/create-report")
-async def function_action_create_report(request:Request):
+import hashlib
+@router.post("/action/update-password")
+async def function_action_update_password(request:Request):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -227,9 +228,11 @@ async def function_action_create_report(request:Request):
    #request body
    request_body=await request.json()
    password=request_body["password"]
+   #conversion
+   password=hashlib.sha256(password.encode()).hexdigest()
    #logic
-   query=" (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
-   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
+   query="update users set password=:password where id=:id returning *;"
+   query_param={"id":user["id"],"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
