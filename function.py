@@ -25,7 +25,7 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization_que
 #token check
 import jwt,json
 from config import config_key_jwt
-async def function_token_check(request):
+async def function_token_check_jwt(request):
   header_authorization=request.headers.get("Authorization")
   if not header_authorization:return {"status":0,"message":"authorization header is must"}
   token=request.headers.get("Authorization").split(" ",1)[1]
@@ -34,11 +34,11 @@ async def function_token_check(request):
   user=json.loads(data)
   return {"status":1,"message":user}
 
-#token create
+#token create jwt
 import jwt,json,time
 from datetime import datetime,timedelta
 from config import config_key_jwt
-async def function_token_create(user):
+async def function_token_create_jwt(user):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
   config_token_expiry_days=10000
