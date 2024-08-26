@@ -27,10 +27,6 @@ async def function_object_update(postgres_object,user_id,table,id,payload,functi
 #csv
 import csv,codecs
 async def function_csv(postgres_object,mode,table,file,function_sanitization):
-  if mode=="create":
-    column_to_insert_list=[*file_row_list[0]]
-    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-    query_param_list=file_row_list
   if mode=="update":
     column_to_update_list=[*file_row_list[0]]
     column_to_update_list.remove("id")
