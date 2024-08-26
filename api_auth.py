@@ -88,6 +88,7 @@ async def function_auth_google(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
+from function import function_otp_verify
 from function import function_token_create_jwt
 @router.post("/auth/email")
 async def function_auth_email(request:Request):
@@ -95,8 +96,9 @@ async def function_auth_email(request:Request):
    request_body=await request.json()
    email=request_body["email"]
    otp=request_body["otp"]
-   #verify otp
-   
+   #otp verify
+   response=await function_otp_verify(postgres_object,"email",email,otp)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user
    query="select * from users where email=:email order by id desc limit 1;"
    query_param={"email":email}
@@ -123,6 +125,7 @@ async def function_auth_email(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
+from function import function_otp_verify
 from function import function_token_create_jwt
 @router.post("/auth/mobile")
 async def function_auth_mobile(request:Request):
@@ -130,12 +133,9 @@ async def function_auth_mobile(request:Request):
    request_body=await request.json()
    mobile=request_body["mobile"]
    otp=request_body["otp"]
-   #verify otp
-   query="select otp from otp where mobile=:mobile order by id desc limit 1;"
-   query_param={"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   if not output:return JSONResponse(status_code=400,content={"status":0,"message":"otp not exist"})
-   if int(output[0]["otp"])!=int(otp):return JSONResponse(status_code=400,content={"status":0,"message":"otp mismatch"})
+   #otp verify
+   response=await function_otp_verify(postgres_object,"mobile",mobile,otp)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user
    query="select * from users where mobile=:mobile order by id desc limit 1;"
    query_param={"mobile":mobile}
