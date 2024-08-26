@@ -41,18 +41,16 @@ async def function_aws_send_email_ses(request:Request):
 #delete s3 url
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key,config_s3_bucket_name
 from fastapi.responses import JSONResponse
 @router.delete("/aws/delete-s3-url")
 async def function_aws_delete_s3_url(request:Request,url:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #buckey key
    buckey_key=url.rsplit("/",1)[1]
    #logic
@@ -64,18 +62,16 @@ async def function_aws_delete_s3_url(request:Request,url:str):
 #empty s3 bucket
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 import boto3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from fastapi.responses import JSONResponse
 @router.delete("/aws/empty-s3-bucket")
 async def function_aws_empty_s3_bucket(request:Request,bucket_name:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #admin check
-   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
    output=s3_resource.Bucket(bucket_name).objects.all().delete()
