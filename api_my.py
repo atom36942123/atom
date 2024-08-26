@@ -55,24 +55,24 @@ async def function_my_profile(request:Request,background:BackgroundTasks):
    #final
    return {"status":1,"message":user}
 
-#stats
+#metric
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-@router.get("/my/stats")
-async def function_my_stats(request:Request):
+@router.get("/my/metric")
+async def function_my_metric(request:Request):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   config_user_stats={
+   config_user_metric={
    "post_count":"select count(*) as x from post where created_by_id=:user_id;",
    "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
    temp={}
-   for k,v in config_user_stats.items():
+   for k,v in config_user_metric.items():
       query=v
       query_param={"user_id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
