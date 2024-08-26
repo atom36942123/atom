@@ -107,6 +107,8 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #check
+   if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
    payload=await request.json()
    response=await function_object_create(postgres_object,user["id"],table,payload,function_sanitization)
