@@ -2,6 +2,24 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
+#delete account
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #delete object
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 #token
 from fastapi import Request
 from config import postgres_object
@@ -76,28 +94,6 @@ async def function_my_metric(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#parent read
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-@router.get("/my/parent-read")
-async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select parent_id from {base_table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   parent_ids_list=[item["parent_id"] for item in output]
-   query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
 #parent check
 from fastapi import Request
 from config import postgres_object
@@ -117,24 +113,6 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
    parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
    #final
    return {"status":1,"message":parent_ids_filtered}
-
-#read bulk
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-@router.get("/my/read-bulk")
-async def function_my_read_bulk(request:Request,table:str,ids:str):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select * from {table} where created_by_id=:created_by_id and id in ({ids}) order by id desc;"
-   query_param={"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
 #object create
 from fastapi import Request
@@ -178,22 +156,42 @@ async def function_my_object_update(request:Request,table:str,id:int):
    #final
    return {"status":1,"message":output}
 
-#object delete
+#parent read
 from fastapi import Request
 from config import postgres_object
-from function import function_auth_check
 from fastapi.responses import JSONResponse
-@router.delete("/object/delete")
-async def function_object_delete(request:Request,table:str,id:int):
+from function import function_auth_check
+@router.get("/my/parent-read")
+async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #delete object
-   query=f"delete from {table} where id=:id and (created_by_id=:created_by_id or :created_by_id is null);"
-   query_param={"id":id,"created_by_id":user["id"]}
-   if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
+   #logic
+   query=f"select parent_id from {base_table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   parent_ids_list=[item["parent_id"] for item in output]
+   query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+   query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
+#read bulk
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/my/read-bulk")
+async def function_my_read_bulk(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"select * from {table} where created_by_id=:created_by_id and id in ({ids}) order by id desc;"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
