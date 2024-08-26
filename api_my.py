@@ -33,6 +33,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from function import function_background_task_user
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth check
