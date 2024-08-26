@@ -1,7 +1,5 @@
 #object create
 async def function_object_create(postgres_object,table,payload,function_sanitization):
-  for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-    if item in payload:payload.remove(item)
   column_to_insert_list=[*payload]
   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
   query_param=payload
