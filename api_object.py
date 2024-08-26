@@ -7,7 +7,8 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_sanitization_query_param_list
+from function import function_object_create
+from function import function_sanitization
 @router.post("/object/create")
 async def function_object_create(request:Request,table:str):
    #auth check
@@ -15,25 +16,16 @@ async def function_object_create(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #misc
-   
    request_body=await request.json()
 
 
-   async def function_object_create(postgres_object,user_id,table,payload,function_sanitization_query_param_list):
-         if table in ["users","otp"]:return {"status":0,"message":"table not allowed"}
-         [payload.remove(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in column_to_insert_list]
-         column_to_insert_list=[*payload]+["created_by_id"]
-         query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-         query_param={}
-         for item in column_to_insert_list:
-            if item in payload:query_param[item]=request_body[item]
-         query_param["created_by_id"]=user_id
-      
-      response=await function_sanitization_query_param_list(postgres_object,"create",[query_param])
-      if response["status"]==0:return response
-      query_param=response["message"][0]
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      return {"status":1,"message":"done"}
+
+   
+   
+   
+   
+   
+   
   
    
    #final
@@ -45,7 +37,7 @@ from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from datetime import datetime
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 @router.put("/object/update")
 async def function_object_update(request:Request,table:str,id:int):
    #auth check
@@ -70,7 +62,7 @@ async def function_object_update(request:Request,table:str,id:int):
    query_param["created_by_id"]=user["id"]
    if table=="users":query_param["id"],query_param["created_by_id"]=user["id"],None
    #sanitization query_param_list
-   response=await function_sanitization_query_param_list(postgres_object,"update",[query_param])
+   response=await function_sanitization(postgres_object,"update",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
@@ -101,7 +93,7 @@ async def function_object_delete(request:Request,table:str,id:int):
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 from function import function_prepare_where
 from fastapi.responses import JSONResponse
 @router.get("/object/read")
@@ -123,7 +115,7 @@ async def function_object_read(request:Request,table:str,order:str="id desc",lim
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    #sanitization query_param_list
-   response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
+   response=await function_sanitization(postgres_object,"read",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
