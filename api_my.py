@@ -92,8 +92,7 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    query_param={"parent_table":parent_table,"created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    parent_ids_list=[item["parent_id"] for item in output]
-   parent_ids_string=",".join(parent_ids_list)
-   query=f"select * from {parent_table} where id in ({parent_ids_string}) order by id desc;"
+   query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
