@@ -11,10 +11,8 @@ async def function_object_create(postgres_object,table,payload_list,function_san
 
 #object update
 from datetime import datetime
-async def function_object_update(postgres_object,user_id,table,id,payload,function_sanitization):
-  for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-    if item in payload:payload.remove(item)
-  column_to_update_list=[*payload]+["updated_at","updated_by_id"]
+async def function_object_update(postgres_object,table,id,payload_list,function_sanitization):
+  column_to_update_list=[*file_row_list[0]]
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id and (created_by_id=:created_by_id or :created_by_id is null) returning *;"
   query_param=payload|{"updated_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"updated_by_id":user_id}|{"id":id,"created_by_id":user_id}
   if table=="users":query_param["id"],query_param["created_by_id"]=user_id,None
@@ -27,8 +25,6 @@ async def function_object_update(postgres_object,user_id,table,id,payload,functi
 #csv
 import csv,codecs
 async def function_csv(postgres_object,mode,table,file,function_sanitization):
-  if mode=="update":
-    column_to_update_list=[*file_row_list[0]]
     column_to_update_list.remove("id")
     query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
     query_param_list=file_row_list
@@ -36,7 +32,7 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization):
   if response["status"]==0:return response
   query_param=response["message"]
   output=await postgres_object.execute_many(query=query,values=query_param)
-  await file.close()
+  
   return {"status":1,"message":"done"}
 
 #update last active at
