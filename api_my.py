@@ -178,13 +178,13 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
    #final
    return {"status":1,"message":parent_ids_filtered}
 
-#read bulk
+#bulk
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-@router.get("/my/read-bulk")
-async def function_my_read_bulk(request:Request,table:str,ids:str):
+@router.get("/my/bulk")
+async def function_my_bulk(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
