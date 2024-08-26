@@ -20,6 +20,30 @@ async def function_my_delete_account(request:Request):
    #final
    return {"status":1,"message":output}
 
+#profile
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_background_update_last_active_at
+@router.get("/my/profile")
+async def function_my_profile(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #read user
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   #update last active at
+   response=await function_background_update_last_active_at(postgres_object,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":user}
+
 #token
 from fastapi import Request
 from config import postgres_object
@@ -44,30 +68,6 @@ async def function_my_token(request:Request):
    token=response["message"]
    #final
    return {"status":1,"message":token}
-
-#profile
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from function import function_background_update_last_active_at
-@router.get("/my/profile")
-async def function_my_profile(request:Request):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   #update last active at
-   response=await function_background_update_last_active_at(postgres_object,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return {"status":1,"message":user}
 
 #metric
 from fastapi import Request
