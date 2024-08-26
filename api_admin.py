@@ -116,22 +116,28 @@ async def function_admin_database_init(request:Request):
 #csv
 from fastapi import Request
 from config import postgres_object
+from fastapi.responses import JSONResponse
 from function import function_auth_check
 from fastapi import UploadFile
-from fastapi import Depends
+import csv,codecs
 from fastapi_limiter.depends import RateLimiter
-from function import function_csv
+from fastapi import Depends
 from function import function_sanitization
-from fastapi.responses import JSONResponse
-@router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
+@router.post("/admin/csv-create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+async def function_admin_csv_create(request:Request,mode:str,table:str,file:UploadFile):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #function csv
-   response=await function_csv(postgres_object,mode,table,file,function_sanitization)
+   #file
+   if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   payload_list=[]
+   for row in file_csv:payload_list.append(row)
+   #logic
+   response=await function_object_create(postgres_object,table,payload_list,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
    return response
 
