@@ -69,6 +69,7 @@ config_database_column={
 }
 config_database_not_null={
 "id":config_database_table,
+"created_at":config_database_table,
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
 }
