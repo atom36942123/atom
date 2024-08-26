@@ -140,6 +140,7 @@ async def function_admin_csv_create(request:Request,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
+   await file.close()
    return response
 
 #update cell
