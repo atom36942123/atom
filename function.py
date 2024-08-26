@@ -25,14 +25,20 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization_que
 #auth check
 import jwt,json
 from config import config_key_jwt,config_key_root
-async def function_auth_check(request,mode,user_type):
-  if
+async def function_auth_check(request,mode,user_type_allowed_list):
+  if mode not in ["jwt","root"]:return {"status":0,"message":"wrong mode"}
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=request.headers.get("Authorization").split(" ",1)[1]
-  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-  data=payload["data"]
-  user=json.loads(data)
+  user=None
+  if mode=="root":
+    if token!=config_key_root:return {"status":0,"message":"token root issue"}
+  if mode=="jwt":
+    payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+    data=payload["data"]
+    user=json.loads(data)
+    if user_type_allowed_list:
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
 #token check jwt
