@@ -12,7 +12,6 @@ async def function_auth_signup(request:Request):
    request_body=await request.json()
    username=request_body["username"]
    password=str(request_body["password"])
-   #conversion
    password=hashlib.sha256(password.encode()).hexdigest()
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
@@ -33,7 +32,6 @@ async def function_auth_login(request:Request):
    request_body=await request.json()
    username=request_body["username"]
    password=str(request_body["password"])
-   #conversion
    password=hashlib.sha256(password.encode()).hexdigest()
    #read user
    query="select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -59,7 +57,6 @@ async def function_auth_google(request:Request):
    #request body
    request_body=await request.json()
    google_id=str(request_body["google_id"])
-   #conversion
    google_id=hashlib.sha256(google_id.encode()).hexdigest()
    #read user
    query="select * from users where google_id=:google_id order by id desc limit 1;"
