@@ -1,4 +1,8 @@
 #verify otp
+async def function_update_last_active_at(postgres_object,user_id):
+  return {"status":1,"message":"done"}
+  
+#verify otp
 async def function_otp_verify(postgres_object,mode,contact,otp):
   if mode not in ["email","mobile"]:return {"status":0,"message":"wrong mode"}
   if mode=="email":query="select otp from otp where email=:contact order by id desc limit 1;"
