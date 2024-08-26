@@ -164,8 +164,8 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from function import function_object_update
 from function import function_sanitization
-@router.post("/my/object-create")
-async def function_my_object_create(request:Request,table:str,id:int):
+@router.post("/my/object-update")
+async def function_my_object_update(request:Request,table:str,id:int):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
