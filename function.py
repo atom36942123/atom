@@ -1,6 +1,5 @@
 #object create
 async def function_object_create(postgres_object,user_id,table,payload,function_sanitization):
-  if table in ["users","otp"]:return {"status":0,"message":"table not allowed"}
   payload["created_by_id"]=user_id
   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
     if item in payload:payload.remove(item)
