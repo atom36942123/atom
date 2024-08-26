@@ -124,7 +124,7 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
 from function import function_sanitization
 @router.post("/admin/csv-create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_admin_csv_create(request:Request,mode:str,table:str,file:UploadFile):
+async def function_admin_csv_create(request:Request,table:str,file:UploadFile):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
