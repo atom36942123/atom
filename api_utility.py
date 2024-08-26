@@ -27,7 +27,7 @@ from config import postgres_object
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 from function import function_prepare_where
-from function import function_sanitization_query_param_list
+from function import function_sanitization
 from function import function_add_creator_key
 from function import function_add_action_count
 from fastapi.responses import JSONResponse
@@ -47,8 +47,8 @@ async def function_utility_feed(request:Request,table:str,order:str="id desc",li
    #query set
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
-   #sanitization query_param
-   response=await function_sanitization_query_param_list(postgres_object,"read",[query_param])
+   #sanitization
+   response=await function_sanitization("read",[query_param])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
