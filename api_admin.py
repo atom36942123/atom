@@ -10,6 +10,9 @@ from fastapi.responses import JSONResponse
 @router.get("/admin/qrunner")
 async def function_admin_qrunner(request:Request,query:str):
    #auth check
+   response=await function_auth_check(request,"root",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #logic
    query=query
    query_param={}
@@ -20,13 +23,15 @@ async def function_admin_qrunner(request:Request,query:str):
 #database init
 from fastapi import Request
 from config import postgres_object
-from config import config_key_root
+from function import function_auth_check
 from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_not_null,config_database_identity,config_database_default,config_database_query
 from fastapi.responses import JSONResponse
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
    #auth check
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   response=await function_auth_check(request,"root",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #extension
    for item in config_database_extension:
       query=f"create extension if not exists {item};"
@@ -103,20 +108,19 @@ async def function_admin_database_init(request:Request):
 #csv
 from fastapi import Request
 from config import postgres_object
+from function import function_auth_check
 from fastapi import UploadFile
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
-from function import function_token_check
 from function import function_csv
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content={"status":0,"message":"admin issue"})
    #function csv
    response=await function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -126,17 +130,16 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
 #update cell
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from datetime import datetime
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #request body
    request_body=await request.json()
    table=request_body["table"]
@@ -157,15 +160,14 @@ async def function_admin_update_cell(request:Request):
 #delete bulk
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.delete("/admin/delete-bulk")
 async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #table check
    if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    #length check
@@ -180,15 +182,14 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
 #database clean
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #delete object having creator null
    for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
       query=f"delete from {table} where created_by_id not in (select id from users);"
@@ -206,17 +207,16 @@ async def function_admin_database_clean(request:Request):
 #feed
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from function import function_prepare_where
 from function import function_sanitization_query_param_list
 from fastapi.responses import JSONResponse
 @router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #request query param
    request_query_param=dict(request.query_params)
    #prepare where
@@ -240,15 +240,14 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
 #read bulk
 from fastapi import Request
 from config import postgres_object
-from function import function_token_check
+from function import function_auth_check
 from fastapi.responses import JSONResponse
 @router.get("/admin/read-bulk")
 async def function_admin_read_bulk(request:Request,table:str,ids:str):
    #auth check
-   response=await function_token_check(request)
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   if user["type"]!="admin":return JSONResponse(status_code=400,content=({"status":0,"message":"admin issue"}))
    #logic
    query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
