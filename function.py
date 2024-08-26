@@ -21,7 +21,7 @@ async def function_otp_verify(postgres_object,mode,contact,otp):
   
 #csv
 import csv,codecs
-async def function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list):
+async def function_csv(postgres_object,mode,table,file,function_sanitization):
   if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
   if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -36,7 +36,7 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization_que
     column_to_update_list.remove("id")
     query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
     query_param_list=file_row_list
-  response=await function_sanitization_query_param_list(postgres_object,"create",query_param_list)
+  response=await function_sanitization(postgres_object,"create",query_param_list)
   if response["status"]==0:return response
   query_param=response["message"]
   output=await postgres_object.execute_many(query=query,values=query_param)
@@ -107,18 +107,18 @@ async def function_prepare_where(where_param_raw):
 import hashlib,json
 from datetime import datetime
 from config import config_database_column
-async def function_sanitization_query_param_list(postgres_object,query_type,query_param_list):
-  if query_type not in ["create","update","read"]:return {"status":0,"message":"wrong query_type"}
+async def function_sanitization(mode,query_param_list):
+  if mode not in ["create","update","read"]:return {"status":0,"message":"wrong mode"}
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       datatype=config_database_column[k][0]
-      if query_type in ["create","read","update"]:
+      if mode in ["create","read","update"]:
         if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
         if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
         if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
         if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
         if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-      if query_type in ["create","update"]:
+      if mode in ["create","update"]:
         if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
   return {"status":1,"message":query_param_list}
 
