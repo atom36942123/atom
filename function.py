@@ -1,12 +1,12 @@
 #object create
-async def function_object_create(postgres_object,table,payload,function_sanitization):
-  column_to_insert_list=[*payload]
+async def function_object_create(postgres_object,table,payload_list,function_sanitization):
+  column_to_insert_list=[*payload_list[0]]
   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-  query_param=payload
+  query_param=payload_list
   response=await function_sanitization("create",[query_param])
   if response["status"]==0:return response
-  query_param=response["message"][0]
-  output=await postgres_object.fetch_all(query=query,values=query_param)
+  query_param=response["message"]
+  output=await postgres_object.execute_many(query=query,values=query_param)
   return {"status":1,"message":output}
 
 #object update
