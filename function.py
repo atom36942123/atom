@@ -1,3 +1,17 @@
+#verify otp
+async def function_otp_verify(postgres_object,mode,contact,otp):
+  if mode not in ["email","mobile"]:return {"status":0,"message":"wrong mode"}
+  if mode=="email":
+    query="select otp from otp where email=:contact order by id desc limit 1;"
+    query_param={"email":contact}
+  if mode=="mobile":
+    query="select otp from otp where mobile=:contact order by id desc limit 1;"
+    query_param={"mobile":contact}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if not output:return {"status":0,"message":"otp not found"}
+  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
+  return {"status":1,"message":"done"}
+  
 #csv
 import csv,codecs
 async def function_csv(postgres_object,mode,table,file,function_sanitization_query_param_list):
