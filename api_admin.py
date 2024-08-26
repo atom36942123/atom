@@ -24,7 +24,7 @@ async def function_admin_qrunner(request:Request,query:str):
 from fastapi import Request
 from config import postgres_object
 from function import function_auth_check
-from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_not_null,config_database_identity,config_database_default,config_database_query
+from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
 from fastapi.responses import JSONResponse
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
@@ -87,6 +87,14 @@ async def function_admin_database_init(request:Request):
          state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
          if state[0]==None:
             query=f"alter table {table} alter column {k} set default {v[0]};"
+            query_param={}
+            output=await postgres_object.fetch_all(query=query,values=query_param)
+   #unique
+   for k,v in config_database_unique.items():
+      for table in v:
+         constraint_name=f"constraint_unique_{table}"
+         if constraint_name not in schema_constraint_name_list:
+            query=f"alter table {table} add constraint {constraint_name} unique ({k});"
             query_param={}
             output=await postgres_object.fetch_all(query=query,values=query_param)
    #protected
