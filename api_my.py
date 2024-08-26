@@ -135,3 +135,22 @@ async def function_my_read_bulk(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#object create
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_object_create
+from function import function_sanitization
+@router.post("/my/object-create")
+async def function_my_object_create(request:Request,table:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #misc
+   request_body=await request.json()
+   #final
+   return {"status":1,"message":output}
+
