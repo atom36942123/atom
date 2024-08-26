@@ -22,7 +22,7 @@ async def function_csv(postgres_object,mode,table,file,function_sanitization_que
   await file.close()
   return {"status":1,"message":"done"}
 
-#token check
+#token check jwt
 import jwt,json
 from config import config_key_jwt
 async def function_token_check_jwt(request):
