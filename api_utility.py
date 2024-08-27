@@ -59,65 +59,31 @@ from function import function_aws
 @router.post("/utility/send-email-ses")
 async def function_send_email_ses(request:Request):
    #logic
-   payload=await request.json()
-   response=await function_aws("send_email_ses",payload)
+   body=await request.json()
+   response=await function_aws("send_email_ses",body)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
-
-
-
-
-
-
-
-
-
-
+   return response
 
 #feed
 from fastapi import Request
 from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_object_read
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
-from function import function_prepare_where
-from function import function_sanitization
-from function import function_add_creator_key
-from function import function_add_action_count
-from fastapi.responses import JSONResponse
-@router.get("/utility/feed")
-@cache(expire=60,key_builder=function_read_redis_key)
-async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #table check
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+from function import function_add_creator_key,function_add_action_count
+@router.get("/admin/feed")
+async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #request query param
    request_query_param=dict(request.query_params)
-   #prepare where
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_prepare_where(where_param_raw)
+   response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string=response["message"][0]
-   where_param=response["message"][1]
-   #query set
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   #sanitization
-   response=await function_sanitization("read",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   query_param=response["message"][0]
-   #query run
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   output=[dict(item) for item in output]
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(postgres_object,output,table,"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
-
-
+   return response
