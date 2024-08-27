@@ -7,27 +7,44 @@ async def function_prepare_where(where_param_raw):
   where_string=f"where {key_joined}" if key_joined else ""
   return {"status":1,"message":[where_string,where_param]}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#aws
+from config import config_aws_access_key_id,config_aws_secret_access_key
+from config import  config_s3_bucket_name,config_s3_region_name
+from config import config_ses_sender_email,config_ses_region_name
+import boto3,uuid
+async def function_aws(mode,payload):
+  s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="create_presigned_url":
+    filename=payload["filename"]
+    key=str(uuid.uuid4())+"-"+filename
+    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+  if mode=="delete_s3_url":
+    url=payload["url"]
+    key=url.rsplit("/",1)[1]
+    output=s3_resource.Object(config_s3_bucket_name,key).delete()
+  if mode=="empty_s3_bucket":
+    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+  if mode=="send_email_ses":
+    to,title,description=payload["to"],payload["title"],payload["description"]
+    output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+  return {"status":1,"message":output}
   
-    
-      
-        
-        
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #object
 import hashlib,json
 from datetime import datetime
