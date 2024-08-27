@@ -11,18 +11,38 @@ async def function_prepare_where(where_param_raw):
 
 
 
+
+
+
+
+
 #mongo
-from elasticsearch import Elasticsearch
-
-async def function_mongo(mode,payload):
-
-
-
-
-
-
-
-
+from config import config_mongo_server
+import motor.motor_asyncio
+from bson import ObjectId
+async def function_mongo(mode,database,table,payload):
+  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
+  if mode=="create":
+    if database=="test" and table=="users":
+      output=await mongo_object.test.users.insert_one(payload)
+      output={"status":1,"message":repr(output.inserted_id)}
+  if mode=="read":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
+      if output:output['_id']=str(output['_id'])
+  if mode=="update":
+    if database=="test" and table=="users":
+      id,data=payload["id"],payload["data"]
+      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":data})
+      output={"status":1,"message":output.modified_count}
+  if mode=="delete":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
+      output={"status":1,"message":output.deleted_count}
+  return {"status":1,"message":output}
+  
 #aws
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import  config_s3_bucket_name,config_s3_region_name
