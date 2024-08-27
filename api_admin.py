@@ -36,7 +36,7 @@ async def function_admin_database_init(request:Request):
    response=await function_database_init(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":"done"}
+   return response
 
 #database clean
 from fastapi import Request
@@ -64,6 +64,7 @@ from function import function_auth_check
 from fastapi import UploadFile
 import csv,codecs
 from function import function_object_create
+from function import function_object_update
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
 @router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
@@ -79,7 +80,8 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    for row in file_csv:object_list.append(row)
    await file.close()
    #logic
-   response=await function_object(postgres_object,mode,table,object_list)
+   if mode=="create"response=await function_object_create(postgres_object,table,object_list)
+   if mode=="update"response=await function_object_update(postgres_object,table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -89,9 +91,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from config import config_database_column
-import hashlib,json
-from datetime import datetime
+from function import function_object_update
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #auth check
@@ -102,10 +102,10 @@ async def function_admin_update_cell(request:Request):
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
    object_list=[{"id":id,column:value,"updated_by_id":user["id"]}]
-   response=await function_object(postgres_object,"update",table,object_list)
+   response=await function_object_create(postgres_object,table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #feed
 from fastapi import Request
@@ -122,8 +122,10 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    #request query param
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #bulk read
 from fastapi import Request
@@ -187,7 +189,7 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from function import function_aws
 @router.delete("/admin/empty-s3-bucket")
-async def function_admin_empty_s3_bucket(request:Request,url:str):
+async def function_admin_empty_s3_bucket(request:Request):
    #auth check
    response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
