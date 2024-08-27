@@ -13,6 +13,7 @@ async def function_prepare_where(where_param_raw):
 
 
 
+async def function_mongo(mode,payload):
 
 
 
