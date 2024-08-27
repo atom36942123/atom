@@ -43,25 +43,18 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #creator null
-   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-      query=f"delete from {table} where created_by_id not in (select id from users);"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   #parent null
-   for table in ["likes","bookmark","report","block","rating","comment","message"]:
-      for parent_table in ["users","post","comment"]:
-         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
+   #logic
+   response=await function_database_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":"done"}
+   return response
 
 #csv
 from fastapi import Request
@@ -96,6 +89,8 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import config_database_column
+import hashlib,json
 from datetime import datetime
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
@@ -106,13 +101,39 @@ async def function_admin_update_cell(request:Request):
    #logic
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
-   
+   datatype=config_database_column[column][0]
+   if column in ["password","google_id"]:value=hashlib.sha256(value.encode()).hexdigest()
+   if datatype in ["bigint","int"]:value=int(value)
+   if datatype in ["numeric"]:value=round(float(value),3)
+   if datatype in ["timestamptz","date"]:datetime.strptime(value,'%Y-%m-%dT%H:%M:%S')
+   if datatype in ["jsonb"]:value=json.dumps(value) if v else None
+   if "[]" in datatype:value=value.split(",")
    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
    query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
+#bulk
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/admin/bulk")
+async def function_admin_bulk(request:Request,mode:str,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="delete" and table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if len(ids)>100000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
+   if mode=="read":query=f"select * from {table} where id in ({ids}) order by id desc;"
+   if mode=="delete":query=f"delete from {table} where id in ({ids});"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
 
 
 
@@ -177,27 +198,7 @@ async def function_admin_empty_s3_bucket(request:Request,url:str):
 
 
 
-#delete bulk
-from fastapi import Request
-from config import postgres_object
-from function import function_auth_check
-from fastapi.responses import JSONResponse
-@router.delete("/admin/delete-bulk")
-async def function_admin_delete_bulk(request:Request,table:str,ids:str):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #table check
-   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   #length check
-   if len(ids)>10000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
-   #logic
-   query=f"delete from {table} where id in ({ids});"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+
 
 
 
@@ -230,24 +231,6 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    query_param=response["message"][0]
    #query run
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#read bulk
-from fastapi import Request
-from config import postgres_object
-from function import function_auth_check
-from fastapi.responses import JSONResponse
-@router.get("/admin/read-bulk")
-async def function_admin_read_bulk(request:Request,table:str,ids:str):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
