@@ -278,6 +278,24 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
    #final
    return {"status":1,"message":output}
 
+#delete message all
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/my/message-delete-all")
+async def function_my_message_delete_all(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   query_param={"created_by_id":user['id'],"parent_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 
 
 
