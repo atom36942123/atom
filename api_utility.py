@@ -34,10 +34,11 @@ async def function_utility_read_bulk(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#create s3 url
+#create presigned url
 from fastapi import Request
-@router.get("/utility/read-bulk")
-async def function_create(request:Request,table:str,ids:str):
+from function import function_aws
+@router.get("/utility/create-presigned-url")
+async def function_create_presigned_url(request:Request,filename:str):
    #logic
    if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} where id in ({ids}) order by id desc;"
