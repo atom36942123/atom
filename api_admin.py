@@ -107,6 +107,24 @@ async def function_admin_update_cell(request:Request):
    #final
    return {"status":1,"message":output}
 
+#feed
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_object_read
+@router.get("/admin/feed")
+async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #request query param
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   #final
+   return {"status":1,"message":output}
+
 #bulk read
 from fastapi import Request
 from config import postgres_object
@@ -138,7 +156,7 @@ async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str)
    user=response["message"]
    #logic
    if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   if len(ids)>100000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
+   if len(ids)>100:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
    query=f"delete from {table} where id in ({ids});"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -178,41 +196,5 @@ async def function_admin_empty_s3_bucket(request:Request,url:str):
    response=await function_aws("empty_s3_bucket",{})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-
-
-
-
-
-
-
-
-#feed
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from function import function_prepare_where
-@router.get("/admin/feed")
-async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #request query param
-   request_query_param=dict(request.query_params)
-   #prepare where
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_prepare_where(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string=response["message"][0]
-   where_param=response["message"][1]
-   #query set
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   #query run
-   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
