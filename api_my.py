@@ -135,6 +135,12 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #payload prepare
+   payload=await request.json()
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in payload:payload.remove(item)
+   payload["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+   payload["updated_by_id"]=user["id"]
    #checks
    if table=="users":
       if payload["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
@@ -145,12 +151,6 @@ async def function_my_object_update(request:Request,table:str):
       object=output[0] if output else None
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
       if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
-   #payload prepare
-   payload=await request.json()
-   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in payload:payload.remove(item)
-   payload["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-   payload["updated_by_id"]=user["id"]
    #logic
    response=await function_object_update(postgres_object,table,[payload],function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
