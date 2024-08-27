@@ -107,51 +107,45 @@ async def function_admin_update_cell(request:Request):
    #final
    return {"status":1,"message":output}
 
-#bulk
+#bulk read
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-@router.get("/admin/bulk")
-async def function_admin_bulk(request:Request,mode:str,table:str,ids:str):
+@router.get("/admin/bulk-read")
+async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="delete" and table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   if len(ids)>100000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
-   if mode=="read":query=f"select * from {table} where id in ({ids}) order by id desc;"
-   if mode=="delete":query=f"delete from {table} where id in ({ids});"
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#aws
+#bulk delete
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/admin/bulk-delete")
+async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if len(ids)>100000:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
+   query=f"delete from {table} where id in ({ids});"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+   
+#delete 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
