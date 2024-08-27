@@ -1,15 +1,67 @@
-#prepare where
-async def function_prepare_where(where_param_raw):
+#object create
+from config import config_database_column
+import hashlib,json
+from datetime import datetime
+async def function_object_create(postgres_object,table,object_list):
+  column_to_insert_list=[*object_list[0]]
+  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=config_database_column[k][0]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+  output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":output}
+
+#object update
+from config import config_database_column
+import hashlib,json
+from datetime import datetime
+async def function_object_update(postgres_object,mode,table,object_list):
+  column_to_update_list=[*object_list[0].pop("id")]
+  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
+    query_param_list[index]["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=config_database_column[k][0]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+  output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":output}
+
+#object read
+from config import config_database_column
+import hashlib
+from datetime import datetime
+async def function_object_read(postgres_object,table,where_param_raw,order,limit,offset):
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
   key_joined=' and '.join(key_list)
   where_string=f"where {key_joined}" if key_joined else ""
-  return {"status":1,"message":[where_string,where_param]}
-
-
-
-
+  query=f"select * from {table} {where_string} order by {order} limit {limit} offset {offset};"
+  query_param=where_param
+  for k,v in query_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:query_param[k]=v.split(",") if v else None
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
 
 #database clean
 async def function_database_clean(postgres_object):
@@ -99,35 +151,6 @@ async def function_aws(mode,payload):
     output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
   return {"status":1,"message":output}
   
-#object
-from config import config_database_column
-import hashlib,json
-from datetime import datetime
-async def function_object(postgres_object,mode,table,object_list):
-  if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
-  if mode=="create":
-    column_to_insert_list=[*object_list[0]]
-    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-    query_param_list=object_list
-  if mode=="update":
-    column_to_update_list=[*object_list[0].pop("id")]
-    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-    query_param_list=object_list
-    for index,object in enumerate(query_param_list):
-      if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
-      query_param_list[index]["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-  for index,object in enumerate(query_param_list):
-    for k,v in object.items():
-      datatype=config_database_column[k][0]
-      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
-      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
-
 #database init
 from config import config_database_extension,config_database_table,config_database_column,config_database_index
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
