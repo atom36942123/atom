@@ -123,9 +123,10 @@ import csv,codecs
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
 from function import function_object_create
+from function import function_object_update
 from function import function_sanitization
 @router.post("/admin/csv-create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_admin_csv_create(request:Request,table:str,file:UploadFile):
+async def function_admin_csv_create(request:Request,mode:str,table:str,file:UploadFile):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -136,7 +137,8 @@ async def function_admin_csv_create(request:Request,table:str,file:UploadFile):
    payload_list=[]
    for row in file_csv:payload_list.append(row)
    #logic
-   response=await function_object_create(postgres_object,table,payload_list,function_sanitization)
+   if mode=="create":response=await function_object_create(postgres_object,table,payload_list,function_sanitization)
+   if mode=="update":response=await function_object_update(postgres_object,table,payload_list,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
