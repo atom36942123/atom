@@ -40,10 +40,21 @@ from function import function_aws
 @router.get("/utility/create-presigned-url")
 async def function_create_presigned_url(request:Request,filename:str):
    #logic
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_aws("create_presigned_url",{"filename":filename})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+#create email ses
+from fastapi import Request
+from function import function_aws
+@router.get("/utility/create-email-ses")
+async def function_create_email_ses(request:Request,filename:str):
+   #logic
+   response=await function_aws("create_email_ses",{"filename":filename})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
    return {"status":1,"message":output}
 
