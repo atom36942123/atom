@@ -56,6 +56,16 @@ async def function_sanitization(mode,query_param_list):
 
 
 
+#database init
+from config import config_database_extension,config_database_table,config_database_column,config_database_index
+from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
+async def function_background_update_last_active_at(postgres_object,user_id):
+  background=BackgroundTasks()
+  query="update users set last_active_at=:last_active_at where id=:id;"
+  query_param={"last_active_at":datetime.now(),"id":user_id}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
 
 
 
