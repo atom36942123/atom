@@ -56,19 +56,19 @@ async def function_admin_delete_s3_url(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
-#delete s3 url
+#empty s3 bucket
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from function import function_aws
-@router.delete("/admin/delete-s3-url")
-async def function_admin_delete_s3_url(request:Request,url:str):
+@router.delete("/admin/empty-s3-bucket")
+async def function_admin_empty_s3_bucket(request:Request,url:str):
    #auth check
    response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_aws("delete_s3_url",{"url":url})
+   response=await function_aws("empty_s3_bucket",{})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
