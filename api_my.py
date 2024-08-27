@@ -130,17 +130,17 @@ from function import function_object_update
 from function import function_sanitization
 from datetime import datetime
 @router.put("/my/object-update")
-async def function_my_object_update(request:Request,table:str,id:int):
+async def function_my_object_update(request:Request,table:str):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #checks
    if table=="users":
-      if id!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+      if payload["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
    else:
       query=f"select * from {table} where id=:id;"
-      query_param={"id":id}
+      query_param={"id":payload["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       object=output[0] if output else None
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
@@ -149,7 +149,6 @@ async def function_my_object_update(request:Request,table:str,id:int):
    payload=await request.json()
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in payload:payload.remove(item)
-   payload["id"]=id
    payload["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    payload["updated_by_id"]=user["id"]
    #logic
