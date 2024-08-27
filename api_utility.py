@@ -81,9 +81,18 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request query param
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add action count
+   response=await function_add_action_count(postgres_object,output,table,"likes")
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
-   return response
+   return {"status":1,"message":output}
