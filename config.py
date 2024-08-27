@@ -22,10 +22,6 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 from databases import Database
 postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
-#elasticsearch object
-from elasticsearch import Elasticsearch
-elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
-
 #database
 config_database_extension=["postgis"]
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
