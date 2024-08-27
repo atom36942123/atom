@@ -25,17 +25,16 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from function import function_database_init
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
    #auth check
    response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-
-   
- 
-
-   
+   #logic
+   response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":"done"}
 
