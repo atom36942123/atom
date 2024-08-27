@@ -13,9 +13,30 @@ async def function_prepare_where(where_param_raw):
 
 
 
-
-
-
+#elasticsearch
+from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
+from elasticsearch import Elasticsearch
+async def function_elasticsearch(mode,table,payload):
+  elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
+  if mode=="create":
+    id,data=payload["id"],payload["data"]
+    output=elasticsearch_object.index(index=table,id=id,document=data)
+  if mode=="read":
+    id=payload["id"]
+    response=elasticsearch_object.get(index=table,id=id)
+  if mode=="update":
+    id,data=payload["id"],payload["data"]
+    response=elasticsearch_object.update(index=table,id=id,doc=request_body)
+  if mode=="delete":
+    id=payload["id"]
+    response=elasticsearch_object.delete(index=table,id=id)
+  if mode=="refresh_table":
+    response=elasticsearch_object.indices.refresh(index=table)
+  if mode=="search":
+    key,value,limit=payload["key"],payload["value"],payload["limit"]
+    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:value}},"size":limit})
+  return {"status":1,"message":output}
+  
 #mongo
 from config import config_mongo_server
 import motor.motor_asyncio
