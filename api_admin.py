@@ -80,8 +80,8 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    for row in file_csv:object_list.append(row)
    await file.close()
    #logic
-   if mode=="create"response=await function_object_create(postgres_object,table,object_list)
-   if mode=="update"response=await function_object_update(postgres_object,table,object_list)
+   if mode=="create":response=await function_object_create(postgres_object,table,object_list)
+   if mode=="update":response=await function_object_update(postgres_object,table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
