@@ -21,13 +21,19 @@ async def function_utility_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#read bulk
+#bulk read
 from fastapi import Request
 from config import postgres_object
-@router.get("/utility/read-bulk")
-async def function_utility_read_bulk(request:Request,table:str,ids:str):
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/utility/bulk-read")
+async def function_utility_bulk_read(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #logic
-   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if table not in ["users","post","atom"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
