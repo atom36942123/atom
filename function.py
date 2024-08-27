@@ -14,20 +14,12 @@ from datetime import datetime
 async def function_object_update(postgres_object,table,payload_list,function_sanitization):
   column_to_update_list=[*payload_list[0]].remove("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  
-  query_param=payload|{"updated_at":datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),"updated_by_id":user_id}|{"id":id,"created_by_id":user_id}
-  response=await function_sanitization("create",[query_param])
+  query_param=payload_list
+  response=await function_sanitization("create",query_param)
   if response["status"]==0:return response
-  query_param=response["message"][0]
-  output=await postgres_object.fetch_all(query=query,values=query_param)
+  query_param=response["message"]
+  output=await postgres_object.execute_many(query=query,values=query_param)
   return {"status":1,"message":output}
-
-#csv
-import csv,codecs
-async def function_csv(postgres_object,mode,table,file,function_sanitization):
-  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  query_param_list=file_row_list
-  return {"status":1,"message":"done"}
 
 #update last active at
 from fastapi import BackgroundTasks
