@@ -46,11 +46,11 @@ async def function_create_presigned_url(request:Request,filename:str):
    #final
    return {"status":1,"message":output}
 
-#create email ses
+#send email ses
 from fastapi import Request
 from function import function_aws
-@router.get("/utility/create-email-ses")
-async def function_create_email_ses(request:Request,filename:str):
+@router.post("/utility/send-email-ses")
+async def function_send_email_ses(request:Request):
    #logic
    response=await function_aws("create_email_ses",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
