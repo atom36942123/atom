@@ -89,18 +89,22 @@ async def function_aws(mode,payload):
   return {"status":1,"message":output}
   
 #object
+from config import config_database_column
 import hashlib,json
 from datetime import datetime
-from config import config_database_column
 async def function_object(postgres_object,mode,table,object_list):
   if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
   if mode=="create":
     column_to_insert_list=[*object_list[0]]
     query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+    query_param_list=object_list
   if mode=="update":
     column_to_update_list=[*object_list[0].pop("id")]
     query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  query_param_list=object_list
+    query_param_list=object_list
+    for index,object in enumerate(query_param_list):
+      if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
+      query_param_list[index]["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       datatype=config_database_column[k][0]
