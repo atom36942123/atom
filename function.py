@@ -11,7 +11,8 @@ async def function_prepare_where(where_param_raw):
 
 
 
-
+#mongo
+from elasticsearch import Elasticsearch
 
 async def function_mongo(mode,payload):
 
