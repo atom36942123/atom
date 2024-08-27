@@ -11,7 +11,8 @@ async def function_object_create(postgres_object,table,payload_list,function_san
 
 #object update
 async def function_object_update(postgres_object,table,payload_list,function_sanitization):
-  column_to_update_list=[*payload_list[0]].remove("id")
+  column_to_update_list=[*payload_list[0]]
+  column_to_update_list.remove("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
   query_param_list=payload_list
   response=await function_sanitization("create",query_param_list)
