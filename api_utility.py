@@ -49,9 +49,8 @@ async def function_create_presigned_url(request:Request,filename:str):
    #logic
    response=await function_aws("create_presigned_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
+   return response
 
 #send email ses
 from fastapi import Request
