@@ -103,19 +103,12 @@ async def function_admin_update_cell(request:Request):
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #request body
-   request_body=await request.json()
-   table=request_body["table"]
-   id=request_body["id"]
-   column=request_body["column"]
-   value=request_body["value"]
-   #function sanitization
-   response=await function_sanitization("update",[{column:value}])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   value=response["message"][0][column]
    #logic
+   request_body=await request.json()
+   table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
+   
    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
