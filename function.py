@@ -11,7 +11,18 @@ async def function_prepare_where(where_param_raw):
 
 
 
-
+#database clean
+async def function_database_clean(postgres_object):
+  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+    query=f"delete from {table} where created_by_id not in (select id from users);"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  for table in ["likes","bookmark","report","block","rating","comment","message"]:
+    for parent_table in ["users","post","comment"]:
+      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
 
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
