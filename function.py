@@ -21,6 +21,45 @@ async def function_object_update(postgres_object,table,payload_list,function_san
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
+#prepare where
+async def function_prepare_where(where_param_raw):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  return {"status":1,"message":[where_string,where_param]}
+
+#sanitization
+import hashlib,json
+from datetime import datetime
+from config import config_database_column
+async def function_sanitization(mode,query_param_list):
+  if mode not in ["create","read","update","delete"]:return {"status":0,"message":"wrong mode"}
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=config_database_column[k][0]
+      if mode in ["create","read","update","delete"]:
+        if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if mode in ["create","read","update"]:
+        if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+        if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+        if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+        if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+      if mode in ["create","update"]:
+        if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+  return {"status":1,"message":query_param_list}
+
+
+
+
+
+
+
+
+
+
+
 #update last active at
 from fastapi import BackgroundTasks
 from datetime import datetime
@@ -80,35 +119,6 @@ def function_read_redis_key(func,namespace:str="",*,request:Request=None,respons
   param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
   param=":".join(param)
   return param
-
-#prepare where
-async def function_prepare_where(where_param_raw):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  return {"status":1,"message":[where_string,where_param]}
-
-#sanitization
-import hashlib,json
-from datetime import datetime
-from config import config_database_column
-async def function_sanitization(mode,query_param_list):
-  if mode not in ["create","read","update","delete"]:return {"status":0,"message":"wrong mode"}
-  for index,object in enumerate(query_param_list):
-    for k,v in object.items():
-      datatype=config_database_column[k][0]
-      if mode in ["create","read","update","delete"]:
-        if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
-      if mode in ["create","read","update"]:
-        if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-        if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-        if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-        if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-      if mode in ["create","update"]:
-        if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-  return {"status":1,"message":query_param_list}
 
 #creator key
 async def function_add_creator_key(postgres_object,object_list):
