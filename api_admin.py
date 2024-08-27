@@ -101,16 +101,9 @@ async def function_admin_update_cell(request:Request):
    #logic
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
-   datatype=config_database_column[column][0]
-   if column in ["password","google_id"]:value=hashlib.sha256(value.encode()).hexdigest()
-   if datatype in ["bigint","int"]:value=int(value)
-   if datatype in ["numeric"]:value=round(float(value),3)
-   if datatype in ["timestamptz","date"]:datetime.strptime(value,'%Y-%m-%dT%H:%M:%S')
-   if datatype in ["jsonb"]:value=json.dumps(value) if v else None
-   if "[]" in datatype:value=value.split(",")
-   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   object_list=[{column:value,"updated_by_id":user["id"]}]
+   response=await function_object(postgres_object,"update",table,object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
@@ -119,7 +112,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-@router.delete("/admin/bulk")
+@router.get("/admin/bulk")
 async def function_admin_bulk(request:Request,mode:str,table:str,ids:str):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
@@ -158,7 +151,7 @@ async def function_admin_bulk(request:Request,mode:str,table:str,ids:str):
 
 
 
-#delete s3 url
+#aws
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
