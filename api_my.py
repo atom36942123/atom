@@ -133,8 +133,14 @@ async def function_my_object_update(request:Request,table:str,id:int):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
+   #param prepare
    payload=await request.json()
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in payload:payload.remove(item)
+    
+
+   
+   #logic
    response=await function_object_update(postgres_object,user["id"],table,id,payload,function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
