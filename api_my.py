@@ -217,3 +217,47 @@ async def function_my_bulk(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#message inbox
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/my/message-inbox")
+async def function_my_message_inbox(request:Request,is_unread:int=0,limit:int=100,page:int=1):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
+   if is_unread==1:query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#message thread
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from fastapi import BackgroundTasks
+@router.get("/my/message-thread")
+async def function_my_message_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"user_1":user["id"],"user_2":user_id}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #mark message status read
+   query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   query_param={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
+   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   #final
+   return {"status":1,"message":output}
+
+
