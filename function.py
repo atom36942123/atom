@@ -112,8 +112,8 @@ async def function_object(postgres_object,mode,table,object_list):
       if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
       if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
       if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
