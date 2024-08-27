@@ -5,8 +5,8 @@ router=APIRouter(tags=["admin"])
 #qrunner
 from fastapi import Request
 from config import postgres_object
-from function import function_auth_check
 from fastapi.responses import JSONResponse
+from function import function_auth_check
 @router.get("/admin/qrunner")
 async def function_admin_qrunner(request:Request,query:str):
    #auth check
@@ -23,9 +23,8 @@ async def function_admin_qrunner(request:Request,query:str):
 #database init
 from fastapi import Request
 from config import postgres_object
-from function import function_auth_check
-from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
 from fastapi.responses import JSONResponse
+from function import function_auth_check
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
    #auth check
