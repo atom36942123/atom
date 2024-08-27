@@ -126,9 +126,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_object_update
-from function import function_sanitization
-from datetime import datetime
+from function import function_object
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
    #auth check
@@ -139,7 +137,6 @@ async def function_my_object_update(request:Request,table:str):
    payload=await request.json()
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in payload:payload.remove(item)
-   payload["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
    payload["updated_by_id"]=user["id"]
    #checks
    if table=="users":
