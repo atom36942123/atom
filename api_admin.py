@@ -130,7 +130,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-@router.get("/admin/bulk-delete")
+@router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
@@ -145,7 +145,7 @@ async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str)
    #final
    return {"status":1,"message":output}
    
-#delete 
+#delete s3 url
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
@@ -192,10 +192,9 @@ async def function_admin_empty_s3_bucket(request:Request,url:str):
 #feed
 from fastapi import Request
 from config import postgres_object
+from fastapi.responses import JSONResponse
 from function import function_auth_check
 from function import function_prepare_where
-from function import function_sanitization
-from fastapi.responses import JSONResponse
 @router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
@@ -213,10 +212,6 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
    #query set
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
-   #sanitization query_param
-   response=await function_sanitization("read",[query_param])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   query_param=response["message"][0]
    #query run
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
