@@ -107,8 +107,9 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #param prepare
+   #checks
    if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #payload prepare
    payload=await request.json()
    payload["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
@@ -133,15 +134,25 @@ async def function_my_object_update(request:Request,table:str,id:int):
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #param prepare
+   #checks
+   if table=="users":
+      if id!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+   else:
+      query=f"select * from {table} where id=:id;"
+      query_param={"id":id}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      object=output[0] if output else None
+      if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
+      if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+   #payload prepare
    payload=await request.json()
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in payload:payload.remove(item)
-    
-
-   
+   payload["id"]=id
+   payload["updated_at"]=datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+   payload["updated_by_id"]=user["id"]
    #logic
-   response=await function_object_update(postgres_object,user["id"],table,id,payload,function_sanitization)
+   response=await function_object_update(postgres_object,table,[payload],function_sanitization)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
