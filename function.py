@@ -10,7 +10,6 @@ async def function_object_create(postgres_object,table,payload_list,function_san
   return {"status":1,"message":output}
 
 #object update
-from datetime import datetime
 async def function_object_update(postgres_object,table,payload_list,function_sanitization):
   column_to_update_list=[*payload_list[0]].remove("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
