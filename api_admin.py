@@ -40,11 +40,35 @@ async def function_admin_database_init(request:Request):
 
 #delete s3 url
 from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
 from function import function_aws
-@router.get("/utility/create-presigned-url")
-async def function_create_presigned_url(request:Request,filename:str):
+@router.delete("/admin/delete-s3-url")
+async def function_admin_delete_s3_url(request:Request,url:str):
+   #auth check
+   response=await function_auth_check(request,"root",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #logic
-   response=await function_aws("create_presigned_url",{"filename":filename})
+   response=await function_aws("delete_s3_url",{"url":url})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+#delete s3 url
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from function import function_aws
+@router.delete("/admin/delete-s3-url")
+async def function_admin_delete_s3_url(request:Request,url:str):
+   #auth check
+   response=await function_auth_check(request,"root",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_aws("delete_s3_url",{"url":url})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
