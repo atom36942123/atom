@@ -38,6 +38,112 @@ async def function_admin_database_init(request:Request):
    #final
    return {"status":1,"message":"done"}
 
+#database clean
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/admin/database-clean")
+async def function_admin_database_clean(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #creator null
+   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+      query=f"delete from {table} where created_by_id not in (select id from users);"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+   #parent null
+   for table in ["likes","bookmark","report","block","rating","comment","message"]:
+      for parent_table in ["users","post","comment"]:
+         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+         query_param={}
+         output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"done"}
+
+#csv
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from fastapi import UploadFile
+import csv,codecs
+from function import function_object_create
+from fastapi_limiter.depends import RateLimiter
+from fastapi import Depends
+@router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #file
+   if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+   object_list=[]
+   for row in file_csv:object_list.append(row)
+   await file.close()
+   #logic
+   response=await function_object(postgres_object,mode,table,object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#update cell
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from datetime import datetime
+@router.put("/admin/update-cell")
+async def function_admin_update_cell(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #request body
+   request_body=await request.json()
+   table=request_body["table"]
+   id=request_body["id"]
+   column=request_body["column"]
+   value=request_body["value"]
+   #function sanitization
+   response=await function_sanitization("update",[{column:value}])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   value=response["message"][0][column]
+   #logic
+   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
+   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #delete s3 url
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -74,67 +180,9 @@ async def function_admin_empty_s3_bucket(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
-#csv
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from fastapi import UploadFile
-import csv,codecs
-from fastapi_limiter.depends import RateLimiter
-from fastapi import Depends
-from function import function_object_create
-from function import function_object_update
-from function import function_sanitization
-@router.post("/admin/csv-create",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_admin_csv_create(request:Request,mode:str,table:str,file:UploadFile):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #file
-   if file.content_type!="text/csv":return {"status":0,"message":"file must be csv"}
-   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-   payload_list=[]
-   for row in file_csv:payload_list.append(row)
-   #logic
-   if mode=="create":response=await function_object_create(postgres_object,table,payload_list,function_sanitization)
-   if mode=="update":response=await function_object_update(postgres_object,table,payload_list,function_sanitization)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   await file.close()
-   return response
 
-#update cell
-from fastapi import Request
-from config import postgres_object
-from function import function_auth_check
-from datetime import datetime
-from function import function_sanitization
-from fastapi.responses import JSONResponse
-@router.put("/admin/update-cell")
-async def function_admin_update_cell(request:Request):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #request body
-   request_body=await request.json()
-   table=request_body["table"]
-   id=request_body["id"]
-   column=request_body["column"]
-   value=request_body["value"]
-   #function sanitization
-   response=await function_sanitization("update",[{column:value}])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   value=response["message"][0][column]
-   #logic
-   query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id=:id returning *;"
-   query_param={"value":value,"id":id,"updated_at":datetime.now(),"updated_by_id":user['id']}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+
+
 
 #delete bulk
 from fastapi import Request
@@ -158,30 +206,7 @@ async def function_admin_delete_bulk(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#database clean
-from fastapi import Request
-from config import postgres_object
-from function import function_auth_check
-from fastapi.responses import JSONResponse
-@router.delete("/admin/database-clean")
-async def function_admin_database_clean(request:Request):
-   #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #delete object having creator null
-   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-      query=f"delete from {table} where created_by_id not in (select id from users);"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   #delete object having  parent null
-   for table in ["likes","bookmark","report","block","rating","comment","message"]:
-      for parent_table in ["users","post","comment"]:
-         query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"done"}
+
 
 #feed
 from fastapi import Request
