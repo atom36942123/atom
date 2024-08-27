@@ -1,26 +1,3 @@
-#object create
-async def function_object_create(postgres_object,table,payload_list,function_sanitization):
-  column_to_insert_list=[*payload_list[0]]
-  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-  query_param_list=payload_list
-  response=await function_sanitization("create",query_param_list)
-  if response["status"]==0:return response
-  query_param_list=response["message"]
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
-
-#object update
-async def function_object_update(postgres_object,table,payload_list,function_sanitization):
-  column_to_update_list=[*payload_list[0]]
-  column_to_update_list.remove("id")
-  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  query_param_list=payload_list
-  response=await function_sanitization("create",query_param_list)
-  if response["status"]==0:return response
-  query_param_list=response["message"]
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
-
 #prepare where
 async def function_prepare_where(where_param_raw):
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
@@ -30,35 +7,51 @@ async def function_prepare_where(where_param_raw):
   where_string=f"where {key_joined}" if key_joined else ""
   return {"status":1,"message":[where_string,where_param]}
 
-#sanitization
+  
+    
+      
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#object
 import hashlib,json
 from datetime import datetime
 from config import config_database_column
-async def function_sanitization(mode,query_param_list):
-  if mode not in ["create","read","update","delete"]:return {"status":0,"message":"wrong mode"}
+async def function_object(postgres_object,mode,table,object_list):
+  if mode not in ["create","update"]:return {"status":0,"message":"wrong mode"}
+  if mode=="create":
+    column_to_insert_list=[*object_list[0]]
+    query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+  if mode=="update":
+    column_to_update_list=[*object_list[0].pop("id")]
+    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  query_param_list=object_list
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       datatype=config_database_column[k][0]
-      if mode in ["create","read","update","delete"]:
-        if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
-      if mode in ["create","read","update"]:
-        if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-        if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-        if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-        if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-      if mode in ["create","update"]:
-        if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-  return {"status":1,"message":query_param_list}
-
-
-
-
-
-
-
-
-
-
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+  output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":output}
 
 #database init
 from config import config_database_extension,config_database_table,config_database_column,config_database_index
