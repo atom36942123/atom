@@ -36,6 +36,7 @@ async def function_utility_read_bulk(request:Request,table:str,ids:str):
 
 #create presigned url
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from function import function_aws
 @router.get("/utility/create-presigned-url")
 async def function_create_presigned_url(request:Request,filename:str):
@@ -48,6 +49,7 @@ async def function_create_presigned_url(request:Request,filename:str):
 
 #send email ses
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from function import function_aws
 @router.post("/utility/send-email-ses")
 async def function_send_email_ses(request:Request):
