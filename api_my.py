@@ -100,58 +100,88 @@ from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from function import function_object_create
-from function import function_sanitization
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #checks
-   if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #payload prepare
-   payload=await request.json()
-   payload["created_by_id"]=user["id"]
-   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in payload:payload.remove(item)
    #logic
-   response=await function_object_create(postgres_object,table,[payload],function_sanitization)
+   if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   [object.remove(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
+   response=await function_object_create(postgres_object,table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
+   return response
 
 #object update
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from function import function_object
+from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
    #auth check
    response=await function_auth_check(request,"jwt",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #payload prepare
-   payload=await request.json()
-   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in payload:payload.remove(item)
-   payload["updated_by_id"]=user["id"]
-   #checks
-   if table=="users":
-      if payload["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+   #check
+   body=await request.json()
+   if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
    else:
       query=f"select * from {table} where id=:id;"
-      query_param={"id":payload["id"]}
+      query_param={"id":body["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       object=output[0] if output else None
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
       if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
    #logic
-   response=await function_object_update(postgres_object,table,[payload],function_sanitization)
+   object=body
+   object["updated_by_id"]=user["id"]
+   [object.remove(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
+   response=await function_object_update(postgres_object,table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
+   #final
+   return response
+
+#bulk read
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.get("/my/bulk-read")
+async def function_my_bulk_read(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"select * from {table} where created_by_id=:created_by_id and id in ({ids}) order by id desc;"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#bulk delete
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/my/bulk-delete")
+async def function_my_bulk_delete(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if len(ids)>100:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
+   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
@@ -197,24 +227,6 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
    #final
    return {"status":1,"message":parent_ids_filtered}
 
-#bulk
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-@router.get("/my/bulk")
-async def function_my_bulk(request:Request,table:str,ids:str):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select * from {table} where created_by_id=:created_by_id and id in ({ids}) order by id desc;"
-   query_param={"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
 #message received
 from fastapi import Request
 from config import postgres_object
@@ -232,6 +244,32 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#message delete
+from fastapi import Request
+from config import postgres_object
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+@router.delete("/my/message-delete")
+async def function_my_message_delete(request:Request):
+   #auth check
+   response=await function_auth_check(request,"jwt",[])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   query_param={"created_by_id":user['id'],"parent_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+
+
+
+
+
+
+
 
 #message inbox
 from fastapi import Request
@@ -275,23 +313,7 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
    #final
    return {"status":1,"message":output}
 
-#delete message all
-from fastapi import Request
-from config import postgres_object
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-@router.delete("/my/message-delete-all")
-async def function_my_message_delete_all(request:Request):
-   #auth check
-   response=await function_auth_check(request,"jwt",[])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-   query_param={"created_by_id":user['id'],"parent_id":user['id']}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+
 
 
 
