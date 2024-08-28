@@ -151,7 +151,7 @@ async def function_database_clean(postgres_object):
   return {"status":1,"message":output}
 
 #database init
-from config import config_database_extension,config_database_table,config_database_column,config_database_index
+from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_function
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
 async def function_database_init(postgres_object):
   #extension
@@ -177,6 +177,8 @@ async def function_database_init(postgres_object):
         query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
+  #function
+  
   #schema constraint
   query="select constraint_name from information_schema.constraint_column_usage;"
   query_param={}
