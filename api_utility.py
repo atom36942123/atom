@@ -60,6 +60,7 @@ from function import function_add_action_count
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 @router.get("/utility/feed")
+@cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #request query param
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
