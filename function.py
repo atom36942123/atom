@@ -151,8 +151,9 @@ async def function_database_clean(postgres_object):
   return {"status":1,"message":output}
 
 #database init
-from config import config_database_extension,config_database_table,config_database_column,config_database_index,config_database_function
+from config import config_database_extension,config_database_table,config_database_column,config_database_index
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
+from congig import config_database_function
 async def function_database_init(postgres_object):
   #extension
   for item in config_database_extension:
@@ -177,8 +178,6 @@ async def function_database_init(postgres_object):
         query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
-  #function
-  
   #schema constraint
   query="select constraint_name from information_schema.constraint_column_usage;"
   query_param={}
@@ -189,9 +188,19 @@ async def function_database_init(postgres_object):
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   schema_column=output
+  #schema function
+  query="select proname from pg_proc;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_function_name_list=[item["proname"] for item in output]
   #protected
   for item in config_database_column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #function
+  for item in config_database_function:
+    query=item
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #not null
