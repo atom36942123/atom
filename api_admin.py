@@ -95,7 +95,7 @@ async def function_admin_update_cell(request:Request):
    #final
    return response
 
-#object-read
+#object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
