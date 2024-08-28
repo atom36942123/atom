@@ -319,7 +319,7 @@ def function_read_redis_key(func,namespace:str="",*,request:Request=None,respons
 #creator key
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
-  object_list=[item|{"created_by_username":None} for item in object_list]
+  object_list=[item|{"created_by_username":None} for dict(item) in object_list]
   user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
   if user_ids:
     query=f"select * from users where id in ({user_ids});"
@@ -336,7 +336,7 @@ async def function_add_creator_key(postgres_object,object_list):
 async def function_add_action_count(postgres_object,object_list,object_table,action_table):
   if not object_list:return {"status":1,"message":object_list}
   key_name=f"{action_table}_count"
-  object_list=[item|{key_name:0} for item in object_list]
+  object_list=[item|{key_name:0} for dict(item) in object_list]
   parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
   if parent_ids:
     query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
