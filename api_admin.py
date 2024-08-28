@@ -157,7 +157,7 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import postgres_object
 @router.delete("/admin/bulk-delete")
-async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str):
+async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
