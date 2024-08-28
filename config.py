@@ -59,8 +59,8 @@ config_database_column={
 "tag_array":["text[]",["atom"]],
 "location":["geography(POINT)",["users","post","box","atom"]],
 "request_path":["text",["log"]],
-"request_query_param":["text",["log"]],
-"request_body":["text",["log"]],
+"request_query_param":["jsonb",["log"]],
+"request_body":["jsonb",["log"]],
 }
 config_database_index={
 "id":"btree",
