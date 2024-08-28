@@ -2,13 +2,13 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
-#qrunner
+#query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import postgres_object
-@router.get("/admin/qrunner")
-async def function_admin_qrunner(request:Request,query:str):
+@router.get("/admin/query-runner")
+async def function_admin_query_runner(request:Request,query:str):
    #auth check
    response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
