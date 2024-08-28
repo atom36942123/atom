@@ -170,7 +170,7 @@ async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #log
-   response=await function_background_log(postgres_object,user["id"],request.url.path)
+   response=await function_background_log(postgres_object,user["id"],request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
