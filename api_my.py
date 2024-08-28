@@ -4,8 +4,8 @@ router=APIRouter(tags=["my"])
 
 #delete account
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_token_check
 @router.delete("/my/delete-account")
 async def function_my_delete_account(request:Request):
@@ -22,8 +22,8 @@ async def function_my_delete_account(request:Request):
 
 #profile
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_token_check
 from function import function_background_update_last_active_at
 @router.get("/my/profile")
@@ -46,8 +46,8 @@ async def function_my_profile(request:Request):
 
 #token refresh
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_token_check
 from function import function_token_create
 @router.get("/my/token-refresh")
