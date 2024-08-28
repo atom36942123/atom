@@ -138,7 +138,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
-from function import function_background_request_log
+from function import function_background_log
 @router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #auth check
