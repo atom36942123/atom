@@ -43,12 +43,10 @@ from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
-    #api response
     response=await api_function(request)
   except Exception as e:
     print(traceback.format_exc())
     return JSONResponse(status_code=400,content={"status":0,"message":e.args})
-  #final
   return response
 
 #root api
