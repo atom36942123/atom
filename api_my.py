@@ -130,8 +130,9 @@ async def function_my_object_update(request:Request,table:str):
    user=response["message"]
    #ownership check
    body=await request.json()
-   if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the user"})
-   else:
+   if table=="users":
+      if body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the object"})
+   if table!="users":
       query=f"select * from {table} where id=:id;"
       query_param={"id":body["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
