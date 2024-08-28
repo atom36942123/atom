@@ -154,15 +154,16 @@ from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
 from function import function_object_read
-@router.get("/admin/object-read")
-async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/my/object-read")
+async def function_my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
-   response=await function_token_check(postgres_object,request,["admin"])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #request query param
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}|{"created_by_id":f"=,{user['id']}"}
    response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
