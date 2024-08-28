@@ -107,7 +107,7 @@ async def function_my_object_create(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if table in ["users","otp","log","atom","spatial_ref_sys"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if table in ["users","otp","log","atom","box","spatial_ref_sys"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
    object["created_by_id"]=user["id"]
    [object.pop(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
@@ -128,7 +128,7 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #check
+   #owner check
    body=await request.json()
    if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
    else:
@@ -141,7 +141,7 @@ async def function_my_object_update(request:Request,table:str):
    #logic
    object=body
    object["updated_by_id"]=user["id"]
-   [object.remove(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
+   [object.pop(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
    response=await function_object_update(postgres_object,table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
