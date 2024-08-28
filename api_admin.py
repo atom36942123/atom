@@ -3,9 +3,10 @@ from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
 #qrunner
-from fastapi import Request,responses.JSONResponse
-from config import postgres_object
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 @router.get("/admin/qrunner")
 async def function_admin_qrunner(request:Request,query:str):
    #auth check
@@ -21,9 +22,9 @@ async def function_admin_qrunner(request:Request,query:str):
 
 #database init
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_database_init
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
@@ -39,9 +40,9 @@ async def function_admin_database_init(request:Request):
 
 #database clean
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
@@ -57,9 +58,9 @@ async def function_admin_database_clean(request:Request):
 
 #csv
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
 from function import function_object_create
@@ -87,9 +88,9 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
 
 #update cell
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_object_update
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
@@ -108,9 +109,9 @@ async def function_admin_update_cell(request:Request):
 
 #feed
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_object_read
 @router.get("/admin/feed")
 async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -128,9 +129,9 @@ async def function_admin_feed(request:Request,table:str,order:str="id desc",limi
 
 #bulk read
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 @router.get("/admin/bulk-read")
 async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
@@ -146,9 +147,9 @@ async def function_admin_bulk_read(request:Request,table:str,ids:str):
 
 #bulk delete
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 @router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str):
    #auth check
@@ -168,6 +169,7 @@ async def function_admin_bulk_delete(request:Request,mode:str,table:str,ids:str)
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_aws
 @router.delete("/admin/delete-s3-url")
 async def function_admin_delete_s3_url(request:Request,url:str):
@@ -186,6 +188,7 @@ async def function_admin_delete_s3_url(request:Request,url:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
+from config import postgres_object
 from function import function_aws
 @router.delete("/admin/empty-s3-bucket")
 async def function_admin_empty_s3_bucket(request:Request):
