@@ -100,6 +100,7 @@ from datetime import datetime
 async def function_object_update(postgres_object,table,object_list):
   column_to_update_list=[*object_list[0]]
   column_to_update_list.pop("id")
+  print(column_to_update_list)
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
   print(query)
   query_param_list=object_list
