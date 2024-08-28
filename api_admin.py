@@ -102,7 +102,7 @@ async def function_admin_update_cell(request:Request):
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
    object={"id":id,column:value,"updated_by_id":user["id"]}
-   response=await function_object_create(postgres_object,table,[object])
+   response=await function_object_update(postgres_object,table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
