@@ -39,7 +39,7 @@ config_database_column={
 "type":["text",["users","post","box","atom","helpdesk"]],
 "status":["text",["report","helpdesk","message"]],
 "remark":["text",["report","helpdesk"]],
-"rating":["numeric",["rating","atom"]],
+"rating":["numeric",["rating","atom","post"]],
 "metadata":["jsonb",["users","post","box","atom"]],
 "username":["text",["users"]],
 "password":["text",["users"]],
