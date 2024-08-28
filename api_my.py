@@ -128,7 +128,7 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #owner check
+   #ownership check
    body=await request.json()
    if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
    else:
