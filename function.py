@@ -236,7 +236,7 @@ async def function_database_init(postgres_object):
       else:output=await postgres_object.fetch_all(query=item,values={})
   #trigger set updated_at
   for item in config_database_column["updated_at"][1]:
-    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
