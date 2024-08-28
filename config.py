@@ -24,7 +24,7 @@ postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
 #database
 config_database_extension=["postgis"]
-config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp"]
+config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 config_database_column={
 "id":["bigint",config_database_table],
 "created_at":["timestamptz",config_database_table],
@@ -50,7 +50,7 @@ config_database_column={
 "email":["text",["users","post","box","atom","otp","helpdesk"]],
 "mobile":["text",["users","post","box","atom","otp","helpdesk"]],
 "date_of_birth":["date",["users"]],
-"title":["text",["users","post","box","atom"]],
+"title":["text",["users","post","box","atom","log"]],
 "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
 "file_url":["text",["post","box","atom","comment","message"]],
 "link_url":["text",["post","box","atom"]],
