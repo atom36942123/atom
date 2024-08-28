@@ -138,6 +138,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
+from function import function_background_log
 @router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #auth check
@@ -150,6 +151,9 @@ async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    query=f"delete from {table} where id in ({ids});"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
+   #log
+   response=await function_background_log(postgres_object,request,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
