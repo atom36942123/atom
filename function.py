@@ -262,7 +262,7 @@ async def function_background_log(postgres_object,created_by_id,request):
   path=request.url.path
   param=json.dumps(dict(request.query_params))
   body=await request.json()
-  body=json.dumps(body)
+  body=json.dumps(dict(body))
   print(path)
   print(param)
   print(body)
