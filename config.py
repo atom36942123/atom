@@ -94,13 +94,5 @@ config_database_unique={
 config_database_query=[
 "insert into users (username,password,type,is_protected) values ('root','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;",
 "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
-]
-config_database_function=[
-'''CREATE OR REPLACE FUNCTION function_set_updated_at_now()
-RETURNS TRIGGER AS $$
-BEGIN
-NEW.updated_at = now();
-RETURN NEW;
-END;
-$$ language 'plpgsql';''',
+"CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
 ]
