@@ -74,8 +74,8 @@ from function import function_object_read
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 from function import function_add_creator_key,function_add_action_count
-@router.get("/admin/feed")
-async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/utility/feed")
+async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
