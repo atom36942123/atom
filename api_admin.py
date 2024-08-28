@@ -3,9 +3,8 @@ from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
 #qrunner
-from fastapi import Request
+from fastapi import Request,responses.JSONResponse
 from config import postgres_object
-from fastapi.responses import JSONResponse
 from function import function_auth_check
 @router.get("/admin/qrunner")
 async def function_admin_qrunner(request:Request,query:str):
