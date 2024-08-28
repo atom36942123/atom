@@ -101,6 +101,7 @@ async def function_object_update(postgres_object,table,object_list):
   column_to_update_list=[*object_list[0]]
   column_to_update_list.pop("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  print(query)
   query_param_list=object_list
   for index,object in enumerate(query_param_list):
     if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
@@ -114,9 +115,7 @@ async def function_object_update(postgres_object,table,object_list):
       if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  print(query)
-  print(query_param_list)
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
+    output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
 #object read
