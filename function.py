@@ -262,10 +262,6 @@ async def function_background_log(postgres_object,created_by_id,request):
   path=request.url.path
   param=json.dumps(dict(request.query_params))
   body=json.dumps(dict(await request.body()))
- 
-  
-  
- 
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":path,"request_query_param":param,"request_body":body}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
