@@ -130,14 +130,14 @@ async def function_my_object_update(request:Request,table:str):
    user=response["message"]
    #ownership check
    body=await request.json()
-   if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+   if table=="users" and body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the user"})
    else:
       query=f"select * from {table} where id=:id;"
       query_param={"id":body["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       object=output[0] if output else None
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
-      if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the id"})
+      if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the object"})
    #logic
    object=body
    object["updated_by_id"]=user["id"]
