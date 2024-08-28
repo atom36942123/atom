@@ -153,7 +153,7 @@ async def function_database_clean(postgres_object):
 #database init
 from config import config_database_extension,config_database_table,config_database_column,config_database_index
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
-from congig import config_database_function
+from config import config_database_function
 async def function_database_init(postgres_object):
   #extension
   for item in config_database_extension:
