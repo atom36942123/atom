@@ -180,7 +180,7 @@ from function import function_aws
 @router.delete("/admin/delete-s3-url")
 async def function_admin_delete_s3_url(request:Request,url:str):
    #auth check
-   response=await function_auth_check(request,"root",[])
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -199,7 +199,7 @@ from function import function_aws
 @router.delete("/admin/empty-s3-bucket")
 async def function_admin_empty_s3_bucket(request:Request):
    #auth check
-   response=await function_auth_check(request,"root",[])
+   response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
