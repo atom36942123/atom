@@ -112,6 +112,7 @@ async def function_object_update(postgres_object,table,object_list):
       if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+    print(query_param_list)
     output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
