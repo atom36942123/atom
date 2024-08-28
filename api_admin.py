@@ -18,6 +18,11 @@ async def function_admin_query_runner(request:Request,query:str,mode:str=None):
       query=query
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="list":
+      for item in query.split("---"):
+         query=item
+         query_param={}
+         output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
