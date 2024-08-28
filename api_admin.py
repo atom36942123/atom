@@ -5,12 +5,12 @@ router=APIRouter(tags=["admin"])
 #query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,query:str,mode:str=None):
    #auth check
-   response=await function_auth_check(request,"root",[])
+   response=await function_token_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -29,13 +29,13 @@ async def function_admin_query_runner(request:Request,query:str,mode:str=None):
 #database clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -47,7 +47,7 @@ async def function_admin_database_clean(request:Request):
 #csv
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from fastapi import UploadFile
 import csv,codecs
@@ -58,7 +58,7 @@ from fastapi import Depends
 @router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
@@ -77,13 +77,13 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
 #update cell
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_object_update
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -98,13 +98,13 @@ async def function_admin_update_cell(request:Request):
 #object-read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_object_read
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #request query param
@@ -118,12 +118,12 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
 #bulk read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 @router.get("/admin/bulk-read")
 async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -136,13 +136,13 @@ async def function_admin_bulk_read(request:Request,table:str,ids:str):
 #bulk delete
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_background_log
 @router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -160,13 +160,13 @@ async def function_admin_bulk_delete(request:Request,table:str,ids:str):
 #delete s3 url
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_aws
 @router.delete("/admin/delete-s3-url")
 async def function_admin_delete_s3_url(request:Request,url:str):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -179,13 +179,13 @@ async def function_admin_delete_s3_url(request:Request,url:str):
 #empty s3 bucket
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from config import postgres_object
 from function import function_aws
 @router.delete("/admin/empty-s3-bucket")
 async def function_admin_empty_s3_bucket(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",["admin"])
+   response=await function_token_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
