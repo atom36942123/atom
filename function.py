@@ -260,7 +260,7 @@ import json
 async def function_background_log(postgres_object,created_by_id,request):
   background=BackgroundTasks()
   path=request.url.path
-  param=dict(request.query_params)
+  param=json.dumps(request.query_params)
   body=
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":path,"request_query_param":param,"request_body":body}
