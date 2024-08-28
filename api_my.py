@@ -71,8 +71,8 @@ async def function_my_token_refresh(request:Request):
 
 #metric
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_token_check
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
@@ -96,8 +96,8 @@ async def function_my_metric(request:Request):
 
 #object create
 from fastapi import Request
-from config import postgres_object
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_token_check
 from function import function_object_create
 @router.post("/my/object-create")
@@ -107,7 +107,7 @@ async def function_my_object_create(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if table in ["users","otp"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if table in ["users","otp","log","atom","spatial_ref_sys"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
    object["created_by_id"]=user["id"]
    [object.remove(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
