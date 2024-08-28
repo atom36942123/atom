@@ -38,8 +38,9 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 
 #middleware
 from fastapi import Request
-import traceback
 from fastapi.responses import JSONResponse
+import traceback
+from function import function_background_log
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
