@@ -252,7 +252,7 @@ async def function_background_update_last_active_at(postgres_object,user_id):
   query="update users set last_active_at=:last_active_at where id=:id;"
   query_param={"last_active_at":datetime.now(),"id":user_id}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return None
+  return {"status":1,"message":"done"}
 
 #log
 from fastapi import BackgroundTasks
@@ -261,7 +261,7 @@ async def function_background_log(postgres_object,created_by_id,request_url_path
   query="insert into log (created_by_id,request_url_path) values(:created_by_id,:request_url_path);"
   query_param={"created_by_id":created_by_id,"request_url_path":request_url_path}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return None
+  return {"status":1,"message":"done"}
 
 #verify otp
 async def function_otp_verify(postgres_object,mode,contact,otp):
