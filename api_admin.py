@@ -18,7 +18,7 @@ async def function_admin_query_runner(request:Request,query:str):
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return output
+   return {"status":1,"message":output}
 
 #database init
 from fastapi import Request
