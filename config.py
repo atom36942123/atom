@@ -96,7 +96,7 @@ config_database_query=[
 "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
 ]
 config_database_function=[
-'''CREATE  FUNCTION function_set_updated_at_now()
+'''CREATE OR REPLACE FUNCTION function_set_updated_at_now()
 RETURNS TRIGGER AS $$
 BEGIN
 NEW.updated_at = now();
