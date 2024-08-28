@@ -8,15 +8,16 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import postgres_object
 @router.get("/admin/query-runner")
-async def function_admin_query_runner(request:Request,query:str):
+async def function_admin_query_runner(request:Request,query:str,mode:str=None):
    #auth check
    response=await function_auth_check(request,"root",[])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=query
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   if not mode:
+      query=query
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
