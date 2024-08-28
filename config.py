@@ -58,7 +58,9 @@ config_database_column={
 "otp":["int",["otp"]],
 "tag_array":["text[]",["atom"]],
 "location":["geography(POINT)",["users","post","box","atom"]],
-"request_url_path":["text",["log"]],
+"request_path":["text",["log"]],
+"request_query_param":["text",["log"]],
+"request_body":["text",["log"]],
 }
 config_database_index={
 "id":"btree",
