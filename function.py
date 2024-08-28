@@ -189,10 +189,11 @@ async def function_database_init(postgres_object):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   schema_column=output
   #schema function
-  query="select proname from pg_proc;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_function_name_list=[item["proname"] for item in output]
+  if False:
+    query="select proname from pg_proc;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    schema_function_name_list=[item["proname"] for item in output]
   #protected
   for item in config_database_column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
@@ -200,11 +201,9 @@ async def function_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #function
   for item in config_database_function:
-    function_name=item.split()[2].replace("()","")
-    if function_name not in schema_function_name_list:
-      query=item
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
+    query=item
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
   #not null
   for k,v in config_database_not_null.items():
     for table in v:
