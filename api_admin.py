@@ -107,7 +107,7 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
    response=await function_token_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #request query param
+   #logic
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
    response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
