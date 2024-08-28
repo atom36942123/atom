@@ -199,11 +199,6 @@ async def function_database_init(postgres_object):
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
-  #function
-  for item in config_database_function:
-    query=item
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
   #not null
   for k,v in config_database_not_null.items():
     for table in v:
@@ -244,6 +239,22 @@ async def function_database_init(postgres_object):
          query=item
          query_param={}
          output=await postgres_object.fetch_all(query=query,values=query_param)
+  #function
+  for item in config_database_function:
+    query=item
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #trigger set updated_at
+  for item in config_database_column["updated_at"][1]:
+    query=f'''
+    CREATE OR REPLACE TRIGGER trigger_set_updated_at_now
+    BEFORE UPDATE
+    ON {item}
+    FOR EACH ROW
+    EXECUTE PROCEDURE function_set_updated_at_now();
+    '''
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
 #update last active at
