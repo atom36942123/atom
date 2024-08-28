@@ -200,7 +200,7 @@ async def function_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #function
   for item in config_database_function:
-    if item.split()[2] not in schema_function_name_list):
+    if item.split()[2] not in schema_function_name_list:
       query=item
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
