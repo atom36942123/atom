@@ -257,7 +257,7 @@ async def function_background_update_last_active_at(postgres_object,user_id):
 #log
 from fastapi import BackgroundTasks
 import json
-async def function_background_log(postgres_object,request,created_by_id):
+async def function_background_create_log(postgres_object,request,created_by_id):
   background=BackgroundTasks()
   path=request.url.path
   param=json.dumps(dict(request.query_params))
