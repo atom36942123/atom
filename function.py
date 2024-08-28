@@ -278,23 +278,22 @@ async def function_otp_verify(postgres_object,mode,contact,otp):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
-#auth check
+#token check
 import jwt,json
-from config import config_key_jwt,config_key_root
-async def function_auth_check(request,mode,user_type_allowed_list):
-  if mode not in ["jwt","root"]:return {"status":0,"message":"wrong mode"}
+from config import config_key_jwt
+async def function_token_check(postgres_object,request,user_type_allowed_list):
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=request.headers.get("Authorization").split(" ",1)[1]
-  user=None
-  if mode=="root":
-    if token!=config_key_root:return {"status":0,"message":"token root issue"}
-  if mode=="jwt":
-    payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-    data=payload["data"]
-    user=json.loads(data)
-    if user_type_allowed_list:
-      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+  data=payload["data"]
+  user=json.loads(data)
+  if user_type_allowed_list:
+    query="select * from users where id=:id;"
+    query_param={"id":user["id"]}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0] if output else None
+    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
 #token create
