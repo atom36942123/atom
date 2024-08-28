@@ -50,7 +50,7 @@ config_database_column={
 "email":["text",["users","post","box","atom","otp","helpdesk"]],
 "mobile":["text",["users","post","box","atom","otp","helpdesk"]],
 "date_of_birth":["date",["users"]],
-"title":["text",["users","post","box","atom","log"]],
+"title":["text",["users","post","box","atom"]],
 "description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],
 "file_url":["text",["post","box","atom","comment","message"]],
 "link_url":["text",["post","box","atom"]],
@@ -58,6 +58,7 @@ config_database_column={
 "otp":["int",["otp"]],
 "tag_array":["text[]",["atom"]],
 "location":["geography(POINT)",["users","post","box","atom"]],
+"request_url_path":["text",["log"]],
 }
 config_database_index={
 "id":"btree",
