@@ -113,14 +113,14 @@ async def function_admin_update_cell(request:Request):
    #final
    return response
 
-#feed
+#object-read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import postgres_object
 from function import function_object_read
-@router.get("/admin/feed")
-async def function_admin_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/admin/object-read")
+async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(request,"jwt",["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
