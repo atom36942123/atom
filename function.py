@@ -153,7 +153,6 @@ async def function_database_clean(postgres_object):
 #database init
 from config import config_database_extension,config_database_table,config_database_column,config_database_index
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
-from config import config_database_function
 async def function_database_init(postgres_object):
   #extension
   for item in config_database_extension:
@@ -188,12 +187,12 @@ async def function_database_init(postgres_object):
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   schema_column=output
-  #schema function
+  #schema routine
   if False:
     query="select proname from pg_proc;"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
-    schema_function_name_list=[item["proname"] for item in output]
+    schema_routine_name_list=[item["proname"] for item in output]
   #protected
   for item in config_database_column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
@@ -233,17 +232,8 @@ async def function_database_init(postgres_object):
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #query
   for item in config_database_query:
-      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):
-         continue
-      else:
-         query=item
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-  #function
-  for item in config_database_function:
-    query=item
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
+      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
+      else:output=await postgres_object.fetch_all(query=item,values={})
   #trigger set updated_at
   for item in config_database_column["updated_at"][1]:
     query=f'''
