@@ -233,7 +233,10 @@ async def function_database_init(postgres_object):
   #query
   for item in config_database_query:
       if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
-      else:output=await postgres_object.fetch_all(query=item,values={})
+      else:
+        query=item
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
   #trigger set updated_at
   for item in config_database_column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
