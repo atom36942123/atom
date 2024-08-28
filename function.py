@@ -98,9 +98,7 @@ from config import config_database_column
 import hashlib,json
 from datetime import datetime
 async def function_object_update(postgres_object,table,object_list):
-  column_to_update_list=[*object_list[0]]
-  print(column_to_update_list)
-  column_to_update_list.pop("id")
+  column_to_update_list=[*object_list[0]].remove("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
   query_param_list=object_list
   for index,object in enumerate(query_param_list):
