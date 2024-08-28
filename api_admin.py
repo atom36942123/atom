@@ -101,8 +101,8 @@ async def function_admin_update_cell(request:Request):
    #logic
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
-   object_list=[{"id":id,column:value,"updated_by_id":user["id"]}]
-   response=await function_object_create(postgres_object,table,object_list)
+   object={"id":id,column:value,"updated_by_id":user["id"]}
+   response=await function_object_create(postgres_object,table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
