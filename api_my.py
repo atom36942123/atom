@@ -6,11 +6,11 @@ router=APIRouter(tags=["my"])
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.delete("/my/delete-account")
 async def function_my_delete_account(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #delete object
@@ -24,12 +24,12 @@ async def function_my_delete_account(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from function import function_background_update_last_active_at
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -48,12 +48,12 @@ async def function_my_profile(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from function import function_token_create
 @router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -73,11 +73,11 @@ async def function_my_token_refresh(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -98,12 +98,12 @@ async def function_my_metric(request:Request):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -120,12 +120,12 @@ async def function_my_object_create(request:Request,table:str):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #check
@@ -151,11 +151,11 @@ async def function_my_object_update(request:Request,table:str):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/bulk-read")
 async def function_my_bulk_read(request:Request,table:str,ids:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -169,11 +169,11 @@ async def function_my_bulk_read(request:Request,table:str,ids:str):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.delete("/my/bulk-delete")
 async def function_my_bulk_delete(request:Request,table:str,ids:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -189,11 +189,11 @@ async def function_my_bulk_delete(request:Request,table:str,ids:str):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -211,11 +211,11 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,base_table:str,parent_table:str,parent_ids:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -231,11 +231,11 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/message-received")
 async def function_my_message_received(request:Request,limit:int=100,page:int=1):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -249,11 +249,11 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.delete("/my/message-delete")
 async def function_my_message_delete(request:Request,mode:str):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -274,11 +274,11 @@ async def function_my_message_delete(request:Request,mode:str):
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 @router.get("/my/message-inbox")
 async def function_my_message_inbox(request:Request,is_unread:int=0,limit:int=100,page:int=1):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -293,12 +293,12 @@ async def function_my_message_inbox(request:Request,is_unread:int=0,limit:int=10
 from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
-from function import function_auth_check
+from function import function_token_check
 from fastapi import BackgroundTasks
 @router.get("/my/message-thread")
 async def function_my_message_thread(request:Request,background:BackgroundTasks,user_id:int,limit:int=100,page:int=1):
    #auth check
-   response=await function_auth_check(request,"jwt",[])
+   response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
