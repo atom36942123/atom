@@ -50,36 +50,6 @@ async def function_utility_bulk_read(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#feed
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
-from function import function_object_read
-from function import function_add_creator_key
-from function import function_add_action_count
-from fastapi_cache.decorator import cache
-from function import function_read_redis_key
-@router.get("/utility/feed")
-@cache(expire=60,key_builder=function_read_redis_key)
-async def function_utility_feed(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #request query param
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(postgres_object,output,table,"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
 #create presigned url
 from fastapi import Request
 from fastapi.responses import JSONResponse
