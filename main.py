@@ -36,18 +36,20 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
-from function import function_background_create_log
-response=await function_background_create_log(postgres_object,request,user["id"])
-if response["status"]==0:return JSONResponse(status_code=400,content=response)
 
 #middleware
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
+from function import function_background_create_log
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
+    #api response
     response=await api_function(request)
+    #create log
+    response=await function_background_create_log(postgres_object,request,user["id"])
+    if response["status"]==0:return JSONResponse(status_code=400,content=response)
     print(request.method)
   except Exception as e:
     print(traceback.format_exc())
