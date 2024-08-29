@@ -169,6 +169,5 @@ async def function_admin_s3_delete(request:Request,mode:str=None,url:str=None):
    if not mode:response=await function_aws("s3_delete_url",{"url":url})
    if mode=="all":response=await function_aws("s3_delete_all",{})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
+   return response
