@@ -266,7 +266,7 @@ async def function_my_parent_delete(request:Request,base_table:str,parent_table:
    query_param={"created_by_id":user["id"],"parent_table":parent_table}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":parent_ids_filtered}
+   return {"status":1,"message":output}
 
 #message received
 from fastapi import Request
