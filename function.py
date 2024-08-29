@@ -23,7 +23,7 @@ async def function_elasticsearch(mode,table,payload):
   return {"status":1,"message":output}
   
 #mongo
-from config import config_mongo_server
+from config import config_mongo_server_url
 import motor.motor_asyncio
 from bson import ObjectId
 async def function_mongo(mode,database,table,payload):
