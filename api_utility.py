@@ -44,7 +44,7 @@ from function import function_object_read
 from fastapi_cache.decorator import cache
 from function import function_read_redis_key
 @router.get("/utility/object-read")
-@cache(expire=60)
+@cache(expire=60,key_builder=function_read_redis_key)
 async def function_utility_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #logic
    request_query_param=dict(request.query_params)
