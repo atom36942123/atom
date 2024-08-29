@@ -75,7 +75,7 @@ from function import function_aws
 @router.get("/utility/create-presigned-url")
 async def function_create_presigned_url(request:Request,filename:str):
    #logic
-   response=await function_aws("create_presigned_url",{"filename":filename})
+   response=await function_aws("s3_create_presigned_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -88,7 +88,7 @@ from function import function_aws
 async def function_send_email_ses(request:Request):
    #logic
    body=await request.json()
-   response=await function_aws("send_email_ses",body)
+   response=await function_aws("ses_send_email",body)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
