@@ -160,13 +160,13 @@ from function import function_token_check
 from config import postgres_object
 from function import function_aws
 @router.delete("/admin/s3-delete")
-async def function_admin_s3_delete_url(request:Request,mode:str,url:str=None):
+async def function_admin_s3_delete(request:Request,mode:str=None,url:str=None):
    #auth check
    response=await function_token_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="single":response=await function_aws("s3_delete_url",{"url":url})
+   if not mode:response=await function_aws("s3_delete_url",{"url":url})
    if mode=="all":response=await function_aws("s3_delete_all",{})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
