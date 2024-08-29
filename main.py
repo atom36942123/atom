@@ -41,6 +41,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
+from config import postgres_object
 from function import function_background_create_log
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
@@ -48,9 +49,7 @@ async def function_middleware(request:Request,api_function):
     #api response
     response=await api_function(request)
     #create log
-    response=await function_background_create_log(postgres_object,request,user["id"])
-    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-    print(request.method)
+    if request.method in ["DELETE"]:await function_background_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
     return JSONResponse(status_code=400,content={"status":0,"message":e.args})
