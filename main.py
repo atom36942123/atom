@@ -36,6 +36,10 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
+from function import function_background_create_log
+response=await function_background_create_log(postgres_object,request,user["id"])
+if response["status"]==0:return JSONResponse(status_code=400,content=response)
+
 #middleware
 from fastapi import Request
 from fastapi.responses import JSONResponse
