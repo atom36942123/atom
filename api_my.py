@@ -255,7 +255,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-@router.get("/my/parent-check")
+@router.delete("/my/parent-check")
 async def function_my_parent_delete(request:Request,base_table:str,parent_table:str,parent_ids:str):
    #auth check
    response=await function_token_check(postgres_object,request,None)
