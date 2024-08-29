@@ -7,8 +7,11 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_database_init
+from config import config_key_root
 @router.get("/utility/database-init")
 async def function_utility_database_init(request:Request):
+   #auth check
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #logic
    response=await function_database_init(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
