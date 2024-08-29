@@ -33,6 +33,21 @@ async def function_utility_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
+#object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import postgres_object
+from function import function_object_read
+@router.get("/utility/object-read")
+async def function_utility_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #logic
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #bulk read
 from fastapi import Request
 from fastapi.responses import JSONResponse
