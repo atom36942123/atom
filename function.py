@@ -317,8 +317,8 @@ async def function_token_create(user):
 
 #redis key
 from fastapi import Request,Response
-def function_read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[repr(sorted(request.query_params.items())),namespace,request.method.lower(),request.url.path]
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
   param=":".join(param)
   return param
 
