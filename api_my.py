@@ -220,8 +220,8 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select parent_id from {base_table} where parent_table=:parent_table and created_by_id=:created_by_id order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   query=f"select parent_id from {base_table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    parent_ids_list=[item["parent_id"] for item in output]
    query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
@@ -243,10 +243,28 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
    user=response["message"]
    #logic
    parent_ids_list=[int(item) for item in parent_ids.split(",")]
-   query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and created_by_id=:created_by_id;"
-   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
+   query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+   #final
+   return {"status":1,"message":parent_ids_filtered}
+
+#parent delete
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import postgres_object
+from function import function_token_check
+@router.get("/my/parent-check")
+async def function_my_parent_delete(request:Request,base_table:str,parent_table:str,parent_ids:str):
+   #auth check
+   response=await function_token_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"delete from {base_table} where created_by_id=:created_by_id and parent_table=:parent_table and id in ({ids});"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":parent_ids_filtered}
 
