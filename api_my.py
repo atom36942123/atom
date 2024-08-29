@@ -262,7 +262,7 @@ async def function_my_parent_delete(request:Request,base_table:str,parent_table:
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"delete from {base_table} where created_by_id=:created_by_id and parent_table=:parent_table and id in ({ids});"
+   query=f"delete from {base_table} where created_by_id=:created_by_id and parent_table=:parent_table and id in ({parent_ids});"
    query_param={"created_by_id":user["id"],"parent_table":parent_table}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
