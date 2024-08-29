@@ -27,7 +27,7 @@ from config import config_mongo_server_url
 import motor.motor_asyncio
 from bson import ObjectId
 async def function_mongo(mode,database,table,payload):
-  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server)
+  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_url)
   if mode=="create":
     if database=="test" and table=="users":
       output=await mongo_object.test.users.insert_one(payload)
