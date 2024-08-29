@@ -258,9 +258,13 @@ async def function_background_update_last_active_at(postgres_object,user_id):
 
 #log
 from fastapi import BackgroundTasks
-import json
-async def function_background_create_log(postgres_object,request,created_by_id):
+from config import config_key_jwt
+import jwt,json
+async def function_background_create_log(postgres_object,request):
+  user=None
+  if request.headers.get("Authorization"):user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
   background=BackgroundTasks()
+  created_by_id=user["id"] if user else None
   path=request.url.path
   param=json.dumps(dict(request.query_params))
   body=json.dumps(dict(await request.body()))
