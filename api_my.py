@@ -107,7 +107,7 @@ async def function_my_object_create(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if table in ["users","otp","log","atom","box","spatial_ref_sys"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if table in ["users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
    object["created_by_id"]=user["id"]
    [object.pop(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
