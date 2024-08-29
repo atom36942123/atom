@@ -153,39 +153,21 @@ async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#s3 delete url
+#s3 delete
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
 from function import function_aws
-@router.delete("/admin/s3-delete-url")
-async def function_admin_s3_delete_url(request:Request,url:str):
+@router.delete("/admin/s3-delete")
+async def function_admin_s3_delete_url(request:Request,mode:str,url:str=None):
    #auth check
    response=await function_token_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_aws("s3_delete_url",{"url":url})
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-#empty s3 bucket
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_token_check
-from config import postgres_object
-from function import function_aws
-@router.delete("/admin/s3-delete-all")
-async def function_admin_s3_delete_all(request:Request):
-   #auth check
-   response=await function_token_check(postgres_object,request,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_aws("s3_delete_all",{})
+   if mode=="single":response=await function_aws("s3_delete_url",{"url":url})
+   if mode=="all":response=await function_aws("s3_delete_all",{})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
