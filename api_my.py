@@ -309,7 +309,7 @@ async def function_my_message_delete(request:Request,mode:str):
    if mode=="received":
       query="delete from message where parent_table='users' and parent_id=:parent_id;"
       query_param={"parent_id":user['id']}
-   if mode=="created":
+   if mode=="all":
       query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
       query_param={"created_by_id":user['id'],"parent_id":user['id']}
    output=await postgres_object.fetch_all(query=query,values=query_param)
