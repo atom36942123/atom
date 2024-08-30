@@ -1,3 +1,14 @@
+#file to object list
+import csv,codecs
+async def function_file_to_object_list(file):
+  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  object_list=[]
+  for row in file_csv:
+    object_list.append(row)
+  await file.close()
+  return {"status":1,"message":object_list}
+
 #read user force
 async def function_read_user_force(postgres_object,column,value):
   query=f"select * from users where {column}=:value order by id desc limit 1;"
