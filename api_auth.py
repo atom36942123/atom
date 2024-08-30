@@ -9,7 +9,7 @@ import hashlib
 from function import function_token_create
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
-@router.post("/auth/signup")
+@router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_auth_signup(request:Request):
    #request body
    request_body=await request.json()
