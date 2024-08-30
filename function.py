@@ -1,4 +1,9 @@
-#api files
+#error parse
+async def function_error_parse(error):
+  if "constraint_unique_likes" in error:error="already liked"
+  return {"status":0,"message":error}
+
+#api filename
 import os,glob
 def function_read_filename_api():
   current_directory_path=os.path.dirname(os.path.realpath(__file__))
