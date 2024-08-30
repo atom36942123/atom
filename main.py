@@ -8,24 +8,17 @@ from config import config_sentry_dsn
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
-from config import config_redis_server_url
+from function import function_redis_service_init
 from config import postgres_object
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from redis import asyncio as aioredis
-from fastapi_limiter import FastAPILimiter
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  #redis cache
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
-  #redis rate limiter
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  #postgres object connect
+  #stat
+  await function_redis_service_init()
   await postgres_object.connect()
   yield
-  #postgres object disconnect
+  #end
   await postgres_object.disconnect()
 
 #app
