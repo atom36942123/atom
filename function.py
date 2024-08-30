@@ -1,3 +1,20 @@
+#create user
+async def function_create_user(postgres_object,column,value):
+  query=f"select * from users where {column}=:value order by id desc limit 1;"
+  query_param={"value":value}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  user=output[0] if output else None
+  if not user:
+    query=f"insert into users ({column}) values (:value) returning *;"
+    query_param={"value":value}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user_id=output[0]["id"]
+    query="select * from users where id=:id;"
+    query_param={"id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0]
+  return {"status":1,"message":output}
+
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
 from elasticsearch import Elasticsearch
