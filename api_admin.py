@@ -50,6 +50,7 @@ from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
 from fastapi import UploadFile
+from function import function_file_to_object_list
 from function import function_object_create
 from function import function_object_update
 @router.post("/admin/csv")
@@ -59,7 +60,9 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
-   
+   response=await function_file_to_object_list(file)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object_list=response["message"]
    #logic
    if mode=="create":response=await function_object_create(postgres_object,table,object_list)
    if mode=="update":response=await function_object_update(postgres_object,table,object_list)
