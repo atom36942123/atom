@@ -39,9 +39,7 @@ from function import function_background_create_log
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
-    #api response
     response=await api_function(request)
-    #create log
     if request.method in ["DELETE"]:await function_background_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
