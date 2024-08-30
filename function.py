@@ -1,6 +1,7 @@
 #error parse
 async def function_error_parse(error):
   if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
   return {"status":0,"message":error}
 
 #api filename
