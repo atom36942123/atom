@@ -7,6 +7,8 @@ from fastapi import Request
 from config import postgres_object
 import hashlib
 from function import function_token_create
+from fastapi_limiter.depends import RateLimiter
+from fastapi import Depends
 @router.post("/auth/signup")
 async def function_auth_signup(request:Request):
    #request body
