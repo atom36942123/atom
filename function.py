@@ -1,3 +1,12 @@
+#server start
+import uvicorn,asyncio
+async def function_server_start(app):
+  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+  loop=asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+  loop.run_until_complete(uvicorn_object.serve())
+  return {"status":1,"message":"done"}
+
 #redis service init
 from config import config_redis_server_url
 from fastapi_cache import FastAPICache
