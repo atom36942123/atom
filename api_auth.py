@@ -52,27 +52,17 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 import hashlib
 from function import function_token_create
+from function import function_read_user_force
 @router.post("/auth/google")
 async def function_auth_google(request:Request):
    #request body
    request_body=await request.json()
    google_id=str(request_body["google_id"])
    google_id=hashlib.sha256(google_id.encode()).hexdigest()
-   #read user
-   query="select * from users where google_id=:google_id order by id desc limit 1;"
-   query_param={"google_id":google_id}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   #create user
-   if not user:
-      query="insert into users (google_id) values (:google_id) returning *;"
-      query_param={"google_id":google_id}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user_id=output[0]["id"]
-      query="select * from users where id=:id;"
-      query_param={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0]
+   #read user force
+   response=await function_read_user_force(postgres_object,"google_id",google_id)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
