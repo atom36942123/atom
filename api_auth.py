@@ -29,7 +29,7 @@ async def function_auth_signup(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":token}
 
 #login
 from fastapi import Request
