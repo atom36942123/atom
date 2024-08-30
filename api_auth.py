@@ -19,7 +19,15 @@ async def function_auth_signup(request:Request):
    query_param={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #read user
-   
+   user_id=output[0]["id"]
+   query="select * from users where id=:id;"
+   query_param={"id":user_id}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0]
+   #token create
+   response=await function_token_create(user)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
    #final
    return {"status":1,"message":output}
 
