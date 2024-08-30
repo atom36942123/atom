@@ -65,4 +65,4 @@ for item in file_name_api_list:
 #server start
 from function import function_server_start
 if __name__=="__main__":
-  function_background_create_log(app)
+  function_server_start(app)
