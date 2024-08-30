@@ -76,6 +76,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_otp_verify
 from function import function_token_create
+from function import function_read_user_force
 @router.post("/auth/email")
 async def function_auth_email(request:Request):
    #request body
@@ -85,21 +86,10 @@ async def function_auth_email(request:Request):
    #otp verify
    response=await function_otp_verify(postgres_object,"email",email,otp)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #read user
-   query="select * from users where email=:email order by id desc limit 1;"
-   query_param={"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   #create user
-   if not user:
-      query="insert into users (email) values (:email) returning *;"
-      query_param={"email":email}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user_id=output[0]["id"]
-      query="select * from users where id=:id;"
-      query_param={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0]
+   #read user force
+   response=await function_read_user_force(postgres_object,"email",email)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -113,6 +103,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_otp_verify
 from function import function_token_create
+from function import function_read_user_force
 @router.post("/auth/mobile")
 async def function_auth_mobile(request:Request):
    #request body
@@ -122,21 +113,10 @@ async def function_auth_mobile(request:Request):
    #otp verify
    response=await function_otp_verify(postgres_object,"mobile",mobile,otp)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #read user
-   query="select * from users where mobile=:mobile order by id desc limit 1;"
-   query_param={"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   #create user
-   if not user:
-      query="insert into users (mobile) values (:mobile) returning *;"
-      query_param={"mobile":mobile}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user_id=output[0]["id"]
-      query="select * from users where id=:id;"
-      query_param={"id":user_id}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0]
+   #read user force
+   response=await function_read_user_force(postgres_object,"mobile",mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
