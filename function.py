@@ -13,7 +13,7 @@ async def function_create_user(postgres_object,column,value):
     query_param={"id":user_id}
     output=await postgres_object.fetch_all(query=query,values=query_param)
     user=output[0]
-  return {"status":1,"message":output}
+  return {"status":1,"message":user}
 
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
