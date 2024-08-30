@@ -1,6 +1,6 @@
 #api files
 import os,glob
-async def function_read_filename_api():
+def function_read_filename_api():
   current_directory_path=os.path.dirname(os.path.realpath(__file__))
   filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
   filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
