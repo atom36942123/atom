@@ -12,21 +12,16 @@
 
 # salient features
 1. postgres as core database
-2. databses indexing and other stratgey to make queries faster
-3. master/slave replica to route queries
-4. scalability in terms of business database schema
-5. mongodb included for non-relational data use-cases
-6. elastiscsearch api's included
-7. redis caching included
-8. staging/prod env with as many as development enviornments
-9. complete api collection/runner on postman with automated testing
-10. deployment using ec2/jenkins included
-12. Authentication/others basic services prebuilt
-13. aws s3,ses setup included
-14. object level api's without any opinions on the objects
-15. rback included
-16. postgis included for lat/long use-cases
-    
+2. scalability in terms of business database schema
+3. master/slave/indexing and other stratgey to make queries faster included
+4. mongodb/elastiscsearch/s3/ses setup included
+5. redis caching included for any api using config
+6. complete api collection/runner on postman with automated testing
+7. object level api's without any opinions on the objects
+8. rback included for api's
+9. postgis included for lat/long use-cases
+10. deployment using render in less than 5 mins
+
 # tech stack
 1. python
 2. fastapi
@@ -42,6 +37,8 @@
 12. retool
 13. sentry
 14. postgis
+15. render
+    
 
 # how to run
 1. download atom repo
