@@ -14,12 +14,12 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  #stat
-  await function_redis_service_init()
-  await postgres_object.connect()
-  yield
-  #end
-  await postgres_object.disconnect()
+  try:
+    await function_redis_service_init()
+    await postgres_object.connect()
+    yield
+    await postgres_object.disconnect()
+  except Exception as e:print(e.args)
 
 #app
 from fastapi import FastAPI
