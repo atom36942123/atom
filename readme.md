@@ -3,7 +3,7 @@
 2. atom is non opionated. Its more like a boilerplate that can help you to build ~70-80%% of your project within few weeks.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm
-5. for example - tinder backend can be build with atom with-in ~2 week
+5. example: backend for tinder can be build with atom with-in ~2 week
 
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
@@ -52,11 +52,3 @@
 ![Screenshot 2024-08-29 at 3 51 25 PM](https://github.com/user-attachments/assets/48fd54cc-7e07-4cdf-b297-96cdf6acea00)
 ![Screenshot 2024-08-29 at 3 51 46 PM](https://github.com/user-attachments/assets/60c21a52-bada-4e71-8a35-5e9c77b29aff)
 ![Screenshot 2024-08-29 at 3 51 59 PM](https://github.com/user-attachments/assets/0d5a1702-8db7-4afd-b5e3-f459b3910f46)
-
-
-
-
-
-
-
-
