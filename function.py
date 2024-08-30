@@ -1,3 +1,14 @@
+#redis service init
+from config import config_redis_server_url
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_service_init():
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":object_list}
+
 #file to object list
 import csv,codecs
 async def function_file_to_object_list(file):
