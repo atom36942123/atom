@@ -52,7 +52,7 @@ from config import postgres_object
 from fastapi import UploadFile
 from function import function_object_create
 from function import function_object_update
-@router.post("/admin/csv",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+@router.post("/admin/csv")
 async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile):
    #auth check
    response=await function_token_check(postgres_object,request,["admin"])
