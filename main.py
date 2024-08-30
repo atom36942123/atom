@@ -41,9 +41,8 @@ async def function_middleware(request:Request,api_function):
     if request.method in ["DELETE"]:await function_background_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
-    error=e.args
+    error="".join(e.args)
     response=await function_error_parse(error)
-    print (response)
     return JSONResponse(status_code=400,content=response)
   return response
 
