@@ -12,7 +12,7 @@
 
 # salient features
 1. postgres as core database
-2. scalability in terms of business database schema
+2. scalability in terms of database schema
 3. master/slave/indexing and other stratgey to make queries faster included
 4. mongodb/elastiscsearch/s3/ses setup included
 5. redis caching included for any api using config
