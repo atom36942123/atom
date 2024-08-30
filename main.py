@@ -51,7 +51,7 @@ async def function_root(request:Request):
 
 #router
 from function import function_read_filename_api
-response=await function_read_filename_api()
+response=function_read_filename_api()
 filename_api_list=response["message"]
 for item in filename_api_list:
   x=__import__(item)
