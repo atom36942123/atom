@@ -53,19 +53,15 @@ async def function_root(request:Request):
   return {"status":1,"message":"welcome to atom"}
 
 #router
-import os
-import glob
-current_directory_path=os.path.dirname(os.path.realpath(__file__))
-file_path_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-file_name_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_path_all_list]
+
+
 file_name_api_list=[item for item in file_name_all_list if "api" in item]
 for item in file_name_api_list:
   x=__import__(item)
   app.include_router(x.router)
 
 #server start
-import uvicorn
-import asyncio
+import uvicorn,asyncio
 if __name__=="__main__":
   uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
   loop=asyncio.new_event_loop()
