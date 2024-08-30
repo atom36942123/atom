@@ -6,6 +6,7 @@ router=APIRouter(tags=["auth"])
 from fastapi import Request
 from config import postgres_object
 import hashlib
+from function import function_token_create
 @router.post("/auth/signup")
 async def function_auth_signup(request:Request):
    #request body
@@ -17,6 +18,8 @@ async def function_auth_signup(request:Request):
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
+   #read user
+   
    #final
    return {"status":1,"message":output}
 
