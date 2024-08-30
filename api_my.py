@@ -2,24 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["my"])
 
-#delete account
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
-from function import function_token_check
-@router.delete("/my/delete-account")
-async def function_my_delete_account(request:Request):
-   #auth check
-   response=await function_token_check(postgres_object,request,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #delete object
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
 #profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -43,6 +25,24 @@ async def function_my_profile(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
+
+#delete account
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import postgres_object
+from function import function_token_check
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
+   #auth check
+   response=await function_token_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #delete object
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
 
 #token refresh
 from fastapi import Request
