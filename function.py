@@ -7,7 +7,7 @@ from redis import asyncio as aioredis
 async def function_redis_service_init():
   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":object_list}
+  return {"status":1,"message":"done"}
 
 #file to object list
 import csv,codecs
