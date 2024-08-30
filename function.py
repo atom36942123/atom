@@ -1,6 +1,8 @@
 #error parse
 async def function_error_parse(error):
+  print (error)
   if "constraint_unique_likes" in error:error="already liked"
+  print (error)
   return {"status":0,"message":error}
 
 #api filename
