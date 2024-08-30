@@ -43,6 +43,7 @@ async def function_middleware(request:Request,api_function):
     print(traceback.format_exc())
     error=e.args
     response=await function_error_parse(error)
+    print (response)
     return JSONResponse(status_code=400,content=response)
   return response
 
