@@ -1,5 +1,5 @@
-#create user
-async def function_create_user(postgres_object,column,value):
+#read user force
+async def function_read_user_force(postgres_object,column,value):
   query=f"select * from users where {column}=:value order by id desc limit 1;"
   query_param={"value":value}
   output=await postgres_object.fetch_all(query=query,values=query_param)
