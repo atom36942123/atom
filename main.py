@@ -14,13 +14,11 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  try:
-    await function_redis_service_init()
-    await postgres_object.connect()
-    yield
-    await postgres_object.disconnect()
-  except Exception as e:print(e.args)
-
+  await function_redis_service_init()
+  await postgres_object.connect()
+  yield
+  await postgres_object.disconnect()
+  
 #app
 from fastapi import FastAPI
 app=FastAPI(lifespan=function_lifespan,title="atom")
@@ -28,7 +26,6 @@ app=FastAPI(lifespan=function_lifespan,title="atom")
 #cors
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
-
 
 #middleware
 from fastapi import Request
@@ -53,12 +50,10 @@ async def function_root(request:Request):
   return {"status":1,"message":"welcome to atom"}
 
 #router
-import os,glob
-current_directory_path=os.path.dirname(os.path.realpath(__file__))
-file_path_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-file_name_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in file_path_all_list]
-file_name_api_list=[item for item in file_name_all_list if "api" in item]
-for item in file_name_api_list:
+from function import function_read_filename_api
+response=await function_read_filename_api()
+filename_api_list=response["message"]
+for item in filename_api_list:
   x=__import__(item)
   app.include_router(x.router)
 
