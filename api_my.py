@@ -114,6 +114,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_token_check
+from function import function_ownership_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
@@ -121,19 +122,12 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #body
+   object=await request.json()
    #ownership check
-   body=await request.json()
-   if table=="users":
-      if body["id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the object"})
-   if table!="users":
-      query=f"select * from {table} where id=:id;"
-      query_param={"id":body["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      object=output[0] if output else None
-      if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object found"})
-      if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not the owner of the object"})
+   response=await function_ownership_check(postgres_object,table,object["id"],user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
-   object=body
    object["updated_by_id"]=user["id"]
    [object.pop(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
    response=await function_object_update(postgres_object,table,[object])
