@@ -63,6 +63,12 @@ config_database_column={
 "request_path":["text",["log"]],
 "request_query_param":["jsonb",["log"]],
 "request_body":["jsonb",["log"]],
+"interest":["text",["users"]],
+"skill":["text",["users"]],
+"gender":["text",["users"]],
+"country":["text",["users"]],
+"state":["text",["users"]],
+"city":["text",["users"]],
 }
 config_database_index={
 "id":"btree",
