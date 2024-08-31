@@ -23,7 +23,7 @@ async def function_metric_user(postgres_object,user_id):
     temp[k]=output[0]["x"]
   return {"status":1,"message":temp}
   
-#error parse
+#error prepare
 async def function_error_prepare(error):
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
