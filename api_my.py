@@ -74,6 +74,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
+from function import function_metric_user
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
    #auth check
@@ -81,18 +82,11 @@ async def function_my_metric(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   config_user_metric={
-   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
-   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
-   }
-   temp={}
-   for k,v in config_user_metric.items():
-      query=v
-      query_param={"user_id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output[0]["x"]
+   response=await function_metric_user(postgres_object,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
-   return {"status":1,"message":temp}
+   return {"status":1,"message":output}
 
 #object create
 from fastapi import Request
