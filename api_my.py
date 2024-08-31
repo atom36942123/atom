@@ -114,7 +114,7 @@ from fastapi import Request
 from config import postgres_object
 from fastapi.responses import JSONResponse
 from function import function_token_check
-from function import function_ownership_check
+from function import function_object_ownership_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
@@ -124,8 +124,8 @@ async def function_my_object_update(request:Request,table:str):
    user=response["message"]
    #body
    object=await request.json()
-   #ownership check
-   response=await function_ownership_check(postgres_object,table,object["id"],user["id"])
+   #object ownership check
+   response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    object["updated_by_id"]=user["id"]
