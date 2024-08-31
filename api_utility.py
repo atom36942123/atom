@@ -71,6 +71,7 @@ from function import function_redis_key_builder
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_utility_bulk(request:Request,mode:str="read",table:str,ids:str):
    #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    response=await function_bulk(postgres_object,"read",table,ids,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
