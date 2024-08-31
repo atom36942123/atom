@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse
 import traceback
 from config import postgres_object
 from function import function_background_create_log
-from function import function_error_parse
+from function import function_error_prepare
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
@@ -42,7 +42,7 @@ async def function_middleware(request:Request,api_function):
   except Exception as e:
     print(traceback.format_exc())
     error="".join(e.args)
-    response=await function_error_parse(error)
+    response=await function_error_prepare(error)
     return JSONResponse(status_code=400,content=response)
   return response
 
