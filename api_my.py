@@ -261,6 +261,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
+from function import function_message
 from function import function_add_creator_key
 @router.get("/my/message-received")
 async def function_my_message_received(request:Request,limit:int=100,page:int=1):
@@ -269,9 +270,9 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   payload={"parent_id":user["id"],"limit":limit,"offset":(page-1)*limit}
+   response=await function_message(postgres_object,"users","received",payload)
+   output=response["message"]
    #add creator key
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
