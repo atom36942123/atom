@@ -4,9 +4,6 @@ async def function_message(postgres_object,parent_table,mode,payload):
     parent_id,order,limit,offset=payload["parent_id"],payload["order"],payload["limit"],payload["offset"]
     query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":parent_id}
-    print(query)
-    print(query_param)
-    output=await postgres_object.fetch_all(query=query,values=query_param)
   if mode=="delete_created_all":
     payload["created_by_id"]=created_by_id
     query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
@@ -19,6 +16,7 @@ async def function_message(postgres_object,parent_table,mode,payload):
     created_by_id,parent_id=payload["created_by_id"],payload["parent_id"]
     query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
     query_param={"parent_table":parent_table,"created_by_id":created_by_id,"parent_id":parent_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
 #ownership check
