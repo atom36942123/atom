@@ -1,3 +1,12 @@
+#message
+async def function_message(postgres_object,parent_table,mode,payload):
+  if mode=="received":
+    parent_id,limit,offset=payload["parent_id"],payload["limit"],payload["offset"]
+    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by id desc limit {limit} offset {offset};"
+    query_param={"parent_table":parent_table,"parent_id":parent_id,"limit":limit,"offset":offset}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
 #ownership check
 async def function_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
