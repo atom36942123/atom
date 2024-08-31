@@ -1,3 +1,10 @@
+#bulk
+async def function_bulk(postgres_object,mode,table,ids,created_by_id):
+  if mode=="read":query=f"select * from {table} where (created_by_id=:created_by_id or :created_by_id is null) and id in ({ids}) order by id desc;"
+  query_param={"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
 #ownership check
 async def function_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
