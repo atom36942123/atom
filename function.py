@@ -1,3 +1,16 @@
+#ownership check
+async def function_ownership_check(postgres_object,table,id,user_id):
+  if table=="users":
+    if id!=user_id:return {"status":0,"message":"ownership issue"}
+  if table!="users":
+    query=f"select * from {table} where id=:id;"
+    query_param={"id":id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    object=output[0] if output else None
+    if not object:return {"status":0,"message":"no object"}
+    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
+  return {"status":1,"message":"done"}
+
 #parent check
 async def function_parent_check(postgres_object,base_table,parent_table,parent_ids,created_by_id):
   parent_ids_list=[int(item) for item in parent_ids.split(",")]
