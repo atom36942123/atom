@@ -1,3 +1,17 @@
+#metric user
+async def function_metric_user(postgres_object,user_id):
+  config_user_metric={
+  "post_count":"select count(*) as x from post where created_by_id=:user_id;",
+  "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
+  }
+  temp={}
+  for k,v in config_user_metric.items():
+    query=v
+    query_param={"user_id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    temp[k]=output[0]["x"]
+  return {"status":0,"message":temp}
+  
 #error parse
 async def function_error_parse(error):
   if "constraint_unique_likes" in error:error="already liked"
