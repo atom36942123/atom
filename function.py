@@ -11,7 +11,7 @@ async def function_bulk(postgres_object,mode,table,ids,created_by_id):
   return {"status":1,"message":output}
 
 #ownership check
-async def function_ownership_check(postgres_object,table,id,user_id):
+async def function_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
     if id!=user_id:return {"status":0,"message":"ownership issue"}
   if table!="users":
