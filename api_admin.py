@@ -116,6 +116,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
+from function import function_bulk
 @router.get("/admin/bulk-read")
 async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
@@ -123,11 +124,10 @@ async def function_admin_bulk_read(request:Request,table:str,ids:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_bulk(postgres_object,"read",table,ids,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #bulk delete
 from fastapi import Request
