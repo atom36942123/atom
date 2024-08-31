@@ -230,6 +230,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
+from function import function_parent_check
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,base_table:str,parent_table:str,parent_ids:str):
    #auth check
@@ -237,13 +238,11 @@ async def function_my_parent_check(request:Request,base_table:str,parent_table:s
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   parent_ids_list=[int(item) for item in parent_ids.split(",")]
-   query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where created_by_id=:created_by_id and parent_table=:parent_table;"
-   query_param={"created_by_id":user["id"],"parent_table":parent_table}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+   response=await function_parent_check(postgres_object,base_table,parent_table,parent_ids,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
-   return {"status":1,"message":parent_ids_filtered}
+   return {"status":1,"message":output}
 
 #parent delete
 from fastapi import Request
