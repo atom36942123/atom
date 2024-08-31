@@ -1,32 +1,3 @@
-#message
-async def function_message(postgres_object,parent_table,mode,payload):
-  if mode=="received":
-    parent_id,order,limit,offset=payload["parent_id"],payload["order"],payload["limit"],payload["offset"]
-    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
-    query_param={"parent_table":parent_table,"parent_id":parent_id}
-  if mode=="inbox":
-    user_id,order,limit,offset=payload["user_id"],payload["order"],payload["limit"],payload["offset"]
-    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order {order} desc;"
-    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
-  if mode=="inbox_unread":
-    user_id,order,limit,offset=payload["user_id"],payload["order"],payload["limit"],payload["offset"]
-    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order {order} desc limit {limit} offset {offset};"
-    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
-  if mode=="delete_created_all":
-    user_id=payload["user_id"]
-    query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
-    query_param={"parent_table":parent_table,"created_by_id":user_id}
-  if mode=="delete_received_all":
-    user_id=payload["user_id"]
-    query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
-    query_param={"parent_table":parent_table,"parent_id":user_id}
-  if mode=="delete_all":
-    user_id=payload["user_id"]
-    query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
-    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
 #ownership check
 async def function_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
