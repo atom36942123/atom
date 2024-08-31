@@ -293,7 +293,7 @@ async def function_my_message_delete(request:Request,mode:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   payload={"created_by_id":user['id'],"parent_id":user['id']}
+   payload={"user_id":user['id']}
    response=await function_message(postgres_object,"users",mode,payload)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
