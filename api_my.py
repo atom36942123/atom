@@ -261,7 +261,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-from function import function_message
 from function import function_add_creator_key
 @router.get("/my/message-received")
 async def function_my_message_received(request:Request,limit:int=100,page:int=1):
@@ -270,9 +269,9 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   payload={"parent_id":user["id"],"order":"id desc","limit":limit,"offset":(page-1)*limit}
-   response=await function_message(postgres_object,"users","received",payload)
-   output=response["message"]
+   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #add creator key
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -285,7 +284,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-from function import function_message
 @router.delete("/my/message-delete")
 async def function_my_message_delete(request:Request,mode:str):
    #auth check
@@ -293,18 +291,24 @@ async def function_my_message_delete(request:Request,mode:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   payload={"user_id":user['id']}
-   response=await function_message(postgres_object,"users",mode,payload)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode=="created":
+      query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
+      query_param={"created_by_id":user['id']}
+   if mode=="received":
+      query="delete from message where parent_table='users' and parent_id=:parent_id;"
+      query_param={"parent_id":user['id']}
+   if mode=="all":
+      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      query_param={"created_by_id":user['id'],"parent_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #message inbox
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-from function import function_message
 @router.get("/my/message-inbox")
 async def function_my_message_inbox(request:Request,mode:str=None,limit:int=100,page:int=1):
    #auth check
@@ -312,13 +316,13 @@ async def function_my_message_inbox(request:Request,mode:str=None,limit:int=100,
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   payload={"user_id":user['id'],"order":"id desc","limit":limit,"offset":(page-1)*limit}
-   if not mode:response=await function_message(postgres_object,"users","inbox",payload)
-   if mode=="unread":response=await function_message(postgres_object,"users","inbox_unread",payload)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
+   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
-   
+   return {"status":1,"message":output}
+
 #message thread
 from fastapi import Request
 from fastapi.responses import JSONResponse
