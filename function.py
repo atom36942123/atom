@@ -1,9 +1,11 @@
 #message
 async def function_message(postgres_object,parent_table,mode,payload):
   if mode=="received":
-    parent_id,limit,offset=payload["parent_id"],payload["limit"],payload["offset"]
-    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by id desc limit {limit} offset {offset};"
+    parent_id,order,limit,offset=payload["parent_id"],payload["order"],payload["limit"],payload["offset"]
+    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":parent_id,"limit":limit,"offset":offset}
+    print(query)
+    print(query_param)
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
