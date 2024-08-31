@@ -1,3 +1,14 @@
+#parent read
+async def function_parent_read(postgres_object,base_table,parent_table,order,limit,offset,created_by_id):
+  query=f"select parent_id from {base_table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_list=[item["parent_id"] for item in output]
+  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":0,"message":output}
+
 #metric user
 async def function_metric_user(postgres_object,user_id):
   config_user_metric={
