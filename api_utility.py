@@ -60,22 +60,21 @@ async def function_utility_object_read(request:Request,table:str,order:str="id d
    #final
    return {"status":1,"message":output}
 
-#bulk read
+#bulk
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
+from function import function_bulk
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
-@router.get("/utility/bulk-read")
+@router.get("/utility/bulk")
 @cache(expire=60,key_builder=function_redis_key_builder)
-async def function_utility_bulk_read(request:Request,table:str,ids:str):
+async def function_utility_bulk(request:Request,mode:str="read",table:str,ids:str):
    #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_bulk(postgres_object,"read",table,ids,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #s3 create presigned url
 from fastapi import Request
