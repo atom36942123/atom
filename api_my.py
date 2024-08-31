@@ -207,6 +207,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
 from function import function_parent_read
+from function import function_add_creator_key
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -216,8 +217,13 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    #logic
    response=await function_parent_read(postgres_object,base_table,parent_table,"id desc",limit,(page-1)*limit,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #final
-   return response
+   return {"status":1,"message":output}
 
 #parent check
 from fastapi import Request
