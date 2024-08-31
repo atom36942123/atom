@@ -7,7 +7,7 @@ async def function_parent_read(postgres_object,base_table,parent_table,order,lim
   query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":0,"message":output}
+  return {"status":1,"message":output}
 
 #metric user
 async def function_metric_user(postgres_object,user_id):
@@ -21,10 +21,10 @@ async def function_metric_user(postgres_object,user_id):
     query_param={"user_id":user_id}
     output=await postgres_object.fetch_all(query=query,values=query_param)
     temp[k]=output[0]["x"]
-  return {"status":0,"message":temp}
+  return {"status":1,"message":temp}
   
 #error parse
-async def function_error_parse(error):
+async def function_error_prepare(error):
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
   return {"status":0,"message":error}
