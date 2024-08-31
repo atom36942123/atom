@@ -285,6 +285,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
+from function import function_message
 @router.delete("/my/message-delete")
 async def function_my_message_delete(request:Request,mode:str):
    #auth check
@@ -292,18 +293,11 @@ async def function_my_message_delete(request:Request,mode:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="created":
-      query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
-      query_param={"created_by_id":user['id']}
-   if mode=="received":
-      query="delete from message where parent_table='users' and parent_id=:parent_id;"
-      query_param={"parent_id":user['id']}
-   if mode=="all":
-      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"created_by_id":user['id'],"parent_id":user['id']}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   payload={"created_by_id":user['id'],"parent_id":user['id']}
+   response=await function_message(postgres_object,"users",mode,payload)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response
    #final
-   return {"status":1,"message":output}
+   return response
 
 #message inbox
 from fastapi import Request
