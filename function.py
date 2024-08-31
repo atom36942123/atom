@@ -5,7 +5,7 @@ async def function_message(postgres_object,parent_table,mode,payload):
     query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":parent_id}
   if mode=="delete_created_all":
-    payload["created_by_id"]=created_by_id
+    created_by_id=payload["created_by_id"]
     query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
     query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   if mode=="delete_received_all":
