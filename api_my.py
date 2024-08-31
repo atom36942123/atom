@@ -156,44 +156,23 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return response
 
-#bulk read
+#bulk
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import postgres_object
 from function import function_token_check
-@router.get("/my/bulk-read")
-async def function_my_bulk_read(request:Request,table:str,ids:str):
+from config import postgres_object
+from function import function_bulk
+@router.get("/my/bulk")
+async def function_my_bulk(request:Request,mode:str,table:str,ids:str):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   query=f"select * from {table} where created_by_id=:created_by_id and id in ({ids}) order by id desc;"
-   query_param={"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#bulk delete
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
-from function import function_token_check
-@router.delete("/my/bulk-delete")
-async def function_my_bulk_delete(request:Request,table:str,ids:str):
-   #auth check
-   response=await function_token_check(postgres_object,request,None)
+   response=await function_bulk(postgres_object,mode,table,ids,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   if len(ids)>100:return JSONResponse(status_code=400,content=({"status":0,"message":"ids length exceeded"}))
-   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
-   query_param={"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #parent read
 from fastapi import Request
