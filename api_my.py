@@ -270,7 +270,7 @@ async def function_my_message_received(request:Request,limit:int=100,page:int=1)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   payload={"parent_id":user["id"],"limit":limit,"offset":(page-1)*limit}
+   payload={"parent_id":user["id"],"order":"id desc","limit":limit,"offset":(page-1)*limit}
    response=await function_message(postgres_object,"users","received",payload)
    output=response["message"]
    #add creator key
