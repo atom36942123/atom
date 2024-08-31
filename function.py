@@ -10,7 +10,7 @@ async def function_message(postgres_object,parent_table,mode,payload):
     query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   if mode=="delete_received_all":
     parent_id=payload["parent_id"]
-    query="delete from message where parent_table='users' and parent_id=:parent_id;"
+    query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
     query_param={"parent_table":parent_table,"parent_id":parent_id}
   if mode=="delete_all":
     created_by_id,parent_id=payload["created_by_id"],payload["parent_id"]
