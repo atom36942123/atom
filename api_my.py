@@ -84,9 +84,8 @@ async def function_my_metric(request:Request):
    #logic
    response=await function_metric_user(postgres_object,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
    #final
-   return {"status":1,"message":output}
+   return response
 
 #object create
 from fastapi import Request
@@ -207,6 +206,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
+from function import function_parent_read
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,base_table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -214,15 +214,10 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select parent_id from {base_table} where created_by_id=:created_by_id and parent_table=:parent_table order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"created_by_id":user["id"],"parent_table":parent_table}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   parent_ids_list=[item["parent_id"] for item in output]
-   query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_parent_read(postgres_object,base_table,parent_table,"id desc",limit,(page-1)*limit,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #parent check
 from fastapi import Request
