@@ -380,6 +380,8 @@ from fastapi import BackgroundTasks
 from config import config_key_jwt
 import jwt,json
 async def function_background_create_log(postgres_object,request):
+  if request.url.path.split("/")[1] not in ["my","admin"]:return {"status":1,"message":"done"}
+  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   user=None
   if request.headers.get("Authorization"):user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
   background=BackgroundTasks()
