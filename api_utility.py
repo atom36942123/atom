@@ -21,16 +21,20 @@ async def function_utility_database_init(request:Request):
 #project cache
 from fastapi import Request
 from config import postgres_object
-from function import function_project_cache
 from fastapi_cache.decorator import cache
 @router.get("/utility/project-cache")
 @cache(expire=60)
 async def function_utility_project_cache(request:Request):
    #logic
-   response=await function_project_cache(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   config_pcache={"user_count":"select count(*) from users;"}
+   temp={}
+   for k,v in config_pcache.items():
+      query=v
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output
    #final
-   return response
+   return {"status":1,"message":temp}
 
 #s3 create presigned url
 from fastapi import Request
