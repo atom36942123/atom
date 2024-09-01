@@ -38,7 +38,7 @@ from function import function_error_prepare
 async def function_middleware(request:Request,api_function):
   try:
     response=await api_function(request)
-    if request.url.path.split("/") in ["my","admin"] and request.method in ["DELETE"]:await function_background_create_log(postgres_object,request)
+    if request.url.path.split("/")[1] in ["my","admin"] and request.method in ["DELETE"]:await function_background_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
     error="".join(e.args)
