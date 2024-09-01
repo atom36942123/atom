@@ -6,8 +6,8 @@ router=APIRouter(tags=["utility"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
-from function import function_database_init
 from config import config_key_root
+from function import function_database_init
 @router.get("/utility/database-init")
 async def function_utility_database_init(request:Request):
    #auth check
