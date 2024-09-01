@@ -59,7 +59,7 @@ async def function_project_cache(postgres_object):
   temp={}
   for k,v in query_dict.items():
     query=v
-    query_param={"user_id":user_id}
+    query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
     temp[k]=output
   return {"status":1,"message":temp}
