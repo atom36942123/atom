@@ -2,7 +2,7 @@
 async def function_location_query(postgres_object,table,lat,long,min_meter,max_meter,order,limit,offset):
   query=f'''
   with x as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from {table})
-  select * from x where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};"
+  select * from x where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
   '''
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
