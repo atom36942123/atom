@@ -252,7 +252,7 @@ from function import function_token_check
 from function import function_add_creator_key
 from function import function_background_mark_message_object_read
 @router.get("/my/message-received")
-async def function_my_message_received(request:Request,background:BackgroundTasks,mode:str=None,limit:int=100,page:int=1):
+async def function_my_message_received(request:Request,mode:str=None,limit:int=100,page:int=1):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
