@@ -250,8 +250,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
 from function import function_add_creator_key
-from fastapi import BackgroundTasks
-from datetime import datetime
+from function import function_background_mark_message_object_read
 @router.get("/my/message-received")
 async def function_my_message_received(request:Request,background:BackgroundTasks,mode:str=None,limit:int=100,page:int=1):
    #auth check
@@ -267,13 +266,9 @@ async def function_my_message_received(request:Request,background:BackgroundTask
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
-   #mark message read
-   ids_list=[str(item["id"]) for item in output]
-   ids_string=",".join(ids_list)
-   if ids_string:
-      query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id']}
-      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   #mark message object read
+   response=await function_background_mark_message_object_read(postgres_object,output,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
