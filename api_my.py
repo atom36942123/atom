@@ -26,7 +26,7 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
-#stats
+#metric
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
