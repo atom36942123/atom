@@ -63,7 +63,6 @@ async def function_ses_send_email(request:Request):
    #final
    return response
 
-
 #object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -89,22 +88,19 @@ async def function_utility_object_read(request:Request,table:str,order:str="id d
    #final
    return {"status":1,"message":output}
 
-#bulk
+#bulk read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
-from function import function_bulk
-from fastapi_cache.decorator import cache
-from function import function_redis_key_builder
-@router.get("/utility/bulk")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_utility_bulk(request:Request,mode:str,table:str,ids:str):
+@router.get("/utility/bulk-read")
+async def function_utility_bulk_read(request:Request,table:str,ids:str):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   response=await function_bulk(postgres_object,"read",table,ids,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #location query
 from fastapi import Request
