@@ -12,18 +12,21 @@ async def function_background_mark_message_object_read(postgres_object,object_li
   return {"status":1,"message":"done"}
 
 #search location
-async def function_search_location(postgres_object,table,location,within,order,limit,offset):
-  lat=float(location.split(",")[0])
-  long=float(location.split(",")[1])
-  min_meter=int(within.split(",")[0])
-  max_meter=int(within.split(",")[1])
+async def function_search_location(postgres_object,table,where_param_raw,location,within,order,limit,offset):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
+  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
   query=f'''
   with
-  x as (select * from {table}),
+  x as (select * from {table}) {where_string},
   y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
   select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
   '''
-  query_param={}
+  query_param=where_param
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
   
