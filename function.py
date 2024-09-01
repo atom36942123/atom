@@ -43,7 +43,7 @@ async def function_parent_check(postgres_object,base_table,parent_table,parent_i
   return {"status":1,"message":parent_ids_filtered}
 
 #parent read
-async def function_parent_read(postgres_object,base_table,parent_table,order,limit,offset,created_by_id):
+async def function_parent_read(postgres_object,base_table,parent_table,created_by_id,order,limit,offset):
   query=f"select parent_id from {base_table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
   query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
