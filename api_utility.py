@@ -26,9 +26,9 @@ from fastapi_cache.decorator import cache
 @cache(expire=60)
 async def function_utility_project_cache(request:Request):
    #logic
-   config_pcache={"user_count":"select count(*) from users;"}
+   query_dict={"user_count":"select count(*) from users;"}
    temp={}
-   for k,v in config_pcache.items():
+   for k,v in query_dict.items():
       query=v
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
