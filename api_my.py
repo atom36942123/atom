@@ -268,9 +268,10 @@ async def function_my_message_received(request:Request,background:BackgroundTask
    #mark message read
    ids_list=[str(item["id"]) for item in output]
    ids_string=",".join(ids_list)
-   query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id']}
-   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   if ids_string:
+      query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id']}
+      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
 
