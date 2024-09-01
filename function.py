@@ -11,8 +11,8 @@ async def function_background_mark_message_object_read(postgres_object,object_li
     background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#location query
-async def function_location_query(postgres_object,table,lat,long,min_meter,max_meter,order,limit,offset):
+#search location
+async def function_search_location(postgres_object,table,lat,long,min_meter,max_meter,order,limit,offset):
   query=f'''
   with
   x as (select * from {table}),
