@@ -26,28 +26,28 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
-#profile misc
+#stats
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-@router.get("/my/profile-misc")
-async def function_my_profile_misc(request:Request):
+@router.get("/my/metric")
+async def function_my_metric(request:Request):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    query_dict={
-   "post_count":"select count(*) from post where created_by_id=:user_id;",
-   "message_unread_count":"select count(*) from message where parent_table='users' and parent_id=:user_id and status is null;"
+   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
+   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
    }
    temp={}
    for k,v in query_dict.items():
       query=v
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output
+      temp[k]=output[0]["x"]
    #final
    return {"status":1,"message":temp}
 
