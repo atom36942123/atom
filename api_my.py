@@ -163,23 +163,25 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return response
 
-#bulk
+#bulk delete
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
-from function import function_bulk
-@router.get("/my/bulk")
-async def function_my_bulk(request:Request,mode:str,table:str,ids:str):
+@router.delete("/my/bulk-delete")
+async def function_my_bulk_delete(request:Request,table:str,ids:str):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_bulk(postgres_object,mode,table,ids,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if len(ids)>100:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+   query=f"delete from {table} where id in ({ids}) and created_by_id=:created_by_id;"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #parent read
 from fastapi import Request
