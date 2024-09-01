@@ -36,8 +36,8 @@ async def function_external_s3_delete_all(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_aws
-@router.get("/utility/s3-create-presigned-url")
-async def function_s3_create_presigned_url(request:Request,filename:str):
+@router.get("/external/s3-create-presigned-url")
+async def function_external_s3_create_presigned_url(request:Request,filename:str):
    #logic
    response=await function_aws("s3_create_presigned_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -48,15 +48,11 @@ async def function_s3_create_presigned_url(request:Request,filename:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_aws
-@router.post("/utility/ses-send-email")
-async def function_ses_send_email(request:Request):
+@router.post("/external/ses-send-email")
+async def function_external_ses_send_email(request:Request):
    #logic
    body=await request.json()
    response=await function_aws("ses_send_email",body)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-
-
-
