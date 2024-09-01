@@ -110,7 +110,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_location_query
 @router.get("/utility/location-query")
-async def function_utility_location_query(request:Request,table:str,lat:int,long:int,min_meter:int,max_meter:int):
+async def function_utility_location_query(request:Request,table:str,lat:float,long:float,min_meter:int,max_meter:int):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    response=await function_location_query(postgres_object,table,lat,long,min_meter,max_meter)
