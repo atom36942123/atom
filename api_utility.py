@@ -77,16 +77,16 @@ async def function_utility_bulk_read(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#location query
+#search location
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
-from function import function_location_query
-@router.get("/utility/location-query")
-async def function_utility_location_query(request:Request,table:str,lat:float,long:float,min_meter:int,max_meter:int,order:str="id desc",limit:int=100,page:int=1):
+from function import function_search_location
+@router.get("/utility/search-location")
+async def function_utility_search_location(request:Request,table:str,lat:float,long:float,min_meter:int,max_meter:int,order:str="id desc",limit:int=100,page:int=1):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   response=await function_location_query(postgres_object,table,lat,long,min_meter,max_meter,order,limit,(page-1)*limit)
+   response=await function_search_location(postgres_object,table,lat,long,min_meter,max_meter,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
