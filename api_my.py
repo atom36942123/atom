@@ -26,23 +26,30 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
-#delete account
+#metric
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-@router.delete("/my/delete-account")
-async def function_my_delete_account(request:Request):
+@router.get("/my/metric")
+async def function_my_metric(request:Request):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #delete object
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #logic
+   query_dict={
+   "post_count":"select count(*) from post where created_by_id=:user_id;",
+   "message_unread_count":"select count(*) from message where parent_table='users' and parent_id=:user_id and status is null;"
+   }
+   temp={}
+   for k,v in query_dict.items():
+      query=v
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":temp}
 
 #token refresh
 from fastapi import Request
@@ -69,23 +76,23 @@ async def function_my_token_refresh(request:Request):
    #final
    return {"status":1,"message":token}
 
-#metric
+#delete account
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-from function import function_metric_user
-@router.get("/my/metric")
-async def function_my_metric(request:Request):
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
-   response=await function_metric_user(postgres_object,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #delete object
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #object create
 from fastapi import Request
