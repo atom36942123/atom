@@ -10,6 +10,7 @@ async def function_location_query(postgres_object,table,lat,long,min_meter,max_m
 
 #bulk
 async def function_bulk(postgres_object,mode,table,ids,created_by_id):
+  if not ids:return {"status":0,"message":"ids cant be null"}
   if mode=="read":
     query=f"select * from {table} where id in ({ids}) and (created_by_id=:created_by_id or :created_by_id is null) order by id desc;"
   if mode=="delete":
