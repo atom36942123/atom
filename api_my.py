@@ -26,13 +26,13 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
-#metric
+#profile misc
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-@router.get("/my/metric")
-async def function_my_metric(request:Request):
+@router.get("/my/profile-misc")
+async def function_my_profile_misc(request:Request):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
