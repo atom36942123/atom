@@ -38,31 +38,6 @@ async def function_utility_project_cache(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#s3 create presigned url
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_aws
-@router.get("/utility/s3-create-presigned-url")
-async def function_s3_create_presigned_url(request:Request,filename:str):
-   #logic
-   response=await function_aws("s3_create_presigned_url",{"filename":filename})
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#ses send email
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_aws
-@router.post("/utility/ses-send-email")
-async def function_ses_send_email(request:Request):
-   #logic
-   body=await request.json()
-   response=await function_aws("ses_send_email",body)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
