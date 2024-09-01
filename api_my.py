@@ -248,8 +248,10 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
 from function import function_add_creator_key
+from fastapi import BackgroundTasks
+from datetime import datetime
 @router.get("/my/message-received")
-async def function_my_message_received(request:Request,mode:str=None,limit:int=100,page:int=1):
+async def function_my_message_received(request:Request,background:BackgroundTasks,mode:str=None,limit:int=100,page:int=1):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -263,6 +265,12 @@ async def function_my_message_received(request:Request,mode:str=None,limit:int=1
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
+   #mark message read
+   ids_list=[item["id"] for item in output]
+   ids_string=",".join(ids_list)
+   query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id']}
+   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
 
@@ -330,9 +338,9 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
    query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by id desc limit {limit} offset {(page-1)*limit};"
    query_param={"user_1":user["id"],"user_2":user_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   #update message status read
-   query="update message set status=:status,updated_by_id=:updated_by_id,updated_at=:updated_at where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-   query_param={"status":"read","created_by_id":user_id,"parent_id":user["id"],"updated_at":datetime.now(),"updated_by_id":user['id']}
+   #mark message read
+   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
