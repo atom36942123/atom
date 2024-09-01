@@ -1,7 +1,7 @@
 #location query
 async def function_location_query(postgres_object,table,lat,long,min_meter,max_meter):
   query=f'''
-  with x as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from {table} order by distance_meter desc)
+  with x as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from {table} order by distance_meter asc)
   select * from x where distance_meter between {min_meter} and {max_meter}
   '''
   query_param={}
