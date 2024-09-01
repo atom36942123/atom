@@ -1,4 +1,4 @@
-#background update last active at
+#background mark message object read
 from fastapi import BackgroundTasks
 from datetime import datetime
 async def function_background_mark_message_object_read(postgres_object,object_list,updated_by_id):
