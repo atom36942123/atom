@@ -378,19 +378,19 @@ async def function_background_update_last_active_at(postgres_object,user_id):
 #background create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt
+from config import config_key_root
 import jwt,json
 async def function_background_create_log(postgres_object,request):
-  if request.url.path.split("/")[1] not in ["my","admin"]:return {"status":1,"message":"done"}
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
-  user=None
-  if request.headers.get("Authorization"):user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+  created_by_id=None
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:
+    token=authorization_header.split(" ",1)[1]
+    if token====config_key_root:created_by_id=1
+    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
-  created_by_id=user["id"] if user else None
-  path=request.url.path
-  param=json.dumps(dict(request.query_params))
-  body=json.dumps(dict(await request.body()))
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":path,"request_query_param":param,"request_body":body}
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
