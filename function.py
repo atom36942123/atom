@@ -7,20 +7,7 @@ async def function_location_query(postgres_object,table,lat,long,min_meter,max_m
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
-
-#bulk
-async def function_bulk(postgres_object,mode,table,ids,created_by_id):
-  if not ids:return {"status":0,"message":"ids cant be null"}
-  if mode=="read":
-    query=f"select * from {table} where id in ({ids}) and (created_by_id=:created_by_id or :created_by_id is null) order by id desc;"
-  if mode=="delete":
-    if table in ["users"]:return {"status":0,"message":"table not allowed"}
-    if len(ids)>100:return {"status":0,"message":"length exceeded"}
-    query=f"delete from {table} where id in ({ids}) and (created_by_id=:created_by_id or :created_by_id is null);"
-  query_param={"created_by_id":created_by_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
+  
 #object ownership check
 async def function_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
