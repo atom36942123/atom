@@ -97,7 +97,7 @@ async def function_auth_email(request:Request):
    email=request_body["email"]
    otp=request_body["otp"]
    #otp verify
-   response=await function_otp_verify(postgres_object,"email",email,otp)
+   response=await function_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user force
    response=await function_read_user_force(postgres_object,"email",email)
@@ -124,7 +124,7 @@ async def function_auth_mobile(request:Request):
    mobile=request_body["mobile"]
    otp=request_body["otp"]
    #otp verify
-   response=await function_otp_verify(postgres_object,"mobile",mobile,otp)
+   response=await function_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user force
    response=await function_read_user_force(postgres_object,"mobile",mobile)
