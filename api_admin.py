@@ -111,23 +111,42 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
    #final
    return response
 
-#bulk
+#bulk read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_token_check
 from config import postgres_object
-from function import function_bulk
-@router.get("/admin/bulk")
-async def function_admin_bulk(request:Request,mode:str,table:str,ids:str):
+@router.get("/admin/bulk-read")
+async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
    response=await function_token_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_bulk(postgres_object,mode,table,ids,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
+
+#bulk delete
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_token_check
+from config import postgres_object
+@router.get("/admin/bulk-delete")
+async def function_admin_bulk_delete(request:Request,table:str,ids:str):
+   #auth check
+   response=await function_token_check(postgres_object,request,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   query=f"delete from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
 
 #s3 delete
 from fastapi import Request
