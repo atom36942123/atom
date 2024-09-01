@@ -1,3 +1,9 @@
+#location query
+async def function_location_query(postgres_object,table,lat,long):
+  
+
+  return {"status":1,"message":output}
+
 #bulk
 async def function_bulk(postgres_object,mode,table,ids,created_by_id):
   if mode=="read":
