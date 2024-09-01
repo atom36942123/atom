@@ -413,7 +413,7 @@ from config import config_key_jwt
 async def function_token_check(postgres_object,request,user_type_allowed_list):
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=request.headers.get("Authorization").split(" ",1)[1]
+  token=authorization_header.split(" ",1)[1]
   payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
   data=payload["data"]
   user=json.loads(data)
