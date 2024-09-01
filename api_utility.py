@@ -113,7 +113,7 @@ from function import function_location_query
 async def function_utility_location_query(request:Request,table:str,lat:float,long:float,min_meter:int,max_meter:int,order:str="id desc",limit:int=100,page:int=1):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   response=await function_location_query(postgres_object,table,lat,long,min_meter,max_meter)
+   response=await function_location_query(postgres_object,table,order,limit,(page-1)*limit,lat,long,min_meter,max_meter)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
