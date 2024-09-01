@@ -83,10 +83,10 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_search_location
 @router.get("/utility/search-location")
-async def function_utility_search_location(request:Request,table:str,lat:float,long:float,min_meter:int,max_meter:int,order:str="id desc",limit:int=100,page:int=1):
+async def function_utility_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   response=await function_search_location(postgres_object,table,lat,long,min_meter,max_meter,order,limit,(page-1)*limit)
+   response=await function_search_location(postgres_object,table,location,within,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
