@@ -13,8 +13,8 @@ async def function_background_mark_message_object_read(postgres_object,object_li
 
 #search location
 async def function_search_location(postgres_object,table,location,within,order,limit,offset):
-  lat=int(location.split(",")[0])
-  long=int(location.split(",")[1])
+  lat=float(location.split(",")[0])
+  long=float(location.split(",")[1])
   min_meter=int(within.split(",")[0])
   max_meter=int(within.split(",")[1])
   query=f'''
