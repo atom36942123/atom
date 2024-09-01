@@ -184,7 +184,7 @@ async def function_aws(mode,payload):
   if mode=="ses_send_email":
     to,title,description=payload["to"],payload["title"],payload["description"]
     output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
-  if mode=="s3_delete_url":
+  if mode=="s3_delete_single":
     url=payload["url"]
     key=url.rsplit("/",1)[1]
     output=s3_resource.Object(config_s3_bucket_name,key).delete()
