@@ -53,14 +53,25 @@ async def function_parent_read(postgres_object,base_table,parent_table,created_b
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
+#project cache
+async def function_project_cache(postgres_object):
+  query_dict={"user_count":"select count(*) from users;"}
+  temp={}
+  for k,v in query_dict.items():
+    query=v
+    query_param={"user_id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    temp[k]=output
+  return {"status":1,"message":temp}
+
 #metric user
 async def function_metric_user(postgres_object,user_id):
-  config_user_metric={
+  query_dict={
   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
   }
   temp={}
-  for k,v in config_user_metric.items():
+  for k,v in query_dict.items():
     query=v
     query_param={"user_id":user_id}
     output=await postgres_object.fetch_all(query=query,values=query_param)
