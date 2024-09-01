@@ -26,7 +26,9 @@ from fastapi_cache.decorator import cache
 @cache(expire=60)
 async def function_utility_project_cache(request:Request):
    #logic
-   query_dict={"user_count":"select count(*) from users;"}
+   query_dict={
+   "user_count":"select count(*) from users;"
+   }
    temp={}
    for k,v in query_dict.items():
       query=v
