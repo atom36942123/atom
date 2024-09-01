@@ -53,20 +53,6 @@ async def function_parent_read(postgres_object,base_table,parent_table,created_b
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#metric user
-async def function_metric_user(postgres_object,user_id):
-  query_dict={
-  "post_count":"select count(*) from post where created_by_id=:user_id;",
-  "message_unread_count":"select count(*) from message where parent_table='users' and parent_id=:user_id and status is null;"
-  }
-  temp={}
-  for k,v in query_dict.items():
-    query=v
-    query_param={"user_id":user_id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    temp[k]=output
-  return {"status":1,"message":temp}
-  
 #error prepare
 async def function_error_prepare(error):
   if "constraint_unique_likes" in error:error="already liked"
