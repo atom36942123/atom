@@ -188,7 +188,7 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_parent_read(postgres_object,base_table,parent_table,"id desc",limit,(page-1)*limit,user["id"])
+   response=await function_parent_read(postgres_object,base_table,parent_table,user["id"],"id desc",limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #add creator key
