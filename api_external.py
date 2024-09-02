@@ -34,13 +34,15 @@ from function import function_token_check
 from function import function_aws
 @router.delete("/external/s3-delete-single")
 async def function_external_s3_delete_single(request:Request,url:str):
-  #auth check
-  if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-  #logic
-  response=await function_aws("s3_delete_single",{"url":url})
-  if response["status"]==0:return JSONResponse(status_code=400,content=response)
-  #final
-  return response
+   #auth check
+   response=await function_token_check(postgres_object,request,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_aws("s3_delete_single",{"url":url})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
 
 #s3 delete all
 from fastapi import Request
