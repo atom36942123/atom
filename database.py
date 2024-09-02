@@ -1,7 +1,3 @@
-#router
-from fastapi import APIRouter
-router=APIRouter()
-
 #config
 config_database_extension=["postgis"]
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
