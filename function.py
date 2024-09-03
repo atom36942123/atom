@@ -99,53 +99,6 @@ async def function_read_user_force(postgres_object,column,value):
     user=output[0]
   return {"status":1,"message":user}
 
-#object update
-from config import config_database_column
-import hashlib,json
-from datetime import datetime
-async def function_object_update(postgres_object,table,object_list):
-  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
-  column_to_update_list=[*object_list[0]]
-  column_to_update_list.remove("id")
-  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  query_param_list=object_list
-  for index,object in enumerate(query_param_list):
-    if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
-    for k,v in object.items():
-      datatype=config_database_column[k][0]
-      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
-      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
-
-#object read
-from config import config_database_column
-import hashlib
-from datetime import datetime
-async def function_object_read(postgres_object,table,where_param_raw,order,limit,offset):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  query=f"select * from {table} {where_string} order by {order} limit {limit} offset {offset};"
-  query_param=where_param
-  for k,v in query_param.items():
-    datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:query_param[k]=v.split(",") if v else None
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
-
-
 #background update last active at
 from fastapi import BackgroundTasks
 from datetime import datetime
@@ -155,8 +108,7 @@ async def function_background_update_last_active_at(postgres_object,user_id):
   query_param={"last_active_at":datetime.now(),"id":user_id}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
-
-
+  
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
   if email:
@@ -170,7 +122,6 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
-
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
@@ -347,13 +298,77 @@ async def function_database_init(postgres_object):
 
 
 
-
-
-
-#object create
+#where raw
+import hashlib
+from datetime import datetime
 from config import config_database_column
+async def function_object_read(postgres_object,table,where_param_raw,order,limit,offset):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  query=f"select * from {table} {where_string} order by {order} limit {limit} offset {offset};"
+  query_param=where_param
+  for k,v in query_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:query_param[k]=v.split(",") if v else None
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
+#object read
+import hashlib
+from datetime import datetime
+from config import config_database_column
+async def function_object_read(postgres_object,table,where_param_raw,order,limit,offset):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  query=f"select * from {table} {where_string} order by {order} limit {limit} offset {offset};"
+  query_param=where_param
+  for k,v in query_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:query_param[k]=v.split(",") if v else None
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
+#object update
 import hashlib,json
 from datetime import datetime
+from config import config_database_column
+async def function_object_update(postgres_object,table,object_list):
+  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  column_to_update_list=[*object_list[0]]
+  column_to_update_list.remove("id")
+  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    if "updated_by_id" not in object:return {"status":0,"message":"updated_by_id missing"}
+    for k,v in object.items():
+      datatype=config_database_column[k][0]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+  output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":output}
+  
+#object create
+import hashlib,json
+from datetime import datetime
+from config import config_database_column
 async def function_object_create(postgres_object,table,object_list):
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
