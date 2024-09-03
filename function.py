@@ -75,14 +75,7 @@ async def function_parent_read(postgres_object,base_table,parent_table,created_b
 
 
 
-#api filename
-import os,glob
-def function_read_filename_api():
-  current_directory_path=os.path.dirname(os.path.realpath(__file__))
-  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
-  filename_api_list=[item for item in filename_all_list if "api" in item]
-  return {"status":1,"message":filename_api_list}
+
 
 
 
@@ -220,23 +213,6 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
-#token check
-import jwt,json
-from config import config_key_jwt
-async def function_token_check(postgres_object,request,user_type_allowed_list):
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=authorization_header.split(" ",1)[1]
-  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-  data=payload["data"]
-  user=json.loads(data)
-  if user_type_allowed_list:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
 
 #token create
 import jwt,json,time
@@ -406,8 +382,23 @@ async def function_database_init(postgres_object):
 
 
 
-
-
+#auth check
+import jwt,json
+from config import config_key_jwt
+async def function_auth_check(postgres_object,request,user_type_allowed_list):
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=authorization_header.split(" ",1)[1]
+  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+  data=payload["data"]
+  user=json.loads(data)
+  if user_type_allowed_list:
+    query="select * from users where id=:id;"
+    query_param={"id":user["id"]}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0] if output else None
+    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
 
 #redis start
 from config import config_redis_server_url
