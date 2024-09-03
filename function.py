@@ -92,25 +92,7 @@ def function_read_filename_api():
   filename_api_list=[item for item in filename_all_list if "api" in item]
   return {"status":1,"message":filename_api_list}
 
-#server start
-import uvicorn,asyncio
-def function_server_start(app):
-  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-  loop=asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-  loop.run_until_complete(uvicorn_object.serve())
-  return {"status":1,"message":"done"}
 
-#redis service init
-from config import config_redis_server_url
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
-from redis import asyncio as aioredis
-async def function_redis_service_init():
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":"done"}
 
 #file to object list
 import csv,codecs
@@ -510,4 +492,34 @@ async def function_database_init(postgres_object):
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
+
+
+
+
+
+
+
+
+
+
+#redis service init
+from config import config_redis_server_url
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_service_init():
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
+
+#server start
+import uvicorn,asyncio
+def function_server_start(app):
+  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+  loop=asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+  loop.run_until_complete(uvicorn_object.serve())
   return {"status":1,"message":"done"}
