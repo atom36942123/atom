@@ -490,6 +490,23 @@ async def function_postgres_create_log(postgres_object,request):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #api filename
 import os,glob
 def function_read_filename_api():
