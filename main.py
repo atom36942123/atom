@@ -8,13 +8,13 @@ from config import config_sentry_dsn
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
-from function import function_redis_service_init
+from function import function_redis_start
 from config import postgres_object
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  await function_redis_service_init()
+  await function_redis_start()
   await postgres_object.connect()
   yield
   await postgres_object.disconnect()
@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse
 import traceback
 from config import postgres_object
 from function import function_create_log
-from function import function_error_middleware
+from function import function_middleware_error
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
@@ -41,7 +41,7 @@ async def function_middleware(request:Request,api_function):
     await function_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
-    response=await function_error_middleware(e.args)
+    response=await function_middleware_error(e.args)
     return JSONResponse(status_code=400,content=response)
   return response
 
@@ -52,13 +52,11 @@ async def function_root(request:Request):
   return {"status":1,"message":"welcome to atom"}
 
 #router
-from function import function_read_filename_api
-response=function_read_filename_api()
-filename_api_list=response["message"]
-for item in filename_api_list:
-  x=__import__(item)
-  app.include_router(x.router)
-
+from function import function_router_list
+response=function_router_list()
+router_list=response["message"]
+for item in router_list:app.include_router(item)
+ 
 #server start
 from function import function_server_start
 if __name__=="__main__":
