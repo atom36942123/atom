@@ -457,10 +457,10 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
   return param
 
 #create log
-from config import config_postgres_object,config_key_jwt,config_key_root
+from config import config_key_jwt,config_key_root
 from fastapi import BackgroundTasks
 import jwt,json
-async def function_create_log(request):
+async def function_create_log(config_postgres_object,request):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
   authorization_header=request.headers.get("Authorization")
