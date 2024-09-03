@@ -32,13 +32,13 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
 from config import postgres_object
-from function import function_background_create_log
+from function import function_create_log
 from function import function_error_prepare
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
     response=await api_function(request)
-    await function_background_create_log(postgres_object,request)
+    await function_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
     error="".join(e.args)
