@@ -125,6 +125,117 @@ async def function_auth_mobile(request:Request):
    #final
    return {"status":1,"message":token}
 
+#my
+from function import function_update_last_active_at
+@router.get("/my/profile")
+async def function_my_profile(request:Request):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #read user
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   #update last active at
+   response=await function_update_last_active_at(postgres_object,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":user}
+
+@router.get("/my/metric")
+async def function_my_metric(request:Request):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query_dict={
+   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
+   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
+   }
+   temp={}
+   for k,v in query_dict.items():
+      query=v
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output[0]["x"]
+   #final
+   return {"status":1,"message":temp}
+
+from function import function_token_create
+@router.get("/my/token-refresh")
+async def function_my_token_refresh(request:Request):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #read user
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
+   #token create
+   response=await function_token_create(user)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #delete object
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+from function import function_object_create
+@router.post("/my/object-create")
+async def function_my_object_create(request:Request,table:str):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   [object.pop(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
+   response=await function_object_create(postgres_object,table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_ownership_check
+from function import function_object_update
+@router.put("/my/object-update")
+async def function_my_object_update(request:Request,table:str):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #body
+   object=await request.json()
+   #object ownership check
+   response=await function_ownership_check(postgres_object,table,object["id"],user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   object["updated_by_id"]=user["id"]
+   [object.pop(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
+   response=await function_object_update(postgres_object,table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #admin
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,mode:str,query:str):
