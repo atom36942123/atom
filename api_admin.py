@@ -43,10 +43,6 @@ async def function_admin_database_clean(request:Request):
    return response
 
 #csv
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
 from fastapi import UploadFile
 from function import function_file_to_object_list
 from function import function_object_create
