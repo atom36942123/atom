@@ -32,7 +32,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
 from config import postgres_object
-from function import function_postgres_create_log
+from function import function_create_log
 from function import function_error_middleware
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
