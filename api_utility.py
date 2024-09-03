@@ -1,11 +1,3 @@
-#router
-from fastapi import APIRouter
-router=APIRouter(tags=["utility"])
-
-#database init
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
 from config import config_key_root
 from function import function_database_init
 @router.get("/utility/database-init")
