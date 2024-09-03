@@ -22,7 +22,7 @@ config_elasticsearch_cloud_id=env("config_elasticsearch_cloud_id")
 
 #postgres object
 from databases import Database
-postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+config_postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
 #database
 config_database_extension=["postgis"]
