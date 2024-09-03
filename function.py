@@ -174,11 +174,11 @@ async def function_where_raw(where_param_raw):
   where_string=f"where {key_joined}" if key_joined else ""
   for k,v in where_param.items():
     datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:query_param[k]=v.split(",") if v else None
+    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:where_param[k]=v.split(",") if v else None
   return {"status":1,"message":[where_string,where_param]}
 
 #object update
