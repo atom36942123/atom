@@ -488,27 +488,31 @@ async def function_database_init(postgres_object):
 
 
 #auth check
+from config import config_postgres_object,config_key_jwt,config_key_root
 import jwt,json
-from config import config_key_jwt
-async def function_auth_check(postgres_object,request,user_type_allowed_list):
+async def function_auth_check(mode,request,user_type_allowed_list):
+  user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=authorization_header.split(" ",1)[1]
-  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-  data=payload["data"]
-  user=json.loads(data)
-  if user_type_allowed_list:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  if mode=="root":
+    if token!=config_key_root:return {"status":0,"message":"token root issue"}
+  if mode=="jwt":
+    payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+    data=payload["data"]
+    user=json.loads(data)
+    if user_type_allowed_list:
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await config_postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
-
+      
 #token create
+from config import config_key_jwt
 import jwt,json,time
 from datetime import datetime,timedelta
-from config import config_key_jwt
 async def function_token_create(user):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
@@ -526,11 +530,10 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
   return param
 
 #create log
-from config import config_key_jwt
-from config import config_key_root
+from config import config_postgres_object,config_key_jwt,config_key_root
 from fastapi import BackgroundTasks
 import jwt,json
-async def function_create_log(postgres_object,request):
+async def function_create_log(request):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
   authorization_header=request.headers.get("Authorization")
@@ -541,30 +544,35 @@ async def function_create_log(postgres_object,request):
   background=BackgroundTasks()
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  background.add_task(await config_postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
   
-#api filename
+#router list
 import os,glob
-def function_read_filename_api():
+def function_router_list():
   current_directory_path=os.path.dirname(os.path.realpath(__file__))
   filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
   filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
   filename_api_list=[item for item in filename_all_list if "api" in item]
-  return {"status":1,"message":filename_api_list}
+  router_list=[]
+  for item in filename_api_list:
+    file_module=__import__(item)
+    router_list.append(file_module.router)
+  return {"status":1,"message":router_list}
 
-#redis service init
+#redis start
+from config import config_redis_server_url
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
-async def function_redis_service_init(redis_server_url):
-  FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
+async def function_redis_start(config_redis_server_url):
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
 
-#error middleware
-async def function_error_middleware(error):
+#middleware error
+async def function_middleware_error(error):
   error="".join(e.args)
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
