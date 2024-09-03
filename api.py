@@ -257,8 +257,8 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return {"status":1,"message":output}
 
-@router.delete("/my/bulk-delete")
-async def function_my_bulk_delete(request:Request,table:str,ids:str):
+@router.delete("/my/bulk-ids-delete")
+async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -490,8 +490,8 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
    #final
    return {"status":1,"message":output}
 
-@router.get("/admin/bulk-read")
-async def function_admin_bulk_read(request:Request,table:str,ids:str):
+@router.get("/admin/bulk-ids-read")
+async def function_admin_bulk_ids_read(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -503,8 +503,8 @@ async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-@router.delete("/admin/bulk-delete")
-async def function_admin_bulk_delete(request:Request,table:str,ids:str):
+@router.delete("/admin/bulk-ids-delete")
+async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
    #auth check
    response=await function_auth_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -578,8 +578,8 @@ async def function_utility_object_read(request:Request,table:str,order:str="id d
    #final
    return {"status":1,"message":output}
 
-@router.get("/utility/bulk-read")
-async def function_utility_bulk_read(request:Request,table:str,ids:str):
+@router.get("/utility/bulk-ids-read")
+async def function_utility_bulk_ids_read(request:Request,table:str,ids:str):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    query=f"select * from {table} where id in ({ids}) order by id desc;"
