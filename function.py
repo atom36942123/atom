@@ -495,8 +495,8 @@ async def function_redis_start(config_redis_server_url):
   return {"status":1,"message":"done"}
 
 #middleware error
-async def function_middleware_error(error_args):
-  error="".join(error_args.args)
+async def function_middleware_error(error_tuple):
+  error="".join(error_tuple)
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
   if "Not enough segments" in error:error="token issue"
