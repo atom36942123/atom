@@ -77,23 +77,6 @@ async def function_parent_read(postgres_object,table,parent_table,created_by_id,
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#error prepare
-async def function_error_prepare(error):
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  return {"status":0,"message":error}
-
-#api filename
-import os,glob
-def function_read_filename_api():
-  current_directory_path=os.path.dirname(os.path.realpath(__file__))
-  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
-  filename_api_list=[item for item in filename_all_list if "api" in item]
-  return {"status":1,"message":filename_api_list}
-
-
-
 #file to object list
 import csv,codecs
 async def function_file_to_object_list(file):
@@ -283,25 +266,6 @@ async def function_background_update_last_active_at(postgres_object,user_id):
   background=BackgroundTasks()
   query="update users set last_active_at=:last_active_at where id=:id;"
   query_param={"last_active_at":datetime.now(),"id":user_id}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
-#background create log
-from fastapi import BackgroundTasks
-from config import config_key_jwt
-from config import config_key_root
-import jwt,json
-async def function_background_create_log(postgres_object,request):
-  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
-  created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:
-    token=authorization_header.split(" ",1)[1]
-    if token==config_key_root:created_by_id=1
-    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
-  background=BackgroundTasks()
-  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
@@ -504,6 +468,37 @@ async def function_database_init(postgres_object):
 
 
 
+
+
+
+#create log
+from config import config_key_jwt
+from config import config_key_root
+from fastapi import BackgroundTasks
+import jwt,json
+async def function_postgres_create_log(postgres_object,request):
+  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
+  created_by_id=None
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:
+    token=authorization_header.split(" ",1)[1]
+    if token==config_key_root:created_by_id=1
+    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
+  background=BackgroundTasks()
+  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
+#api filename
+import os,glob
+def function_read_filename_api():
+  current_directory_path=os.path.dirname(os.path.realpath(__file__))
+  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
+  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
+  filename_api_list=[item for item in filename_all_list if "api" in item]
+  return {"status":1,"message":filename_api_list}
+
 #redis service init
 from config import config_redis_server_url
 from fastapi_cache import FastAPICache
@@ -514,6 +509,14 @@ async def function_redis_service_init():
   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
+
+#error middleware
+async def function_error_middleware(error):
+  error="".join(e.args)
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  if "Not enough segments" in error:error="token issue"
+  return {"status":0,"message":error}
 
 #server start
 import uvicorn,asyncio
