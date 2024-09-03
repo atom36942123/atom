@@ -282,44 +282,6 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
-#token check
-import jwt,json
-from config import config_key_jwt
-async def function_token_check(postgres_object,request,user_type_allowed_list):
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=authorization_header.split(" ",1)[1]
-  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-  data=payload["data"]
-  user=json.loads(data)
-  if user_type_allowed_list:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
-
-#token create
-import jwt,json,time
-from datetime import datetime,timedelta
-from config import config_key_jwt
-async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
-
 #creator key
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
@@ -490,6 +452,23 @@ async def function_postgres_create_log(postgres_object,request):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+#token check
+import jwt,json
+from config import config_key_jwt
+async def function_token_check(postgres_object,request,user_type_allowed_list):
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=authorization_header.split(" ",1)[1]
+  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+  data=payload["data"]
+  user=json.loads(data)
+  if user_type_allowed_list:
+    query="select * from users where id=:id;"
+    query_param={"id":user["id"]}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0] if output else None
+    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
 
 
 
@@ -507,6 +486,35 @@ async def function_postgres_create_log(postgres_object,request):
 
 
 
+
+
+
+
+
+
+
+
+
+#token create
+import jwt,json,time
+from datetime import datetime,timedelta
+from config import config_key_jwt
+async def function_token_create(user):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
+
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
+  
 #api filename
 import os,glob
 def function_read_filename_api():
