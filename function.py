@@ -58,17 +58,6 @@ async def function_parent_check(postgres_object,table,parent_table,parent_ids,cr
   parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
   return {"status":1,"message":parent_ids_filtered}
 
-#delete index all
-async def function_delete_index_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if output[0]["output"]:
-    query=output[0]["output"]
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
 #parent read
 async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
   query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
@@ -415,6 +404,17 @@ async def function_database_init(postgres_object):
   #trigger set updated_at
   for item in config_database_column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
+#delete index all
+async def function_delete_index_all(postgres_object):
+  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if output[0]["output"]:
+    query=output[0]["output"]
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
