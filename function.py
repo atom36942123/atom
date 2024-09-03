@@ -1,13 +1,5 @@
 #search location
-from config import config_database_column
-import hashlib
-from datetime import datetime
-async def function_search_location(postgres_object,table,where_param_raw,location,within,order,limit,offset):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
+async def function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
   lat,long=float(location.split(",")[0]),float(location.split(",")[1])
   min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
   query=f'''
@@ -17,13 +9,6 @@ async def function_search_location(postgres_object,table,where_param_raw,locatio
   select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
   '''
   query_param=where_param
-  for k,v in query_param.items():
-    datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:query_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:query_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:query_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:query_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:query_param[k]=v.split(",") if v else None
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
   
