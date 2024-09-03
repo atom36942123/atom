@@ -1,4 +1,3 @@
-
 #search location
 from config import config_database_column
 import hashlib
@@ -28,13 +27,6 @@ async def function_search_location(postgres_object,table,where_param_raw,locatio
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
   
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
-
 #action count
 async def function_add_action_count(postgres_object,object_list,object_table,action_table):
   if not object_list:return {"status":1,"message":object_list}
@@ -62,6 +54,12 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
 
 ############################
 
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
 
 #mark message object read
 from fastapi import BackgroundTasks
