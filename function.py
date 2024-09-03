@@ -53,8 +53,8 @@ async def function_object_ownership_check(postgres_object,table,id,user_id):
     if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
   return {"status":1,"message":"done"}
 
-#value int check
-async def function_ids_check(postgres_object,column,ids,where_param_raw):
+#ids check
+async def function_ids_check(postgres_object,table,column,ids,where_param_raw):
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
