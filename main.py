@@ -41,7 +41,7 @@ async def function_middleware(request:Request,api_function):
     await function_create_log(postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
-    response=await function_error_prepare(e.args)
+    response=await function_middleware_error(e.args)
     return JSONResponse(status_code=400,content=response)
   return response
 
