@@ -517,3 +517,33 @@ async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#utility
+from config import config_key_root
+from function import function_database_init
+@router.get("/utility/database-init")
+async def function_utility_database_init(request:Request):
+   #auth check
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   #logic
+   response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from fastapi_cache.decorator import cache
+@router.get("/utility/project-cache")
+@cache(expire=60)
+async def function_utility_project_cache(request:Request):
+   #logic
+   query_dict={
+   "user_count":"select count(*) from users;"
+   }
+   temp={}
+   for k,v in query_dict.items():
+      query=v
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output
+   #final
+   return {"status":1,"message":temp}
