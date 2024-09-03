@@ -433,29 +433,64 @@ async def function_database_init(postgres_object):
 
 
 
-#create log
-from config import config_key_jwt
-from config import config_key_root
-from fastapi import BackgroundTasks
-import jwt,json
-async def function_postgres_create_log(postgres_object,request):
-  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
-  created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:
-    token=authorization_header.split(" ",1)[1]
-    if token==config_key_root:created_by_id=1
-    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
-  background=BackgroundTasks()
-  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
 
-#token check
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#auth check
 import jwt,json
 from config import config_key_jwt
-async def function_token_check(postgres_object,request,user_type_allowed_list):
+async def function_auth_check(postgres_object,request,user_type_allowed_list):
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=authorization_header.split(" ",1)[1]
@@ -469,31 +504,6 @@ async def function_token_check(postgres_object,request,user_type_allowed_list):
     user=output[0] if output else None
     if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #token create
 import jwt,json,time
@@ -514,6 +524,25 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
   param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
   param=":".join(param)
   return param
+
+#create log
+from config import config_key_jwt
+from config import config_key_root
+from fastapi import BackgroundTasks
+import jwt,json
+async def function_create_log(postgres_object,request):
+  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
+  created_by_id=None
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:
+    token=authorization_header.split(" ",1)[1]
+    if token==config_key_root:created_by_id=1
+    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
+  background=BackgroundTasks()
+  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
   
 #api filename
 import os,glob
@@ -525,12 +554,11 @@ def function_read_filename_api():
   return {"status":1,"message":filename_api_list}
 
 #redis service init
-from config import config_redis_server_url
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
-async def function_redis_service_init():
+async def function_redis_service_init(config_redis_server_url):
   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
