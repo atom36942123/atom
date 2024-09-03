@@ -65,10 +65,6 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    return response
 
 #update cell
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
 from function import function_object_update
 @router.put("/admin/update-cell")
 async def function_admin_update_cell(request:Request):
@@ -86,30 +82,27 @@ async def function_admin_update_cell(request:Request):
    return response
 
 #object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
-from function import function_object_read
+from function import function_where_raw
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
+   #where raw
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_object_read(postgres_object,table,where_param_raw,order,limit,(page-1)*limit)
+   response=await function_where_raw(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #bulk read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
 @router.get("/admin/bulk-read")
 async def function_admin_bulk_read(request:Request,table:str,ids:str):
    #auth check
@@ -124,10 +117,6 @@ async def function_admin_bulk_read(request:Request,table:str,ids:str):
    return {"status":1,"message":output}
 
 #bulk delete
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
 @router.delete("/admin/bulk-delete")
 async def function_admin_bulk_delete(request:Request,table:str,ids:str):
    #auth check
