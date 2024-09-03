@@ -80,16 +80,7 @@ async def function_parent_read(postgres_object,base_table,parent_table,created_b
 
 
 
-#file to object list
-import csv,codecs
-async def function_file_to_object_list(file):
-  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
-  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-  object_list=[]
-  for row in file_csv:
-    object_list.append(row)
-  await file.close()
-  return {"status":1,"message":object_list}
+
 
 #read user force
 async def function_read_user_force(postgres_object,column,value):
@@ -107,29 +98,6 @@ async def function_read_user_force(postgres_object,column,value):
     output=await postgres_object.fetch_all(query=query,values=query_param)
     user=output[0]
   return {"status":1,"message":user}
-
-
-  
-#object create
-from config import config_database_column
-import hashlib,json
-from datetime import datetime
-async def function_object_create(postgres_object,table,object_list):
-  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
-  column_to_insert_list=[*object_list[0]]
-  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-  query_param_list=object_list
-  for index,object in enumerate(query_param_list):
-    for k,v in object.items():
-      datatype=config_database_column[k][0]
-      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
-      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
 
 #object update
 from config import config_database_column
@@ -382,9 +350,37 @@ async def function_database_init(postgres_object):
 
 
 
+#object create
+from config import config_database_column
+import hashlib,json
+from datetime import datetime
+async def function_object_create(postgres_object,table,object_list):
+  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  column_to_insert_list=[*object_list[0]]
+  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=config_database_column[k][0]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+  output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":output}
 
-
-
+#file to object list
+import csv,codecs
+async def function_file_to_object_list(file):
+  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  object_list=[]
+  for row in file_csv:
+    object_list.append(row)
+  await file.close()
+  return {"status":1,"message":object_list}
 
 #database clean
 async def function_database_clean(postgres_object):
