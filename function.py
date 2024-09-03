@@ -73,11 +73,7 @@ async def function_parent_read(postgres_object,base_table,parent_table,created_b
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#error prepare
-async def function_error_prepare(error):
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  return {"status":0,"message":error}
+
 
 #api filename
 import os,glob
@@ -417,6 +413,22 @@ async def function_database_init(postgres_object):
 
 
 
+
+
+
+
+
+
+
+
+
+#middleware error
+async def function_middleware_error(error_tuple):
+  error="".join(error_tuple)
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  return {"status":0,"message":error}
+  
 #create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
