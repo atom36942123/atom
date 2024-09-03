@@ -1,15 +1,3 @@
-#background mark message object read
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_background_mark_message_object_read(postgres_object,object_list,updated_by_id):
-  background=BackgroundTasks()
-  ids_list=[str(item["id"]) for item in object_list]
-  ids_string=",".join(ids_list)
-  if ids_string:
-    query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-    query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":updated_by_id}
-    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
 
 #search location
 from config import config_database_column
@@ -40,123 +28,12 @@ async def function_search_location(postgres_object,table,where_param_raw,locatio
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
   
-#object ownership check
-async def function_object_ownership_check(postgres_object,table,id,user_id):
-  if table=="users":
-    if id!=user_id:return {"status":0,"message":"ownership issue"}
-  if table!="users":
-    query=f"select * from {table} where id=:id;"
-    query_param={"id":id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    object=output[0] if output else None
-    if not object:return {"status":0,"message":"no object"}
-    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
-  return {"status":1,"message":"done"}
-
-#parent check
-async def function_parent_check(postgres_object,base_table,parent_table,parent_ids,created_by_id):
-  parent_ids_list=[int(item) for item in parent_ids.split(",")]
-  query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
-  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-  return {"status":1,"message":parent_ids_filtered}
-
-#parent read
-async def function_parent_read(postgres_object,base_table,parent_table,created_by_id,order,limit,offset):
-  query=f"select parent_id from {base_table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
-  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  parent_ids_list=[item["parent_id"] for item in output]
-  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
-
-
-
-
-
-
-
-
-
-#read user force
-async def function_read_user_force(postgres_object,column,value):
-  query=f"select * from users where {column}=:value order by id desc limit 1;"
-  query_param={"value":value}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  user=output[0] if output else None
-  if not user:
-    query=f"insert into users ({column}) values (:value) returning *;"
-    query_param={"value":value}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user_id=output[0]["id"]
-    query="select * from users where id=:id;"
-    query_param={"id":user_id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0]
-  return {"status":1,"message":user}
-
-#background update last active at
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_background_update_last_active_at(postgres_object,user_id):
-  background=BackgroundTasks()
-  query="update users set last_active_at=:last_active_at where id=:id;"
-  query_param={"last_active_at":datetime.now(),"id":user_id}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-  
-#verify otp
-async def function_otp_verify(postgres_object,otp,email,mobile):
-  if email:
-    query="select otp from otp where email=:email order by id desc limit 1;"
-    query_param={"email":email}
-  if mobile:
-    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
-    query_param={"mobile":mobile}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if not output:return {"status":0,"message":"otp not found"}
-  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
-  return {"status":1,"message":"done"}
-  
-#token create
-import jwt,json,time
-from datetime import datetime,timedelta
-from config import config_key_jwt
-async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
 #redis key
 from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
   param=":".join(param)
   return param
-
-#creator key
-async def function_add_creator_key(postgres_object,object_list):
-  if not object_list:return {"status":1,"message":object_list}
-  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
-  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
-  if user_ids:
-    query=f"select * from users where id in ({user_ids});"
-    query_param={}
-    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
-    for x in object_list:
-      for y in object_user_list:
-         if x["created_by_id"]==y["id"]:
-           x["created_by_username"]=y["username"]
-           break
-  return {"status":1,"message":object_list}
 
 #action count
 async def function_add_action_count(postgres_object,object_list,object_table,action_table):
@@ -175,6 +52,131 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
           break
   return {"status":1,"message":object_list}
   
+
+
+#database init
+from config import config_database_extension,config_database_table,config_database_column,config_database_index
+from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
+async def function_database_init(postgres_object):
+  #extension
+  for item in config_database_extension:
+    query=f"create extension if not exists {item};"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #table
+  for item in config_database_table:
+    query=f"create table if not exists {item} ();"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #column
+  for k,v in config_database_column.items():
+    for table in v[1]:
+      query=f"alter table {table} add column if not exists {k} {v[0]};"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  #index
+  for k,v in config_database_column.items():
+    if k in config_database_index:
+      for table in v[1]:
+        query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #schema constraint
+  query="select constraint_name from information_schema.constraint_column_usage;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_constraint_name_list=[item["constraint_name"] for item in output]
+  #schema column
+  query="select * from information_schema.columns where table_schema='public';"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_column=output
+  #schema routine
+  if False:
+    query="select proname from pg_proc;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    schema_routine_name_list=[item["proname"] for item in output]
+  #protected
+  for item in config_database_column["is_protected"][1]:
+    query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #not null
+  for k,v in config_database_not_null.items():
+    for table in v:
+      state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+      if state[0]=="YES":
+        query=f"alter table {table} alter column {k} set not null;"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #identity
+  for k,v in config_database_identity.items():
+    for table in v:
+      state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+      if state[0]=="NO":
+        query=f"alter table {table} alter column {k} add generated always as identity;"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #default
+  for k,v in config_database_default.items():
+    for table in v[1]:
+      state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+      if state[0]==None:
+        query=f"alter table {table} alter column {k} set default {v[0]};"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #unique
+  for k,v in config_database_unique.items():
+    for table in v:
+      constraint_name=f"constraint_unique_{table}"
+      if constraint_name not in schema_constraint_name_list:
+        query=f"alter table {table} add constraint {constraint_name} unique ({k});"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #query
+  for item in config_database_query:
+      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
+      else:
+        query=item
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #trigger set updated_at
+  for item in config_database_column["updated_at"][1]:
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
+
+
+
+
+############################
+
+
+#mark message object read
+from fastapi import BackgroundTasks
+from datetime import datetime
+async def function_mark_message_object_read(postgres_object,object_list,updated_by_id):
+  background=BackgroundTasks()
+  ids_list=[str(item["id"]) for item in object_list]
+  ids_string=",".join(ids_list)
+  if ids_string:
+    query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+    query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":updated_by_id}
+    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
+#parent check
+async def function_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
+  parent_ids_list=[int(item) for item in parent_ids.split(",")]
+  query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+  return {"status":1,"message":parent_ids_filtered}
+
 #delete index all
 async def function_delete_index_all(postgres_object):
   query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
@@ -186,13 +188,98 @@ async def function_delete_index_all(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
+#parent read
+async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
+  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_list=[item["parent_id"] for item in output]
+  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
 
+#creator key
+async def function_add_creator_key(postgres_object,object_list):
+  if not object_list:return {"status":1,"message":object_list}
+  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
+  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
+  if user_ids:
+    query=f"select * from users where id in ({user_ids});"
+    query_param={}
+    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
+    for x in object_list:
+      for y in object_user_list:
+         if x["created_by_id"]==y["id"]:
+           x["created_by_username"]=y["username"]
+           break
+  return {"status":1,"message":object_list}
+  
+#ownership check
+async def function_ownership_check(postgres_object,table,id,user_id):
+  if table=="users":
+    if id!=user_id:return {"status":0,"message":"ownership issue"}
+  if table!="users":
+    query=f"select * from {table} where id=:id;"
+    query_param={"id":id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    object=output[0] if output else None
+    if not object:return {"status":0,"message":"no object"}
+    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
+  return {"status":1,"message":"done"}
 
+#update last active at
+from fastapi import BackgroundTasks
+from datetime import datetime
+async def function_update_last_active_at(postgres_object,user_id):
+  background=BackgroundTasks()
+  query="update users set last_active_at=:last_active_at where id=:id;"
+  query_param={"last_active_at":datetime.now(),"id":user_id}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
 
+#verify otp
+async def function_otp_verify(postgres_object,otp,email,mobile):
+  if email:
+    query="select otp from otp where email=:email order by id desc limit 1;"
+    query_param={"email":email}
+  if mobile:
+    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
+    query_param={"mobile":mobile}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if not output:return {"status":0,"message":"otp not found"}
+  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
+  return {"status":1,"message":"done"}
 
+#read user force
+async def function_read_user_force(postgres_object,column,value):
+  query=f"select * from users where {column}=:value order by id desc limit 1;"
+  query_param={"value":value}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  user=output[0] if output else None
+  if not user:
+    query=f"insert into users ({column}) values (:value) returning *;"
+    query_param={"value":value}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user_id=output[0]["id"]
+    query="select * from users where id=:id;"
+    query_param={"id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0]
+  return {"status":1,"message":user}
 
-
-############################
+#token create
+import jwt,json,time
+from config import config_key_jwt
+from datetime import datetime,timedelta
+async def function_token_create(user):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
 
 #where raw
 import hashlib
@@ -355,100 +442,6 @@ def function_server_start(app):
   loop=asyncio.new_event_loop()
   asyncio.set_event_loop(loop)
   loop.run_until_complete(uvicorn_object.serve())
-  return {"status":1,"message":"done"}
-
-#database init
-from config import config_database_extension,config_database_table,config_database_column,config_database_index
-from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
-async def function_database_init(postgres_object):
-  #extension
-  for item in config_database_extension:
-    query=f"create extension if not exists {item};"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  #table
-  for item in config_database_table:
-    query=f"create table if not exists {item} ();"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  #column
-  for k,v in config_database_column.items():
-    for table in v[1]:
-      query=f"alter table {table} add column if not exists {k} {v[0]};"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-  #index
-  for k,v in config_database_column.items():
-    if k in config_database_index:
-      for table in v[1]:
-        query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #schema constraint
-  query="select constraint_name from information_schema.constraint_column_usage;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_constraint_name_list=[item["constraint_name"] for item in output]
-  #schema column
-  query="select * from information_schema.columns where table_schema='public';"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_column=output
-  #schema routine
-  if False:
-    query="select proname from pg_proc;"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    schema_routine_name_list=[item["proname"] for item in output]
-  #protected
-  for item in config_database_column["is_protected"][1]:
-    query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  #not null
-  for k,v in config_database_not_null.items():
-    for table in v:
-      state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
-      if state[0]=="YES":
-        query=f"alter table {table} alter column {k} set not null;"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #identity
-  for k,v in config_database_identity.items():
-    for table in v:
-      state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
-      if state[0]=="NO":
-        query=f"alter table {table} alter column {k} add generated always as identity;"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #default
-  for k,v in config_database_default.items():
-    for table in v[1]:
-      state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
-      if state[0]==None:
-        query=f"alter table {table} alter column {k} set default {v[0]};"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #unique
-  for k,v in config_database_unique.items():
-    for table in v:
-      constraint_name=f"constraint_unique_{table}"
-      if constraint_name not in schema_constraint_name_list:
-        query=f"alter table {table} add constraint {constraint_name} unique ({k});"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #query
-  for item in config_database_query:
-      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
-      else:
-        query=item
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
-  #trigger set updated_at
-  for item in config_database_column["updated_at"][1]:
-    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
 #elasticsearch
