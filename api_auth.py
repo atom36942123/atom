@@ -1,6 +1,6 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["auth"])
+router=APIRouter(tags=["api"])
 
 #common
 from fastapi import Request
@@ -12,7 +12,7 @@ from function import function_auth_check
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
 
-#singup
+#auth
 import hashlib
 from function import function_token_create
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
@@ -39,7 +39,6 @@ async def function_auth_signup(request:Request):
    #final
    return {"status":1,"message":token}
 
-#login
 import hashlib
 from function import function_token_create
 @router.post("/auth/login")
@@ -62,7 +61,6 @@ async def function_auth_login(request:Request):
    #final
    return {"status":1,"message":token}
 
-#google
 import hashlib
 from function import function_token_create
 from function import function_read_user_force
@@ -83,7 +81,6 @@ async def function_auth_google(request:Request):
    #final
    return {"status":1,"message":token}
 
-#email
 from function import function_otp_verify
 from function import function_read_user_force
 from function import function_token_create
@@ -107,7 +104,6 @@ async def function_auth_email(request:Request):
    #final
    return {"status":1,"message":token}
 
-#mobile
 from function import function_otp_verify
 from function import function_read_user_force
 from function import function_token_create
@@ -130,3 +126,6 @@ async def function_auth_mobile(request:Request):
    token=response["message"]
    #final
    return {"status":1,"message":token}
+
+#admin
+
