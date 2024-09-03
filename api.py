@@ -26,12 +26,12 @@ async def function_auth_signup(request:Request):
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":password}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   output=await config_postgres_object.fetch_all(query=query,values=query_param)
    #read user
    user_id=output[0]["id"]
    query="select * from users where id=:id;"
    query_param={"id":user_id}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   output=await config_postgres_object.fetch_all(query=query,values=query_param)
    user=output[0]
    #token create
    response=await function_token_create(user,config_key_jwt)
