@@ -8,13 +8,14 @@ from config import config_sentry_dsn
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
+from config import config_redis_server_url
 from function import function_redis_start
 from config import config_postgres_object
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  await function_redis_start()
+  await function_redis_start(config_redis_server_url)
   await config_postgres_object.connect()
   yield
   await config_postgres_object.disconnect()
