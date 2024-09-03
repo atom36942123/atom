@@ -552,6 +552,7 @@ from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
 from function import function_where_raw
 from function import function_add_creator_key
+from function import function_add_action_count
 @router.get("/utility/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_utility_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
@@ -570,6 +571,11 @@ async def function_utility_object_read(request:Request,table:str,order:str="id d
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
+   #add action count
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+
    #final
    return {"status":1,"message":output}
 
