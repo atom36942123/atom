@@ -33,6 +33,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
 from config import config_postgres_object
+from config import config_key_jwt,config_key_root
 from function import function_create_log
 from function import function_middleware_error
 @app.middleware("http")
