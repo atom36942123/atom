@@ -44,16 +44,6 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
           break
   return {"status":1,"message":object_list}
   
-
-
-
-
-
-
-
-
-############################
-
 #redis key
 from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
