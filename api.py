@@ -257,6 +257,26 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return {"status":1,"message":output}
 
+from function import function_where_raw
+@router.delete("/my/object-delete")
+async def function_my_object_delete(request:Request,table:str):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #where raw
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
+   response=await function_where_raw(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   query=f"delete from {table} {where_string};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 @router.delete("/my/bulk-ids-delete")
 async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
    #auth check
@@ -304,20 +324,6 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    response=await function_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-#parent delete
-@router.delete("/my/parent-delete")
-async def function_my_parent_delete(request:Request,table:str,parent_table:str,parent_ids:str):
-   #auth check
-   response=await function_auth_check(postgres_object,request,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"delete from {table} where parent_table=:parent_table and created_by_id=:created_by_id and parent_id in ({parent_ids});"
-   query_param={"parent_table":parent_table,"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
