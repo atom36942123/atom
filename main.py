@@ -31,13 +31,14 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
+from config import config_postgres_object
 from function import function_create_log
 from function import function_middleware_error
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
     response=await api_function(request)
-    await function_create_log(request)
+    await function_create_log(config_postgres_object,request)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
