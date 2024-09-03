@@ -1,40 +1,7 @@
-from config import config_key_root
-from function import function_database_init
-@router.get("/utility/database-init")
-async def function_utility_database_init(request:Request):
-   #auth check
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #logic
-   response=await function_database_init(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from fastapi_cache.decorator import cache
-@router.get("/utility/project-cache")
-@cache(expire=60)
-async def function_utility_project_cache(request:Request):
-   #logic
-   query_dict={
-   "user_count":"select count(*) from users;"
-   }
-   temp={}
-   for k,v in query_dict.items():
-      query=v
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output
-   #final
-   return {"status":1,"message":temp}
-
-#object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
-from function import function_object_read
-from function import function_add_creator_key
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
+from function import function_object_read
+from function import function_add_creator_key
 @router.get("/utility/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_utility_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
