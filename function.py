@@ -176,18 +176,7 @@ async def function_object_read(postgres_object,table,where_param_raw,order,limit
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#database clean
-async def function_database_clean(postgres_object):
-  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-    query=f"delete from {table} where created_by_id not in (select id from users);"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  for table in ["likes","bookmark","report","block","rating","comment","message"]:
-    for parent_table in ["users","post","comment"]:
-      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
+
 
 #background update last active at
 from fastapi import BackgroundTasks
@@ -381,6 +370,34 @@ async def function_database_init(postgres_object):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#database clean
+async def function_database_clean(postgres_object):
+  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+    query=f"delete from {table} where created_by_id not in (select id from users);"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  for table in ["likes","bookmark","report","block","rating","comment","message"]:
+    for parent_table in ["users","post","comment"]:
+      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
 
 #auth check
 import jwt,json
