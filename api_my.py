@@ -207,20 +207,20 @@ async def function_my_parent_read(request:Request,base_table:str,parent_table:st
    #final
    return {"status":1,"message":output}
 
-#ids check
+#parent check
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_token_check
-from function import function_ids_check
-@router.get("/my/ids-check")
-async def function_my_ids_check(request:Request,ids:str,table:str,column:str):
+from function import function_parent_check
+@router.get("/my/parent-check")
+async def function_my_parent_check(request:Request,base_table:str,parent_table:str,parent_ids:str):
    #auth check
    response=await function_token_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_ids_check(postgres_object,ids,table,column,       table,parent_ids,user["id"])
+   response=await function_parent_check(postgres_object,base_table,parent_table,parent_ids,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
