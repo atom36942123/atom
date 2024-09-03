@@ -54,7 +54,7 @@ async def function_object_ownership_check(postgres_object,table,id,user_id):
   return {"status":1,"message":"done"}
 
 #ids check
-async def function_ids_check(postgres_object,table,column,ids,where_param_raw):
+async def function_ids_check(postgres_object,ids,table,column,where_param_raw):
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
