@@ -547,3 +547,38 @@ async def function_utility_project_cache(request:Request):
       temp[k]=output
    #final
    return {"status":1,"message":temp}
+
+from fastapi_cache.decorator import cache
+from function import function_redis_key_builder
+from function import function_where_raw
+from function import function_add_creator_key
+@router.get("/utility/object-read")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_utility_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #where raw
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_where_raw(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+@router.get("/utility/bulk-read")
+async def function_utility_bulk_read(request:Request,table:str,ids:str):
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
