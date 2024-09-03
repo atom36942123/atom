@@ -53,22 +53,18 @@ async def function_object_ownership_check(postgres_object,table,id,user_id):
     if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
   return {"status":1,"message":"done"}
 
-#ids check
-async def function_ids_check(postgres_object,ids,table,column,where_param_raw):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  query=f"select {column} from {table} where {column} in ({ids}) {where_string};"
-  query_param=where_param
+#parent check
+async def function_parent_check(postgres_object,base_table,parent_table,parent_ids,created_by_id):
+  parent_ids_list=[int(item) for item in parent_ids.split(",")]
+  query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  ids_filtered=list(set([item[column] for item in output if item[column]]))
-  return {"status":1,"message":ids_filtered}
+  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+  return {"status":1,"message":parent_ids_filtered}
 
 #parent read
-async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
-  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+async def function_parent_read(postgres_object,base_table,parent_table,created_by_id,order,limit,offset):
+  query=f"select parent_id from {base_table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
   query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   parent_ids_list=[item["parent_id"] for item in output]
@@ -76,6 +72,41 @@ async def function_parent_read(postgres_object,table,parent_table,created_by_id,
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
+
+#error prepare
+async def function_error_prepare(error):
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  return {"status":0,"message":error}
+
+#api filename
+import os,glob
+def function_read_filename_api():
+  current_directory_path=os.path.dirname(os.path.realpath(__file__))
+  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
+  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
+  filename_api_list=[item for item in filename_all_list if "api" in item]
+  return {"status":1,"message":filename_api_list}
+
+#server start
+import uvicorn,asyncio
+def function_server_start(app):
+  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+  loop=asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+  loop.run_until_complete(uvicorn_object.serve())
+  return {"status":1,"message":"done"}
+
+#redis service init
+from config import config_redis_server_url
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_service_init():
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
 
 #file to object list
 import csv,codecs
@@ -105,6 +136,81 @@ async def function_read_user_force(postgres_object,column,value):
     user=output[0]
   return {"status":1,"message":user}
 
+#elasticsearch
+from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
+from elasticsearch import Elasticsearch
+async def function_elasticsearch(mode,table,payload):
+  elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
+  if mode=="create":
+    id,data=payload["id"],payload["data"]
+    output=elasticsearch_object.index(index=table,id=id,document=data)
+  if mode=="read":
+    id=payload["id"]
+    response=elasticsearch_object.get(index=table,id=id)
+  if mode=="update":
+    id,data=payload["id"],payload["data"]
+    response=elasticsearch_object.update(index=table,id=id,doc=request_body)
+  if mode=="delete":
+    id=payload["id"]
+    response=elasticsearch_object.delete(index=table,id=id)
+  if mode=="refresh_table":
+    response=elasticsearch_object.indices.refresh(index=table)
+  if mode=="search":
+    key,value,limit=payload["key"],payload["value"],payload["limit"]
+    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:value}},"size":limit})
+  return {"status":1,"message":output}
+  
+#mongo
+from config import config_mongo_server_url
+import motor.motor_asyncio
+from bson import ObjectId
+async def function_mongo(mode,database,table,payload):
+  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(config_mongo_server_url)
+  if mode=="create":
+    if database=="test" and table=="users":
+      output=await mongo_object.test.users.insert_one(payload)
+      output={"status":1,"message":repr(output.inserted_id)}
+  if mode=="read":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
+      if output:output['_id']=str(output['_id'])
+  if mode=="update":
+    if database=="test" and table=="users":
+      id,data=payload["id"],payload["data"]
+      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":data})
+      output={"status":1,"message":output.modified_count}
+  if mode=="delete":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
+      output={"status":1,"message":output.deleted_count}
+  return {"status":1,"message":output}
+  
+#aws
+from config import config_aws_access_key_id,config_aws_secret_access_key
+from config import  config_s3_bucket_name,config_s3_region_name
+from config import config_ses_sender_email,config_ses_region_name
+import boto3,uuid
+async def function_aws(mode,payload):
+  s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="s3_create_presigned_url":
+    filename=payload["filename"]
+    key=str(uuid.uuid4())+"-"+filename
+    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+  if mode=="ses_send_email":
+    to,title,description=payload["to"],payload["title"],payload["description"]
+    output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+  if mode=="s3_delete_single":
+    url=payload["url"]
+    key=url.rsplit("/",1)[1]
+    output=s3_resource.Object(config_s3_bucket_name,key).delete()
+  if mode=="s3_delete_all":
+    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+  return {"status":1,"message":output}
+  
 #object create
 from config import config_database_column
 import hashlib,json
@@ -194,6 +300,25 @@ async def function_background_update_last_active_at(postgres_object,user_id):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+#background create log
+from fastapi import BackgroundTasks
+from config import config_key_jwt
+from config import config_key_root
+import jwt,json
+async def function_background_create_log(postgres_object,request):
+  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
+  created_by_id=None
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:
+    token=authorization_header.split(" ",1)[1]
+    if token==config_key_root:created_by_id=1
+    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
+  background=BackgroundTasks()
+  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
   if email:
@@ -207,6 +332,44 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
   
+#token check
+import jwt,json
+from config import config_key_jwt
+async def function_token_check(postgres_object,request,user_type_allowed_list):
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=authorization_header.split(" ",1)[1]
+  payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
+  data=payload["data"]
+  user=json.loads(data)
+  if user_type_allowed_list:
+    query="select * from users where id=:id;"
+    query_param={"id":user["id"]}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0] if output else None
+    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
+
+#token create
+import jwt,json,time
+from datetime import datetime,timedelta
+from config import config_key_jwt
+async def function_token_create(user):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
+
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
+
 #creator key
 async def function_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
@@ -343,170 +506,4 @@ async def function_database_init(postgres_object):
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#auth check
-import jwt,json
-async def function_auth_check(mode,config_postgres_object,config_key_jwt,config_key_root,request,user_type_allowed_list):
-  user=None
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=authorization_header.split(" ",1)[1]
-  if mode=="root":
-    if token!=config_key_root:return {"status":0,"message":"token root issue"}
-  if mode=="jwt":
-    payload=jwt.decode(token,config_key_jwt,algorithms="HS256")
-    data=payload["data"]
-    user=json.loads(data)
-    if user_type_allowed_list:
-      query="select * from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await config_postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0] if output else None
-      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
-      
-#token create
-import jwt,json,time
-from datetime import datetime,timedelta
-async def function_token_create(user,config_key_jwt):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
-
-#create log
-from fastapi import BackgroundTasks
-import jwt,json
-async def function_create_log(config_postgres_object,request,config_key_jwt,config_key_root):
-  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
-  created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:
-    token=authorization_header.split(" ",1)[1]
-    if token==config_key_root:created_by_id=1
-    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
-  background=BackgroundTasks()
-  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
-  background.add_task(await config_postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-  
-#router list
-import os,glob
-def function_router_list():
-  current_directory_path=os.path.dirname(os.path.realpath(__file__))
-  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
-  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
-  filename_api_list=[item for item in filename_all_list if "api" in item]
-  router_list=[]
-  for item in filename_api_list:
-    file_module=__import__(item)
-    router_list.append(file_module.router)
-  return {"status":1,"message":router_list}
-
-#redis start
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
-from redis import asyncio as aioredis
-async def function_redis_start(config_redis_server_url):
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":"done"}
-
-#middleware error
-async def function_middleware_error(error_tuple):
-  error="".join(error_tuple)
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  if "Not enough segments" in error:error="token issue"
-  return {"status":0,"message":error}
-
-#server start
-import uvicorn,asyncio
-def function_server_start(app):
-  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
-  loop=asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-  loop.run_until_complete(uvicorn_object.serve())
   return {"status":1,"message":"done"}
