@@ -572,7 +572,7 @@ async def function_utility_object_read(request:Request,table:str,order:str="id d
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #add action count
-   response=await function_add_creator_key(postgres_object,output)
+   response=await function_add_action_count(postgres_object,output,action_table)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
 
