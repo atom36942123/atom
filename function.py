@@ -219,24 +219,6 @@ async def function_background_update_last_active_at(postgres_object,user_id):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#background create log
-from fastapi import BackgroundTasks
-from config import config_key_jwt
-from config import config_key_root
-import jwt,json
-async def function_background_create_log(postgres_object,request):
-  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
-  created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:
-    token=authorization_header.split(" ",1)[1]
-    if token==config_key_root:created_by_id=1
-    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
-  background=BackgroundTasks()
-  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
 
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
@@ -435,7 +417,23 @@ async def function_database_init(postgres_object):
 
 
 
-
+#create log
+from fastapi import BackgroundTasks
+from config import config_key_jwt,config_key_root
+import jwt,json
+async def function_create_log(postgres_object,request):
+  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
+  created_by_id=None
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:
+    token=authorization_header.split(" ",1)[1]
+    if token==config_key_root:created_by_id=1
+    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
+  background=BackgroundTasks()
+  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
 
 #router list
 import os,glob
