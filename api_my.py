@@ -1,7 +1,3 @@
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import postgres_object
 from function import function_object_read
 @router.get("/my/object-read")
 async def function_my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
