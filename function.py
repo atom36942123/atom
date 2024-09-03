@@ -415,9 +415,8 @@ async def function_database_init(postgres_object):
 
 
 #auth check
-from config import config_postgres_object,config_key_jwt,config_key_root
 import jwt,json
-async def function_auth_check(mode,request,user_type_allowed_list):
+async def function_auth_check(mode,config_postgres_object,config_key_jwt,config_key_root,request,user_type_allowed_list):
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
@@ -437,10 +436,9 @@ async def function_auth_check(mode,request,user_type_allowed_list):
   return {"status":1,"message":user}
       
 #token create
-from config import config_key_jwt
 import jwt,json,time
 from datetime import datetime,timedelta
-async def function_token_create(user):
+async def function_token_create(user,config_key_jwt):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
   config_token_expiry_days=10000
@@ -457,10 +455,9 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
   return param
 
 #create log
-from config import config_key_jwt,config_key_root
 from fastapi import BackgroundTasks
 import jwt,json
-async def function_create_log(config_postgres_object,request):
+async def function_create_log(config_postgres_object,request,config_key_jwt,config_key_root):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
   authorization_header=request.headers.get("Authorization")
