@@ -10,9 +10,6 @@ async def function_utility_database_init(request:Request):
    #final
    return response
 
-#project cache
-from fastapi import Request
-from config import postgres_object
 from fastapi_cache.decorator import cache
 @router.get("/utility/project-cache")
 @cache(expire=60)
