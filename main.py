@@ -52,12 +52,10 @@ async def function_root(request:Request):
   return {"status":1,"message":"welcome to atom"}
 
 #router
-from function import function_read_filename_api
-response=function_read_filename_api()
-filename_api_list=response["message"]
-for item in filename_api_list:
-  x=__import__(item)
-  app.include_router(x.router)
+from function import function_router_list
+response=function_router_list()
+router_list=response["message"]
+for item in router_list:app.include_router(item)  
   
 #server start
 from function import function_server_start
