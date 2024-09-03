@@ -2,13 +2,19 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["auth"])
 
-#singup
+#common
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from config import postgres_object
-import hashlib
-from function import function_token_create
+from function import function_auth_check
+
+#rate limiter
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
+
+#singup
+import hashlib
+from function import function_token_create
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_auth_signup(request:Request):
    #request body
@@ -34,9 +40,6 @@ async def function_auth_signup(request:Request):
    return {"status":1,"message":token}
 
 #login
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
 import hashlib
 from function import function_token_create
 @router.post("/auth/login")
@@ -60,9 +63,6 @@ async def function_auth_login(request:Request):
    return {"status":1,"message":token}
 
 #google
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
 import hashlib
 from function import function_token_create
 from function import function_read_user_force
@@ -84,12 +84,9 @@ async def function_auth_google(request:Request):
    return {"status":1,"message":token}
 
 #email
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
 from function import function_otp_verify
-from function import function_token_create
 from function import function_read_user_force
+from function import function_token_create
 @router.post("/auth/email")
 async def function_auth_email(request:Request):
    #request body
@@ -111,12 +108,9 @@ async def function_auth_email(request:Request):
    return {"status":1,"message":token}
 
 #mobile
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import postgres_object
 from function import function_otp_verify
-from function import function_token_create
 from function import function_read_user_force
+from function import function_token_create
 @router.post("/auth/mobile")
 async def function_auth_mobile(request:Request):
    #request body
