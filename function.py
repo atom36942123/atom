@@ -427,6 +427,29 @@ async def function_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
+
+
+
+
+
+
+
+
+
+
+#router list
+import os,glob
+def function_router_list():
+  current_directory_path=os.path.dirname(os.path.realpath(__file__))
+  filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
+  filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
+  filename_api_list=[item for item in filename_all_list if "api" in item]
+  router_list=[]
+  for item in filename_api_list:
+    file_module=__import__(item)
+    router_list.append(file_module.router)
+  return {"status":1,"message":router_list}
+
 #server start
 import uvicorn,asyncio
 def function_server_start(app):
@@ -510,4 +533,3 @@ async def function_aws(mode,payload):
   if mode=="s3_delete_all":
     output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
   return {"status":1,"message":output}
-
