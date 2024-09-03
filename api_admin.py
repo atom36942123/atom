@@ -2,20 +2,11 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["admin"])
 
-#common
+#query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import postgres_object
 from function import function_token_check
-
-
-
-
-
-
-
-
-#query runner
+from config import postgres_object
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,mode:str,query:str):
    #auth check
