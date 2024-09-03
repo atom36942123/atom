@@ -53,18 +53,22 @@ async def function_object_ownership_check(postgres_object,table,id,user_id):
     if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
   return {"status":1,"message":"done"}
 
-#parent check
-async def function_parent_check(postgres_object,base_table,parent_table,parent_ids,created_by_id):
-  parent_ids_list=[int(item) for item in parent_ids.split(",")]
-  query=f"select parent_id from {base_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
-  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+#value int check
+async def function_ids_check(postgres_object,column,ids,where_param_raw):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  query=f"select {column} from {table} where {column} in ({ids}) {where_string};"
+  query_param=where_param
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-  return {"status":1,"message":parent_ids_filtered}
+  ids_filtered=list(set([item[column] for item in output if item[column]]))
+  return {"status":1,"message":ids_filtered}
 
 #parent read
-async def function_parent_read(postgres_object,base_table,parent_table,created_by_id,order,limit,offset):
-  query=f"select parent_id from {base_table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
+  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
   query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   parent_ids_list=[item["parent_id"] for item in output]
