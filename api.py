@@ -73,7 +73,7 @@ async def function_auth_oauth(request:Request):
       column=k
       value=hashlib.sha256(v.encode()).hexdigest()
    #read user force
-   response=await function_read_user_force(postgres_object,"google_id",google_id)
+   response=await function_read_user_force(postgres_object,column,value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #token create
