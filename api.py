@@ -63,10 +63,11 @@ async def function_auth_login(request:Request):
 import hashlib
 from function import function_token_create
 from function import function_read_user_force
-@router.post("/auth/google")
-async def function_auth_google(request:Request):
+@router.post("/auth/oauth")
+async def function_auth_oauth(request:Request):
    #request body
    request_body=await request.json()
+   for k,v in request_body.items()
    google_id=str(request_body["google_id"])
    google_id=hashlib.sha256(google_id.encode()).hexdigest()
    #read user force
