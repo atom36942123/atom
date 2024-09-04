@@ -389,7 +389,7 @@ async def function_database_init(postgres_object):
   #unique
   for k,v in config_database_unique.items():
     for table in v:
-      constraint_name=f"constraint_unique_{k}_{table}"
+      constraint_name=f"constraint_unique_{k}_{table}".replace(",","_")
       if constraint_name not in schema_constraint_name_list:
         query=f"alter table {table} add constraint {constraint_name} unique ({k});"
         query_param={}
