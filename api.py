@@ -408,6 +408,17 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
    return {"status":1,"message":output}
 
 #admin
+from function import function_database_init
+@router.get("/admin/database-init")
+async def function_admin_database_init(request:Request):
+   #auth check
+   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   #logic
+   response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+   
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,mode:str,query:str):
    #auth check
@@ -526,17 +537,6 @@ async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
    return {"status":1,"message":output}
 
 #utility
-from function import function_database_init
-@router.get("/utility/database-init")
-async def function_utility_database_init(request:Request):
-   #auth check
-   if request.headers.get("Authorization").split(" ",1)[1]!=config_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #logic
-   response=await function_database_init(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 from fastapi_cache.decorator import cache
 @router.get("/utility/project-cache")
 @cache(expire=60)
