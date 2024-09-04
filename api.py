@@ -7,6 +7,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_auth_check
+from config import config_key_root
 
 #auth
 import hashlib
@@ -525,7 +526,6 @@ async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
    return {"status":1,"message":output}
 
 #utility
-from config import config_key_root
 from function import function_database_init
 @router.get("/utility/database-init")
 async def function_utility_database_init(request:Request):
@@ -644,7 +644,6 @@ async def function_external_s3_delete_single(request:Request,url:str):
    #final
    return response
 
-from config import config_key_root
 from function import function_aws
 @router.delete("/external/s3-delete-all")
 async def function_external_s3_delete_all(request:Request):
