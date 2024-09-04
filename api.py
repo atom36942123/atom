@@ -92,14 +92,15 @@ async def function_auth_otp(request:Request):
    request_body=await request.json()
    if len(request_body)!=2:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    otp=request_body["otp"]
-
-   email=request_body["contact"]
-   
+   email=request_body["email"] if "email" in request_body else None
+   mobile=request_body["mobile"] if "mobile" in request_body else None
+   column="email" if email else "mobile"
+   value=request_body["column"]
    #otp verify
-   response=await function_otp_verify(postgres_object,otp,email,None)
+   response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user force
-   response=await function_read_user_force(postgres_object,"email",email)
+   response=await function_read_user_force(postgres_object,column,value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #token create
