@@ -95,7 +95,7 @@ async def function_auth_otp(request:Request):
    email=request_body["email"] if "email" in request_body else None
    mobile=request_body["mobile"] if "mobile" in request_body else None
    column="email" if email else "mobile"
-   value=request_body["column"]
+   value=request_body[column]
    #otp verify
    response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
