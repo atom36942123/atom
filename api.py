@@ -67,13 +67,11 @@ from function import function_read_user_force
 async def function_auth_oauth(request:Request):
    #request body
    request_body=await request.json()
-   if len(request_body)!=1:return JSONResponse(status_code=400,content={"status":0,"message":"body key should be 1"})
+   if len(request_body)!=1:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    for k,v in request_body.items():
       if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
-      google_id=str(request_body["google_id"])
-      
-   
-   google_id=hashlib.sha256(google_id.encode()).hexdigest()
+      column=k
+      value=hashlib.sha256(v.encode()).hexdigest()
    #read user force
    response=await function_read_user_force(postgres_object,"google_id",google_id)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
