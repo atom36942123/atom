@@ -86,40 +86,20 @@ async def function_auth_oauth(request:Request):
 from function import function_otp_verify
 from function import function_read_user_force
 from function import function_token_create
-@router.post("/auth/email")
-async def function_auth_email(request:Request):
+@router.post("/auth/otp")
+async def function_auth_otp(request:Request):
    #request body
    request_body=await request.json()
-   email=request_body["email"]
+   if len(request_body)!=2:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    otp=request_body["otp"]
+
+   email=request_body["contact"]
+   
    #otp verify
    response=await function_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #read user force
    response=await function_read_user_force(postgres_object,"email",email)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #token create
-   response=await function_token_create(user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
-   #final
-   return {"status":1,"message":token}
-
-from function import function_otp_verify
-from function import function_read_user_force
-from function import function_token_create
-@router.post("/auth/mobile")
-async def function_auth_mobile(request:Request):
-   #request body
-   request_body=await request.json()
-   mobile=request_body["mobile"]
-   otp=request_body["otp"]
-   #otp verify
-   response=await function_otp_verify(postgres_object,otp,None,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #read user force
-   response=await function_read_user_force(postgres_object,"mobile",mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #token create
