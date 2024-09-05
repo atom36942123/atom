@@ -4,7 +4,8 @@
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm
 5. example: backend for tinder can be build with atom with-in ~2 week
-6. 6. api docs= https://atom-tbsk.onrender.com/docs
+6. api docs= https://atom-tbsk.onrender.com/docs
+   
 
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
