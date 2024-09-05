@@ -379,11 +379,11 @@ async def function_database_init(postgres_object):
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #default
-  for k,v in config_database_default.items():
-    for table in v[1]:
-      state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+  for item in config_database_default:
+    for table in item[2]:
+      state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==item[0]]
       if state[0]==None:
-        query=f"alter table {table} alter column {k} set default {v[0]};"
+        query=f"alter table {table} alter column {item[0]} set default {item[1]};"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #unique
