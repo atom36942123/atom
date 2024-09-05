@@ -91,9 +91,9 @@ config_database_not_null={
 config_database_identity={
 "id":config_database_table
 }
-config_database_default={
-"created_at":["now()",config_database_table]
-}
+config_database_default=[
+["created_at","now()",config_database_table]
+]
 config_database_unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
