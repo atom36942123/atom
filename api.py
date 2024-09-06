@@ -148,8 +148,8 @@ async def function_my_metric(request:Request):
    return response
 
 from function import function_token_create
-@router.get("/my/token-refresh")
-async def function_my_token_refresh(request:Request):
+@router.get("/my/token")
+async def function_my_token(request:Request):
    #auth check
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
