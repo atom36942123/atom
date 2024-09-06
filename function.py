@@ -1,3 +1,17 @@
+#user metric
+async def function_user_metric(postgres_object,user_id):
+  query_dict={
+  "post_count":"select count(*) as x from post where created_by_id=:user_id;",
+  "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
+  }
+  temp={}
+  for k,v in query_dict.items():
+    query=v
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    temp[k]=output[0]["x"]
+  return {"status":1,"message":temp}
+
 #search location
 async def function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
   lat,long=float(location.split(",")[0]),float(location.split(",")[1])
