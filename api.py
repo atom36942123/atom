@@ -323,12 +323,13 @@ async def function_my_message(request:Request,mode:str,order:str="id desc",limit
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #mark message object read
-   object_list=[]
-   for item in output:
-      object={"id":item["id"],"status":"read","updated_by_id":user["id"]}
-      object_list.append(object)
-      response=await function_object_update(postgres_object,"message",object_list)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode in ["received","received_unread"]:
+      object_list=[]
+      for item in output:
+         object={"id":item["id"],"status":"read","updated_by_id":user["id"]}
+         object_list.append(object)
+         response=await function_object_update(postgres_object,"message",object_list)
+         if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
