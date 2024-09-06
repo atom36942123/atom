@@ -2,15 +2,12 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#config
-from config import postgres_object
-from config import config_key_root
-
-#package
+#common
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from config import postgres_object
 from function import function_auth_check
-from function import function_add_creator_key
+from config import config_key_root
 
 #auth
 import hashlib
@@ -274,6 +271,7 @@ async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
 
 #parent read
 from function import function_parent_read
+from function import function_add_creator_key
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -306,17 +304,26 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    #final
    return {"status":1,"message":output}
 
-from function import function_message
-@router.get("/my/message")
-async def function_my_message(request:Request,mode:str,order:str="id desc",limit:int=100,page:int=1):
+from function import function_add_creator_key
+from function import function_mark_message_object_read
+@router.get("/my/message-received")
+async def function_my_message_received(request:Request,mode:str=None,limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_message(postgres_object,"users",mode,user["id"],None,order,limit,(page-1)*limit)
+   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
+   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
+   #mark message object read
+   response=await function_mark_message_object_read(postgres_object,output,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
@@ -339,6 +346,20 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    if mode=="single":
       query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
       query_param={"id":id,"created_by_id":user['id'],"parent_id":user['id']}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+@router.get("/my/message-inbox")
+async def function_my_message_inbox(request:Request,mode:str=None,limit:int=100,page:int=1):
+   #auth check
+   response=await function_auth_check(postgres_object,request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
+   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -378,6 +399,7 @@ async def function_public_project_cache(request:Request):
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
 from function import function_where_raw
+from function import function_add_creator_key
 from function import function_add_action_count
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
