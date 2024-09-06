@@ -112,11 +112,11 @@ async def function_auth_check(postgres_object,mode,request,user_type_allowed_lis
   if mode=="jwt":
     user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
     if user_type_allowed_list:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
 #token create
