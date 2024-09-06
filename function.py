@@ -11,16 +11,6 @@ async def function_mark_message_object_read(postgres_object,object_list,updated_
     background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#update last active at
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_update_last_active_at(postgres_object,user_id):
-  background=BackgroundTasks()
-  query="update users set last_active_at=:last_active_at where id=:id;"
-  query_param={"last_active_at":datetime.now(),"id":user_id}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
 #object update
 import hashlib,json
 from datetime import datetime
