@@ -21,25 +21,6 @@ async def function_update_last_active_at(postgres_object,user_id):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#where raw
-import hashlib
-from datetime import datetime
-from config import config_database_column
-async def function_where_raw(where_param_raw):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  for k,v in where_param.items():
-    datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:where_param[k]=v.split(",") if v else None
-  return {"status":1,"message":[where_string,where_param]}
-
 #object update
 import hashlib,json
 from datetime import datetime
@@ -63,6 +44,45 @@ async def function_object_update(postgres_object,table,object_list):
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
   
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#where raw
+import hashlib
+from datetime import datetime
+from config import config_database_column
+async def function_where_raw(where_param_raw):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  for k,v in where_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:where_param[k]=v.split(",") if v else None
+  return {"status":1,"message":[where_string,where_param]}
+  
 #object create
 import hashlib,json
 from datetime import datetime
@@ -84,28 +104,6 @@ async def function_object_create(postgres_object,table,object_list):
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
   if email:
