@@ -166,8 +166,8 @@ async def function_my_token(request:Request):
    #final
    return response
 
-@router.delete("/my/delete-account")
-async def function_my_delete_account(request:Request):
+@router.delete("/my/exit")
+async def function_my_exit(request:Request):
    #auth check
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
