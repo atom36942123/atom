@@ -6,13 +6,13 @@ router=APIRouter(tags=["api"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
-from function import function_auth_check
 from config import config_key_root
+from function import function_auth_check
+from fastapi_limiter.depends import RateLimiter
+from fastapi import Depends
 
 #auth
 import hashlib
-from fastapi_limiter.depends import RateLimiter
-from fastapi import Depends
 from function import function_token_create
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_auth_signup(request:Request):
