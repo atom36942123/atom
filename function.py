@@ -267,9 +267,9 @@ async def function_auth_check(postgres_object,request,user_type_allowed_list):
   return {"status":1,"message":user}
 
 #create log
+import jwt,json
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
-import jwt,json
 async def function_create_log(postgres_object,request):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
@@ -285,6 +285,7 @@ async def function_create_log(postgres_object,request):
   return {"status":1,"message":"done"}
 
 #redis service start
+from config import config_redis_server_url
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
