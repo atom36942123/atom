@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from config import config_key_root
 from function import function_auth_check
+from function import function_add_creator_key
 from fastapi import BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
@@ -274,7 +275,6 @@ async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
 
 #parent read
 from function import function_parent_read
-from function import function_add_creator_key
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -307,7 +307,6 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    #final
    return {"status":1,"message":output}
 
-from function import function_add_creator_key
 from function import function_mark_message_object_read
 @router.get("/my/message-received")
 async def function_my_message_received(request:Request,mode:str=None,limit:int=100,page:int=1):
