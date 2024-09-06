@@ -61,7 +61,7 @@ async def function_object_update(postgres_object,mode,table,object_list):
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
   if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
-  else:output=await postgres_object.execute_many(query=query,values=query_param_list)
+  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"updated"}
   
 #object create
@@ -85,7 +85,7 @@ async def function_object_create(postgres_object,mode,table,object_list):
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
   if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
-  else:output=await postgres_object.execute_many(query=query,values=query_param_list)
+  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"done"}
   
 #verify otp
