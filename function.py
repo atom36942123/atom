@@ -1,3 +1,27 @@
+#message
+async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,order,limit,offset):
+  if mode=="received":
+    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
+    query_param={"parent_table":parent_table,"parent_id":user_id}
+  if mode=="received_unread":
+    query=f"selecparent_tablet * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+    query_param={"parent_table":parent_table,"parent_id":user_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
+#update object list column
+from fastapi import BackgroundTasks
+from datetime import datetime
+async def function_update_object_list_column(postgres_object,table,object_list,column,value,updated_by_id):
+  background=BackgroundTasks()
+  ids_list=[str(item["id"]) for item in object_list]
+  ids_string=",".join(ids_list)
+  if ids_string:
+    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+    query_param={"value":value,"updated_at":datetime.now(),"updated_by_id":updated_by_id}
+    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
 #query dict runner
 async def function_query_dict_runner(postgres_object,query_dict):
   temp={}
@@ -45,19 +69,6 @@ def function_redis_key_builder(func,namespace:str="",*,request:Request=None,resp
   param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
   param=":".join(param)
   return param
-
-#mark message object read
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_mark_message_object_read(postgres_object,object_list,updated_by_id):
-  background=BackgroundTasks()
-  ids_list=[str(item["id"]) for item in object_list]
-  ids_string=",".join(ids_list)
-  if ids_string:
-    query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-    query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":updated_by_id}
-    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
 
 #parent check
 async def function_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
