@@ -19,7 +19,24 @@ async def function_mark_message_object_read(postgres_object,object_list,updated_
 
 
 
-
+#where raw
+import hashlib
+from datetime import datetime
+from config import config_database_column
+async def function_where_raw(where_param_raw):
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  for k,v in where_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:where_param[k]=v.split(",") if v else None
+  return {"status":1,"message":[where_string,where_param]}
 
 #object update
 import hashlib,json
@@ -47,30 +64,13 @@ async def function_object_update(postgres_object,mode,table,object_list):
   else:output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"updated"}
   
-#where raw
-import hashlib
-from datetime import datetime
-from config import config_database_column
-async def function_where_raw(where_param_raw):
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  for k,v in where_param.items():
-    datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:where_param[k]=v.split(",") if v else None
-  return {"status":1,"message":[where_string,where_param]}
-  
 #object create
 import hashlib,json
 from datetime import datetime
+from fastapi import BackgroundTasks
 from config import config_database_column
 async def function_object_create(postgres_object,table,object_list):
+  background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
@@ -84,8 +84,9 @@ async def function_object_create(postgres_object,table,object_list):
       if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
+  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
+  else:output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":"updated"}
   
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
