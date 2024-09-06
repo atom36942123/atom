@@ -1,9 +1,5 @@
-#user metric
-async def function_user_metric(postgres_object,user_id):
-  query_dict={
-  "post_count":"select count(*) as x from post where created_by_id=:user_id;",
-  "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
-  }
+#query dict runner
+async def function_query_dict_runner(postgres_object,query_dict):
   temp={}
   for k,v in query_dict.items():
     query=v
