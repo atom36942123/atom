@@ -8,12 +8,15 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_auth_check
 from config import config_key_root
+from fastapi import BackgroundTasks
+from fastapi_cache.decorator import cache
+from function import function_redis_key_builder
+from fastapi_limiter.depends import RateLimiter
+from fastapi import Depends
 
 #auth
 import hashlib
 from function import function_token_create
-from fastapi_limiter.depends import RateLimiter
-from fastapi import Depends
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_auth_signup(request:Request):
    #request body
@@ -307,7 +310,6 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    return {"status":1,"message":output}
 
 from datetime import datetime
-from fastapi import BackgroundTasks
 from function import function_object_update
 from function import function_add_creator_key
 @router.get("/my/message-read")
@@ -376,10 +378,8 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    return {"status":1,"message":output}
 
 #public
-from fastapi_cache.decorator import cache
-from function import function_query_dict_runner
 @router.get("/public/project-cache")
-@cache(expire=60)
+@cache(expire=60,key_builder=function_redis_key_builder)
 async def function_public_project_cache(request:Request):
    #logic
    query_dict={"user_count":"select count(*) from users;"}
@@ -388,8 +388,6 @@ async def function_public_project_cache(request:Request):
    #final
    return response
 
-from fastapi_cache.decorator import cache
-from function import function_redis_key_builder
 from function import function_where_raw
 from function import function_add_creator_key
 from function import function_add_action_count
@@ -504,8 +502,8 @@ async def function_admin_csv(request:Request,mode:str,table:str,file:UploadFile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
-   if mode=="create":response=await function_object_create(postgres_object,table,object_list)
-   if mode=="update":response=await function_object_update(postgres_object,table,object_list)
+   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
+   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -521,7 +519,7 @@ async def function_admin_update_cell(request:Request):
    request_body=await request.json()
    table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
    object={"id":id,column:value,"updated_by_id":user["id"]}
-   response=await function_object_update(postgres_object,table,[object])
+   response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
