@@ -304,25 +304,25 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    #final
    return {"status":1,"message":output}
 
+from function import function_message
 from function import function_add_creator_key
-from function import function_mark_message_object_read
-@router.get("/my/message-received")
-async def function_my_message_received(request:Request,mode:str=None,limit:int=100,page:int=1):
+from function import function_update_object_list_column
+@router.get("/my/message")
+async def function_my_message(request:Request,mode:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
    response=await function_auth_check(postgres_object,request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by id desc limit {limit} offset {(page-1)*limit};"
-   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_message(postgres_object,"users",mode,user["id"],None,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
    #add creator key
    response=await function_add_creator_key(postgres_object,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #mark message object read
-   response=await function_mark_message_object_read(postgres_object,output,user["id"])
+   response=await function_update_object_list_column(postgres_object,"message",output,"status","read",user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
