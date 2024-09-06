@@ -6,6 +6,12 @@ async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,o
   if mode=="received_unread":
     query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":user_id}
+  if mode=="inbox":
+    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(offset}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
+    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
+  if mode=="inbox_unread":
+    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
