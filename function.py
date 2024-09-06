@@ -50,12 +50,7 @@ async def function_add_action_count(postgres_object,object_list,object_table,act
           break
   return {"status":1,"message":object_list}
   
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
+
 
 #parent check
 async def function_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
@@ -128,23 +123,6 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   if not output:return {"status":0,"message":"otp not found"}
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"done"}
-
-#read user force
-async def function_read_user_force(postgres_object,column,value):
-  query=f"select * from users where {column}=:value order by id desc limit 1;"
-  query_param={"value":value}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  user=output[0] if output else None
-  if not user:
-    query=f"insert into users ({column}) values (:value) returning *;"
-    query_param={"value":value}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user_id=output[0]["id"]
-    query="select * from users where id=:id;"
-    query_param={"id":user_id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0]
-  return {"status":1,"message":user}
 
 #token create
 import jwt,json,time
@@ -222,30 +200,6 @@ async def function_object_create(postgres_object,table,object_list):
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
-#file to object list
-import csv,codecs
-async def function_file_to_object_list(file):
-  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
-  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-  object_list=[]
-  for row in file_csv:
-    object_list.append(row)
-  await file.close()
-  return {"status":1,"message":object_list}
-
-#database clean
-async def function_database_clean(postgres_object):
-  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-    query=f"delete from {table} where created_by_id not in (select id from users);"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  for table in ["likes","bookmark","report","block","rating","comment","message"]:
-    for parent_table in ["users","post","comment"]:
-      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
 #auth check
 import jwt,json
 from config import config_key_jwt
@@ -274,14 +228,7 @@ async def function_redis_start():
   FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
-  
-#middleware error
-async def function_middleware_error(error_tuple):
-  error="".join(error_tuple)
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  return {"status":0,"message":error}
-  
+
 #create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
@@ -300,6 +247,65 @@ async def function_create_log(postgres_object,request):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#read user force
+async def function_read_user_force(postgres_object,column,value):
+  query=f"select * from users where {column}=:value order by id desc limit 1;"
+  query_param={"value":value}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  user=output[0] if output else None
+  if not user:
+    query=f"insert into users ({column}) values (:value) returning *;"
+    query_param={"value":value}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user_id=output[0]["id"]
+    query="select * from users where id=:id;"
+    query_param={"id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0]
+  return {"status":1,"message":user}
+
+#file to object list
+import csv,codecs
+async def function_file_to_object_list(file):
+  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  object_list=[]
+  for row in file_csv:
+    object_list.append(row)
+  await file.close()
+  return {"status":1,"message":object_list}
+
+#database clean
+async def function_database_clean(postgres_object):
+  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+    query=f"delete from {table} where created_by_id not in (select id from users);"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  for table in ["likes","bookmark","report","block","rating","comment","message"]:
+    for parent_table in ["users","post","comment"]:
+      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+  
 #router list
 import os,glob
 def function_router_list():
@@ -312,6 +318,31 @@ def function_router_list():
     file_module=__import__(item)
     router_list.append(file_module.router)
   return {"status":1,"message":router_list}
+
+#delete index all
+async def function_delete_index_all(postgres_object):
+  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if output[0]["output"]:
+    query=output[0]["output"]
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
+#middleware error
+async def function_middleware_error(error_tuple):
+  error="".join(error_tuple)
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  return {"status":0,"message":error}
+
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
 
 #server start
 import uvicorn,asyncio
@@ -415,18 +446,7 @@ async def function_database_init(postgres_object):
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
-
-#delete index all
-async def function_delete_index_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if output[0]["output"]:
-    query=output[0]["output"]
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
+  
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
 from elasticsearch import Elasticsearch
