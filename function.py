@@ -398,7 +398,7 @@ async def function_database_init(postgres_object):
   #identity
   for k,v in config_database_identity.items():
     for table in v:
-      state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+      state=[column["is_identity"] for column in schema_column if column["table_name"]==table and column["column_name"]==k]
       if state[0]=="NO":
         query=f"alter table {table} alter column {k} add generated always as identity;"
         query_param={}
@@ -406,7 +406,7 @@ async def function_database_init(postgres_object):
   #default
   for item in config_database_default:
     for table in item[2]:
-      state=[item["column_default"] for item in schema_column if item["table_name"]==table and item["column_name"]==item[0]]
+      state=[column["column_default"] for column in schema_column if column["table_name"]==table and column["column_name"]==item[0]]
       if state[0]==None:
         query=f"alter table {table} alter column {item[0]} set default {item[1]};"
         query_param={}
