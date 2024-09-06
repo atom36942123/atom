@@ -9,19 +9,6 @@ async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,o
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#token create
-import jwt,json,time
-from config import config_key_jwt
-from datetime import datetime,timedelta
-async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
 #where raw
 import hashlib
 from datetime import datetime
@@ -103,6 +90,19 @@ async def function_auth_check(postgres_object,request,user_type_allowed_list):
     if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
+#token create
+import jwt,json,time
+from config import config_key_jwt
+from datetime import datetime,timedelta
+async def function_token_create(user):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
+
 #create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
@@ -120,22 +120,6 @@ async def function_create_log(postgres_object,request):
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #query dict runner
 async def function_query_dict_runner(postgres_object,query_dict):
