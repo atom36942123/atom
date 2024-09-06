@@ -25,6 +25,7 @@ from config import config_database_column
 async def function_object_update(postgres_object,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  if not object_list:return {"status":1,"message":"done"}
   column_to_update_list=[*object_list[0]]
   column_to_update_list.remove("id")
   query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
