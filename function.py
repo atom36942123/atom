@@ -9,19 +9,6 @@ async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,o
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#update object list column
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_update_object_list_column(postgres_object,table,object_list,column,value,updated_by_id):
-  background=BackgroundTasks()
-  ids_list=[str(item["id"]) for item in object_list]
-  ids_string=",".join(ids_list)
-  if ids_string:
-    query=f"update {table} set {column}=:value,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-    query_param={"value":value,"updated_at":datetime.now(),"updated_by_id":updated_by_id}
-    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
 #query dict runner
 async def function_query_dict_runner(postgres_object,query_dict):
   temp={}
