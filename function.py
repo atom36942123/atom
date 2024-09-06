@@ -266,24 +266,6 @@ async def function_auth_check(postgres_object,request,user_type_allowed_list):
     if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
-#redis start
-from config import config_redis_server_url
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
-from redis import asyncio as aioredis
-async def function_redis_start():
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":"done"}
-  
-#middleware error
-async def function_middleware_error(error_tuple):
-  error="".join(error_tuple)
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  return {"status":0,"message":error}
-  
 #create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
@@ -302,6 +284,23 @@ async def function_create_log(postgres_object,request):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+#redis service start
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_service_start():
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
+  
+#middleware error
+async def function_middleware_error(error_tuple):
+  error="".join(error_tuple)
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  return {"status":0,"message":error}
+  
 #router list
 import os,glob
 def function_router_list():
@@ -314,6 +313,17 @@ def function_router_list():
     file_module=__import__(item)
     router_list.append(file_module.router)
   return {"status":1,"message":router_list}
+
+#delete index all
+async def function_delete_index_all(postgres_object):
+  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if output[0]["output"]:
+    query=output[0]["output"]
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
 
 #server start
 import uvicorn,asyncio
@@ -414,17 +424,6 @@ async def function_database_init(postgres_object):
   #trigger set updated_at
   for item in config_database_column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
-#delete index all
-async def function_delete_index_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if output[0]["output"]:
-    query=output[0]["output"]
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
