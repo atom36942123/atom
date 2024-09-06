@@ -4,7 +4,7 @@ async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,o
     query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":user_id}
   if mode=="received_unread":
-    query=f"selecparent_tablet * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
+    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":user_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
