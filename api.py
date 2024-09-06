@@ -2,12 +2,14 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#common
+#config
+from config import postgres_object
+from config import config_key_root
+
+#package
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import postgres_object
 from function import function_auth_check
-from config import config_key_root
 from function import function_add_creator_key
 
 #auth
