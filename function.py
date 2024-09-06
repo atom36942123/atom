@@ -1,5 +1,8 @@
 #message
+from fastapi import BackgroundTasks
+from datetime import datetime
 async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,order,limit,offset):
+  background=BackgroundTasks()
   if mode=="received":
     query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"parent_id":user_id}
@@ -13,6 +16,13 @@ async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,o
     query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
     query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
+  if mode in ["received","received_unread"]:
+    ids_list=[str(item["id"]) for item in output]
+    ids_string=",".join(ids_list)
+    if ids_string:
+      query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user_id}
+      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":output}
 
 #where raw
