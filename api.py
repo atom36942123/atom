@@ -7,7 +7,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_auth_check
-from config import config_key_root
 from fastapi import BackgroundTasks
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
