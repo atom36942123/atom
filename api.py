@@ -377,9 +377,9 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    return {"status":1,"message":output}
 
 #public
-@router.get("/public/project-cache")
+@router.get("/public/pcache")
 @cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_project_cache(request:Request):
+async def function_public_pcache(request:Request):
    #logic
    query_dict={"user_count":"select count(*) from users;"}
    response=await function_query_dict_runner(postgres_object,query_dict)
