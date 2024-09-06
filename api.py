@@ -12,6 +12,8 @@ from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
+from function import function_add_creator_key
+from function import function_add_action_count
 
 #auth
 import hashlib
@@ -275,7 +277,6 @@ async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
 
 #parent read
 from function import function_parent_read
-from function import function_add_creator_key
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -310,7 +311,6 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
 
 from datetime import datetime
 from function import function_object_update
-from function import function_add_creator_key
 @router.get("/my/message-read")
 async def function_my_message_read(request:Request,background:BackgroundTasks,mode:str=None,limit:int=100,page:int=1,user_id:int=None):
    #auth check
@@ -388,8 +388,6 @@ async def function_public_project_cache(request:Request):
    return response
 
 from function import function_where_raw
-from function import function_add_creator_key
-from function import function_add_action_count
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
