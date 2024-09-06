@@ -8,9 +8,9 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from config import config_key_root
 from function import function_auth_check
+from fastapi import BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
-from fastapi import BackgroundTasks
 
 #auth
 import hashlib
@@ -190,7 +190,7 @@ async def function_my_object_create(request:Request,table:str):
    object=await request.json()
    object["created_by_id"]=user["id"]
    [object.pop(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
-   response=await function_object_create(postgres_object,table,[object])
+   response=await function_object_create(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
