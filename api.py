@@ -137,7 +137,7 @@ async def function_my_metric(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query_dict={ "post_count":f"select count(*) as x from post where created_by_id={user['id']};","message_unread_count":f"select count(*) as x from message where parent_table='users' and parent_id={user['id']} and status is null;"}
+   query_dict={ "post_count":f"select count(*) from post where created_by_id={user['id']};","message_unread_count":f"select count(*) from message where parent_table='users' and parent_id={user['id']} and status is null;"}
    response=await function_query_dict_runner(postgres_object,query_dict)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
