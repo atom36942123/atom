@@ -1,24 +1,3 @@
-#mark message object read
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_mark_message_object_read(postgres_object,object_list,updated_by_id):
-  background=BackgroundTasks()
-  ids_list=[str(item["id"]) for item in object_list]
-  ids_string=",".join(ids_list)
-  if ids_string:
-    query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-    query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":updated_by_id}
-    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
-
-
-
-
-
-
-
-
 #where raw
 import hashlib
 from datetime import datetime
