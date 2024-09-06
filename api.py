@@ -355,20 +355,6 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    #final
    return {"status":1,"message":output}
 
-@router.get("/my/message-inbox")
-async def function_my_message_inbox(request:Request,mode:str=None,limit:int=100,page:int=1):
-   #auth check
-   response=await function_auth_check(postgres_object,request,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by id desc;"
-   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by id desc limit {limit} offset {(page-1)*limit};"
-   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
 from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/my/message-thread")
