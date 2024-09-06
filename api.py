@@ -10,6 +10,7 @@ from config import config_key_root
 from function import function_auth_check
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Depends
+from fastapi import BackgroundTasks
 
 #auth
 import hashlib
@@ -110,7 +111,7 @@ async def function_auth_otp(request:Request):
    return response
 
 #my
-from function import function_update_last_active_at
+from function import function_object_update
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth check
@@ -124,10 +125,24 @@ async def function_my_profile(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
+   object={"id":id,column:value,"updated_by_id":user["id"]}
+   
    response=await function_update_last_active_at(postgres_object,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
+
+
+response=await function_object_update(postgres_object,table,[object])
+if response["status"]==0:return JSONResponse(status_code=400,content=response)
+
+
+async def function_update_last_active_at(postgres_object,user_id):
+  background=BackgroundTasks()
+  query="update users set last_active_at=:last_active_at where id=:id;"
+  query_param={"last_active_at":datetime.now(),"id":user_id}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
 
 from function import function_query_dict_runner
 @router.get("/my/metric")
