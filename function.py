@@ -5,7 +5,7 @@ async def function_query_dict_runner(postgres_object,query_dict):
     query=v
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
-    temp[k]=output[0]["x"]
+    temp[k]=output
   return {"status":1,"message":temp}
 
 #search location
