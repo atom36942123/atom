@@ -129,7 +129,7 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
-from function import function_user_metric
+from function import function_query_dict_runner
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
    #auth check
@@ -137,7 +137,8 @@ async def function_my_metric(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_user_metric(postgres_object,user["id"])
+   query_dict={ "post_count":f"select count(*) as x from post where created_by_id={user['id']};","message_unread_count":f"select count(*) as x from message where parent_table='users' and parent_id={user['id']} and status is null;"}
+   response=await function_query_dict_runner(postgres_object,query_dict)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -384,21 +385,16 @@ async def function_my_message_thread(request:Request,background:BackgroundTasks,
 
 #public
 from fastapi_cache.decorator import cache
+from function import function_query_dict_runner
 @router.get("/public/project-cache")
 @cache(expire=60)
 async def function_public_project_cache(request:Request):
    #logic
-   query_dict={
-   "user_count":"select count(*) from users;"
-   }
-   temp={}
-   for k,v in query_dict.items():
-      query=v
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output
+   query_dict={"user_count":"select count(*) from users;"}
+   response=await function_query_dict_runner(postgres_object,query_dict)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":temp}
+   return response
 
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
