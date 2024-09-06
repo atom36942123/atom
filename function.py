@@ -1,29 +1,165 @@
-#message
+#query dict runner
+async def function_query_dict_runner(postgres_object,query_dict):
+  temp={}
+  for k,v in query_dict.items():
+    query=v
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    temp[k]=output
+  return {"status":1,"message":temp}
+
+#search location
+async def function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
+  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
+  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
+  query=f'''
+  with
+  x as (select * from {table} {where_string}),
+  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
+  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
+  '''
+  query_param=where_param
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+  
+#action count
+async def function_add_action_count(postgres_object,object_list,object_table,action_table):
+  if not object_list:return {"status":1,"message":object_list}
+  key_name=f"{action_table}_count"
+  object_list=[dict(item)|{key_name:0} for item in object_list]
+  parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
+  if parent_ids:
+    query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
+    query_param={"parent_table":object_table}
+    object_action_list=await postgres_object.fetch_all(query=query,values=query_param)
+    for x in object_list:
+      for y in object_action_list:
+        if x["id"]==y["parent_id"]:
+          x[key_name]=y["count"]
+          break
+  return {"status":1,"message":object_list}
+  
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
+
+#mark message object read
 from fastapi import BackgroundTasks
 from datetime import datetime
-async def function_message(postgres_object,parent_table,mode,user_id,user_id_2,order,limit,offset):
+async def function_mark_message_object_read(postgres_object,object_list,updated_by_id):
   background=BackgroundTasks()
-  if mode=="received":
-    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {offset};"
-    query_param={"parent_table":parent_table,"parent_id":user_id}
-  if mode=="received_unread":
-    query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
-    query_param={"parent_table":parent_table,"parent_id":user_id}
-  if mode=="inbox":
-    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {offset}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
-    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
-  if mode=="inbox_unread":
-    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {offset};"
-    query_param={"parent_table":parent_table,"created_by_id":user_id,"parent_id":user_id}
+  ids_list=[str(item["id"]) for item in object_list]
+  ids_string=",".join(ids_list)
+  if ids_string:
+    query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
+    query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":updated_by_id}
+    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
+#parent check
+async def function_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
+  parent_ids_list=[int(item) for item in parent_ids.split(",")]
+  query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  if mode in ["received","received_unread"]:
-    ids_list=[str(item["id"]) for item in output]
-    ids_string=",".join(ids_list)
-    if ids_string:
-      query=f"update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where id in ({ids_string}) returning *;"
-      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user_id}
-      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+  return {"status":1,"message":parent_ids_filtered}
+
+#parent read
+async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
+  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_list=[item["parent_id"] for item in output]
+  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
+
+#creator key
+async def function_add_creator_key(postgres_object,object_list):
+  if not object_list:return {"status":1,"message":object_list}
+  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
+  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
+  if user_ids:
+    query=f"select * from users where id in ({user_ids});"
+    query_param={}
+    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
+    for x in object_list:
+      for y in object_user_list:
+         if x["created_by_id"]==y["id"]:
+           x["created_by_username"]=y["username"]
+           break
+  return {"status":1,"message":object_list}
+  
+#ownership check
+async def function_ownership_check(postgres_object,table,id,user_id):
+  if table=="users":
+    if id!=user_id:return {"status":0,"message":"ownership issue"}
+  if table!="users":
+    query=f"select * from {table} where id=:id;"
+    query_param={"id":id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    object=output[0] if output else None
+    if not object:return {"status":0,"message":"no object"}
+    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
+  return {"status":1,"message":"done"}
+
+#update last active at
+from fastapi import BackgroundTasks
+from datetime import datetime
+async def function_update_last_active_at(postgres_object,user_id):
+  background=BackgroundTasks()
+  query="update users set last_active_at=:last_active_at where id=:id;"
+  query_param={"last_active_at":datetime.now(),"id":user_id}
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
+
+#verify otp
+async def function_otp_verify(postgres_object,otp,email,mobile):
+  if email:
+    query="select otp from otp where email=:email order by id desc limit 1;"
+    query_param={"email":email}
+  if mobile:
+    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
+    query_param={"mobile":mobile}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if not output:return {"status":0,"message":"otp not found"}
+  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
+  return {"status":1,"message":"done"}
+
+#read user force
+async def function_read_user_force(postgres_object,column,value):
+  query=f"select * from users where {column}=:value order by id desc limit 1;"
+  query_param={"value":value}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  user=output[0] if output else None
+  if not user:
+    query=f"insert into users ({column}) values (:value) returning *;"
+    query_param={"value":value}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user_id=output[0]["id"]
+    query="select * from users where id=:id;"
+    query_param={"id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0]
+  return {"status":1,"message":user}
+
+#token create
+import jwt,json,time
+from config import config_key_jwt
+from datetime import datetime,timedelta
+async def function_token_create(user):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
 
 #where raw
 import hashlib
@@ -88,6 +224,30 @@ async def function_object_create(postgres_object,table,object_list):
   output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":output}
 
+#file to object list
+import csv,codecs
+async def function_file_to_object_list(file):
+  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  object_list=[]
+  for row in file_csv:
+    object_list.append(row)
+  await file.close()
+  return {"status":1,"message":object_list}
+
+#database clean
+async def function_database_clean(postgres_object):
+  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
+    query=f"delete from {table} where created_by_id not in (select id from users);"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  for table in ["likes","bookmark","report","block","rating","comment","message"]:
+    for parent_table in ["users","post","comment"]:
+      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
 #auth check
 import jwt,json
 from config import config_key_jwt
@@ -106,19 +266,24 @@ async def function_auth_check(postgres_object,request,user_type_allowed_list):
     if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
-#token create
-import jwt,json,time
-from config import config_key_jwt
-from datetime import datetime,timedelta
-async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
+#redis start
+from config import config_redis_server_url
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_start():
+  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
+  
+#middleware error
+async def function_middleware_error(error_tuple):
+  error="".join(error_tuple)
+  if "constraint_unique_likes" in error:error="already liked"
+  if "constraint_unique_users" in error:error="user already exist"
+  return {"status":0,"message":error}
+  
 #create log
 from fastapi import BackgroundTasks
 from config import config_key_jwt,config_key_root
@@ -137,171 +302,6 @@ async def function_create_log(postgres_object,request):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#query dict runner
-async def function_query_dict_runner(postgres_object,query_dict):
-  temp={}
-  for k,v in query_dict.items():
-    query=v
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    temp[k]=output
-  return {"status":1,"message":temp}
-
-#search location
-async def function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
-  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
-  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
-  query=f'''
-  with
-  x as (select * from {table} {where_string}),
-  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
-  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
-  '''
-  query_param=where_param
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
-#creator key
-async def function_add_creator_key(postgres_object,object_list):
-  if not object_list:return {"status":1,"message":object_list}
-  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
-  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
-  if user_ids:
-    query=f"select * from users where id in ({user_ids});"
-    query_param={}
-    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
-    for x in object_list:
-      for y in object_user_list:
-         if x["created_by_id"]==y["id"]:
-           x["created_by_username"]=y["username"]
-           break
-  return {"status":1,"message":object_list}
-  
-#action count
-async def function_add_action_count(postgres_object,object_list,object_table,action_table):
-  if not object_list:return {"status":1,"message":object_list}
-  key_name=f"{action_table}_count"
-  object_list=[dict(item)|{key_name:0} for item in object_list]
-  parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
-  if parent_ids:
-    query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
-    query_param={"parent_table":object_table}
-    object_action_list=await postgres_object.fetch_all(query=query,values=query_param)
-    for x in object_list:
-      for y in object_action_list:
-        if x["id"]==y["parent_id"]:
-          x[key_name]=y["count"]
-          break
-  return {"status":1,"message":object_list}
-
-#parent read
-async def function_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
-  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
-  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  parent_ids_list=[item["parent_id"] for item in output]
-  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-  
-#parent check
-async def function_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
-  parent_ids_list=[int(item) for item in parent_ids.split(",")]
-  query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
-  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
-  return {"status":1,"message":parent_ids_filtered}
-
-#ownership check
-async def function_ownership_check(postgres_object,table,id,user_id):
-  if table=="users":
-    if id!=user_id:return {"status":0,"message":"ownership issue"}
-  if table!="users":
-    query=f"select * from {table} where id=:id;"
-    query_param={"id":id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    object=output[0] if output else None
-    if not object:return {"status":0,"message":"no object"}
-    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
-  return {"status":1,"message":"done"}
-
-#update last active at
-from fastapi import BackgroundTasks
-from datetime import datetime
-async def function_update_last_active_at(postgres_object,user_id):
-  background=BackgroundTasks()
-  query="update users set last_active_at=:last_active_at where id=:id;"
-  query_param={"last_active_at":datetime.now(),"id":user_id}
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
-#verify otp
-async def function_otp_verify(postgres_object,otp,email,mobile):
-  if email:
-    query="select otp from otp where email=:email order by id desc limit 1;"
-    query_param={"email":email}
-  if mobile:
-    query="select otp from otp where mobile=:mobile order by id desc limit 1;"
-    query_param={"mobile":mobile}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if not output:return {"status":0,"message":"otp not found"}
-  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
-  return {"status":1,"message":"done"}
-
-#read user force
-async def function_read_user_force(postgres_object,column,value):
-  query=f"select * from users where {column}=:value order by id desc limit 1;"
-  query_param={"value":value}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  user=output[0] if output else None
-  if not user:
-    query=f"insert into users ({column}) values (:value) returning *;"
-    query_param={"value":value}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user_id=output[0]["id"]
-    query="select * from users where id=:id;"
-    query_param={"id":user_id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0]
-  return {"status":1,"message":user}
-
-#database clean
-async def function_database_clean(postgres_object):
-  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-    query=f"delete from {table} where created_by_id not in (select id from users);"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  for table in ["likes","bookmark","report","block","rating","comment","message"]:
-    for parent_table in ["users","post","comment"]:
-      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
-#delete index all
-async def function_delete_index_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if output[0]["output"]:
-    query=output[0]["output"]
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
-#file to object list
-import csv,codecs
-async def function_file_to_object_list(file):
-  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
-  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
-  object_list=[]
-  for row in file_csv:
-    object_list.append(row)
-  await file.close()
-  return {"status":1,"message":object_list}
-  
 #router list
 import os,glob
 def function_router_list():
@@ -314,30 +314,6 @@ def function_router_list():
     file_module=__import__(item)
     router_list.append(file_module.router)
   return {"status":1,"message":router_list}
-
-#middleware error
-async def function_middleware_error(error_tuple):
-  error="".join(error_tuple)
-  if "constraint_unique_likes" in error:error="already liked"
-  if "constraint_unique_users" in error:error="user already exist"
-  return {"status":0,"message":error}
-
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
-
-#redis service start
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
-from redis import asyncio as aioredis
-async def function_redis_service_start(redis_server_url):
-  FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":"done"}
 
 #server start
 import uvicorn,asyncio
@@ -441,7 +417,18 @@ async def function_database_init(postgres_object):
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
-  
+
+#delete index all
+async def function_delete_index_all(postgres_object):
+  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if output[0]["output"]:
+    query=output[0]["output"]
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
 from elasticsearch import Elasticsearch
