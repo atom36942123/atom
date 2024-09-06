@@ -26,9 +26,8 @@ async def function_auth_signup(request:Request):
    query_param={"username":username,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #read user
-   user_id=output[0]["id"]
    query="select * from users where id=:id;"
-   query_param={"id":user_id}
+   query_param={"id":output[0]["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0]
    #token create
@@ -70,8 +69,7 @@ async def function_auth_oauth(request:Request):
    if len(request_body)!=1:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    for k,v in request_body.items():
       if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
-      column=k
-      value=hashlib.sha256(v.encode()).hexdigest()
+      column,value=k,hashlib.sha256(v.encode()).hexdigest()
    #read user force
    response=await function_read_user_force(postgres_object,column,value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -92,10 +90,12 @@ async def function_auth_otp(request:Request):
    request_body=await request.json()
    if len(request_body)!=2:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    otp=request_body["otp"]
-   email=request_body["email"] if "email" in request_body else None
-   mobile=request_body["mobile"] if "mobile" in request_body else None
-   column="email" if email else "mobile"
-   value=request_body[column]
+   if "email" in request_body:
+      email,mobile=request_body["email"],None
+      column,value="email",email
+   else:
+      email,mobile=None,request_body["mobile"]
+      column,value="mobile",mobile
    #otp verify
    response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -106,9 +106,8 @@ async def function_auth_otp(request:Request):
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
    #final
-   return {"status":1,"message":token}
+   return response
 
 #my
 from function import function_update_last_active_at
@@ -130,6 +129,7 @@ async def function_my_profile(request:Request):
    #final
    return {"status":1,"message":user}
 
+from function import function_user_metric
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
    #auth check
@@ -137,18 +137,10 @@ async def function_my_metric(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query_dict={
-   "post_count":"select count(*) as x from post where created_by_id=:user_id;",
-   "message_unread_count":"select count(*) as x from message where parent_table='users' and parent_id=:user_id and status is null;"
-   }
-   temp={}
-   for k,v in query_dict.items():
-      query=v
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output[0]["x"]
+   response=await function_user_metric(postgres_object,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":temp}
+   return response
 
 from function import function_token_create
 @router.get("/my/token-refresh")
@@ -166,9 +158,8 @@ async def function_my_token_refresh(request:Request):
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
    #final
-   return {"status":1,"message":token}
+   return response
 
 @router.delete("/my/delete-account")
 async def function_my_delete_account(request:Request):
