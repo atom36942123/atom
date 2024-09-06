@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from config import postgres_object
 from function import function_auth_check
 from config import config_key_root
+from function import function_add_creator_key
 
 #auth
 import hashlib
@@ -271,7 +272,6 @@ async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
 
 #parent read
 from function import function_parent_read
-from function import function_add_creator_key
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth check
@@ -305,8 +305,6 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    return {"status":1,"message":output}
 
 from function import function_message
-from function import function_add_creator_key
-from function import function_update_object_list_column
 @router.get("/my/message")
 async def function_my_message(request:Request,mode:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
@@ -399,7 +397,6 @@ async def function_public_project_cache(request:Request):
 from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
 from function import function_where_raw
-from function import function_add_creator_key
 from function import function_add_action_count
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
