@@ -11,11 +11,23 @@ async def function_mark_message_object_read(postgres_object,object_list,updated_
     background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+
+
+
+
+
+
+
+
+
+
 #object update
 import hashlib,json
 from datetime import datetime
+from fastapi import BackgroundTasks
 from config import config_database_column
-async def function_object_update(postgres_object,table,object_list):
+async def function_object_update(postgres_object,mode,table,object_list):
+  background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_update_list=[*object_list[0]]
   column_to_update_list.remove("id")
@@ -31,29 +43,10 @@ async def function_object_update(postgres_object,table,object_list):
       if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
-  output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":output}
+  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
+  else:output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":"updated"}
   
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #where raw
 import hashlib
 from datetime import datetime
