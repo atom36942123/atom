@@ -307,6 +307,7 @@ async def function_my_parent_check(request:Request,table:str,parent_table:str,pa
    return {"status":1,"message":output}
 
 from function import function_message
+from function import function_object_update
 @router.get("/my/message")
 async def function_my_message(request:Request,mode:str,order:str="id desc",limit:int=100,page:int=1):
    #auth check
@@ -322,8 +323,12 @@ async def function_my_message(request:Request,mode:str,order:str="id desc",limit
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #mark message object read
-   response=await function_update_object_list_column(postgres_object,"message",output,"status","read",user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object_list=[]
+   for item in output:
+      object={"id":item["id"],"status":"read","updated_by_id":user["id"]}
+      object_list.append(object)
+      response=await function_object_update(postgres_object,"message",object_list)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
