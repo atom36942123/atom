@@ -69,7 +69,7 @@ import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
 from config import config_database_column
-async def function_object_create(postgres_object,table,object_list):
+async def function_object_create(postgres_object,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
@@ -86,7 +86,7 @@ async def function_object_create(postgres_object,table,object_list):
       if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
   if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
   else:output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":"updated"}
+  return {"status":1,"message":"done"}
   
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
