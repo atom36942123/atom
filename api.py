@@ -87,14 +87,11 @@ from function import function_token_create
 async def function_auth_otp(request:Request):
    #request body
    request_body=await request.json()
-   if len(request_body)!=2:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    otp=request_body["otp"]
-   if "email" in request_body:
-      email,mobile=request_body["email"],None
-      column,value="email",email
-   else:
-      email,mobile=None,request_body["mobile"]
-      column,value="mobile",mobile
+   if "email" in request_body:email,mobile=request_body["email"],None
+   else:email,mobile=None,request_body["mobile"]
+   if email:column,value="email",email
+   else:column,value="mobile",mobile
    #otp verify
    response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
