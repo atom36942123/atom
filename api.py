@@ -18,8 +18,8 @@ from function import function_add_action_count
 #auth
 import hashlib
 from function import function_token_create
-@router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
-async def function_auth_signup(request:Request):
+@router.post("/auth/signup-username",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
+async def function_auth_signup_username(request:Request):
    #request body
    request_body=await request.json()
    username=request_body["username"]
@@ -38,8 +38,8 @@ async def function_auth_signup(request:Request):
 
 import hashlib
 from function import function_token_create
-@router.post("/auth/password")
-async def function_auth_password(request:Request):
+@router.post("/auth/login-password")
+async def function_auth_login_password(request:Request):
    #request body
    request_body=await request.json()
    password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
@@ -63,8 +63,8 @@ async def function_auth_password(request:Request):
 import hashlib
 from function import function_token_create
 from function import function_read_user_force
-@router.post("/auth/oauth")
-async def function_auth_oauth(request:Request):
+@router.post("/auth/login-oauth")
+async def function_auth_login_oauth(request:Request):
    #request body
    request_body=await request.json()
    for k,v in request_body.items():
@@ -84,8 +84,8 @@ async def function_auth_oauth(request:Request):
 from function import function_otp_verify
 from function import function_read_user_force
 from function import function_token_create
-@router.post("/auth/otp")
-async def function_auth_otp(request:Request):
+@router.post("/auth/login-otp")
+async def function_auth_login_otp(request:Request):
    #request body
    request_body=await request.json()
    otp=request_body["otp"]
