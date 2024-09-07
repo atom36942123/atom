@@ -446,6 +446,19 @@ async def function_admin_query_runner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
+from function import function_aws
+@router.delete("/external/s3-delete-single")
+async def function_external_s3_delete_single(request:Request,url:str):
+   #auth check
+   response=await function_auth_check(postgres_object,request,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_aws("s3_delete_single",{"url":url})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #public
 @router.get("/public/project-cache")
 @cache(expire=60,key_builder=function_redis_key_builder)
