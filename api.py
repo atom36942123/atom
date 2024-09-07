@@ -447,8 +447,8 @@ async def function_admin_query_runner(request:Request,mode:str,query:str):
    return {"status":1,"message":output}
 
 from function import function_aws
-@router.delete("/external/s3-delete-single")
-async def function_external_s3_delete_single(request:Request,url:str):
+@router.delete("/admin/s3-delete-single")
+async def function_admin_s3_delete_single(request:Request,url:str):
    #auth check
    response=await function_auth_check(postgres_object,request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -524,8 +524,8 @@ async def function_public_search_location(request:Request,table:str,location:str
    return response
 
 from function import function_aws
-@router.get("/public/create-presigned-url")
-async def function_public_create_presigned_url(request:Request,filename:str):
+@router.get("/public/s3-create-presigned-url")
+async def function_public_s3_create_presigned_url(request:Request,filename:str):
    #logic
    response=await function_aws("s3_create_presigned_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
