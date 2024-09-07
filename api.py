@@ -509,3 +509,12 @@ async def function_public_search_location(request:Request,table:str,location:str
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+from function import function_aws
+@router.get("/public/create-presigned-url")
+async def function_public_create_presigned_url(request:Request,filename:str):
+   #logic
+   response=await function_aws("s3_create_presigned_url",{"filename":filename})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
