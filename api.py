@@ -45,7 +45,7 @@ async def function_auth_password(request:Request):
    password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
    request_body.pop("password")
    for k,v in request_body.items():
-      if k not in ["username","email","mobile"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
+      if k not in ["username","email","mobile"]:return JSONResponse(status_code=400,content={"status":0,"message":"column not allowed"})
       column,value=k,v
    #read user
    query=f"select * from users where {column}=:value and password=:password order by id desc limit 1;"
