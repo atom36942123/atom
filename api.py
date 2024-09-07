@@ -341,6 +341,7 @@ async def function_my_message_read(request:Request,background:BackgroundTasks,mo
    #final
    return {"status":1,"message":output}
 
+from function import function_message_delete
 @router.delete("/my/message-delete")
 async def function_my_message_delete(request:Request,mode:str,id:int=None):
    #auth check
@@ -348,21 +349,10 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="created":
-      query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
-      query_param={"created_by_id":user['id']}
-   if mode=="received":
-      query="delete from message where parent_table='users' and parent_id=:parent_id;"
-      query_param={"parent_id":user['id']}
-   if mode=="all":
-      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"created_by_id":user['id'],"parent_id":user['id']}
-   if mode=="single":
-      query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"id":id,"created_by_id":user['id'],"parent_id":user['id']}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_message_delete(postgres_object,"users",mode,user["id"],id)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #public
 @router.get("/public/project-cache")
