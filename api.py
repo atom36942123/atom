@@ -23,8 +23,7 @@ async def function_auth_signup(request:Request):
    #request body
    request_body=await request.json()
    username=request_body["username"]
-   password=str(request_body["password"])
-   password=hashlib.sha256(password.encode()).hexdigest()
+   password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":password}
@@ -39,16 +38,18 @@ async def function_auth_signup(request:Request):
 
 import hashlib
 from function import function_token_create
-@router.post("/auth/login")
-async def function_auth_login(request:Request):
+@router.post("/auth/password")
+async def function_auth_password(request:Request):
    #request body
    request_body=await request.json()
-   username=request_body["username"]
-   password=str(request_body["password"])
-   password=hashlib.sha256(password.encode()).hexdigest()
+   password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
+   request_body.pop("password")
+   for k,v in request_body.items():
+      if k not in ["username","email","mobile"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
+      column,value=k,v
    #read user
-   query="select * from users where username=:username and password=:password order by id desc limit 1;"
-   query_param={"username":username,"password":password}
+   query=f"select * from users where {column}=:value and password=:password order by id desc limit 1;"
+   query_param={"value":value,"password":password}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
