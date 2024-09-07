@@ -268,7 +268,6 @@ async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#parent read
 from function import function_parent_read
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
@@ -287,7 +286,6 @@ async def function_my_parent_read(request:Request,table:str,parent_table:str,lim
    #final
    return {"status":1,"message":output}
 
-#parent check
 from function import function_parent_check
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
@@ -347,70 +345,6 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    #final
    return response
 
-#public
-@router.get("/public/project-cache")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_project_cache(request:Request):
-   #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   response=await function_query_dict_runner(postgres_object,query_dict)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from function import function_where_raw
-@router.get("/public/object-read")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #where raw
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_raw(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(postgres_object,output,table,"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-@router.get("/public/bulk-ids-read")
-async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-from function import function_where_raw
-from function import function_search_location
-@router.get("/public/search-location")
-async def function_public_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where raw
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
-   response=await function_where_raw(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
-   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #admin
 from function import function_database_init
 @router.get("/admin/database-init")
@@ -420,6 +354,19 @@ async def function_admin_database_init(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_database_clean
+@router.delete("/admin/database-clean")
+async def function_admin_database_clean(request:Request):
+   #auth
+   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_database_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -442,19 +389,6 @@ async def function_admin_query_runner(request:Request,mode:str,query:str):
          output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
-
-from function import function_database_clean
-@router.delete("/admin/database-clean")
-async def function_admin_database_clean(request:Request):
-   #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_database_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 from fastapi import UploadFile
 from function import function_file_to_object_list
@@ -540,6 +474,70 @@ async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#public
+@router.get("/public/project-cache")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_public_project_cache(request:Request):
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   response=await function_query_dict_runner(postgres_object,query_dict)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_where_raw
+@router.get("/public/object-read")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #where raw
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_where_raw(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add action count
+   response=await function_add_action_count(postgres_object,output,table,"likes")
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+@router.get("/public/bulk-ids-read")
+async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+from function import function_where_raw
+from function import function_search_location
+@router.get("/public/search-location")
+async def function_public_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #where raw
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
+   response=await function_where_raw(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
 
 #external
 from function import function_aws
