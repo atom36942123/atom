@@ -143,8 +143,8 @@ async def function_my_metric(request:Request):
    return response
 
 from function import function_token_create
-@router.get("/my/token")
-async def function_my_token(request:Request):
+@router.get("/my/token-refresh")
+async def function_my_token_refresh(request:Request):
    #auth
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -161,8 +161,8 @@ async def function_my_token(request:Request):
    #final
    return response
 
-@router.delete("/my/exit")
-async def function_my_exit(request:Request):
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
    #auth
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
