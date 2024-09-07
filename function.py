@@ -107,6 +107,7 @@ async def function_object_create(postgres_object,mode,table,object_list):
   
 #verify otp
 async def function_otp_verify(postgres_object,otp,email,mobile):
+  if email and mobile:return {"status":0,"message":"only one contact allowed"}
   if email:
     query="select otp from otp where email=:email order by id desc limit 1;"
     query_param={"email":email}
