@@ -545,12 +545,10 @@ async def function_public_send_otp(request:Request,email:str=None,mobile:str=Non
    return {"status":1,"message":"otp sent"}
 
 @router.get("/public/verify-otp")
-async def function_public_verify_otp(request:Request,email:str=None,mobile:str=None):
+async def function_public_verify_otp(request:Request,otp:int,email:str=None,mobile:str=None):
    #logic
    if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   otp=1234
-   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
-   query_param={"otp":otp,"email":email,"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await function_otp_verify(postgres_object,otp,email,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":"otp sent"}
+   return response
