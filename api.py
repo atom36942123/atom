@@ -531,3 +531,15 @@ async def function_public_s3_create_presigned_url(request:Request,filename:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+from random import randint
+@router.get("/public/send-otp")
+async def function_public_send_otp(request:Request,email:str=None,mobile:str=None):
+   #logic
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
+   otp=123
+   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
+   query_param={"otp":otp,"email":email,"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
