@@ -66,7 +66,6 @@ from function import function_read_user_force
 async def function_auth_oauth(request:Request):
    #request body
    request_body=await request.json()
-   if len(request_body)!=1:return JSONResponse(status_code=400,content={"status":0,"message":"body key length should be 1"})
    for k,v in request_body.items():
       if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
       column,value=k,hashlib.sha256(v.encode()).hexdigest()
