@@ -509,21 +509,3 @@ async def function_public_search_location(request:Request,table:str,location:str
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-#external
-from function import function_aws
-@router.post("/external/aws")
-async def function_external_aws(request:Request):
-   #request body
-   payload=await request.json()
-   mode=payload["mode"]
-   payload.pop("mode")
-   #auth
-   if "delete" in mode:
-      response=await function_auth_check(postgres_object,"jwt",request,["admin"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      user=response["message"]
-   response=await function_aws(mode,payload)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
