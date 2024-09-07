@@ -1,3 +1,20 @@
+#message delete
+async def function_message_delete(postgres_object,parent_table,mode,user_id,id):
+  if mode=="created":
+    query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
+    query_param={"parent_table":"users","created_by_id":user_id}
+  if mode=="received":
+    query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
+    query_param={"parent_table":"users","created_by_id":user_id}
+  if mode=="all":
+    query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
+    query_param={"parent_table":"users","created_by_id":user_id,"parent_id":user_id}
+  if mode=="single":
+    query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+    query_param={"parent_table":"users","id":id,"created_by_id":user_id,"parent_id":user_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+  
 #message read
 async def function_message_read(postgres_object,parent_table,mode,user_id,user_id_2,order,limit,offset):
   if mode=="received":
