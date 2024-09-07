@@ -551,7 +551,7 @@ async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
 #external
 from function import function_aws
 @router.get("/external/aws")
-async def function_external_aws(request:Request,filename:str):
+async def function_external_aws(request:Request,mode:str,filename:str):
    #logic
    response=await function_aws("s3_create_presigned_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
