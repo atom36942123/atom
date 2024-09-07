@@ -370,25 +370,6 @@ async def function_admin_database_clean(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-   
-@router.get("/admin/query-runner")
-async def function_admin_query_runner(request:Request,mode:str,query:str):
-   #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="single":
-      query=query
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   if mode=="bulk":
-      for item in query.split("---"):
-         query=item
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
 from fastapi import UploadFile
 from function import function_file_to_object_list
@@ -412,66 +393,36 @@ async def function_admin_csv_uploader(request:Request,mode:str,table:str,file:Up
    return response
 
 from function import function_object_update
-@router.put("/admin/update-cell")
-async def function_admin_update_cell(request:Request):
+@router.put("/admin/object-update")
+async def function_admin_object_update(request:Request,table:str):
    #auth
    response=await function_auth_check(postgres_object,"jwt",request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   request_body=await request.json()
-   table,id,column,value=request_body["table"],request_body["id"],request_body["column"],request_body["value"]
-   object={"id":id,column:value,"updated_by_id":user["id"]}
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-from function import function_where_raw
-@router.get("/admin/object-read")
-async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #where raw
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_raw(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-@router.get("/admin/bulk-ids-read")
-async def function_admin_bulk_ids_read(request:Request,table:str,ids:str):
+  
+@router.get("/admin/query-runner")
+async def function_admin_query_runner(request:Request,mode:str,query:str):
    #auth
    response=await function_auth_check(postgres_object,"jwt",request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-@router.delete("/admin/bulk-ids-delete")
-async def function_admin_bulk_ids_delete(request:Request,table:str,ids:str):
-   #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   if len(ids)>100:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
-   query=f"delete from {table} where id in ({ids});"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="single":
+      query=query
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="bulk":
+      for item in query.split("---"):
+         query=item
+         query_param={}
+         output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
