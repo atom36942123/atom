@@ -533,8 +533,8 @@ async def function_public_s3_create_presigned_url(request:Request,filename:str):
    return response
 
 from random import randint
-@router.get("/public/send-otp")
-async def function_public_send_otp(request:Request,email:str=None,mobile:str=None):
+@router.get("/public/otp-send")
+async def function_public_otp_send(request:Request,email:str=None,mobile:str=None):
    #logic
    if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
    otp=1234
@@ -544,8 +544,8 @@ async def function_public_send_otp(request:Request,email:str=None,mobile:str=Non
    #final
    return {"status":1,"message":"otp sent"}
 
-@router.get("/public/verify-otp")
-async def function_public_verify_otp(request:Request,otp:int,email:str=None,mobile:str=None):
+@router.get("/public/otp-verify")
+async def function_public_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
    #logic
    if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
    response=await function_otp_verify(postgres_object,otp,email,mobile)
