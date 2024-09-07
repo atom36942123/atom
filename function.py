@@ -117,7 +117,7 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   if not output:return {"status":0,"message":"otp not found"}
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
-  return {"status":1,"message":"done"}
+  return {"status":1,"message":"otp verifed"}
 
 #read user force
 async def function_read_user_force(postgres_object,column,value):
