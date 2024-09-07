@@ -450,7 +450,7 @@ from function import function_aws
 @router.delete("/admin/s3-delete-single")
 async def function_admin_s3_delete_single(request:Request,url:str):
    #auth check
-   response=await function_auth_check(postgres_object,request,["admin"])
+   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
