@@ -13,9 +13,16 @@
 5. any social media
 
 # atom features
-any application has two major part - backend/frontend. backend is something that takes time and involves complexity. atom is written to simplify backend development which is common across any product. with atom, anyone can deploy ~50% of the backend in ~2 weeks.
+Any application has two major parts-backend/frontend. 
+Backend is something that takes time and involves complexity. 
+Atom is written to simplify backend development which is common across any product. 
+With atom, anyone can deploy ~50% of the backend in ~2 weeks.
 
-below are the generic modules that are already built in atom that can be used directly while building any application. below modules are fully developed with rigourus testing which can save a lot of time while building any new application. using atom, any application can be configured in a week. after that, further development can be continued without any restriction. below are modules are core business logics that any application needs and which take a lot of time to develop.
+Below are the generic modules that are already built in atom that can be used directly while building any application. 
+Below modules are fully developed with rigourus testing which can save a lot of time while building any new application.
+Using atom, any application can be configured in a week.
+After that,further development can be continued without any restriction.
+Below are modules are core business logics that any application needs and which take a lot of time to develop.
 
 1. auth = signup/login-email,mobile,oauth,password/token refresh
 2. object level crud operations including access based control
