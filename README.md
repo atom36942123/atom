@@ -1,48 +1,42 @@
 # what is atom
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
-2. atom is non opionated. Its more like a boilerplate that can help you to build ~70-80%% of your project within few weeks.
+2. atom is non opionated. all the features are generic without any bias for any particular application.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm
 5. example: backend for tinder can be build with atom with-in ~2 week
 6. api docs= https://atom-tbsk.onrender.com/docs
-   
+7. tech stack = python/fastapi/postgres/redis/mongodb/elasticsearch/ec2/s3/ses/jenkins/postman/retool/appsmith/sentry/postgis/ec2/s3/ses/render
+8. vision = to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.
+9. email = atom36942@gmail.com
+10. any application has two major part - backend/frontend. backend is something that takes time and involves complexity. atom is written to simplify backend development which is common across any product. with atom, anyone can deploy ~50% of the backend in ~2 weeks.
 
-# vision
-1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.  
-2. Primary motivation  is to build as many applications using atom code and help startup founders.
-3. If you are an aspiring founder, then you can email me to build your tech using atom.
-4. Email = atom36942@gmail.com
+#atom features
+below are the generic modules that are already built in atom that can be used directly while building any application. below modules are fully developed with rigourus testing which can save a lot of time while building any new application. using atom, any application be configured in a week. after that, further development can be continud without any restriction.
 
-# salient features
-1. postgres as core database
-2. scalability in terms of database schema
-3. master/slave/indexing and other stratgey to make queries faster included
-4. mongodb/elastiscsearch/s3/ses setup included
-5. redis caching included for any api using config
-6. complete api collection/runner on postman with automated testing
-7. object level api's without any opinions on the objects
-8. rback included for api's
-9. postgis included for lat/long use-cases
-10. deployment using render in less than 5 mins
-
-# tech stack
-1. python
-2. fastapi
-3. postgres
-4. redis
-5. mongodb
-6. elasticsearch
-7. ec2
-8. s3
-9. ses
-10. jenkins
-11. postman
-12. retool
-13. sentry
-14. postgis
-15. render
+1. signup username
+2. login with password - username,email,mobile
+3. login with otp,email
+4. login with otp,mobile
+5. token refresh
+6. profile get,update,delete
+7. create any objects like post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
+8. object level crud operations including access based control
+9. message module
+10. admin rback module
+11. csv uploader
+12. sql runner for operations/analytics
+13. feed api
+14. s3 presigned url for media storage
+15. otp send/verify
+16. location search api
+17. database postgres/mongo configured
+18. redis configured for caching any api response
+19. master/slave replicas configured for get apis
+20. sentry added for performance monitoring
+21. one click deployment configured using render
+22. one click database schema setup with no restriction in schema
+23. postman collection/runner for automated testing
     
-
 # how to run
 1. download atom repo
 2. install requirement.txt
