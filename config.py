@@ -27,6 +27,7 @@ config_database_column={
 "id":["bigint",config_database_table],
 "created_at":["timestamptz",config_database_table],
 "created_by_id":["bigint",config_database_table],
+"is_deleted":["int",config_database_table],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
 "is_active":["int",["users","post"]],
