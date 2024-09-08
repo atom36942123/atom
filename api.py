@@ -188,7 +188,7 @@ async def function_my_object_create(request:Request,table:str):
    #request body
    object=await request.json()
    object["created_by_id"]=user["id"]
-   #object check
+   #object crud check
    response=await function_object_crud_check(postgres_object,"create",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
@@ -212,7 +212,7 @@ async def function_my_object_update(request:Request,table:str):
    #object ownership check
    response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #object check
+   #object crud check
    response=await function_object_crud_check(postgres_object,"update",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
