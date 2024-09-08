@@ -17,30 +17,27 @@ any application has two major part - backend/frontend. backend is something that
 
 below are the generic modules that are already built in atom that can be used directly while building any application. below modules are fully developed with rigourus testing which can save a lot of time while building any new application. using atom, any application can be configured in a week. after that, further development can be continued without any restriction. below are modules are core business logics that any application needs and which take a lot of time to develop.
 
-1. signup username
-2. login with password - username,email,mobile
-3. login with otp,email
-4. login with otp,mobile
-5. token refresh
-6. profile get,update,delete
-7. create any objects like post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
-8. object level crud operations including access based control
-9. message module
-10. admin rback module
-11. csv uploader
-12. sql runner for operations/analytics
-13. feed api
-14. s3 presigned url for media storage
-15. otp send/verify
-16. location search api
-17. database postgres/mongo configured
-18. redis configured for caching any api response
-19. master/slave replicas configured for get apis
-20. sentry added for performance monitoring
-21. one click deployment configured using render
-22. one click database schema setup with no restriction in schema
-23. postman collection/runner for automated testing
-
+1. auth = signup/login-email,mobile,oauth,password/token refresh
+2. object level crud operations including access based control
+3. any table/objects operations alloed - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
+4. message module
+5. admin module with rbac
+6. csv uploader
+7. sql runner for operations/analytics
+8. feed api with caching
+9. s3 presigned url for media storage
+10. otp send/verify
+11. location search api
+12. database postgres/mongo configured
+13. redis configured for caching any api response
+14. master/slave replicas configured for get apis
+15. sentry added for performance monitoring
+16. one click deployment configured using render
+17. one click database schema setup with no restriction in schema
+18. postman collection/runner for automated testing
+19. one click indexing
+20. all major datatype supported in api's - string,timestamp,int,numeric,list,jsonb,geometric
+   
 # tech stack
 1. python
 2. fastapi
