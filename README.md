@@ -1,5 +1,5 @@
 # what is atom
-1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months. ny application has two major part - backend/frontend. backend is something that takes time and involves complexity. atom is written to simplify backend development which is common across any product. with atom, anyone can deploy ~50% of the backend in ~2 weeks.
+1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
 2. atom is non opionated. all the features are generic without any bias for any particular application.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm
@@ -14,6 +14,8 @@
 5. any social media
 
 # atom features
+any application has two major part - backend/frontend. backend is something that takes time and involves complexity. atom is written to simplify backend development which is common across any product. with atom, anyone can deploy ~50% of the backend in ~2 weeks.
+
 below are the generic modules that are already built in atom that can be used directly while building any application. below modules are fully developed with rigourus testing which can save a lot of time while building any new application. using atom, any application be configured in a week. after that, further development can be continued without any restriction. below are modules are core business logics that any application needs and which take a lot of time to develop.
 
 1. signup username
