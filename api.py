@@ -177,7 +177,7 @@ async def function_my_delete_account(request:Request):
    #final
    return {"status":1,"message":output}
 
-from function import function_object_check
+from function import function_object_crud_check
 from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
@@ -189,7 +189,7 @@ async def function_my_object_create(request:Request,table:str):
    object=await request.json()
    object["created_by_id"]=user["id"]
    #object check
-   response=await function_object_check(postgres_object,"create",table,[object])
+   response=await function_object_crud_check(postgres_object,"create",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    response=await function_object_create(postgres_object,"normal",table,[object])
@@ -197,8 +197,8 @@ async def function_my_object_create(request:Request,table:str):
    #final
    return response
 
-from function import function_ownership_check
-from function import function_object_check
+from function import function_object_ownership_check
+from function import function_object_crud_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
@@ -210,10 +210,10 @@ async def function_my_object_update(request:Request,table:str):
    object=await request.json()
    object["updated_by_id"]=user["id"]
    #object ownership check
-   response=await function_ownership_check(postgres_object,table,object["id"],user["id"])
+   response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #object check
-   response=await function_object_check(postgres_object,"update",table,[object])
+   response=await function_object_crud_check(postgres_object,"update",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    response=await function_object_update(postgres_object,"normal",table,[object])
