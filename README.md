@@ -3,8 +3,7 @@
 2. atom is non opionated. all the features are generic without any bias for any particular application.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm
-5. example: backend for tinder can be build with atom with-in ~2 week
-6. api docs= https://atom-tbsk.onrender.com/docs
+5. api docs= https://atom-tbsk.onrender.com/docs
     
 # what type of applications atom can build
 1. ecommnerce
