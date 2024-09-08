@@ -1,5 +1,5 @@
-#object check
-async def function_object_check(postgres_object,mode,table,object_list):
+#object crud check
+async def function_object_crud_check(postgres_object,mode,table,object_list):
   if mode=="create":
     if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return {"status":0,"message":"table not allowed"}
     for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
@@ -233,8 +233,8 @@ async def function_search_location(postgres_object,table,where_string,where_para
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#ownership check
-async def function_ownership_check(postgres_object,table,id,user_id):
+#object ownership check
+async def function_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
     if id!=user_id:return {"status":0,"message":"ownership issue"}
   if table!="users":
