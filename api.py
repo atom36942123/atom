@@ -185,7 +185,8 @@ async def function_my_object_create(request:Request,table:str):
    if table in ["users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
    object["created_by_id"]=user["id"]
-   [object.pop(item) for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"] if item in object]
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object::return JSONResponse(status_code=400,content={"status":1,"message":"body keys not allowed"})
    response=await function_object_create(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
