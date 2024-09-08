@@ -1,3 +1,13 @@
+#object check
+async def function_object_check(postgres_object,mode,table,object_list):
+  if mode=="create":
+    if table in ["users","otp","log","atom","box"]:return {"status":0,"message":"table not allowed"}
+    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      for object in object_list:
+        if item in object:return {"status":0,"message":"object keys not allowed"}
+  if mode=="update":pass
+  return {"status":1,"message":"done"}
+  
 #message delete
 async def function_message_delete(postgres_object,parent_table,mode,user_id,id):
   if mode=="created":
