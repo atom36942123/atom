@@ -238,7 +238,7 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -259,7 +259,7 @@ async def function_my_object_delete(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"delete from {table} {where_string};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -497,7 +497,7 @@ async def function_public_object_read(request:Request,table:str,order:str="id de
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -515,7 +515,7 @@ async def function_public_object_read(request:Request,table:str,order:str="id de
 @router.get("/public/bulk-ids-read")
 async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
    #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} where id in ({ids}) order by id desc;"
    query_param={}
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -533,7 +533,7 @@ async def function_public_search_location(request:Request,table:str,location:str
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
