@@ -190,7 +190,7 @@ async def function_my_object_create(request:Request,table:str):
    #object check
    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    #logic
    response=await function_object_create(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -214,7 +214,7 @@ async def function_my_object_update(request:Request,table:str):
    #object check
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    if table=="users":
       for item in ["email","mobile"]:
          if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
