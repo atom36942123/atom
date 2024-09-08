@@ -2,9 +2,9 @@
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
 2. atom is non opionated. all the features are generic without any bias for any particular application.
 3. atom is fully scalable as per need.
-4. atom follows functional programming paradigm
+4. atom follows functional programming paradigm with separation of logic and interface.
 5. api docs= https://atom-tbsk.onrender.com/docs
-    
+
 # what type of applications atom can build
 1. ecommnerce
 2. tinder like apps
@@ -26,7 +26,7 @@ Below are modules are core business logics that any application needs and which 
 
 1. auth = signup/login-email,mobile,oauth,password/token refresh
 2. object level crud operations including access based control
-3. any table/objects operations alloed - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
+3. any table/objects operations allowed - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
 4. message module
 5. admin module with rbac
 6. csv uploader
