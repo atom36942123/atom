@@ -10,6 +10,10 @@ async def function_object_check(postgres_object,mode,table,object_list):
     for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       for object in object_list:
         if item in object:return {"status":0,"message":"object keys not allowed"}
+    if table=="users":
+      for item in ["email","mobile"]:
+        for object in object_list:
+          if item in object:return {"status":0,"message":"object keys not allowed"}
   return {"status":1,"message":"done"}
   
 #message delete
