@@ -15,9 +15,9 @@
 
 # atom features
 > Any application has two major parts-backend/frontend.
-Backend is something that takes time and involves complexity.
-Atom is written to simplify backend development which is common across any product.
-With atom, anyone can deploy ~50% of the backend in ~2 weeks.
+> Backend is something that takes time and involves complexity.
+> Atom is written to simplify backend development which is common across any product.
+> With atom, anyone can deploy ~50% of the backend in ~2 weeks.
 
 Below are the generic modules that are already built in atom that can be used directly while building any application.
 Below modules are fully developed with rigourus testing which can save a lot of time while building any new application.
