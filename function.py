@@ -243,7 +243,7 @@ async def function_ownership_check(postgres_object,table,id,user_id):
     output=await postgres_object.fetch_all(query=query,values=query_param)
     object=output[0] if output else None
     if not object:return {"status":0,"message":"no object"}
-    if object["created_by_id"]!=user_id:return {"status":0,"message":"ownership issue"}
+    if object["created_by_id"]!=user_id:return {"status":0,"message":"object ownership issue"}
   return {"status":1,"message":"done"}
 
 #parent check
