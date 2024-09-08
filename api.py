@@ -217,7 +217,7 @@ async def function_my_object_update(request:Request,table:str):
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    if table=="users":
       for item in ["email","mobile"]:
-         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
+         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    #logic
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
