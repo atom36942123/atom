@@ -207,7 +207,8 @@ async def function_my_object_update(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    object["updated_by_id"]=user["id"]
-   [object.pop(item) for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"] if item in object]
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"body keys not allowed"})
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
