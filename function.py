@@ -454,7 +454,7 @@ async def function_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
-#aws
+#s3
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import  config_s3_bucket_name,config_s3_region_name
 import boto3,uuid
@@ -464,6 +464,15 @@ async def function_s3(mode,filename,url):
   if mode=="create_url":output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
   if mode=="delete_url":output=s3_resource.Object(config_s3_bucket_name,url.rsplit("/",1)[1]).delete()
   if mode=="delete_all":output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+  return {"status":1,"message":output}
+
+#ses
+from config import config_aws_access_key_id,config_aws_secret_access_key
+from config import config_ses_sender_email,config_ses_region_name
+import boto3
+async def function_ses(mode,to,title,description):
+  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="send_email":output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
   return {"status":1,"message":output}
 
 #elasticsearch
