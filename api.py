@@ -259,6 +259,7 @@ async def function_my_object_delete(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content=({"status":0,"message":"table not allowed"}))
    query=f"delete from {table} {where_string};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
