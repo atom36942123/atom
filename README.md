@@ -14,7 +14,7 @@
 5. any social media
 
 # atom features
-Any application has two major parts-backend/frontend.
+> Any application has two major parts-backend/frontend.
 Backend is something that takes time and involves complexity.
 Atom is written to simplify backend development which is common across any product.
 With atom, anyone can deploy ~50% of the backend in ~2 weeks.
