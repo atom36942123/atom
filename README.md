@@ -10,6 +10,13 @@
 9. email = atom36942@gmail.com
 10. any application has two major part - backend/frontend. backend is something that takes time and involves complexity. atom is written to simplify backend development which is common across any product. with atom, anyone can deploy ~50% of the backend in ~2 weeks.
 
+# what type of applications atom can build
+1. ecommnerce
+2. tinder like apps
+3. uber like apps
+4. any general saas
+5. any social media
+
 # atom features
 below are the generic modules that are already built in atom that can be used directly while building any application. below modules are fully developed with rigourus testing which can save a lot of time while building any new application. using atom, any application be configured in a week. after that, further development can be continued without any restriction. below are modules are core business logics that any application needs and which take a lot of time to develop.
 
