@@ -42,6 +42,7 @@ from function import function_token_create
 async def function_auth_login_password(request:Request):
    #request body
    request_body=await request.json()
+   if len(request_body)>2:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
    password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
    request_body.pop("password")
    for k,v in request_body.items():
@@ -67,6 +68,7 @@ from function import function_read_user_force
 async def function_auth_login_oauth(request:Request):
    #request body
    request_body=await request.json()
+   if len(request_body)>1:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
    for k,v in request_body.items():
       if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
       column,value=k,hashlib.sha256(v.encode()).hexdigest()
@@ -88,6 +90,7 @@ from function import function_token_create
 async def function_auth_login_otp(request:Request):
    #request body
    request_body=await request.json()
+   if len(request_body)>2:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
    otp=request_body["otp"]
    if "email" in request_body:email,mobile=request_body["email"],None
    else:email,mobile=None,request_body["mobile"]
@@ -174,6 +177,7 @@ async def function_my_delete_account(request:Request):
    #final
    return {"status":1,"message":output}
 
+from function import function_object_check
 from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
@@ -181,12 +185,13 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
-   if table in ["users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #request body
    object=await request.json()
    object["created_by_id"]=user["id"]
-   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"body keys not allowed"})
+   #object check
+   response=await function_object_check(postgres_object,"create",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
    response=await function_object_create(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
