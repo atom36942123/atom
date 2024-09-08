@@ -35,11 +35,11 @@ async def function_message_read(postgres_object,parent_table,mode,user_id,user_i
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#where raw
+#where prepare
 import hashlib
 from datetime import datetime
 from config import config_database_column
-async def function_where_raw(where_param_raw):
+async def function_where_prepare(where_param_raw):
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
