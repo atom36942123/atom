@@ -1,21 +1,3 @@
-#object crud check
-async def function_object_crud_check(postgres_object,mode,table,object_list):
-  if mode=="create":
-    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return {"status":0,"message":"table not allowed"}
-    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      for object in object_list:
-        if item in object:return {"status":0,"message":"object keys not allowed"}
-  if mode=="update":
-    if table in ["spatial_ref_sys","otp","log","atom","box"]:return {"status":0,"message":"table not allowed"}
-    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      for object in object_list:
-        if item in object:return {"status":0,"message":"object keys not allowed"}
-    if table=="users":
-      for item in ["email","mobile"]:
-        for object in object_list:
-          if item in object:return {"status":0,"message":"object keys not allowed"}
-  return {"status":1,"message":"done"}
-  
 #message delete
 async def function_message_delete(postgres_object,parent_table,mode,user_id,id):
   if mode=="created":
