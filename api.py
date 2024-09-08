@@ -198,6 +198,7 @@ async def function_my_object_create(request:Request,table:str):
    return response
 
 from function import function_ownership_check
+from function import function_object_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
@@ -205,15 +206,16 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #body
+   #request body
    object=await request.json()
+   object["updated_by_id"]=user["id"]
    #object ownership check
    response=await function_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #object check
+   response=await function_object_check(postgres_object,"update",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
-   object["updated_by_id"]=user["id"]
-   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"body keys not allowed"})
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
