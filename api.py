@@ -125,7 +125,7 @@ async def function_my_profile(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
-   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),"updated_by_id":user["id"]}
+   object={"id":user["id"],"updated_by_id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
    response=await function_object_update(postgres_object,"background","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
@@ -358,6 +358,26 @@ async def function_my_message_delete(request:Request,mode:str,id:int=None):
    #final
    return response
 
+from function import function_otp_verify
+from function import function_object_update
+@router.put("/my/update-contact")
+async def function_my_update_contact(request:Request,otp:int,email:str=None,mobile:str=None):
+   #auth
+   response=await function_auth_check(postgres_object,"jwt",request,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #otp verify
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
+   response=await function_otp_verify(postgres_object,otp,email,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   if email:object={"id":user["id"],"updated_by_id":user["id"],"email":email}
+   if mobile:object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
+   response=await function_object_update(postgres_object,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #admin
 from function import function_database_init
 @router.get("/admin/database-init")
@@ -560,6 +580,7 @@ async def function_public_otp_send(request:Request,email:str=None,mobile:str=Non
    #final
    return {"status":1,"message":"otp sent"}
 
+from function import function_otp_verify
 @router.get("/public/otp-verify")
 async def function_public_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
    #logic
