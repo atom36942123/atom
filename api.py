@@ -482,15 +482,15 @@ async def function_admin_query_runner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
-from function import function_aws
-@router.delete("/admin/s3-delete-single")
-async def function_admin_s3_delete_single(request:Request,url:str):
+from function import function_s3
+@router.delete("/admin/delete-s3-url")
+async def function_admin_delete_s3_url(request:Request,url:str):
    #auth check
    response=await function_auth_check(postgres_object,"jwt",request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_aws("s3_delete_single",{"url":url})
+   response=await function_s3("delete_url",None,url)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -559,11 +559,11 @@ async def function_public_search_location(request:Request,table:str,location:str
    #final
    return response
 
-from function import function_aws
-@router.get("/public/s3-create-presigned-url")
-async def function_public_s3_create_presigned_url(request:Request,filename:str):
+from function import function_s3
+@router.get("/public/create-s3-url")
+async def function_public_create_s3_url(request:Request,filename:str):
    #logic
-   response=await function_aws("s3_create_presigned_url",{"filename":filename})
+   response=await function_s3("create_url",filename,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
