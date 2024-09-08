@@ -177,7 +177,6 @@ async def function_my_delete_account(request:Request):
    #final
    return {"status":1,"message":output}
 
-from function import function_object_crud_check
 from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
@@ -185,12 +184,13 @@ async def function_my_object_create(request:Request,table:str):
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #request body
+   #object
    object=await request.json()
    object["created_by_id"]=user["id"]
-   #object crud check
-   response=await function_object_crud_check(postgres_object,"create",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #object check
+   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
    #logic
    response=await function_object_create(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -198,7 +198,6 @@ async def function_my_object_create(request:Request,table:str):
    return response
 
 from function import function_object_ownership_check
-from function import function_object_crud_check
 from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
@@ -206,15 +205,19 @@ async def function_my_object_update(request:Request,table:str):
    response=await function_auth_check(postgres_object,"jwt",request,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #request body
+   #object
    object=await request.json()
    object["updated_by_id"]=user["id"]
    #object ownership check
    response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #object crud check
-   response=await function_object_crud_check(postgres_object,"update",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #object check
+   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
+   if table=="users":
+      for item in ["email","mobile"]:
+         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":"object keys not allowed"})
    #logic
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -428,9 +431,12 @@ async def function_admin_object_update(request:Request,table:str):
    response=await function_auth_check(postgres_object,"jwt",request,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
+   #object
    object=await request.json()
    object["updated_by_id"]=user["id"]
+   #object check
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #logic
    response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
