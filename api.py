@@ -18,8 +18,8 @@ from function import function_add_action_count
 #auth
 import hashlib
 from function import function_token_create
-@router.post("/auth/signup-username",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
-async def function_auth_signup_username(request:Request):
+@router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
+async def function_auth_signup(request:Request):
    #request body
    request_body=await request.json()
    username=request_body["username"]
@@ -38,22 +38,16 @@ async def function_auth_signup_username(request:Request):
 
 import hashlib
 from function import function_token_create
-@router.post("/auth/login-password")
-async def function_auth_login_password(request:Request):
-   #request body
-   request_body=await request.json()
-   if len(request_body)>2:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
-   password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
-   request_body.pop("password")
-   for k,v in request_body.items():
-      if k not in ["username","email","mobile"]:return JSONResponse(status_code=400,content={"status":0,"message":"column not allowed"})
-      column,value=k,v
-   #read user
-   query=f"select * from users where {column}=:value and password=:password order by id desc limit 1;"
-   query_param={"value":value,"password":password}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+@router.post("/auth/login")
+async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None):
+   #logic
+   if mode=="password_username":
+      #read user
+      query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
+      query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
