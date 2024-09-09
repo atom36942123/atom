@@ -160,7 +160,7 @@ async def function_auth_check(mode,request,postgres_object,user_active_check,use
     if user_active_check:
       if user["is_active"]==0:return {"status":0,"message":"user is not active"}
     if user_type_allowed_list:
-      if and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
 #token create
