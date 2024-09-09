@@ -124,6 +124,7 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
 
 #read user force
 async def function_read_user_force(postgres_object,column,value):
+  if not value:return {"status":0,"message":"value mandatory"}
   query=f"select * from users where {column}=:value order by id desc limit 1;"
   query_param={"value":value}
   output=await postgres_object.fetch_all(query=query,values=query_param)
