@@ -171,15 +171,14 @@ async def function_my_delete_account(request:Request):
    response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #permisson check
+   if config_delete_account==0:return JSONResponse(status_code=400,content={"status":0,"message":"account deletion not allowed"})
    #logic
-   if config_delete_account==1:
-      query="delete from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":"account deleted"}
-   else:response={"status":1,"message":"account deletion not allowed"}
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":"account deleted"}
 
 from function import function_object_create
 @router.post("/my/object-create")
@@ -249,7 +248,7 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return {"status":1,"message":output}
 
-from config import config_object_self
+from config import config_delete_object_self
 from function import function_where_prepare
 @router.delete("/my/object-delete")
 async def function_my_object_delete(request:Request,table:str):
@@ -258,7 +257,7 @@ async def function_my_object_delete(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
-   if config_object_self
+   if config_delete_object_self==0:return JSONResponse(status_code=400,content={"status":0,"message":"self object deletion not allowed"})
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
