@@ -172,7 +172,7 @@ async def function_my_delete_account(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
-   if config_delete_account==0:return JSONResponse(status_code=400,content={"status":0,"message":"account deletion not allowed"})
+   if int(config_delete_account)==0:return JSONResponse(status_code=400,content={"status":0,"message":"account deletion not allowed"})
    #logic
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
@@ -257,7 +257,7 @@ async def function_my_object_delete(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
-   if config_delete_object_self==0:return JSONResponse(status_code=400,content={"status":0,"message":"self object deletion not allowed"})
+   if int(config_delete_object_self)==0:return JSONResponse(status_code=400,content={"status":0,"message":"self object deletion not allowed"})
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
