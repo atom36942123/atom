@@ -3,8 +3,8 @@
 2. atom is non opinionated and it was written with no bias for any particular application.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm with separation of logic and interface.
-5. api docs= https://atom-tbsk.onrender.com/docs
-6. atom uses objects/datatypes as a fundamental concept with no affection to the type of object thus making it suitable for designing any system.
+5. atom uses objects/datatypes as a fundamental concept with no affection to the type of object thus making it suitable for designing any system.
+6. api docs= https://atom-tbsk.onrender.com/docs
 
 # what type of applications atom can build
 1. ecommnerce
