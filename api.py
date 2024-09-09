@@ -249,6 +249,7 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #final
    return {"status":1,"message":output}
 
+from config import config_object_self
 from function import function_where_prepare
 @router.delete("/my/object-delete")
 async def function_my_object_delete(request:Request,table:str):
@@ -256,6 +257,8 @@ async def function_my_object_delete(request:Request,table:str):
    response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #permisson check
+   if config_object_self
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
