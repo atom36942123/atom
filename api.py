@@ -110,22 +110,6 @@ async def function_auth_login_otp(request:Request):
    return response
 
 #my
-from config import config_is_delete_account
-@router.delete("/my/delete-account")
-async def function_my_delete_account(request:Request):
-   #auth
-   response=await function_auth_check("jwt",request,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #permisson check
-   if int(config_is_delete_account)==0:return {"status":1,"message":"account deletion not allowed"}
-   #logic
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"account deleted"}
-   
 from datetime import datetime
 from function import function_object_update
 @router.get("/my/profile")
@@ -179,6 +163,22 @@ async def function_my_token_refresh(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+from config import config_is_delete_account
+@router.delete("/my/delete-account")
+async def function_my_delete_account(request:Request):
+   #auth
+   response=await function_auth_check("jwt",request,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #permisson check
+   if int(config_is_delete_account)==0:return {"status":1,"message":"account deletion not allowed"}
+   #logic
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"account deleted"}
 
 from function import function_object_create
 @router.post("/my/object-create")
