@@ -164,16 +164,20 @@ async def function_my_token_refresh(request:Request):
    #final
    return response
 
+from config import config_delete_account
 @router.delete("/my/delete-account")
 async def function_my_delete_account(request:Request):
    #auth
    response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #delete object
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #logic
+   if config_delete_account==1:
+      query="delete from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"account deleted"}
+   else:response={"status":1,"message":"account deletion not allowed"}
    #final
    return {"status":1,"message":output}
 
