@@ -400,6 +400,19 @@ async def function_utility_file_upload(request:Request,mode:str,filename:str=Non
    #final
    return response
 
+from function import function_database_clean
+@router.delete("/utility/database-clean")
+async def function_utility_database_clean(request:Request):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_database_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #public
 from function import function_where_prepare
 @router.get("/public/object-read")
@@ -455,19 +468,6 @@ async def function_public_search_location(request:Request,table:str,location:str
    return response
 
 #admin
-from function import function_database_clean
-@router.delete("/admin/database-clean")
-async def function_admin_database_clean(request:Request):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_database_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 from fastapi import UploadFile
 from function import function_file_to_object_list
 from function import function_object_create
