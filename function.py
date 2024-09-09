@@ -349,6 +349,7 @@ async def function_middleware_error(error_tuple):
   error="".join(error_tuple)
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
+  if "enough segments" in error:error="token issue"
   return {"status":0,"message":error}
 
 #redis key
