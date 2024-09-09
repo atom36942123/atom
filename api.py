@@ -395,7 +395,7 @@ from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #auth
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -411,7 +411,7 @@ from function import function_object_update
 @router.post("/admin/csv-uploader")
 async def function_admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
    #auth
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
@@ -429,7 +429,7 @@ from function import function_where_prepare
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #where prepare
@@ -449,7 +449,7 @@ from function import function_object_update
 @router.put("/admin/object-update")
 async def function_admin_object_update(request:Request,table:str):
    #auth
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #object
@@ -466,7 +466,7 @@ async def function_admin_object_update(request:Request,table:str):
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,mode:str,query:str):
    #auth
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -486,7 +486,7 @@ from function import function_s3
 @router.delete("/admin/delete-s3-url")
 async def function_admin_delete_s3_url(request:Request,url:str):
    #auth check
-   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
