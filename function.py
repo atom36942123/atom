@@ -153,7 +153,7 @@ async def function_auth_check(mode,request,postgres_object,user_active_check,use
     output=await postgres_object.fetch_all(query=query,values=query_param)
     user=output[0] if output else None
     if not user:return {"status":0,"message":"no user for token passed"}
-  if user and user_active_check and user["is_active"]!=1:return {"status":0,"message":"user is not active"}
+  if user and user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
   if user and user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
