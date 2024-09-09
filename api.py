@@ -115,7 +115,7 @@ from function import function_object_update
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -135,7 +135,7 @@ from function import function_query_dict_runner
 @router.get("/my/metric")
 async def function_my_metric(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -149,7 +149,7 @@ from function import function_token_create
 @router.get("/my/token-refresh")
 async def function_my_token_refresh(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -167,7 +167,7 @@ async def function_my_token_refresh(request:Request):
 @router.delete("/my/delete-account")
 async def function_my_delete_account(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #delete object
@@ -181,7 +181,7 @@ from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #object
@@ -202,7 +202,7 @@ from function import function_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #object
@@ -228,7 +228,7 @@ from function import function_where_prepare
 @router.get("/my/object-read")
 async def function_my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #where prepare
@@ -249,7 +249,7 @@ from function import function_where_prepare
 @router.delete("/my/object-delete")
 async def function_my_object_delete(request:Request,table:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #where prepare
@@ -269,7 +269,7 @@ async def function_my_object_delete(request:Request,table:str):
 @router.delete("/my/bulk-ids-delete")
 async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -285,7 +285,7 @@ from function import function_parent_read
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -303,7 +303,7 @@ from function import function_parent_check
 @router.get("/my/parent-check")
 async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -319,7 +319,7 @@ from function import function_object_update
 @router.get("/my/message-read")
 async def function_my_message_read(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -349,7 +349,7 @@ from function import function_message_delete
 @router.delete("/my/message-delete")
 async def function_my_message_delete(request:Request,mode:str,id:int=None):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -363,7 +363,7 @@ from function import function_object_update
 @router.put("/my/update-contact")
 async def function_my_update_contact(request:Request,otp:int,email:str=None,mobile:str=None):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,None)
+   response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #otp verify
@@ -383,7 +383,7 @@ from function import function_database_init
 @router.get("/admin/database-init")
 async def function_admin_database_init(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"root",request,None)
+   response=await function_auth_check("root",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #logic
    response=await function_database_init(postgres_object)
@@ -395,7 +395,7 @@ from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -411,7 +411,7 @@ from function import function_object_update
 @router.post("/admin/csv-uploader")
 async def function_admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
@@ -429,7 +429,7 @@ from function import function_where_prepare
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #where prepare
@@ -449,7 +449,7 @@ from function import function_object_update
 @router.put("/admin/object-update")
 async def function_admin_object_update(request:Request,table:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #object
@@ -466,7 +466,7 @@ async def function_admin_object_update(request:Request,table:str):
 @router.get("/admin/query-runner")
 async def function_admin_query_runner(request:Request,mode:str,query:str):
    #auth
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -486,7 +486,7 @@ from function import function_s3
 @router.delete("/admin/delete-s3-url")
 async def function_admin_delete_s3_url(request:Request,url:str):
    #auth check
-   response=await function_auth_check(postgres_object,"jwt",request,["admin"])
+   response=await function_auth_check("jwt",request,postgres_object,None,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
