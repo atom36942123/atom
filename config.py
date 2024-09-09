@@ -20,6 +20,7 @@ config_elasticsearch_username=env("elasticsearch_username")
 config_elasticsearch_password=env("elasticsearch_password")
 config_elasticsearch_cloud_id=env("elasticsearch_cloud_id")
 config_delete_account=env("delete_account")
+config_delete_object_self=env("delete_object_self")
 
 #database
 config_database_extension=["postgis"]
