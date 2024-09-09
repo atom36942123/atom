@@ -106,7 +106,7 @@ async def function_object_create(postgres_object,mode,table,object_list):
   return {"status":1,"message":"done"}
   
 #verify otp
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timestamp
 async def function_otp_verify(postgres_object,otp,email,mobile):
   if email and mobile:return {"status":0,"message":"only one contact allowed"}
   if not email and not mobile:return {"status":0,"message":"only one contact is mandatory"}
@@ -118,7 +118,7 @@ async def function_otp_verify(postgres_object,otp,email,mobile):
     query_param={"mobile":mobile}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   if not output:return {"status":0,"message":"otp not found"}
-  print(datetime.now(timezone.utc)-output[0]["created_at"])
+  print(datetime.now(timezone.utc)-output[0]["created_at"].timestamp())
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"otp verifed"}
 
