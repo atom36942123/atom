@@ -140,7 +140,7 @@ async def function_read_user_force(postgres_object,column,value):
 import jwt,json
 from config import config_key_jwt
 from config import config_key_root
-async def function_auth_check(mode,request,postgres_object,user_active_check,user_type_allowed_list)
+async def function_auth_check(mode,request,postgres_object,user_active_check,user_type_allowed_list):
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
