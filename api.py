@@ -384,6 +384,101 @@ async def function_my_update_contact(request:Request,otp:int,email:str=None,mobi
    #final
    return response
 
+#public
+@router.get("/public/project-cache")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_public_project_cache(request:Request):
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   response=await function_query_dict_runner(postgres_object,query_dict)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_where_prepare
+@router.get("/public/object-read")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #where prepare
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_where_prepare(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add action count
+   response=await function_add_action_count(postgres_object,output,table,"likes")
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+@router.get("/public/bulk-ids-read")
+async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+from function import function_where_prepare
+from function import function_search_location
+@router.get("/public/search-location")
+async def function_public_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #where prepare
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
+   response=await function_where_prepare(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_s3
+@router.get("/public/create-s3-url")
+async def function_public_create_s3_url(request:Request,filename:str):
+   #logic
+   response=await function_s3("create_url",filename,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from random import randint
+@router.get("/public/otp-send")
+async def function_public_otp_send(request:Request,email:str=None,mobile:str=None):
+   #logic
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
+   otp=1234
+   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
+   query_param={"otp":otp,"email":email,"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
+
+from function import function_otp_verify
+@router.get("/public/otp-verify")
+async def function_public_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
+   #logic
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
+   response=await function_otp_verify(postgres_object,otp,email,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #admin
 from function import function_database_init
 @router.get("/admin/database-init")
@@ -497,101 +592,6 @@ async def function_admin_delete_s3_url(request:Request,url:str):
    user=response["message"]
    #logic
    response=await function_s3("delete_url",None,url)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#public
-@router.get("/public/project-cache")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_project_cache(request:Request):
-   #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   response=await function_query_dict_runner(postgres_object,query_dict)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from function import function_where_prepare
-@router.get("/public/object-read")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add action count
-   response=await function_add_action_count(postgres_object,output,table,"likes")
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-@router.get("/public/bulk-ids-read")
-async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-from function import function_where_prepare
-from function import function_search_location
-@router.get("/public/search-location")
-async def function_public_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from function import function_s3
-@router.get("/public/create-s3-url")
-async def function_public_create_s3_url(request:Request,filename:str):
-   #logic
-   response=await function_s3("create_url",filename,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from random import randint
-@router.get("/public/otp-send")
-async def function_public_otp_send(request:Request,email:str=None,mobile:str=None):
-   #logic
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   otp=1234
-   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
-   query_param={"otp":otp,"email":email,"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"otp sent"}
-
-from function import function_otp_verify
-@router.get("/public/otp-verify")
-async def function_public_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
-   #logic
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
