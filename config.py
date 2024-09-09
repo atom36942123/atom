@@ -71,6 +71,7 @@ config_database_column={
 config_database_index={
 "id":"btree",
 "created_at":"brin",
+"is_deleted":"btree",
 "is_verified":"btree",
 "is_active":"btree",
 "parent_table":"btree",
