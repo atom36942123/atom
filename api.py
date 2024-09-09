@@ -39,8 +39,9 @@ async def function_auth_signup(request:Request):
 import hashlib
 from function import function_token_create
 from function import function_read_user_force
+from function import function_otp_verify
 @router.post("/auth/login")
-async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None):
+async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None):
    #logic
    if mode=="password_username":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -52,55 +53,25 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
       response=await function_read_user_force(postgres_object,"google_id",google_id)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
+   if mode=="otp_email":
+      response=await function_otp_verify(postgres_object,otp,email,None)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      response=await function_read_user_force(postgres_object,"email",email)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      user=response["message"]
+   if mode=="otp_mobile":
+      response=await function_otp_verify(postgres_object,otp,None,mobile)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      response=await function_read_user_force(postgres_object,"mobile",mobile)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      user=response["message"]
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
    return {"status":1,"message":token}
-
-@router.post("/auth/login-oauth")
-async def function_auth_login_oauth(request:Request):
-   #request body
-   request_body=await request.json()
-   if len(request_body)>1:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
-   for k,v in request_body.items():
-      if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
-      column,value=k,hashlib.sha256(v.encode()).hexdigest()
-  
-   #token create
-   response=await function_token_create(user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
-   #final
-   return {"status":1,"message":token}
-
-from function import function_otp_verify
-from function import function_read_user_force
-from function import function_token_create
-@router.post("/auth/login-otp")
-async def function_auth_login_otp(request:Request):
-   #request body
-   request_body=await request.json()
-   if len(request_body)>2:return JSONResponse(status_code=400,content={"status":0,"message":"body length not allowed"})
-   otp=request_body["otp"]
-   if "email" in request_body:email,mobile=request_body["email"],None
-   else:email,mobile=None,request_body["mobile"]
-   if email:column,value="email",email
-   else:column,value="mobile",mobile
-   #otp verify
-   response=await function_otp_verify(postgres_object,otp,email,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #read user force
-   response=await function_read_user_force(postgres_object,column,value)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #token create
-   response=await function_token_create(user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
+   
 #my
 from datetime import datetime
 from function import function_object_update
