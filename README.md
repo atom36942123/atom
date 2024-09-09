@@ -20,7 +20,7 @@ Below are the generic modules that are already built in atom that can be used di
 
 1. auth = signup/login-email,mobile,oauth,password/token refresh
 2. object level crud operations including access based control
-3. any table/objects operations allowed - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
+3. any table/objects crud - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
 4. message module
 5. admin module with rbac
 6. csv uploader
@@ -38,6 +38,7 @@ Below are the generic modules that are already built in atom that can be used di
 18. postman collection/runner for automated testing
 19. one click indexing
 20. all major datatype supported in api's - string,timestamp,int,numeric,list,jsonb,geometric
+21. rate limiter to stop malicious bot activity
    
 # tech stack
 1. python
