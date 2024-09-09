@@ -34,7 +34,7 @@ async def function_auth_signup_username(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
-   return {"status":1,"message":token}
+   return {"status":1,"message":[user,token]}
 
 import hashlib
 from function import function_token_create
