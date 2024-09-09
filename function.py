@@ -141,22 +141,21 @@ async def function_read_user_force(postgres_object,column,value):
 
 #auth check
 import jwt,json
-from config import config_key_jwt
-from config import config_key_root
-async def function_auth_check(mode,request,postgres_object,user_active_check,user_type_allowed_list):
+from config import config_key_root,config_key_jwt
+async def function_auth_check(request,postgres_object,user_refresh,user_active_check,user_type_allowed_list):
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
   token=authorization_header.split(" ",1)[1]
-  if mode=="root" and token!=config_key_root:return {"status":0,"message":"token root issue"}
-  if mode=="jwt":user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
-  if user and postgres_object:
+  if token==config_key_root:return {"status":1,"message":user}
+  user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
+  if user_refresh:
     query="select * from users where id=:id;"
     query_param={"id":user["id"]}
     output=await postgres_object.fetch_all(query=query,values=query_param)
     user=output[0] if output else None
     if not user:return {"status":0,"message":"no user for token passed"}
-  if user and user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
+  if user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
   if user and user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
