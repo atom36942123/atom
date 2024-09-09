@@ -179,7 +179,7 @@ async def function_my_delete_account(request:Request):
       response={"status":1,"message":"account deleted"}
    else:response={"status":1,"message":"account deletion not allowed"}
    #final
-   return {"status":1,"message":output}
+   return response
 
 from function import function_object_create
 @router.post("/my/object-create")
