@@ -416,6 +416,15 @@ async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mob
    #final
    return response
 
+from function import function_s3
+@router.get("/public/upload-file")
+async def function_public_upload_file(request:Request,mode:str,filename:str=None):
+   #logic
+   if mode=="create_s3_url":response=await function_s3("create_s3_url",filename,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 from function import function_where_prepare
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
@@ -468,17 +477,6 @@ async def function_public_search_location(request:Request,table:str,location:str
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-from function import function_s3
-@router.get("/public/create-s3-url")
-async def function_public_create_s3_url(request:Request,filename:str):
-   #logic
-   response=await function_s3("create_url",filename,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-
 
 #admin
 from function import function_database_init
