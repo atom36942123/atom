@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#common
+#common import
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import postgres_object
