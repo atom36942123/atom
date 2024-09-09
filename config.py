@@ -8,22 +8,18 @@ config_postgres_database_url=env("postgres_database_url")
 config_redis_server_url=env("redis_server_url")
 config_mongo_server_url=env("mongo_server_url")
 config_sentry_dsn=env("sentry_dsn")
-
 config_key_jwt=env("key_jwt")
 config_key_root=env("key_root")
-
 config_aws_access_key_id=env("aws_access_key_id")
 config_aws_secret_access_key=env("aws_secret_access_key")
-
 config_s3_bucket_name=env("s3_bucket_name")
 config_s3_region_name=env("s3_region_name")
-
 config_ses_sender_email=env("ses_sender_email")
 config_ses_region_name=env("ses_region_name")
-
 config_elasticsearch_username=env("elasticsearch_username")
 config_elasticsearch_password=env("elasticsearch_password")
 config_elasticsearch_cloud_id=env("elasticsearch_cloud_id")
+config_delete_account=env("delete_account")
 
 #database
 config_database_extension=["postgis"]
@@ -116,6 +112,3 @@ config_database_query=[
 #postgres object
 from databases import Database
 postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
-
-#switch
-config_delete_account=0
