@@ -140,7 +140,7 @@ async def function_read_user_force(postgres_object,column,value):
 import jwt,json
 from config import config_key_jwt
 from config import config_key_root
-async def function_auth_check(mode,request,postgres_object,user_type_allowed_list,user_active_check)
+async def function_auth_check(mode,request,postgres_object,user_active_check,user_type_allowed_list)
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
@@ -153,8 +153,8 @@ async def function_auth_check(mode,request,postgres_object,user_type_allowed_lis
     output=await postgres_object.fetch_all(query=query,values=query_param)
     user=output[0] if output else None
     if not user:return {"status":0,"message":"no user for token passed"}
-  if user and user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   if user and user_active_check and user["is_active"]!=1:return {"status":0,"message":"user is not active"}
+  if user and user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
 
 #token create
