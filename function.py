@@ -109,7 +109,7 @@ async def function_object_create(postgres_object,mode,table,object_list):
 from datetime import datetime,timezone
 async def function_otp_verify(postgres_object,otp,email,mobile):
   if email and mobile:return {"status":0,"message":"only one contact allowed"}
-  if not email and not mobile:return {"status":0,"message":"only one contact is mandatory"}
+  if not email and not mobile:return {"status":0,"message":"any one contact is mandatory"}
   if email:
     query="select * from otp where email=:email order by id desc limit 1;"
     query_param={"email":email}
