@@ -417,8 +417,8 @@ async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mob
    return response
 
 from function import function_s3
-@router.get("/public/file-upload")
-async def function_public_file_upload(request:Request,mode:str,filename:str=None):
+@router.get("/utility/file-upload")
+async def function_utility_file_upload(request:Request,mode:str,filename:str=None):
    #logic
    if mode=="create_s3_url":response=await function_s3("create_s3_url",filename,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
