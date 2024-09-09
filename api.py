@@ -384,13 +384,34 @@ async def function_my_update_contact(request:Request,otp:int,email:str=None,mobi
    #final
    return response
 
-#public
-@router.get("/public/project-cache")
+#utility
+@router.get("/utility/project-cache")
 @cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_project_cache(request:Request):
+async def function_utility_project_cache(request:Request):
    #logic
    query_dict={"user_count":"select count(*) from users;"}
    response=await function_query_dict_runner(postgres_object,query_dict)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+import random
+@router.get("/utility/otp-send")
+async def function_utility_otp_send(request:Request,email:str=None,mobile:str=None):
+   #logic
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
+   otp=random.randint(1000,9999)
+   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
+   query_param={"otp":otp,"email":email,"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
+
+from function import function_otp_verify
+@router.get("/utility/otp-verify")
+async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
+   #logic
+   response=await function_otp_verify(postgres_object,otp,email,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -457,27 +478,7 @@ async def function_public_create_s3_url(request:Request,filename:str):
    #final
    return response
 
-from random import randint
-@router.get("/public/otp-send")
-async def function_public_otp_send(request:Request,email:str=None,mobile:str=None):
-   #logic
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   otp=1234
-   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
-   query_param={"otp":otp,"email":email,"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"otp sent"}
 
-from function import function_otp_verify
-@router.get("/public/otp-verify")
-async def function_public_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
-   #logic
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   response=await function_otp_verify(postgres_object,otp,email,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 #admin
 from function import function_database_init
