@@ -38,16 +38,20 @@ async def function_auth_signup(request:Request):
 
 import hashlib
 from function import function_token_create
+from function import function_read_user_force
 @router.post("/auth/login")
-async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None):
+async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None):
    #logic
    if mode=="password_username":
-      #read user
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
       query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if mode=="oauth_google":
+      response=await function_read_user_force(postgres_object,"google_id",google_id)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      user=response["message"]
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -55,9 +59,6 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
    #final
    return {"status":1,"message":token}
 
-import hashlib
-from function import function_token_create
-from function import function_read_user_force
 @router.post("/auth/login-oauth")
 async def function_auth_login_oauth(request:Request):
    #request body
@@ -66,10 +67,7 @@ async def function_auth_login_oauth(request:Request):
    for k,v in request_body.items():
       if k not in ["google_id"]:return JSONResponse(status_code=400,content={"status":0,"message":"oauth column not allowed"})
       column,value=k,hashlib.sha256(v.encode()).hexdigest()
-   #read user force
-   response=await function_read_user_force(postgres_object,column,value)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+  
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
