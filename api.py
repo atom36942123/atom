@@ -272,16 +272,16 @@ async def function_my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-@router.delete("/my/bulk-ids-delete")
-async def function_my_bulk_ids_delete(request:Request,table:str,ids:str):
+@router.delete("/my/delete-ids")
+async def function_my_delete_ids(request:Request,table:str,ids:str):
    #auth
    response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   if len(ids)>100:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
-   query=f"delete from {table} where id in ({ids}) and created_by_id=:created_by_id;"
+   if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
    query_param={"created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
