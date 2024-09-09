@@ -1,6 +1,6 @@
 # what is atom
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months.
-2. atom is non opionated. all the features are generic without any bias for any particular application.
+2. atom is non opinionated and it was written with no bias for any particular application.
 3. atom is fully scalable as per need.
 4. atom follows functional programming paradigm with separation of logic and interface.
 5. api docs= https://atom-tbsk.onrender.com/docs
