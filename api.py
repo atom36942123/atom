@@ -385,6 +385,18 @@ async def function_my_update_contact(request:Request,otp:int,email:str=None,mobi
    return response
 
 #utility
+from function import function_database_init
+@router.get("/utility/database-init")
+async def function_utility_database_init(request:Request):
+   #auth
+   response=await function_auth_check("root",request,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+   
 @router.get("/utility/project-cache")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_utility_project_cache(request:Request):
@@ -425,6 +437,7 @@ async def function_utility_file_upload(request:Request,mode:str,filename:str=Non
    #final
    return response
 
+#public
 from function import function_where_prepare
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
@@ -479,18 +492,6 @@ async def function_public_search_location(request:Request,table:str,location:str
    return response
 
 #admin
-from function import function_database_init
-@router.get("/admin/database-init")
-async def function_admin_database_init(request:Request):
-   #auth
-   response=await function_auth_check("root",request,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #logic
-   response=await function_database_init(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 from function import function_database_clean
 @router.delete("/admin/database-clean")
 async def function_admin_database_clean(request:Request):
