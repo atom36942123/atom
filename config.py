@@ -19,8 +19,8 @@ config_ses_region_name=env("ses_region_name")
 config_elasticsearch_username=env("elasticsearch_username")
 config_elasticsearch_password=env("elasticsearch_password")
 config_elasticsearch_cloud_id=env("elasticsearch_cloud_id")
-config_delete_account=env("delete_account")
-config_delete_object_self=env("delete_object_self")
+config_is_delete_account=env("is_delete_account")
+config_is_delete_object_self=env("is_delete_object_self")
 
 #database
 config_database_extension=["postgis"]
