@@ -10,7 +10,6 @@ config_mongo_server_url=env("mongo_server_url")
 config_sentry_dsn=env("sentry_dsn")
 config_key_jwt=env("key_jwt")
 config_key_root=env("key_root")
-config_aws_region_name=env("aws_region_name")
 config_aws_access_key_id=env("aws_access_key_id")
 config_aws_secret_access_key=env("aws_secret_access_key")
 config_s3_bucket_name=env("s3_bucket_name")
@@ -22,6 +21,8 @@ config_elasticsearch_password=env("elasticsearch_password")
 config_elasticsearch_cloud_id=env("elasticsearch_cloud_id")
 config_is_delete_account=env("is_delete_account")
 config_is_delete_object_self=env("is_delete_object_self")
+config_sns_region_name=env("sns_region_name")
+
 
 #database
 config_database_extension=["postgis"]
