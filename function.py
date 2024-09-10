@@ -2,9 +2,35 @@
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import  config_sns_region_name
 async def function_sns(mode,mobile,message):
-  sns_client=boto3.client("sns",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  sns_client=boto3.client("sns",region_name=config_sns_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="send_message":
     output=sns_client.publish(PhoneNumber=mobile,Message=message)
+  return {"status":1,"message":output}
+
+#ses
+from config import config_aws_access_key_id,config_aws_secret_access_key
+from config import config_ses_sender_email,config_ses_region_name
+import boto3
+async def function_ses(mode,to,title,description):
+  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="send_email":output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+  return {"status":1,"message":output}
+
+#s3
+from config import config_aws_access_key_id,config_aws_secret_access_key
+from config import  config_s3_bucket_name,config_s3_region_name
+import boto3,uuid
+async def function_s3(mode,filename,url):
+  s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="create_url":
+    key=str(uuid.uuid4())+"-"+filename
+    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+  if mode=="delete_url":
+    key=url.rsplit("/",1)[1]
+    output=s3_resource.Object(config_s3_bucket_name,key).delete()
+  if mode=="delete_all":
+    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
   return {"status":1,"message":output}
 
 #message delete
@@ -471,32 +497,6 @@ async def function_database_init(postgres_object):
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
-
-#s3
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import  config_s3_bucket_name,config_s3_region_name
-import boto3,uuid
-async def function_s3(mode,filename,url):
-  s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-  s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-  if mode=="create_url":
-    key=str(uuid.uuid4())+"-"+filename
-    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
-  if mode=="delete_url":
-    key=url.rsplit("/",1)[1]
-    output=s3_resource.Object(config_s3_bucket_name,key).delete()
-  if mode=="delete_all":
-    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
-  return {"status":1,"message":output}
-
-#ses
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_ses_sender_email,config_ses_region_name
-import boto3
-async def function_ses(mode,to,title,description):
-  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-  if mode=="send_email":output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
-  return {"status":1,"message":output}
 
 #elasticsearch
 from config import config_elasticsearch_username,config_elasticsearch_password,config_elasticsearch_cloud_id
