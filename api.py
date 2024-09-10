@@ -384,7 +384,7 @@ import random
 async def function_utility_otp_send(request:Request,email:str=None,mobile:str=None):
    #logic
    if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   otp=random.randint(1000,9999)
+   otp=random.randint(100000,999999)
    query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
    query_param={"otp":otp,"email":email,"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
