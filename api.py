@@ -383,30 +383,19 @@ async def function_utility_project_cache(request:Request):
 
 import random
 from function import function_sns
-@router.get("/utility/otp-send-mobile")
-async def function_utility_otp_send_mobile(request:Request,mode:str,mobile:str):
+from function import function_ses
+@router.get("/utility/otp-send")
+async def function_utility_otp_send(request:Request,mode:str,email:str=None,mobile:str=None):
    #logic
    otp=random.randint(100000,999999)
+   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email/mobile"})
+   if not email and not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"email/mobile both cant be null"})
+   if mode=="ses":response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp={otp}"})
    if mode=="sns":response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp={otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
-   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
-   query_param={"otp":otp,"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"otp sent"}
-
-import random
-from function import function_ses
-@router.get("/utility/otp-send-email")
-async def function_utility_otp_send_email(request:Request,mode:str,email:str):
-   #logic
-   otp=random.randint(100000,999999)
-   if mode=="ses":response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp={otp}"})
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #save otp
-   query="insert into otp (otp,email) values (:otp,:email) returning *;"
-   query_param={"otp":otp,"email":email}
+   query="insert into otp (otp,email,mobile) values (:otp,:email,:mobile) returning *;"
+   query_param={"otp":otp,"email":email,"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":"otp sent"}
