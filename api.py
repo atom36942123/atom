@@ -395,6 +395,22 @@ async def function_utility_otp_send_mobile(request:Request,mode:str,mobile:str):
    #final
    return {"status":1,"message":"otp sent"}
 
+import random
+from function import function_ses
+@router.get("/utility/otp-send-email")
+async def function_utility_otp_send_email(request:Request,mode:str,email:str):
+   #logic
+   otp=random.randint(100000,999999)
+   if mode=="ses":
+      response=await function_ses("send_sms",{"mobile":mobile,"message":f"otp from atom {otp}"})
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #save otp
+   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
+   query_param={"otp":otp,"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
+
 from function import function_otp_verify
 @router.get("/utility/otp-verify")
 async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
