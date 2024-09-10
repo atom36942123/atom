@@ -37,7 +37,7 @@ from function import function_token_create
 from function import function_read_user_force
 from function import function_otp_verify
 @router.post("/auth/login")
-async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None):
+async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
    #logic
    if mode=="password_username":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -45,6 +45,7 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+      if type and user["type"]!=type:return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    if mode=="oauth_google":
       response=await function_read_user_force(postgres_object,"google_id",google_id)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
