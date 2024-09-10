@@ -422,6 +422,25 @@ async def function_utility_file_delete(request:Request,mode:str,url:str):
    #final
    return response
 
+@router.get("/utility/query-runner")
+async def function_utility_query_runner(request:Request,mode:str,query:str):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="single":
+      query=query
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="bulk":
+      for item in query.split("---"):
+         query=item
+         query_param={}
+         output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 #public
 from function import function_where_prepare
 @router.get("/public/object-read")
@@ -535,23 +554,3 @@ async def function_admin_object_update(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-  
-@router.get("/admin/query-runner")
-async def function_admin_query_runner(request:Request,mode:str,query:str):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="single":
-      query=query
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   if mode=="bulk":
-      for item in query.split("---"):
-         query=item
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
