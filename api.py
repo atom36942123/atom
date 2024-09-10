@@ -502,17 +502,6 @@ async def function_admin_object_update(request:Request,table:str):
    return response
 
 #public
-@router.get("/public/read-ids")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_read_ids(request:Request,table:str,ids:str):
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-   
 from function import function_where_prepare
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
@@ -538,7 +527,18 @@ async def function_public_object_read(request:Request,table:str,order:str="id de
    output=response["message"]
    #final
    return {"status":1,"message":output}
-
+   
+@router.get("/public/read-ids")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_public_read_ids(request:Request,table:str,ids:str):
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+   
 from function import function_where_prepare
 from function import function_search_location
 @router.get("/public/search-location")
