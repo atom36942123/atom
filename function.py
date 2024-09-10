@@ -74,11 +74,11 @@ async def function_message_read(postgres_object,parent_table,mode,user_id,user_i
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#where clause
+#where string
 import hashlib
 from datetime import datetime
 from config import config_database_column
-async def function_where_clause(request_query_param):
+async def function_where_string(request_query_param):
   where_param_raw={k:v for k,v in request_query_param.items() if k in config_database_column}
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
