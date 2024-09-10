@@ -23,7 +23,6 @@ config_is_delete_account=env("is_delete_account")
 config_is_delete_object_self=env("is_delete_object_self")
 config_sns_region_name=env("sns_region_name")
 
-
 #database
 config_database_extension=["postgis"]
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
