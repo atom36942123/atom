@@ -388,7 +388,7 @@ async def function_utility_otp_send(request:Request,email:str=None,mobile:str=No
    otp=random.randint(100000,999999)
    #otp send
    if mobile:
-      response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp from atom {otp}"})
+      response=await function_sns("send_message",{"mobile":mobile,"message":f"otp from atom {otp}"})
    if email:
       response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp from atom {otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
