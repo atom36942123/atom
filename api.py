@@ -39,7 +39,7 @@ from function import function_otp_verify
 @router.post("/auth/login")
 async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
    #logic
-   if mode=="password_username":
+   if mode=="username_password":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
       query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
       output=await postgres_object.fetch_all(query=query,values=query_param)
