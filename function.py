@@ -1,30 +1,29 @@
 #sns
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import  config_sns_region_name
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
 async def function_sns(mode,payload):
-  sns_client=boto3.client("sns",region_name=config_sns_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  sns_client=boto3.client("sns",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="send_sms":
     mobile,message=payload["mobile"],payload["message"]
     output=sns_client.publish(PhoneNumber=mobile,Message=message)
   return {"status":1,"message":output}
 
 #ses
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import config_ses_sender_email,config_ses_region_name
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
+from config import config_ses_sender_email
 import boto3
 async def function_ses(mode,payload):
-  ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  ses_client=boto3.client("ses",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="send_email":
     to,title,description=payload["to"],payload["title"],payload["description"]
     output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
   return {"status":1,"message":output}
 
 #s3
-from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import  config_s3_bucket_name,config_s3_region_name
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
+from config import  config_s3_bucket_name
 import boto3,uuid
 async def function_s3(mode,payload):
-  s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  s3_client=boto3.client("s3",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="create_url":
     filename=payload["filename"]
