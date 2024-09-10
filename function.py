@@ -108,6 +108,7 @@ async def function_object_create(postgres_object,mode,table,object_list):
 #verify otp
 from datetime import datetime,timezone
 async def function_otp_verify(postgres_object,otp,email,mobile):
+  if not otp:return {"status":0,"message":"otp mandatory"}
   if email and mobile:return {"status":0,"message":"only one contact allowed"}
   if not email and not mobile:return {"status":0,"message":"both contact cant be null"}
   if email:
