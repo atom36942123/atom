@@ -195,14 +195,12 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    response=await function_auth_check("jwt",request,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_clause(where_param_raw)
+   #where clause
+   request_query_param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await function_where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -218,15 +216,14 @@ async def function_my_object_delete(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    if int(config_is_delete_object_self)==0:return {"status":1,"message":"object deletion not allowed"}
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_clause(where_param_raw)
+   #where clause
+   request_query_param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await function_where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"delete from {table} {where_string};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -475,10 +472,9 @@ from function import function_where_clause
 from function import function_search_location
 @router.get("/utility/location-search")
 async def function_utility_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where prepare
+   #where clause
    request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
-   response=await function_where_clause(where_param_raw)
+   response=await function_where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -496,10 +492,9 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
    response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #where prepare
+   #where clause
    request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_clause(where_param_raw)
+   response=await function_where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -532,10 +527,9 @@ from function import function_where_clause
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #where prepare
+   #where clause
    request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_clause(where_param_raw)
+   response=await function_where_clause(request)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
