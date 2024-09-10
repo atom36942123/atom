@@ -470,9 +470,14 @@ import boto3,uuid
 async def function_s3(mode,filename,url):
   s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-  if mode=="create_url":output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=str(uuid.uuid4())+"-"+filename,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
-  if mode=="delete_url":output=s3_resource.Object(config_s3_bucket_name,url.rsplit("/",1)[1]).delete()
-  if mode=="delete_all":output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+  if mode=="create_url":
+    key=str(uuid.uuid4())+"-"+filename
+    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+  if mode=="delete_url":
+    key=url.rsplit("/",1)[1]
+    output=s3_resource.Object(config_s3_bucket_name,key).delete()
+  if mode=="delete_all":
+    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
   return {"status":1,"message":output}
 
 #ses
