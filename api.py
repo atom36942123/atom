@@ -441,6 +441,27 @@ async def function_utility_query_runner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
+from fastapi import UploadFile
+from function import function_file_to_object_list
+from function import function_object_create
+from function import function_object_update
+@router.post("/utility/csv-uploader")
+async def function_utility_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #file
+   response=await function_file_to_object_list(file)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object_list=response["message"]
+   #logic
+   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
+   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #public
 from function import function_where_prepare
 @router.get("/public/object-read")
@@ -496,27 +517,6 @@ async def function_public_search_location(request:Request,table:str,location:str
    return response
 
 #admin
-from fastapi import UploadFile
-from function import function_file_to_object_list
-from function import function_object_create
-from function import function_object_update
-@router.post("/admin/csv-uploader")
-async def function_admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #file
-   response=await function_file_to_object_list(file)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   object_list=response["message"]
-   #logic
-   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
-   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 from function import function_where_prepare
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
