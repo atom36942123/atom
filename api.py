@@ -355,6 +355,19 @@ async def function_utility_database_init(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+from function import function_database_clean
+@router.delete("/utility/database-clean")
+async def function_utility_database_clean(request:Request):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_database_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
    
 @router.get("/utility/project-cache")
 @cache(expire=60,key_builder=function_redis_key_builder)
@@ -392,19 +405,6 @@ from function import function_s3
 async def function_utility_file_upload(request:Request,mode:str,filename:str=None):
    #logic
    if mode=="s3":response=await function_s3("create_url",filename,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-from function import function_database_clean
-@router.delete("/utility/database-clean")
-async def function_utility_database_clean(request:Request):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_database_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
