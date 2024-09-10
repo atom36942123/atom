@@ -1,10 +1,10 @@
 #sns
 from config import config_aws_access_key_id,config_aws_secret_access_key
-from config import  config_ses_region_name
+from config import  config_sns_region_name
 async def function_sns(mode,mobile,message):
-  ses_client=boto3.client("sns",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  sns_client=boto3.client("sns",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="send_message":
-    output=ses_client.publish(PhoneNumber=mobile,Message=message)
+    output=sns_client.publish(PhoneNumber=mobile,Message=message)
   return {"status":1,"message":output}
 
 #message delete
