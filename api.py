@@ -386,7 +386,7 @@ async def function_utility_otp_send_mobile(request:Request,mode:str,mobile:str):
    #logic
    otp=random.randint(100000,999999)
    if mode=="sns":
-      response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp from atom {otp}"})
+      response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp={otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
    query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
@@ -402,11 +402,11 @@ async def function_utility_otp_send_email(request:Request,mode:str,email:str):
    #logic
    otp=random.randint(100000,999999)
    if mode=="ses":
-      response=await function_ses("send_sms",{"mobile":mobile,"message":f"otp from atom {otp}"})
+      response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp={otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
-   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
-   query_param={"otp":otp,"mobile":mobile}
+   query="insert into otp (otp,email) values (:otp,:email) returning *;"
+   query_param={"otp":otp,"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":"otp sent"}
