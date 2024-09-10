@@ -471,6 +471,23 @@ async def function_utility_csv_uploader(request:Request,mode:str,table:str,file:
    #final
    return response
 
+from function import function_where_prepare
+from function import function_search_location
+@router.get("/utility/location-search")
+async def function_utility_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #where prepare
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
+   response=await function_where_prepare(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #admin
 from function import function_where_prepare
 @router.get("/admin/object-read")
@@ -547,20 +564,3 @@ async def function_public_read_ids(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
-   
-from function import function_where_prepare
-from function import function_search_location
-@router.get("/public/search-location")
-async def function_public_search_location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
