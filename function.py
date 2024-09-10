@@ -11,9 +11,11 @@ async def function_sns(mode,mobile,message):
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import config_ses_sender_email,config_ses_region_name
 import boto3
-async def function_ses(mode,to,title,description):
+async def function_ses(mode,payload):
   ses_client=boto3.client("ses",region_name=config_ses_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
-  if mode=="send_email":output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+  if mode=="send_email":
+    to,title,description=payload["to"],payload["title"],payload["description"]
+    output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
   return {"status":1,"message":output}
 
 #s3
