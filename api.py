@@ -402,9 +402,22 @@ async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mob
 
 from function import function_s3
 @router.get("/utility/file-upload")
-async def function_utility_file_upload(request:Request,mode:str,filename:str=None):
+async def function_utility_file_upload(request:Request,mode:str,filename:str):
    #logic
    if mode=="s3":response=await function_s3("create_url",filename,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_s3
+@router.get("/utility/file-delete")
+async def function_utility_file_delete(request:Request,mode:str,url:str):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="s3":response=await function_s3("delete_url",None,url)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -542,15 +555,3 @@ async def function_admin_query_runner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
-from function import function_s3
-@router.delete("/admin/delete-s3-url")
-async def function_admin_delete_s3_url(request:Request,url:str):
-   #auth check
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_s3("delete_url",None,url)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
