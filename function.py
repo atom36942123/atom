@@ -20,13 +20,15 @@ async def function_ses(mode,to,title,description):
 from config import config_aws_access_key_id,config_aws_secret_access_key
 from config import  config_s3_bucket_name,config_s3_region_name
 import boto3,uuid
-async def function_s3(mode,filename,url):
+async def function_s3(mode,payload):
   s3_client=boto3.client("s3",region_name=config_s3_region_name,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
   if mode=="create_url":
+    filename=payload["filename"]
     key=str(uuid.uuid4())+"-"+filename
     output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
   if mode=="delete_url":
+    url=payload["url"]
     key=url.rsplit("/",1)[1]
     output=s3_resource.Object(config_s3_bucket_name,key).delete()
   if mode=="delete_all":
