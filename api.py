@@ -19,14 +19,10 @@ from function import function_add_action_count
 import hashlib
 from function import function_token_create
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
-async def function_auth_signup(request:Request):
-   #request body
-   request_body=await request.json()
-   username=request_body["username"]
-   password=hashlib.sha256(str(request_body["password"]).encode()).hexdigest()
+async def function_auth_signup(request:Request,username:str,password:str):
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
-   query_param={"username":username,"password":password}
+   query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=user=output[0]
    #token create
