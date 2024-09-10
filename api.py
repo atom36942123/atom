@@ -410,7 +410,7 @@ async def function_utility_file_upload(request:Request,mode:str,filename:str):
    return response
 
 from function import function_s3
-@router.get("/utility/file-delete")
+@router.delete("/utility/file-delete")
 async def function_utility_file_delete(request:Request,mode:str,url:str):
    #auth
    response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
