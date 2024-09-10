@@ -462,6 +462,45 @@ async def function_utility_csv_uploader(request:Request,mode:str,table:str,file:
    #final
    return response
 
+#admin
+from function import function_where_prepare
+@router.get("/admin/object-read")
+async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #where prepare
+   request_query_param=dict(request.query_params)
+   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
+   response=await function_where_prepare(where_param_raw)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+from function import function_object_update
+@router.put("/admin/object-update")
+async def function_admin_object_update(request:Request,table:str):
+   #auth
+   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #object
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
+   #object check
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #logic
+   response=await function_object_update(postgres_object,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #public
 from function import function_where_prepare
 @router.get("/public/object-read")
@@ -512,45 +551,6 @@ async def function_public_search_location(request:Request,table:str,location:str
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    response=await function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#admin
-from function import function_where_prepare
-@router.get("/admin/object-read")
-async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #where prepare
-   request_query_param=dict(request.query_params)
-   where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-from function import function_object_update
-@router.put("/admin/object-update")
-async def function_admin_object_update(request:Request,table:str):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #object
-   object=await request.json()
-   object["updated_by_id"]=user["id"]
-   #object check
-   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #logic
-   response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
