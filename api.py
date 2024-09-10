@@ -188,7 +188,7 @@ async def function_my_object_update(request:Request,table:str):
    #final
    return response
 
-from function import function_where_prepare
+from function import function_where_clause
 @router.get("/my/object-read")
 async def function_my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth
@@ -198,7 +198,7 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_prepare(where_param_raw)
+   response=await function_where_clause(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -210,7 +210,7 @@ async def function_my_object_read(request:Request,table:str,order:str="id desc",
    return {"status":1,"message":output}
 
 from config import config_is_delete_object_self
-from function import function_where_prepare
+from function import function_where_clause
 @router.delete("/my/object-delete")
 async def function_my_object_delete(request:Request,table:str):
    #auth
@@ -222,7 +222,7 @@ async def function_my_object_delete(request:Request,table:str):
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table"]}|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_prepare(where_param_raw)
+   response=await function_where_clause(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -471,14 +471,14 @@ async def function_utility_csv_uploader(request:Request,mode:str,table:str,file:
    #final
    return response
 
-from function import function_where_prepare
+from function import function_where_clause
 from function import function_search_location
 @router.get("/utility/location-search")
 async def function_utility_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","location","within","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
+   response=await function_where_clause(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -489,7 +489,7 @@ async def function_utility_location_search(request:Request,table:str,location:st
    return response
 
 #admin
-from function import function_where_prepare
+from function import function_where_clause
 @router.get("/admin/object-read")
 async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #auth
@@ -499,7 +499,7 @@ async def function_admin_object_read(request:Request,table:str,order:str="id des
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
+   response=await function_where_clause(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
@@ -528,14 +528,14 @@ async def function_admin_object_update(request:Request,table:str):
    return response
 
 #public
-from function import function_where_prepare
+from function import function_where_clause
 @router.get("/public/object-read")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #where prepare
    request_query_param=dict(request.query_params)
    where_param_raw={k:v for k,v in request_query_param.items() if k not in ["table","order","limit","page"]}
-   response=await function_where_prepare(where_param_raw)
+   response=await function_where_clause(where_param_raw)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
