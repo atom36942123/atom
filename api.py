@@ -45,7 +45,6 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-      if type and user["type"]!=type:return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    if mode=="oauth_google":
       response=await function_read_user_force(postgres_object,"google_id",google_id)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -62,6 +61,8 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
       response=await function_read_user_force(postgres_object,"mobile",mobile)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
+   #user type check
+   if type and user["type"]!=type:return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await function_token_create(user)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
