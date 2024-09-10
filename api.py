@@ -502,8 +502,8 @@ async def function_admin_object_update(request:Request,table:str):
    return response
 
 #public
-@router.get("/public/bulk-ids-read")
-async def function_public_bulk_ids_read(request:Request,table:str,ids:str):
+@router.get("/public/read-ids")
+async def function_public_read_ids(request:Request,table:str,ids:str):
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    query=f"select * from {table} where id in ({ids}) order by id desc;"
