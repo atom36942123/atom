@@ -385,8 +385,7 @@ from function import function_sns
 async def function_utility_otp_send_mobile(request:Request,mode:str,mobile:str):
    #logic
    otp=random.randint(100000,999999)
-   if mode=="sns":
-      response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp={otp}"})
+   if mode=="sns":response=await function_sns("send_sms",{"mobile":mobile,"message":f"otp={otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
    query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
@@ -401,8 +400,7 @@ from function import function_ses
 async def function_utility_otp_send_email(request:Request,mode:str,email:str):
    #logic
    otp=random.randint(100000,999999)
-   if mode=="ses":
-      response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp={otp}"})
+   if mode=="ses":response=await function_ses("send_email",{"to":email,"title":"otp","description":f"otp={otp}"})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
    query="insert into otp (otp,email) values (:otp,:email) returning *;"
@@ -424,8 +422,7 @@ from function import function_s3
 @router.get("/utility/file-upload")
 async def function_utility_file_upload(request:Request,mode:str,filename:str):
    #logic
-   if mode=="s3":
-      response=await function_s3("create_url",{"filename":filename})
+   if mode=="s3":response=await function_s3("create_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -438,8 +435,7 @@ async def function_utility_file_delete(request:Request,mode:str,url:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="s3":
-      response=await function_s3("delete_url",{"url":url})
+   if mode=="s3":response=await function_s3("delete_url",{"url":url})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
