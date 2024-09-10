@@ -410,7 +410,8 @@ from function import function_s3
 @router.get("/utility/file-upload")
 async def function_utility_file_upload(request:Request,mode:str,filename:str):
    #logic
-   if mode=="s3":response=await function_s3("create_url",filename,None)
+   if mode=="s3":
+      response=await function_s3("create_url",{"filename":filename})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
