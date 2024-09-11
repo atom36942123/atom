@@ -43,12 +43,15 @@ async def function_signup(request:Request,username:str,password:str):
 #login
 from fastapi import Request
 from fastapi.responses import JSONResponse
+import hashlib
+from function import function_token_create
+from config import config_key_jwt
 from function import function_postgres_read_user_force
 from function import function_postgtes_otp_verify
-from config import config_key_jwt
-from function import function_token_create
 @router.post("/login")
 async def function_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
    #logic
    if mode=="username_password":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
