@@ -1,4 +1,5 @@
 #postgres object
+from config import config_postgres_database_url
 from databases import Database
 postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
