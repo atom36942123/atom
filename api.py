@@ -5,13 +5,13 @@ router=APIRouter(tags=["api"])
 #database
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import function_postgres_database_init
+from function import function_postgres_init
 @router.get("/database")
 async def function_database(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    #logic
-   response=await function_postgres_database_init(postgres_object)
+   response=await function_postgres_init(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
