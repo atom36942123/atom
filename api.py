@@ -246,7 +246,7 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import jwt_secret_key
 from function import function_object_ownership_check
-from function import function_postgres_object_update
+from function import function_postgres_object_ownership_check
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
    #middleware
@@ -260,7 +260,7 @@ async def function_my_object_update(request:Request,table:str):
    object=await request.json()
    object["updated_by_id"]=user["id"]
    #object ownership check
-   response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
+   response=await function_postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #object check
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
@@ -270,7 +270,7 @@ async def function_my_object_update(request:Request,table:str):
       for item in ["email","mobile"]:
          if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    #logic
-   response=await function_object_update(postgres_object,"normal",table,[object])
+   response=await function_postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
