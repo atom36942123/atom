@@ -40,7 +40,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 #middleware
 from fastapi import Request
 from fastapi.responses import JSONResponse
-import traceback
+import traceback,json
 from function import function_middleware_error
 from function import function_postgres_create_log
 from config import jwt_secret_key
