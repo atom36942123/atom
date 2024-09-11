@@ -217,6 +217,7 @@ async def function_qrunner(request:Request,mode:str,query:str):
 #pcache
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from fastapi_cache.decorator import cache
 @router.get("/pcache")
 @cache(expire=60,key_builder=function_redis_key_builder)
 async def function_pcache(request:Request):
