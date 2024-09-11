@@ -13,6 +13,9 @@ from contextlib import asynccontextmanager
 from config import config_postgres_object
 from function import function_redis_start
 from config import config_redis_server_url
+from config import function_postgres_column_datatype
+
+from function import function_postgres_column_datatype
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
   await function_redis_start(config_redis_server_url)
