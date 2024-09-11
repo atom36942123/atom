@@ -113,3 +113,6 @@ config_database_query=[
 #postgres object
 from databases import Database
 postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+
+#datatype
+config_datatype=None
