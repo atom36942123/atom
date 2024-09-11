@@ -10,7 +10,7 @@ if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_s
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from config import config_postgres_object
+from runtime import postgres_object
 from function import function_redis_start
 from config import config_redis_server_url
 from config import config_column_datatype
@@ -20,13 +20,13 @@ async def function_lifespan(app:FastAPI):
   #redis
   await function_redis_start(config_redis_server_url)
   #postgres connect
-  await config_postgres_object.connect()
+  await postgres_object.connect()
   #column datatype
-  response=await function_postgres_column_datatype(config_postgres_object)
+  response=await function_postgres_column_datatype(postgres_object)
   config_column_datatype=response["message"]
   yield
   #postgres disconnect
-  await config_postgres_object.disconnect()
+  await postgres_object.disconnect()
   
 #app
 from fastapi import FastAPI
@@ -40,7 +40,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
-from config import config_postgres_object
+from runtime import postgres_object
 from config import config_key_root,config_key_jwt
 from function import function_middleware_error
 from function import function_postgres_create_log
@@ -48,7 +48,7 @@ from function import function_postgres_create_log
 async def function_middleware(request:Request,api_function):
   try:
     response=await api_function(request)
-    await function_postgres_create_log(config_postgres_object,request,config_key_root,config_key_jwt)
+    await function_postgres_create_log(postgres_object,request,config_key_root,config_key_jwt)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
