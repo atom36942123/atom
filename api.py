@@ -12,7 +12,7 @@ import hashlib
 from function import function_token_create
 from config import config_key_jwt
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def function_auth_signup(request:Request,username:str,password:str):
+async def function_signup(request:Request,username:str,password:str):
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -34,7 +34,7 @@ from function import function_postgtes_otp_verify
 from function import function_token_create
 from config import config_key_jwt
 @router.post("/auth/login")
-async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
+async def function_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
    #logic
    if mode=="username_password":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -74,7 +74,7 @@ from config import config_postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
 @router.get("/my/profile")
-async def function_my_profile(request:Request):
+async def function_profile(request:Request):
    #auth
    response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,config_postgres_object,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
