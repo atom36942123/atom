@@ -118,14 +118,10 @@ async def function_postgres_add_creator_key(postgres_object,object_list):
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
-async def function_postgres_create_log(postgres_object,request,config_key_root,config_key_jwt):
+async def function_postgres_create_log(postgres_object,request,key_jwt):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:
-    token=authorization_header.split(" ",1)[1]
-    if token==config_key_root:created_by_id=1
-    else:created_by_id=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])["id"]
+  if request.headers.get("Authorization"):created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],key_jwt,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
