@@ -234,3 +234,21 @@ async def function_pcache(request:Request):
       temp[k]=output
    #final
    return {"status":1,"message":temp}
+
+#clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import jwt_secret_key
+from function import function_database_clean
+@router.delete("/clean")
+async def function_clean(request:Request):
+   #auth
+   response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_database_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
