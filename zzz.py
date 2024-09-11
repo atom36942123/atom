@@ -203,19 +203,6 @@ async def function_my_update_contact(request:Request,otp:int,email:str=None,mobi
    #final
    return response
 
-from function import function_database_clean
-@router.delete("/utility/database-clean")
-async def function_utility_database_clean(request:Request):
-   #auth
-   response=await function_auth("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_database_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 import random
 from function import function_sns
 from function import function_ses
