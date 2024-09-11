@@ -213,3 +213,18 @@ async def function_qrunner(request:Request,mode:str,query:str):
          output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#pcache
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.get("/pcache")
+@cache(expire=60,key_builder=function_redis_key_builder)
+async def function_pcache(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   response=await function_query_dict_runner(postgres_object,query_dict)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
