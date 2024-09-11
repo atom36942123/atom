@@ -30,7 +30,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import config_postgres_object
 from function import function_postgres_read_user_force
-from function import function_postgres_otp_verify
+from function import function_postgtes_otp_verify
 from function import function_token_create
 from config import config_key_jwt
 @router.post("/auth/login")
