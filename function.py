@@ -190,19 +190,6 @@ async def function_read_user_force(postgres_object,column,value):
     user=output[0]
   return {"status":1,"message":user}
 
-#token create
-import jwt,json,time
-from config import config_key_jwt
-from datetime import datetime,timedelta
-async def function_token_create(user):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
-  data=json.dumps(data,default=str)
-  config_token_expiry_days=10000
-  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
-  payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,config_key_jwt)
-  return {"status":1,"message":token}
-
 #database clean
 async def function_database_clean(postgres_object):
   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
@@ -515,6 +502,18 @@ async def function_auth(mode,request,config_key_root,config_key_jwt,postgres_obj
     if user_type_allowed_list:
       if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
+
+#token create
+import jwt,json,time
+from datetime import datetime,timedelta
+async def function_token_create(user,config_key_jwt):
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data=json.dumps(data,default=str)
+  config_token_expiry_days=10000
+  expiry_time=time.mktime((datetime.now()+timedelta(days=config_token_expiry_days)).timetuple())
+  payload={"exp":expiry_time,"data":data}
+  token=jwt.encode(payload,config_key_jwt)
+  return {"status":1,"message":token}
 
 #redis key builder
 from fastapi import Request,Response
