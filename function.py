@@ -1,3 +1,28 @@
+#postgres object update
+import hashlib,json
+from datetime import datetime
+from fastapi import BackgroundTasks
+async def function_postgres_object_update(postgres_object,column_datatype_mapping,mode,table,object_list):
+  background=BackgroundTasks()
+  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  if not object_list:return {"status":1,"message":"done"}
+  column_to_update_list=[*object_list[0]]
+  column_to_update_list.remove("id")
+  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=column_datatype_mapping[k]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
+  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":"updated"}
+
 #postgres database init
 async def function_postgres_database_init(postgres_object):
   #config
@@ -8,7 +33,7 @@ async def function_postgres_database_init(postgres_object):
   identity={"id":table}
   default=[["created_at","now()",table]]
   unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
-  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as datatype,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
+  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
   column={
   "id":["bigint",table],
   "created_at":["timestamptz",table],
