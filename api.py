@@ -93,6 +93,7 @@ from config import config_postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
 from datetime import datetime
+from function import function_postgres_object_update
 @router.get("/my/profile")
 async def function_profile(request:Request):
    #auth
@@ -106,8 +107,8 @@ async def function_profile(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
-   object={"id":user["id"],"updated_by_id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   response=await function_object_update(postgres_object,"background","users",[object])
+   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
+   response=await function_postgres_object_update(postgres_object,mapping,"background","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
