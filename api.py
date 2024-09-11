@@ -2,6 +2,19 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
+#database init
+from function import function_database_init
+@router.get("/utility/database-init")
+async def function_database_init(request:Request):
+   #auth
+   response=await function_auth("root",request,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   response=await function_database_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
