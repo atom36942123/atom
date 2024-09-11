@@ -3,27 +3,8 @@ from fastapi_cache.decorator import cache
 from function import function_redis_key_builder
 from function import function_postgres_add_creator_key
 from function import function_postgres_add_action_count
-from function import function_auth
 
 
-
-
-   
-
-
-from function import function_query_dict_runner
-@router.get("/my/metric")
-async def function_my_metric(request:Request):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query_dict={ "post_count":f"select count(*) from post where created_by_id={user['id']};","message_unread_count":f"select count(*) from message where parent_table='users' and parent_id={user['id']} and status is null;"}
-   response=await function_query_dict_runner(postgres_object,query_dict)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 from function import function_token_create
 @router.get("/my/token-refresh")
