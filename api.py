@@ -408,7 +408,7 @@ async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mob
 
 from function import function_s3
 @router.get("/utility/file")
-async def function_utility_file(request:Request,mode:str,filename:str):
+async def function_utility_file(request:Request,mode:str,filename:str=None,url:str=None):
    #logic
    if mode=="create_s3":
       response=await function_s3("create",{"filename":filename})
