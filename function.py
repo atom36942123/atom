@@ -1,3 +1,11 @@
+#postgres datatype
+async def function_postgres_datatype(postgres_object):
+  query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if output:datatype_mapping={item["column_name"]:item["data_type"] for item in output}
+  return {"status":1,"message":datatype_mapping}
+
 #sns
 from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
 async def function_sns(mode,payload):
