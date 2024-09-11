@@ -243,6 +243,8 @@ from config import jwt_secret_key
 from function import function_postgres_clean
 @router.delete("/clean")
 async def function_clean(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
    #auth
    response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
