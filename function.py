@@ -22,15 +22,15 @@ async def function_postgres_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #column
   for k,v in column.items():
-    for table in v[1]:
-      query=f"alter table {table} add column if not exists {k} {v[0]};"
+    for item in v[1]:
+      query=f"alter table {item} add column if not exists {k} {v[0]};"
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
   #index
   for k,v in column.items():
     if k in index:
-      for table in v[1]:
-        query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
+      for item in v[1]:
+        query=f"create index concurrently if not exists index_{k}_{item} on {item} using {config_database_index[k]} ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #schema constraint
@@ -55,45 +55,45 @@ async def function_postgres_database_init(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #not null
   for k,v in not_null.items():
-    for table in v:
-      state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+    for item in v:
+      state=[x["is_nullable"] for x in schema_column if x["table_name"]==item and x["column_name"]==k]
       if state[0]=="YES":
-        query=f"alter table {table} alter column {k} set not null;"
+        query=f"alter table {item} alter column {k} set not null;"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #identity
   for k,v in identity.items():
-    for table in v:
-      state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+    for item in v:
+      state=[x["is_identity"] for x in schema_column if x["table_name"]==item and x["column_name"]==k]
       if state[0]=="NO":
-        query=f"alter table {table} alter column {k} add generated always as identity;"
+        query=f"alter table {item} alter column {k} add generated always as identity;"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #default
   for item in default:
-    for table in item[2]:
-      state=[x["column_default"] for x in schema_column if x["table_name"]==table and x["column_name"]==item[0]]
+    for t in item[2]:
+      state=[x["column_default"] for x in schema_column if x["table_name"]==t and x["column_name"]==item[0]]
       if state[0]==None:
-        query=f"alter table {table} alter column {item[0]} set default {item[1]};"
+        query=f"alter table {t} alter column {item[0]} set default {item[1]};"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #unique
   for k,v in unique.items():
-    for table in v:
-      constraint_name=f"constraint_unique_{k}_{table}".replace(",","_")
+    for item in v:
+      constraint_name=f"constraint_unique_{k}_{item}".replace(",","_")
       if constraint_name not in schema_constraint_name_list:
-        query=f"alter table {table} add constraint {constraint_name} unique ({k});"
+        query=f"alter table {item} add constraint {constraint_name} unique ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
-  #query
-  for item in config_database_query:
+  #query post
+  for item in query_post:
       if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
       else:
         query=item
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #trigger set updated_at
-  for item in config_database_column["updated_at"][1]:
+  for item in column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
