@@ -87,30 +87,30 @@ async def function_login(request:Request,mode:str,username:str=None,password:str
    return {"status":1,"message":token}
 
 #profile
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from main import postgres_object
-from function import function_auth_check
-from config import config_key_root,config_key_jwt
-from datetime import datetime
-from function import function_postgres_object_update
-from main import column_datatype
-@router.get("/my/profile")
-async def function_profile(request:Request):
-   print(config_column_datatype)
-   #auth
-   response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   #update last active at
-   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   response=await function_postgres_object_update(postgres_object,column_datatype,"background","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return {"status":1,"message":user}
+# from fastapi import Request
+# from fastapi.responses import JSONResponse
+# from main import postgres_object
+# from function import function_auth_check
+# from config import config_key_root,config_key_jwt
+# from datetime import datetime
+# from function import function_postgres_object_update
+# from main import column_datatype
+# @router.get("/my/profile")
+# async def function_profile(request:Request):
+#    print(config_column_datatype)
+#    #auth
+#    response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+#    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+#    user=response["message"]
+#    #read user
+#    query="select * from users where id=:id;"
+#    query_param={"id":user["id"]}
+#    output=await postgres_object.fetch_all(query=query,values=query_param)
+#    user=output[0] if output else None
+#    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+#    #update last active at
+#    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
+#    response=await function_postgres_object_update(postgres_object,column_datatype,"background","users",[object])
+#    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+#    #final
+#    return {"status":1,"message":user}
