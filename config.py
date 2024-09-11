@@ -21,6 +21,10 @@ config_elasticsearch_cloud_id=env("elasticsearch_cloud_id")
 config_is_delete_account=env("is_delete_account")
 config_is_delete_object_self=env("is_delete_object_self")
 
+#postgres object
+from databases import Database
+postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+
 #database
 config_database_extension=["postgis"]
 config_database_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
@@ -110,9 +114,5 @@ config_database_query=[
 "create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",
 ]
 
-#postgres object
-from databases import Database
-postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
-#datatype
-config_datatype=None
+
