@@ -1,8 +1,8 @@
 #postgres column datatype
-def function_postgres_column_datatype(postgres_object):
+async def function_postgres_column_datatype(postgres_object):
   query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
   query_param={}
-  output=postgres_object.fetch_all(query=query,values=query_param)
+  output=await postgres_object.fetch_all(query=query,values=query_param)
   if output:column_datatype={item["column_name"]:item["data_type"] for item in output}
   return {"status":1,"message":column_datatype}
 
