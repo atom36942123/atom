@@ -5,11 +5,12 @@ router=APIRouter(tags=["api"])
 #signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from config import config_postgres_object
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 import hashlib
 from function import function_token_create
-from function import function_token_create
+from config import config_key_jwt
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=5))])
 async def function_auth_signup(request:Request,username:str,password:str):
    #create user
