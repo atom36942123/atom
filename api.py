@@ -71,16 +71,18 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import config_postgres_object
+from function import function_auth_check
+from config import config_key_root,config_key_jwt
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+   response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,config_postgres_object,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   output=await config_postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
@@ -89,4 +91,3 @@ async def function_my_profile(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
-
