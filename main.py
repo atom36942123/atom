@@ -24,7 +24,6 @@ async def function_lifespan(app:FastAPI):
   #column datatype
   response=await function_postgres_column_datatype(config_postgres_object)
   config_column_datatype=response["message"]
-  print(config_column_datatype)
   yield
   #postgres disconnect
   await config_postgres_object.disconnect()
