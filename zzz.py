@@ -4,32 +4,7 @@ from function import function_postgres_add_action_count
 
 
 
-from function import function_object_ownership_check
-from function import function_object_update
-@router.put("/my/object-update")
-async def function_my_object_update(request:Request,table:str):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #object
-   object=await request.json()
-   object["updated_by_id"]=user["id"]
-   #object ownership check
-   response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #object check
-   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   if table=="users":
-      for item in ["email","mobile"]:
-         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   #logic
-   response=await function_object_update(postgres_object,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
+
 
 from function import function_where_clause
 @router.get("/my/object-read")
