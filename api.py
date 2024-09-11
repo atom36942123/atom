@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from function import function_postgres_database_init
 @router.get("/utility/database-init")
 async def function_database_init(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
    #logic
    response=await function_postgres_database_init(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
