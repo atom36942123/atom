@@ -26,6 +26,7 @@ async def function_lifespan(app:FastAPI):
   await function_redis_start(config_redis_server_url)
   await postgres_object.connect()
   response=await function_postgres_column_datatype(postgres_object)
+  gloabl column_datatype
   column_datatype=response["message"]
   print(column_datatype)
   yield
