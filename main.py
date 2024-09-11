@@ -1,21 +1,18 @@
-#import
-from config import config_sentry_dsn
-from config import config_redis_server_url
-from config import postgres_object
-from function import function_redis_start
-from function import function_create_log
-
 #logging
 import logging
 logging.basicConfig(level="INFO")
 
 #sentry
+from config import config_sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from function import function_redis_start
+from config import config_redis_server_url
+from config import postgres_object
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
   await function_redis_start(config_redis_server_url)
@@ -35,15 +32,15 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
+from config import postgres_object
+from config import config_key_root,config_key_jwt
 from function import function_middleware_error
-from function import function_postgres_datatype
+from function import function_postgres_create_log
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
     response=await api_function(request)
-    await function_create_log(postgres_object,request)
-    x=await function_postgres_datatype(postgres_object)
-    print(x)
+    await function_postgres_create_log(postgres_object,request,config_key_root,config_key_jwt)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
