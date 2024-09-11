@@ -165,7 +165,7 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import config_jwt_secret_key
 from fastapi import UploadFile
-from function import function_file_to_object_list
+from function import function_csv_to_object_list
 from function import function_postgres_object_create
 from function import function_postgres_object_update
 @router.post("/csv")
@@ -178,7 +178,7 @@ async def function_csv(request:Request,mode:str,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
-   response=await function_file_to_object_list(file)
+   response=await function_csv_to_object_list(file)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
