@@ -240,7 +240,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import jwt_secret_key
-from function import function_database_clean
+from function import function_postgres_clean
 @router.delete("/clean")
 async def function_clean(request:Request):
    #auth
@@ -248,7 +248,7 @@ async def function_clean(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_database_clean(postgres_object)
+   response=await function_postgres_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
