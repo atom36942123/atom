@@ -177,7 +177,7 @@ async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
   background=BackgroundTasks()
   request_query_param=dict(request.query_params)
   print(request_query_param)
-  request_body=await request.form()
+  request_body=await request.body()
   print(request_body)
   if request_query_param:request_query_param=json.dumps(request_query_param)
   if request_body:request_body=json.dumps(dict(request_body))
