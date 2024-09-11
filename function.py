@@ -83,9 +83,9 @@ async def function_postgres_object_create(postgres_object,column_datatype,mode,t
 #auth check
 import jwt,json
 async def function_auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
-  auth_header=request.headers.get("Authorization")
-  if not auth_header:return {"status":0,"message":"token is must"}
-  token=auth_header.split(" ",1)[1]
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"token is must"}
+  token=authorization_header.split(" ",1)[1]
   user=json.loads(jwt.decode(token,jwt_secret_key,algorithms="HS256")["data"])
   if postgres_object==1:
     query="select * from users where id=:id;"
