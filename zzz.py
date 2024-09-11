@@ -5,7 +5,6 @@ from function import function_postgres_add_creator_key
 from function import function_postgres_add_action_count
 from function import function_auth
 from function import function_otp_verify
-from function import function_read_user_force
 
 
 
