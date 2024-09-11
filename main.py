@@ -48,7 +48,6 @@ from function import function_postgres_create_log
 async def function_middleware(request:Request,api_function):
   try:
     request.state.postgres_object=postgres_object
-    request.state.column_datatype=column_datatype
     response=await api_function(request)
     await function_postgres_create_log(postgres_object,request,config_key_root,config_key_jwt)
   except Exception as e:
