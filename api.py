@@ -5,7 +5,7 @@ router=APIRouter(tags=["api"])
 #database init
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from runtime import postgres_object
+from main import postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
 from function import function_postgres_database_init
@@ -24,7 +24,7 @@ async def function_database_init(request:Request):
 #signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from runtime import postgres_object
+from main import postgres_object
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 import hashlib
@@ -47,7 +47,7 @@ async def function_signup(request:Request,username:str,password:str):
 #login
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from runtime import postgres_object
+from main import postgres_object
 from function import function_postgres_read_user_force
 from function import function_postgtes_otp_verify
 from function import function_token_create
@@ -89,12 +89,12 @@ async def function_login(request:Request,mode:str,username:str=None,password:str
 #profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from runtime import postgres_object
+from main import postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
 from datetime import datetime
 from function import function_postgres_object_update
-from runtime import column_datatype
+from main import column_datatype
 @router.get("/my/profile")
 async def function_profile(request:Request):
    print(config_column_datatype)
