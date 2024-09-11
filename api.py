@@ -444,8 +444,8 @@ from fastapi import UploadFile
 from function import function_file_to_object_list
 from function import function_object_create
 from function import function_object_update
-@router.post("/utility/csv-uploader")
-async def function_utility_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
+@router.post("/utility/csv")
+async def function_utility_csv(request:Request,mode:str,table:str,file:UploadFile):
    #auth
    response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
