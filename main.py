@@ -1,7 +1,8 @@
-#custom import
+#import
 from config import config_sentry_dsn
 from config import config_redis_server_url
 from config import postgres_object
+from function import function_redis_start
 
 #logging
 import logging
@@ -12,12 +13,11 @@ import sentry_sdk
 if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
-from function import function_redis_service_start
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  await function_redis_service_start(config_redis_server_url)
+  await function_redis_start(config_redis_server_url)
   await postgres_object.connect()
   yield
   await postgres_object.disconnect()
