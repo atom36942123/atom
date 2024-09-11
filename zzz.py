@@ -6,24 +6,6 @@ from function import function_postgres_add_action_count
 
 
 
-from function import function_token_create
-@router.get("/my/token-refresh")
-async def function_my_token_refresh(request:Request):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
-   #token create
-   response=await function_token_create(user)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 from config import config_is_delete_account
 @router.delete("/my/delete-account")
