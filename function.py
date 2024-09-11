@@ -43,11 +43,11 @@ async def function_postgres_object_update(postgres_object,column_datatype,mode,t
   if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"updated"}
 
-#object create
+#postgres object create
 import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
-async def function_object_create(postgres_object,column_datatype,mode,table,object_list):
+async def function_postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
