@@ -89,15 +89,16 @@ async def function_login(request:Request,mode:str,username:str=None,password:str
    #final
    return {"status":1,"message":token}
 
-#profile
+#my
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import jwt_secret_key
 from datetime import datetime
+from function import function_token_create
 from function import function_postgres_object_update
-@router.get("/profile")
-async def function_profile(request:Request):
+@router.get("/my")
+async def function_my(request:Request,mode:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -105,68 +106,33 @@ async def function_profile(request:Request):
    response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   #logic
+   if mode=="profile":
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+      response={"status":1,"message":user}
+   if mode=="token":
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+      response=await function_token_create(user,jwt_secret_key)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode=="exit":
+      if True:return {"status":1,"message":"exit not allowed"}
+      query="delete from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"account deleted"}
    #update last active at
    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   response=await function_postgres_object_update(postgres_object,column_datatype,"background","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return {"status":1,"message":user}
-
-#token refresh
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import jwt_secret_key
-from function import function_token_create
-@router.get("/token")
-async def function_token(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await function_auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
-   #token create
-   response=await function_token_create(user,jwt_secret_key)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   await function_postgres_object_update(postgres_object,column_datatype,"background","users",[object])
    #final
    return response
-
-#exit
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import jwt_secret_key
-@router.delete("/exit")
-async def function_exit(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await function_auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #permisson check
-   if True:return {"status":1,"message":"exit not allowed"}
-   #logic
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"account deleted"}
 
 #csv
 from fastapi import Request
@@ -246,7 +212,7 @@ async def function_pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
-#object
+#object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
@@ -270,6 +236,33 @@ async def function_object(request:Request,table:str):
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    #logic
    response=await function_postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+from function import function_object_ownership_check
+from function import function_object_update
+@router.put("/my/object-update")
+async def function_my_object_update(request:Request,table:str):
+   #auth
+   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #object
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
+   #object ownership check
+   response=await function_object_ownership_check(postgres_object,table,object["id"],user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #object check
+   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   if table=="users":
+      for item in ["email","mobile"]:
+         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   #logic
+   response=await function_object_update(postgres_object,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
