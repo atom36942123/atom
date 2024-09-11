@@ -1,3 +1,95 @@
+#postgres database init
+async def function_postgres_database_init(postgres_object):
+  #query pre
+  for item in config_database_extension:
+    query=f"create extension if not exists {item};"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #table
+  for item in config_database_table:
+    query=f"create table if not exists {item} ();"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #column
+  for k,v in config_database_column.items():
+    for table in v[1]:
+      query=f"alter table {table} add column if not exists {k} {v[0]};"
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+  #index
+  for k,v in config_database_column.items():
+    if k in config_database_index:
+      for table in v[1]:
+        query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #schema constraint
+  query="select constraint_name from information_schema.constraint_column_usage;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_constraint_name_list=[item["constraint_name"] for item in output]
+  #schema column
+  query="select * from information_schema.columns where table_schema='public';"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_column=output
+  #schema routine
+  if False:
+    query="select proname from pg_proc;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    schema_routine_name_list=[item["proname"] for item in output]
+  #protected
+  for item in config_database_column["is_protected"][1]:
+    query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  #not null
+  for k,v in config_database_not_null.items():
+    for table in v:
+      state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
+      if state[0]=="YES":
+        query=f"alter table {table} alter column {k} set not null;"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #identity
+  for k,v in config_database_identity.items():
+    for table in v:
+      state=[column["is_identity"] for column in schema_column if column["table_name"]==table and column["column_name"]==k]
+      if state[0]=="NO":
+        query=f"alter table {table} alter column {k} add generated always as identity;"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #default
+  for item in config_database_default:
+    for table in item[2]:
+      state=[column["column_default"] for column in schema_column if column["table_name"]==table and column["column_name"]==item[0]]
+      if state[0]==None:
+        query=f"alter table {table} alter column {item[0]} set default {item[1]};"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #unique
+  for k,v in config_database_unique.items():
+    for table in v:
+      constraint_name=f"constraint_unique_{k}_{table}".replace(",","_")
+      if constraint_name not in schema_constraint_name_list:
+        query=f"alter table {table} add constraint {constraint_name} unique ({k});"
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #query
+  for item in config_database_query:
+      if ("add constraint" in item and item.split()[5] in schema_constraint_name_list):continue
+      else:
+        query=item
+        query_param={}
+        output=await postgres_object.fetch_all(query=query,values=query_param)
+  #trigger set updated_at
+  for item in config_database_column["updated_at"][1]:
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
+    query_param={}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
 #auth check
 import jwt,json
 async def function_auth_check(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
