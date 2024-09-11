@@ -13,14 +13,20 @@ from contextlib import asynccontextmanager
 from config import config_postgres_object
 from function import function_redis_start
 from config import config_redis_server_url
-from config import function_postgres_column_datatype
-
+from config import config_column_datatype
 from function import function_postgres_column_datatype
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
+  #redis
   await function_redis_start(config_redis_server_url)
+  #postgres connect
   await config_postgres_object.connect()
+  #column datatype
+  response=await function_postgres_column_datatype(config_postgres_object)
+  config_column_datatype=response["message"]
+  print(config_column_datatype)
   yield
+  #postgres disconnect
   await config_postgres_object.disconnect()
   
 #app
