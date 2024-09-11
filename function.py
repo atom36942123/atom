@@ -10,7 +10,7 @@ async def function_postgres_column_datatype(postgres_object):
 import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
-async def function_postgres_object_update(postgres_object,config_column_datatype,mode,table,object_list):
+async def function_postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   if not object_list:return {"status":1,"message":"done"}
@@ -20,7 +20,7 @@ async def function_postgres_object_update(postgres_object,config_column_datatype
   query_param_list=object_list
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
-      datatype=config_column_datatype[k]
+      datatype=column_datatype[k]
       if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
       if "int" in datatype:query_param_list[index][k]=int(v) if v else None
       if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
