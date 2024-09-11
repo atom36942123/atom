@@ -1,7 +1,8 @@
-#postgres object
+#runtime
 from config import config_postgres_database_url
 from databases import Database
 postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+column_datatype=None
 
 #logging
 import logging
@@ -18,7 +19,6 @@ from contextlib import asynccontextmanager
 from function import function_redis_start
 from config import config_redis_server_url
 from function import function_postgres_column_datatype
-from runtime import column_datatype
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
   await function_redis_start(config_redis_server_url)
@@ -48,6 +48,7 @@ from function import function_postgres_create_log
 async def function_middleware(request:Request,api_function):
   try:
     request.state.postgres_object=postgres_object
+    request.state.column_datatype=column_datatype
     response=await api_function(request)
     await function_postgres_create_log(postgres_object,request,config_key_root,config_key_jwt)
   except Exception as e:
