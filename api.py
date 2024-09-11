@@ -240,12 +240,20 @@ async def function_object(request:Request,table:str):
    #final
    return response
 
+#object update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import jwt_secret_key
 from function import function_object_ownership_check
-from function import function_object_update
+from function import function_postgres_object_update
 @router.put("/my/object-update")
 async def function_my_object_update(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+   response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #object
