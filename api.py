@@ -144,7 +144,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import config_jwt_secret_key
-from config import config_is_delete_account
 @router.delete("/exit")
 async def function_exit(request:Request):
    #auth check
