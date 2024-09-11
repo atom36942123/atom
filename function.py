@@ -300,8 +300,8 @@ async def function_mongo(mongo_server_url,mode,database,table,payload):
       output={"status":1,"message":output.deleted_count}
   return {"status":1,"message":output}
 
-#postgres database init
-async def function_postgres_database_init(postgres_object):
+#postgres init
+async def function_postgres_init(postgres_object):
   #config
   query_pre=["create extension if not exists postgis"]
   table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
