@@ -121,7 +121,8 @@ from fastapi import BackgroundTasks
 async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
-  if request.headers.get("Authorization"):created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
+  authorization_header=request.headers.get("Authorization")
+  if authorization_header:created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
