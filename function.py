@@ -1,24 +1,34 @@
 #postgres database init
 async def function_postgres_database_init(postgres_object):
+  #config
+  query_pre=["create extension if not exists postgis"]
+  table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
+  column={"id":["bigint",table],"created_at":["timestamptz",table],"created_by_id":["bigint",table],"is_deleted":["int",table],"updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],"updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],"is_active":["int",["users","post"]],"is_verified":["int",["users","post"]],"is_protected":["int",["users","post","box","atom"]],"parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],"parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],"type":["text",["users","post","box","atom","helpdesk"]],"status":["text",["report","helpdesk","message"]],"remark":["text",["report","helpdesk"]],"rating":["numeric",["rating","atom","post"]],"metadata":["jsonb",["users","post","box","atom"]],"username":["text",["users"]],"password":["text",["users"]],"google_id":["text",["users"]],"profile_pic_url":["text",["users"]],"last_active_at":["timestamptz",["users"]],"name":["text",["users"]],"email":["text",["users","post","box","atom","otp","helpdesk"]],"mobile":["text",["users","post","box","atom","otp","helpdesk"]],"date_of_birth":["date",["users"]],"title":["text",["users","post","box","atom"]],"description":["text",["users","post","box","atom","report","block","comment","message","helpdesk"]],"file_url":["text",["post","box","atom","comment","message"]],"link_url":["text",["post","box","atom"]],"tag":["text",["users","post","box","atom"]],"otp":["int",["otp"]],"tag_array":["text[]",["atom"]],"location":["geography(POINT)",["users","post","box","atom"]],"request_path":["text",["log"]],"request_query_param":["jsonb",["log"]],"request_body":["jsonb",["log"]],"interest":["text",["users"]],"skill":["text",["users"]],"gender":["text",["users"]],"country":["text",["users"]],"state":["text",["users"]],"city":["text",["users"]],}
+  index={"id":"btree","created_at":"brin","is_deleted":"btree","is_verified":"btree","is_active":"btree","parent_table":"btree","parent_id":"btree","type":"btree","created_by_id":"btree","status":"btree","email":"btree","password":"btree","location":"gist","tag":"btree","tag_array":"gin"}
+  not_null={"id":config_database_table,"created_at":config_database_table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
+  identity={"id":config_database_table}
+  default=[["created_at","now()",config_database_table]]
+  unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
+  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as datatype,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
   #query pre
-  for item in config_database_extension:
+  for item in query_pre:
     query=f"create extension if not exists {item};"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #table
-  for item in config_database_table:
+  for item in table:
     query=f"create table if not exists {item} ();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #column
-  for k,v in config_database_column.items():
+  for k,v in column.items():
     for table in v[1]:
       query=f"alter table {table} add column if not exists {k} {v[0]};"
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
   #index
-  for k,v in config_database_column.items():
-    if k in config_database_index:
+  for k,v in column.items():
+    if k in index:
       for table in v[1]:
         query=f"create index concurrently if not exists index_{k}_{table} on {table} using {config_database_index[k]} ({k});"
         query_param={}
@@ -34,18 +44,17 @@ async def function_postgres_database_init(postgres_object):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   schema_column=output
   #schema routine
-  if False:
-    query="select proname from pg_proc;"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    schema_routine_name_list=[item["proname"] for item in output]
+  query="select proname from pg_proc;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  schema_routine_name_list=[item["proname"] for item in output]
   #protected
-  for item in config_database_column["is_protected"][1]:
+  for item in column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   #not null
-  for k,v in config_database_not_null.items():
+  for k,v in not_null.items():
     for table in v:
       state=[item["is_nullable"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
       if state[0]=="YES":
@@ -53,23 +62,23 @@ async def function_postgres_database_init(postgres_object):
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #identity
-  for k,v in config_database_identity.items():
+  for k,v in identity.items():
     for table in v:
-      state=[column["is_identity"] for column in schema_column if column["table_name"]==table and column["column_name"]==k]
+      state=[item["is_identity"] for item in schema_column if item["table_name"]==table and item["column_name"]==k]
       if state[0]=="NO":
         query=f"alter table {table} alter column {k} add generated always as identity;"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #default
-  for item in config_database_default:
+  for item in default:
     for table in item[2]:
-      state=[column["column_default"] for column in schema_column if column["table_name"]==table and column["column_name"]==item[0]]
+      state=[x["column_default"] for x in schema_column if x["table_name"]==table and x["column_name"]==item[0]]
       if state[0]==None:
         query=f"alter table {table} alter column {item[0]} set default {item[1]};"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #unique
-  for k,v in config_database_unique.items():
+  for k,v in unique.items():
     for table in v:
       constraint_name=f"constraint_unique_{k}_{table}".replace(",","_")
       if constraint_name not in schema_constraint_name_list:
@@ -92,7 +101,7 @@ async def function_postgres_database_init(postgres_object):
 
 #auth check
 import jwt,json
-async def function_auth_check(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
+async def function_auth_check(mode,request,config_key_root,config_key_jwt,postgres_object,is_user_refresh,user_active_check,user_type_allowed_list):
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
@@ -101,13 +110,13 @@ async def function_auth_check(mode,request,config_key_root,config_key_jwt,postgr
     if token!=config_key_root:return {"status":0,"message":"token root issue"}
   if mode=="jwt":
     user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
-    if is_refresh==1:
+    if is_user_refresh==1:
       query="select * from users where id=:id;"
       query_param={"id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       user=output[0] if output else None
       if not user:return {"status":0,"message":"no user for token passed"}
-    if user_active==1:
+    if user_active_check==1:
       if user["is_active"]==0:return {"status":0,"message":"user is not active"}
     if user_type_allowed_list:
       if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
