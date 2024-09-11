@@ -1,5 +1,7 @@
 #postgres object
-
+from config import config_postgres_database_url
+from databases import Database
+postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
 #logging
 import logging
@@ -13,7 +15,6 @@ if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_s
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from runtime import postgres_object
 from function import function_redis_start
 from config import config_redis_server_url
 @asynccontextmanager
@@ -38,7 +39,6 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
-from runtime import postgres_object
 from config import config_key_root,config_key_jwt
 from function import function_middleware_error
 from function import function_postgres_create_log
