@@ -10,10 +10,10 @@ async def function_postgres_database_init(postgres_object):
   unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
   query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as datatype,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
   column={
-  "id":["bigint",config_database_table],
-  "created_at":["timestamptz",config_database_table],
-  "created_by_id":["bigint",config_database_table],
-  "is_deleted":["int",config_database_table],
+  "id":["bigint",table],
+  "created_at":["timestamptz",table],
+  "created_by_id":["bigint",table],
+  "is_deleted":["int",table],
   "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
   "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
   "is_active":["int",["users","post"]],
