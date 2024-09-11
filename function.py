@@ -359,16 +359,7 @@ async def function_file_to_object_list(file):
   await file.close()
   return {"status":1,"message":object_list}
 
-#redis service start
-from config import config_redis_server_url
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_limiter import FastAPILimiter
-from redis import asyncio as aioredis
-async def function_redis_service_start():
-  FastAPICache.init(RedisBackend(aioredis.from_url(config_redis_server_url)))
-  await FastAPILimiter.init(aioredis.from_url(config_redis_server_url,encoding="utf-8",decode_responses=True))
-  return {"status":1,"message":"done"}
+
   
 #router list
 import os,glob
@@ -562,3 +553,17 @@ async def function_mongo(mode,database,table,payload):
       output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
       output={"status":1,"message":output.deleted_count}
   return {"status":1,"message":output}
+
+
+
+######################## pure ########################
+
+#redis service start
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+async def function_redis_service_start(redis_server_url):
+  FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
+  await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
