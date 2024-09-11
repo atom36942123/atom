@@ -217,16 +217,6 @@ async def function_utility_database_clean(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-   
-@router.get("/utility/project-cache")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_utility_project_cache(request:Request):
-   #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   response=await function_query_dict_runner(postgres_object,query_dict)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 import random
 from function import function_sns
@@ -270,8 +260,6 @@ async def function_utility_file(request:Request,mode:str,filename:str=None,url:s
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-
 
 from function import function_where_clause
 from function import function_location_search
