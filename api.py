@@ -529,7 +529,7 @@ from function import function_where_clause
 async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #where clause
    request_query_param=dict(request.query_params)
-   response=await function_where_clause(request)
+   response=await function_where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
    #logic
