@@ -250,8 +250,8 @@ async def function_database_clean(postgres_object):
       output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
 
-#search location
-async def function_search_location(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
+#location search
+async def function_location_search(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
   lat,long=float(location.split(",")[0]),float(location.split(",")[1])
   min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
   query=f'''
