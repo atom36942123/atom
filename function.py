@@ -1,3 +1,14 @@
+#file to object list
+import csv,codecs
+async def function_file_to_object_list(file):
+  if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
+  file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
+  object_list=[]
+  for row in file_csv:
+    object_list.append(row)
+  await file.close()
+  return {"status":1,"message":object_list}
+
 #postgres column datatype
 async def function_postgres_column_datatype(postgres_object):
   query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
