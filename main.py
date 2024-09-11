@@ -24,12 +24,9 @@ from function import function_redis_start
 from config import config_redis_server_url
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  #redis
   await function_redis_start(config_redis_server_url)
-  #postgres connect
   await postgres_object.connect()
   yield
-  #postgres disconnect
   await postgres_object.disconnect()
   
 #app
