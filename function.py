@@ -1,3 +1,26 @@
+#auth
+import jwt,json
+async def function_auth(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
+  user=None
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=authorization_header.split(" ",1)[1]
+  if mode=="root":
+    if token!=config_key_root:return {"status":0,"message":"token root issue"}
+  if mode=="jwt":
+    user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
+    if is_refresh==1:
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if not user:return {"status":0,"message":"no user for token passed"}
+    if user_active==1:
+      if user["is_active"]==0:return {"status":0,"message":"user is not active"}
+    if user_type_allowed_list:
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
+  
 #postgres verify otp
 from datetime import datetime,timezone
 async def function_postgtes_otp_verify(postgres_object,otp,email,mobile):
