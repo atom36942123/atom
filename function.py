@@ -1,6 +1,6 @@
-#file to object list
+#csv to object list
 import csv,codecs
-async def function_file_to_object_list(file):
+async def function_csv_to_object_list(file):
   if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
   object_list=[]
