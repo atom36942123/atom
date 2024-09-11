@@ -15,8 +15,6 @@ from function import function_postgres_add_action_count
 from function import function_auth
 from config import config_key_root,config_key_jwt,postgres_object
 
-
-
 #auth
 import hashlib
 from function import function_token_create
