@@ -1,6 +1,10 @@
 #postgres object
 from databases import Database
-config_postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
 
-#custom
-config_column_datatype=None
+#column datatype
+from function import function_postgres_column_datatype
+response=await function_postgres_column_datatype(postgres_object)
+config_column_datatype=response["message"]
+
+
