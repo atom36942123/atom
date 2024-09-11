@@ -48,55 +48,6 @@ async def function_postgres_create_log(postgres_object,request,config_key_root,c
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#elasticsearch
-from elasticsearch import Elasticsearch
-async def function_elasticsearch(elasticsearch_username,elasticsearch_password,elasticsearch_cloud_id,mode,table,payload):
-  elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
-  if mode=="create":
-    id,data=payload["id"],payload["data"]
-    output=elasticsearch_object.index(index=table,id=id,document=data)
-  if mode=="read":
-    id=payload["id"]
-    response=elasticsearch_object.get(index=table,id=id)
-  if mode=="update":
-    id,data=payload["id"],payload["data"]
-    response=elasticsearch_object.update(index=table,id=id,doc=request_body)
-  if mode=="delete":
-    id=payload["id"]
-    response=elasticsearch_object.delete(index=table,id=id)
-  if mode=="refresh_table":
-    response=elasticsearch_object.indices.refresh(index=table)
-  if mode=="search":
-    key,value,limit=payload["key"],payload["value"],payload["limit"]
-    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:value}},"size":limit})
-  return {"status":1,"message":output}
-  
-#mongo
-import motor.motor_asyncio
-from bson import ObjectId
-async def function_mongo(mongo_server_url,mode,database,table,payload):
-  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(mongo_server_url)
-  if mode=="create":
-    if database=="test" and table=="users":
-      output=await mongo_object.test.users.insert_one(payload)
-      output={"status":1,"message":repr(output.inserted_id)}
-  if mode=="read":
-    if database=="test" and table=="users":
-      id=payload["id"]
-      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
-      if output:output['_id']=str(output['_id'])
-  if mode=="update":
-    if database=="test" and table=="users":
-      id,data=payload["id"],payload["data"]
-      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":data})
-      output={"status":1,"message":output.modified_count}
-  if mode=="delete":
-    if database=="test" and table=="users":
-      id=payload["id"]
-      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
-      output={"status":1,"message":output.deleted_count}
-  return {"status":1,"message":output}
-
 #auth
 import jwt,json
 async def function_auth(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
@@ -178,3 +129,52 @@ def function_server_start(app):
   asyncio.set_event_loop(loop)
   loop.run_until_complete(uvicorn_object.serve())
   return {"status":1,"message":"done"}
+
+#elasticsearch
+from elasticsearch import Elasticsearch
+async def function_elasticsearch(elasticsearch_username,elasticsearch_password,elasticsearch_cloud_id,mode,table,payload):
+  elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
+  if mode=="create":
+    id,data=payload["id"],payload["data"]
+    output=elasticsearch_object.index(index=table,id=id,document=data)
+  if mode=="read":
+    id=payload["id"]
+    response=elasticsearch_object.get(index=table,id=id)
+  if mode=="update":
+    id,data=payload["id"],payload["data"]
+    response=elasticsearch_object.update(index=table,id=id,doc=request_body)
+  if mode=="delete":
+    id=payload["id"]
+    response=elasticsearch_object.delete(index=table,id=id)
+  if mode=="refresh_table":
+    response=elasticsearch_object.indices.refresh(index=table)
+  if mode=="search":
+    key,value,limit=payload["key"],payload["value"],payload["limit"]
+    response=elasticsearch_object.search(index=table,body={"query":{"match":{key:value}},"size":limit})
+  return {"status":1,"message":output}
+  
+#mongo
+import motor.motor_asyncio
+from bson import ObjectId
+async def function_mongo(mongo_server_url,mode,database,table,payload):
+  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(mongo_server_url)
+  if mode=="create":
+    if database=="test" and table=="users":
+      output=await mongo_object.test.users.insert_one(payload)
+      output={"status":1,"message":repr(output.inserted_id)}
+  if mode=="read":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
+      if output:output['_id']=str(output['_id'])
+  if mode=="update":
+    if database=="test" and table=="users":
+      id,data=payload["id"],payload["data"]
+      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":data})
+      output={"status":1,"message":output.modified_count}
+  if mode=="delete":
+    if database=="test" and table=="users":
+      id=payload["id"]
+      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
+      output={"status":1,"message":output.deleted_count}
+  return {"status":1,"message":output}
