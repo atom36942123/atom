@@ -19,13 +19,15 @@ async def function_database_init(request:Request):
 #signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
+import hashlib
+from function import function_token_create
+from config import config_key_jwt
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
-import hashlib
-from config import config_key_jwt
-from function import function_token_create
 @router.post("/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def function_signup(request:Request,username:str,password:str):
+   #middleware
+   postgres_object=request.state.postgres_object
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
