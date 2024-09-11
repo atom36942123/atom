@@ -68,8 +68,9 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
    return {"status":1,"message":token}
 
 #profile
-from datetime import datetime
-from function import function_object_update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import config_postgres_object
 @router.get("/my/profile")
 async def function_my_profile(request:Request):
    #auth
