@@ -271,24 +271,7 @@ async def function_utility_file(request:Request,mode:str,filename:str=None,url:s
    #final
    return response
 
-@router.get("/utility/query-runner")
-async def function_utility_query_runner(request:Request,mode:str,query:str):
-   #auth
-   response=await function_auth("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="single":
-      query=query
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   if mode=="bulk":
-      for item in query.split("---"):
-         query=item
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+
 
 from function import function_where_clause
 from function import function_location_search
