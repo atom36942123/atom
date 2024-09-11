@@ -30,7 +30,7 @@ async def function_postgres_database_init(postgres_object):
   for k,v in column.items():
     if k in index:
       for item in v[1]:
-        query=f"create index concurrently if not exists index_{k}_{item} on {item} using {config_database_index[k]} ({k});"
+        query=f"create index concurrently if not exists index_{k}_{item} on {item} using {index[k]} ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #schema constraint
