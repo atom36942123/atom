@@ -1,3 +1,21 @@
+#postgres verify otp
+from datetime import datetime,timezone
+async def function_postgtes_otp_verify(postgres_object,otp,email,mobile):
+  if not otp:return {"status":0,"message":"otp mandatory"}
+  if email and mobile:return {"status":0,"message":"only one contact allowed"}
+  if not email and not mobile:return {"status":0,"message":"both contact cant be null"}
+  if email:
+    query="select * from otp where email=:email order by id desc limit 1;"
+    query_param={"email":email}
+  if mobile:
+    query="select * from otp where mobile=:mobile order by id desc limit 1;"
+    query_param={"mobile":mobile}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  if not output:return {"status":0,"message":"otp not found"}
+  if int(datetime.now(timezone.utc).strftime('%s'))-int(output[0]["created_at"].strftime('%s'))>60:return {"status":0,"message":"otp expired"}
+  if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
+  return {"status":1,"message":"otp verifed"}
+
 #postgres read user force
 async def function_postgres_read_user_force(postgres_object,column,value):
   if not value:return {"status":0,"message":"value mandatory"}
