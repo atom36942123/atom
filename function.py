@@ -34,8 +34,8 @@ async def function_postgres_object_update(postgres_object,column_datatype,mode,t
 
 #auth check
 import jwt,json
-async def function_auth_check(request,key_jwt,postgres_object,user_active_check,user_type_allowed_list):
-  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],key_jwt,algorithms="HS256")["data"])
+async def function_auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
+  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])
   if postgres_object==1:
     query="select * from users where id=:id;"
     query_param={"id":user["id"]}
@@ -118,10 +118,10 @@ async def function_postgres_add_creator_key(postgres_object,object_list):
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
-async def function_postgres_create_log(postgres_object,request,key_jwt):
+async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
   if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
-  if request.headers.get("Authorization"):created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],key_jwt,algorithms="HS256")["data"])["id"]
+  if request.headers.get("Authorization"):created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":json.dumps(dict(await request.body()))}
@@ -130,8 +130,8 @@ async def function_postgres_create_log(postgres_object,request,key_jwt):
 
 #auth check
 import jwt,json
-async def function_auth_check(request,key_jwt,postgres_object,user_active_check,user_type_allowed_list):
-  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],key_jwt,algorithms="HS256")["data"])
+async def function_auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
+  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])
   if postgres_object:
     query="select * from users where id=:id;"
     query_param={"id":user["id"]}
@@ -145,13 +145,13 @@ async def function_auth_check(request,key_jwt,postgres_object,user_active_check,
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
-async def function_token_create(user,key_jwt):
+async def function_token_create(user,jwt_secret_key):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
   expiry_days=10000
   expiry_time=time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple())
   payload={"exp":expiry_time,"data":data}
-  token=jwt.encode(payload,key_jwt)
+  token=jwt.encode(payload,jwt_secret_key)
   return {"status":1,"message":token}
 
 #redis key builder
