@@ -180,20 +180,6 @@ async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#auth check
-import jwt,json
-async def function_auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
-  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])
-  if postgres_object:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if not user:return {"status":0,"message":"no user for token passed"}
-  if user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
-  if user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
-
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
