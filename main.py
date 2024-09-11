@@ -3,6 +3,7 @@ from config import config_sentry_dsn
 from config import config_redis_server_url
 from config import postgres_object
 from function import function_redis_start
+from function import function_create_log
 
 #logging
 import logging
@@ -34,8 +35,6 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,all
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
-from config import postgres_object
-from function import function_create_log
 from function import function_middleware_error
 from function import function_postgres_datatype
 @app.middleware("http")
