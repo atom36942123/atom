@@ -11,6 +11,7 @@ from function import function_postgres_clean
 async def function_database(request:Request,mode:str):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #logic
    if mode=="init":response=await function_postgres_init(postgres_object)
    if mode=="clean":response=await function_postgres_clean(postgres_object)
@@ -30,6 +31,7 @@ from fastapi_limiter.depends import RateLimiter
 async def function_signup(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -54,6 +56,7 @@ from function import function_postgtes_otp_verify
 async def function_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #logic
    if mode=="username_password":
       query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -125,6 +128,7 @@ from function import function_token_create
 async def function_token(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #auth check
    response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -148,6 +152,9 @@ from function import function_auth_check
 from config import jwt_secret_key
 @router.delete("/exit")
 async def function_exit(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #auth check
    response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -199,6 +206,7 @@ from config import jwt_secret_key
 async def function_qrunner(request:Request,mode:str,query:str):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #auth
    response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -226,6 +234,7 @@ from function import function_redis_key_builder
 async def function_pcache(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #logic
    query_dict={"user_count":"select count(*) from users;"}
    temp={}
@@ -236,3 +245,31 @@ async def function_pcache(request:Request):
       temp[k]=output
    #final
    return {"status":1,"message":temp}
+
+#object
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import jwt_secret_key
+from function import function_postgres_object_create
+@router.post("/object")
+async def function_object(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await function_auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #object
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   #object check
+   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   #logic
+   response=await function_postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
