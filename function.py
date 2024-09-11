@@ -178,8 +178,8 @@ async def function_postgres_database_init(postgres_object):
 
 #auth check
 import jwt,json
-async def function_auth_check(request,config_key_jwt,postgres_object,user_active_check,user_type_allowed_list):
-  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],config_key_jwt,algorithms="HS256")["data"])
+async def function_auth_check(request,key_jwt,postgres_object,user_active_check,user_type_allowed_list):
+  user=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],key_jwt,algorithms="HS256")["data"])
   if postgres_object==1:
     query="select * from users where id=:id;"
     query_param={"id":user["id"]}
