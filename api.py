@@ -97,6 +97,7 @@ from function import function_postgres_object_update
 from config import config_column_datatype
 @router.get("/my/profile")
 async def function_profile(request:Request):
+   print(config_column_datatype)
    #auth
    response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,config_postgres_object,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
