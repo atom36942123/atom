@@ -91,11 +91,11 @@ from function import function_auth_check
 from config import config_key_jwt
 from datetime import datetime
 from function import function_postgres_object_update
+from runtime import column_datatype
 @router.get("/profile")
 async def function_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    print (column_datatype)
    #auth check
    response=await function_auth_check(request,config_key_jwt,None,None,None)
