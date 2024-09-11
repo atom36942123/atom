@@ -29,7 +29,10 @@ async def function_auth_signup(request:Request,username:str,password:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import config_postgres_object
-from function import function_read_user_force
+from function import function_postgres_read_user_force
+from function import function_postgres_otp_verify
+from function import function_token_create
+from config import config_key_jwt
 @router.post("/auth/login")
 async def function_auth_login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
    #logic
@@ -40,19 +43,19 @@ async def function_auth_login(request:Request,mode:str,username:str=None,passwor
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if mode=="oauth_google":
-      response=await function_read_user_force(postgres_object,"google_id",google_id)
+      response=await function_postgres_read_user_force(config_postgres_object,"google_id",google_id)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    if mode=="otp_email":
-      response=await function_otp_verify(postgres_object,otp,email,None)
+      response=await function_postgres_otp_verify(config_postgres_object,otp,email,None)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      response=await function_read_user_force(postgres_object,"email",email)
+      response=await function_postgres_read_user_force(config_postgres_object,"email",email)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    if mode=="otp_mobile":
-      response=await function_otp_verify(postgres_object,otp,None,mobile)
+      response=await function_postgres_otp_verify(config_postgres_object,otp,None,mobile)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      response=await function_read_user_force(postgres_object,"mobile",mobile)
+      response=await function_postgres_read_user_force(config_postgres_object,"mobile",mobile)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    #user type check
