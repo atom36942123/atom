@@ -91,7 +91,7 @@ from function import function_auth_check
 from config import config_key_jwt
 from datetime import datetime
 from function import function_postgres_object_update
-@router.get("/my/profile")
+@router.get("/profile")
 async def function_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
