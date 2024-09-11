@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from config import config_postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
-from function import function_database_init
+from function import function_postgres_database_init
 @router.get("/utility/database-init")
 async def function_database_init(request:Request):
    #auth
@@ -16,7 +16,7 @@ async def function_database_init(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   response=await function_database_init(postgres_object)
+   response=await function_postgres_database_init(config_postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
