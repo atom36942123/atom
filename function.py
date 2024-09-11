@@ -190,30 +190,6 @@ async def function_read_user_force(postgres_object,column,value):
     user=output[0]
   return {"status":1,"message":user}
 
-#auth check
-import jwt,json
-from config import config_key_root,config_key_jwt
-async def function_auth_check(mode,request,postgres_object,user_active_check,user_type_allowed_list):
-  user=None
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"authorization header is must"}
-  token=authorization_header.split(" ",1)[1]
-  if mode=="root":
-    if token!=config_key_root:return {"status":0,"message":"token root issue"}
-  if mode=="jwt":
-    user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
-    if postgres_object:
-      query="select * from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0] if output else None
-      if not user:return {"status":0,"message":"no user for token passed"}
-    if user_active_check:
-      if user["is_active"]==0:return {"status":0,"message":"user is not active"}
-    if user_type_allowed_list:
-      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
-
 #token create
 import jwt,json,time
 from config import config_key_jwt
@@ -286,39 +262,6 @@ async def function_parent_read(postgres_object,table,parent_table,created_by_id,
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
-  
-#action count
-async def function_add_action_count(postgres_object,object_list,object_table,action_table):
-  if not object_list:return {"status":1,"message":object_list}
-  key_name=f"{action_table}_count"
-  object_list=[dict(item)|{key_name:0} for item in object_list]
-  parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
-  if parent_ids:
-    query=f"select parent_id,count(*) from {action_table} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
-    query_param={"parent_table":object_table}
-    object_action_list=await postgres_object.fetch_all(query=query,values=query_param)
-    for x in object_list:
-      for y in object_action_list:
-        if x["id"]==y["parent_id"]:
-          x[key_name]=y["count"]
-          break
-  return {"status":1,"message":object_list}
-
-#creator key
-async def function_add_creator_key(postgres_object,object_list):
-  if not object_list:return {"status":1,"message":object_list}
-  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
-  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
-  if user_ids:
-    query=f"select * from users where id in ({user_ids});"
-    query_param={}
-    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
-    for x in object_list:
-      for y in object_user_list:
-         if x["created_by_id"]==y["id"]:
-           x["created_by_username"]=y["username"]
-           break
-  return {"status":1,"message":object_list}
 
 #query dict runner
 async def function_query_dict_runner(postgres_object,query_dict):
@@ -451,6 +394,39 @@ async def function_database_init(postgres_object):
 
 ######################## pure ########################
 
+#postgres add action count
+async def function_postgres_add_action_count(postgres_object,action,object_list,object_table):
+  if not object_list:return {"status":1,"message":object_list}
+  key_name=f"{action}_count"
+  object_list=[dict(item)|{key_name:0} for item in object_list]
+  parent_ids=list(set([item["id"] for item in object_list if item["id"]]))
+  if parent_ids:
+    query=f"select parent_id,count(*) from {action} join unnest(array{parent_ids}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table group by parent_id;"
+    query_param={"parent_table":object_table}
+    object_action_list=await postgres_object.fetch_all(query=query,values=query_param)
+    for x in object_list:
+      for y in object_action_list:
+        if x["id"]==y["parent_id"]:
+          x[key_name]=y["count"]
+          break
+  return {"status":1,"message":object_list}
+
+#postgres add creator key
+async def function_postgres_add_creator_key(postgres_object,object_list):
+  if not object_list:return {"status":1,"message":object_list}
+  object_list=[dict(item)|{"created_by_username":None} for item in object_list]
+  user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
+  if user_ids:
+    query=f"select * from users where id in ({user_ids});"
+    query_param={}
+    object_user_list=await postgres_object.fetch_all(query=query,values=query_param)
+    for x in object_list:
+      for y in object_user_list:
+         if x["created_by_id"]==y["id"]:
+           x["created_by_username"]=y["username"]
+           break
+  return {"status":1,"message":object_list}
+
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
@@ -516,6 +492,29 @@ async def function_mongo(mongo_server_url,mode,database,table,payload):
       output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
       output={"status":1,"message":output.deleted_count}
   return {"status":1,"message":output}
+
+#auth
+import jwt,json
+async def function_auth(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
+  user=None
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"authorization header is must"}
+  token=authorization_header.split(" ",1)[1]
+  if mode=="root":
+    if token!=config_key_root:return {"status":0,"message":"token root issue"}
+  if mode=="jwt":
+    user=json.loads(jwt.decode(token,config_key_jwt,algorithms="HS256")["data"])
+    if is_refresh==1:
+      query="select * from users where id=:id;"
+      query_param={"id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      user=output[0] if output else None
+      if not user:return {"status":0,"message":"no user for token passed"}
+    if user_active==1:
+      if user["is_active"]==0:return {"status":0,"message":"user is not active"}
+    if user_type_allowed_list:
+      if user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
 
 #redis key builder
 from fastapi import Request,Response
