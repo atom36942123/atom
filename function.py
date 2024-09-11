@@ -1,6 +1,6 @@
-#auth
+#auth check
 import jwt,json
-async def function_auth(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
+async def function_auth_check(mode,request,config_key_root,config_key_jwt,postgres_object,user_refresh,user_active,user_type_allowed_list):
   user=None
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"authorization header is must"}
