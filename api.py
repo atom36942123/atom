@@ -16,7 +16,7 @@ async def function_auth_signup(request:Request,username:str,password:str):
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   output=await config_postgres_object.fetch_all(query=query,values=query_param)
    user=user=output[0]
    #token create
    response=await function_token_create(user,config_key_jwt)
