@@ -97,7 +97,7 @@ async def function_profile(request:Request):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth
-   response=await function_auth_check("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+   response=await function_auth_check(request,config_key_jwt,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
