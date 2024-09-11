@@ -352,13 +352,6 @@ async def function_delete_index_all(postgres_object):
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
-
 #database init
 from config import config_database_extension,config_database_table,config_database_column,config_database_index
 from config import config_database_not_null,config_database_identity,config_database_default,config_database_unique,config_database_query
@@ -523,6 +516,13 @@ async def function_mongo(mongo_server_url,mode,database,table,payload):
       output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
       output={"status":1,"message":output.deleted_count}
   return {"status":1,"message":output}
+
+#redis key builder
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
 
 #router list
 import os,glob
