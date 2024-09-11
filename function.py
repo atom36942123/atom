@@ -1,3 +1,21 @@
+#postgres read user force
+async def function_postgres_read_user_force(postgres_object,column,value):
+  if not value:return {"status":0,"message":"value mandatory"}
+  query=f"select * from users where {column}=:value order by id desc limit 1;"
+  query_param={"value":value}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  user=output[0] if output else None
+  if not user:
+    query=f"insert into users ({column}) values (:value) returning *;"
+    query_param={"value":value}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user_id=output[0]["id"]
+    query="select * from users where id=:id;"
+    query_param={"id":user_id}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0]
+  return {"status":1,"message":user}
+
 #postgres add action count
 async def function_postgres_add_action_count(postgres_object,action,object_list,object_table):
   if not object_list:return {"status":1,"message":object_list}
