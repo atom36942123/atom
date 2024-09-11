@@ -138,3 +138,24 @@ async def function_token(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#exit
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import config_jwt_secret_key
+from config import config_is_delete_account
+@router.delete("/exit")
+async def function_exit(request:Request):
+   #auth check
+   response=await function_auth_check(request,config_jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #permisson check
+   if int(config_is_delete_account)==0:return {"status":1,"message":"account deletion not allowed"}
+   #logic
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"account deleted"}
