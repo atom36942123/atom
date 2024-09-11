@@ -4,11 +4,6 @@ from function import function_redis_key_builder
 from function import function_postgres_add_creator_key
 from function import function_postgres_add_action_count
 
-
-
-
-
-
 from function import function_object_create
 @router.post("/my/object-create")
 async def function_my_object_create(request:Request,table:str):
@@ -294,27 +289,6 @@ async def function_utility_query_runner(request:Request,mode:str,query:str):
          output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
-
-from fastapi import UploadFile
-from function import function_file_to_object_list
-from function import function_object_create
-from function import function_object_update
-@router.post("/utility/csv")
-async def function_utility_csv(request:Request,mode:str,table:str,file:UploadFile):
-   #auth
-   response=await function_auth("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #file
-   response=await function_file_to_object_list(file)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   object_list=response["message"]
-   #logic
-   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
-   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 from function import function_where_clause
 from function import function_location_search
