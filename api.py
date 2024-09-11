@@ -182,8 +182,8 @@ async def function_csv(request:Request,mode:str,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
-   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
-   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
+   if mode=="create":response=await function_postgres_object_create(postgres_object,column_datatype,"normal",table,object_list)
+   if mode=="update":response=await function_postgres_object_update(postgres_object,column_datatype,"normal",table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
