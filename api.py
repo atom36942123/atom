@@ -410,19 +410,13 @@ from function import function_s3
 @router.get("/utility/file")
 async def function_utility_file(request:Request,mode:str,filename:str):
    #logic
-   if mode=="s3":response=await function_s3("create_url",{"filename":filename})
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-@router.delete("/utility/file-delete")
-async def function_utility_file_delete(request:Request,mode:str,url:str):
-   #auth
-   response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="s3":response=await function_s3("delete_url",{"url":url})
+   if mode=="create_s3":
+      response=await function_s3("create",{"filename":filename})
+   if mode=="delete_s3":
+      response=await function_auth_check("jwt",request,postgres_object,1,["admin"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      user=response["message"]
+      response=await function_s3("delete",{"url":url})
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
