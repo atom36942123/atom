@@ -1,5 +1,5 @@
 #postgres column datatype
-async def function_postgres_column_datatype(postgres_object):
+def function_postgres_column_datatype(postgres_object):
   query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
