@@ -109,7 +109,7 @@ async def function_profile(request:Request):
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #update last active at
    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   response=await function_postgres_object_update(postgres_object,config_column_datatype,"background","users",[object])
+   response=await function_postgres_object_update(config_postgres_object,config_column_datatype,"background","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":user}
