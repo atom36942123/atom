@@ -21,7 +21,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import function_token_create
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 @router.post("/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
@@ -34,7 +34,7 @@ async def function_signup(request:Request,username:str,password:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=user=output[0]
    #token create
-   response=await function_token_create(user,config_jwt_secret_key)
+   response=await function_token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -45,7 +45,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import function_token_create
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 from function import function_postgres_read_user_force
 from function import function_postgtes_otp_verify
 @router.post("/login")
@@ -78,7 +78,7 @@ async def function_login(request:Request,mode:str,username:str=None,password:str
    #user type check
    if type and user["type"]!=type:return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
-   response=await function_token_create(user,config_jwt_secret_key)
+   response=await function_token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -88,7 +88,7 @@ async def function_login(request:Request,mode:str,username:str=None,password:str
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 from datetime import datetime
 from function import function_postgres_object_update
 @router.get("/profile")
@@ -97,7 +97,7 @@ async def function_profile(request:Request):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await function_auth_check(request,config_jwt_secret_key,None,None,None)
+   response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -117,14 +117,14 @@ async def function_profile(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 from function import function_token_create
 @router.get("/token")
 async def function_token(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    #auth check
-   response=await function_auth_check(request,config_jwt_secret_key,None,None,None)
+   response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #read user
@@ -134,7 +134,7 @@ async def function_token(request:Request):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for token passed"})
    #token create
-   response=await function_token_create(user,config_jwt_secret_key)
+   response=await function_token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -143,11 +143,11 @@ async def function_token(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 @router.delete("/exit")
 async def function_exit(request:Request):
    #auth check
-   response=await function_auth_check(request,config_jwt_secret_key,None,None,None)
+   response=await function_auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
@@ -163,7 +163,7 @@ async def function_exit(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_auth_check
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 from fastapi import UploadFile
 from function import function_csv_to_object_list
 from function import function_postgres_object_create
@@ -174,7 +174,7 @@ async def function_csv(request:Request,mode:str,table:str,file:UploadFile):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth
-   response=await function_auth_check(request,config_jwt_secret_key,postgres_object,1,["admin"])
+   response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
