@@ -175,11 +175,11 @@ async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
   authorization_header=request.headers.get("Authorization")
   if authorization_header:created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
-  request_query_param=request.query_params
+  request_query_param=dict(request.query_params)
   request_body=await request.body()
   print(request_query_param)
   print(request_body)
-  if request_query_param:request_query_param=json.dumps(dict(request_query_param))
+  if request_query_param:request_query_param=json.dumps(request_query_param)
   if request_body:request_body=json.dumps(dict(request_body))
   query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
   query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":request_query_param,"request_body":request_body}
