@@ -187,3 +187,29 @@ async def function_csv(request:Request,mode:str,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#qrunner
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import jwt_secret_key
+@router.get("/qrunner")
+async def function_qrunner(request:Request,mode:str,query:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   #auth
+   response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="single":
+      query=query
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="bulk":
+      for item in query.split("---"):
+         query=item
+         query_param={}
+         output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
