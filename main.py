@@ -1,7 +1,7 @@
 #runtime
-from config import config_postgres_database_url
+from config import postgres_database_url
 from databases import Database
-postgres_object=Database(config_postgres_database_url,min_size=1,max_size=100)
+postgres_object=Database(postgres_database_url,min_size=1,max_size=100)
 column_datatype=None
 
 #logging
@@ -9,19 +9,19 @@ import logging
 logging.basicConfig(level="INFO")
 
 #sentry
-from config import config_sentry_dsn
+from config import sentry_dsn
 import sentry_sdk
-if False:sentry_sdk.init(dsn=config_sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
+if False:sentry_sdk.init(dsn=sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
 #lifespan
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from function import function_redis_start
-from config import config_redis_server_url
+from config import redis_server_url
 from function import function_postgres_column_datatype
 @asynccontextmanager
 async def function_lifespan(app:FastAPI):
-  await function_redis_start(config_redis_server_url)
+  await function_redis_start(redis_server_url)
   await postgres_object.connect()
   response=await function_postgres_column_datatype(postgres_object)
   global column_datatype
@@ -43,14 +43,14 @@ from fastapi.responses import JSONResponse
 import traceback
 from function import function_middleware_error
 from function import function_postgres_create_log
-from config import config_jwt_secret_key
+from config import jwt_secret_key
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
     response=await api_function(request)
-    await function_postgres_create_log(postgres_object,request,config_jwt_secret_key)
+    await function_postgres_create_log(postgres_object,request,jwt_secret_key)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
