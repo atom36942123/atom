@@ -92,6 +92,7 @@ from fastapi.responses import JSONResponse
 from config import config_postgres_object
 from function import function_auth_check
 from config import config_key_root,config_key_jwt
+from datetime import datetime
 @router.get("/my/profile")
 async def function_profile(request:Request):
    #auth
