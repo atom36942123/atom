@@ -81,7 +81,6 @@ from config import config_database_column
 async def function_where_clause(request_query_param):
   where_param_raw={k:v for k,v in request_query_param.items() if k in config_database_column}
   where_param_raw={k:v for k,v in where_param_raw.items() if k not in ["location","metadata"]}
-  print(where_param_raw)
   where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
   where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
   key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
