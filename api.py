@@ -151,7 +151,7 @@ async def function_exit(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #permisson check
-   if int(config_is_delete_account)==0:return {"status":1,"message":"account deletion not allowed"}
+   if True:return {"status":1,"message":"account deletion not allowed"}
    #logic
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
