@@ -6,8 +6,8 @@ router=APIRouter(tags=["api"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_postgres_database_init
-@router.get("/database-init")
-async def function_database_init(request:Request):
+@router.get("/database")
+async def function_database(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    #logic
@@ -119,8 +119,8 @@ from fastapi.responses import JSONResponse
 from function import function_auth_check
 from config import config_jwt_secret_key
 from function import function_token_create
-@router.get("/token-refresh")
-async def function_token_refresh(request:Request):
+@router.get("/token")
+async def function_token(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    #auth check
