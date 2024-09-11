@@ -240,7 +240,7 @@ def function_server_start(app):
 #elasticsearch
 from elasticsearch import Elasticsearch
 async def function_elasticsearch(elasticsearch_username,elasticsearch_password,elasticsearch_cloud_id,mode,table,payload):
-  elasticsearch_object=Elasticsearch(cloud_id=config_elasticsearch_cloud_id,basic_auth=(config_elasticsearch_username,config_elasticsearch_password))
+  elasticsearch_object=Elasticsearch(cloud_id=elasticsearch_cloud_id,basic_auth=(elasticsearch_username,elasticsearch_cloud_id))
   if mode=="create":
     id,data=payload["id"],payload["data"]
     output=elasticsearch_object.index(index=table,id=id,document=data)
