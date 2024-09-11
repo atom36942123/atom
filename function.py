@@ -14,11 +14,12 @@ async def function_postgres_object_update(postgres_object,column_datatype_mappin
     for k,v in object.items():
       datatype=column_datatype_mapping[k]
       if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if datatype in ["bigint","int"]:query_param_list[index][k]=int(v) if v else None
+      if "int" in datatype:query_param_list[index][k]=int(v) if v else None
       if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if datatype in ["timestamptz","date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if "time" in datatype:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if "[]" in datatype:query_param_list[index][k]=v.split(",") if v else None
+      if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
   if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
   if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"updated"}
