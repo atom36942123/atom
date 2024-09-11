@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#database init
+#database
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_postgres_database_init
@@ -158,3 +158,29 @@ async def function_exit(request:Request):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":"account deleted"}
+
+#csv
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import function_auth_check
+from config import config_jwt_secret_key
+from fastapi import UploadFile
+from function import function_file_to_object_list
+from function import function_object_create
+from function import function_object_update
+@router.post("/utility/csv")
+async def function_utility_csv(request:Request,mode:str,table:str,file:UploadFile):
+   #auth
+   response=await function_auth("jwt",request,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #file
+   response=await function_file_to_object_list(file)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object_list=response["message"]
+   #logic
+   if mode=="create":response=await function_object_create(postgres_object,"normal",table,object_list)
+   if mode=="update":response=await function_object_update(postgres_object,"normal",table,object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
