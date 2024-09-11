@@ -226,7 +226,11 @@ async def function_pcache(request:Request):
    postgres_object=request.state.postgres_object
    #logic
    query_dict={"user_count":"select count(*) from users;"}
-   response=await function_query_dict_runner(postgres_object,query_dict)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   temp={}
+   for k,v in query_dict.items():
+      query=v
+      query_param={}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      temp[k]=output
    #final
-   return response
+   return {"status":1,"message":temp}
