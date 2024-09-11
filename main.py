@@ -43,14 +43,14 @@ from fastapi.responses import JSONResponse
 import traceback
 from function import function_middleware_error
 from function import function_postgres_create_log
-from config import config_key_jwt
+from config import config_jwt_secret_key
 @app.middleware("http")
 async def function_middleware(request:Request,api_function):
   try:
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
     response=await api_function(request)
-    await function_postgres_create_log(postgres_object,request,config_key_jwt)
+    await function_postgres_create_log(postgres_object,request,config_jwt_secret_key)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
