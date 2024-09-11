@@ -50,7 +50,8 @@ async def function_middleware(request:Request,api_function):
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
     response=await api_function(request)
-    await function_postgres_create_log(postgres_object,request,jwt_secret_key)
+    request_body=json.dumps(await request.body())
+    await function_postgres_create_log(postgres_object,request,request_body,jwt_secret_key)
   except Exception as e:
     print(traceback.format_exc())
     response=await function_middleware_error(e.args)
