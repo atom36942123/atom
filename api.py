@@ -6,12 +6,14 @@ router=APIRouter(tags=["api"])
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import function_postgres_init
+from function import function_postgres_clean
 @router.get("/database")
-async def function_database(request:Request):
+async def function_database(request:Request,mode:str):
    #middleware
    postgres_object=request.state.postgres_object
    #logic
-   response=await function_postgres_init(postgres_object)
+   if mode=="init":response=await function_postgres_init(postgres_object)
+   if mode=="clean":response=await function_postgres_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -234,23 +236,3 @@ async def function_pcache(request:Request):
       temp[k]=output
    #final
    return {"status":1,"message":temp}
-
-#clean
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import function_auth_check
-from config import jwt_secret_key
-from function import function_postgres_clean
-@router.delete("/clean")
-async def function_clean(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   #auth
-   response=await function_auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_postgres_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
