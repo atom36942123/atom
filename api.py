@@ -166,32 +166,6 @@ async def exit(request:Request):
    #final
    return response
 
-#my
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.get("/my")
-async def my(request:Request,mode:str,table:str=None,ids:str=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic      
-   if mode=="delete_ids":
-      if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
-      if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
-      query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
-      query_param={"created_by_id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":"ids deleted"}
-   #final
-   return response
-
 #parent
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -389,6 +363,32 @@ async def object_delete(request:Request,table:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#my
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.get("/my")
+async def my(request:Request,mode:str,table:str=None,ids:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   if mode=="delete_ids":
+      if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
+      if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+      if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+      query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
+      query_param={"created_by_id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"ids deleted"}
+   #final
+   return response
    
 #csv
 from fastapi import Request
