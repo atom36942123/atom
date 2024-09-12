@@ -1,20 +1,33 @@
 #router
 from fastapi import APIRouter
-router=APIRouter(tags=["api"])
+router=APIRouter(tags=["core"])
 
-#database
+#init
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
-from function import postgres_clean
-@router.get("/database")
-async def database(request:Request,mode:str):
+@router.get("/init")
+async def init(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   if mode=="init":response=await postgres_init(postgres_object)
-   if mode=="clean":response=await postgres_clean(postgres_object)
+   response=await postgres_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_clean
+@router.get("/clean")
+async def clean(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
