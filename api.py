@@ -450,15 +450,8 @@ async def qrunner(request:Request,mode:str,query:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="single":
-      query=query
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-   if mode=="bulk":
-      for item in query.split("---"):
-         query=item
-         query_param={}
-         output=await postgres_object.fetch_all(query=query,values=query_param)
+   if mode=="single":output=await postgres_object.fetch_all(query=query,values={})
+   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
    #final
    return {"status":1,"message":output}
 
