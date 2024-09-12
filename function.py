@@ -151,7 +151,7 @@ async def auth_check(request,jwt_secret_key,postgres_object,user_active_check,us
   if user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
   return {"status":1,"message":user}
   
-#postgres verify otp
+#postgres otp verify
 from datetime import datetime,timezone
 async def postgtes_otp_verify(postgres_object,otp,email,mobile):
   if not otp:return {"status":0,"message":"otp mandatory"}
