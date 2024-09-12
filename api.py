@@ -477,14 +477,16 @@ async def qrunner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
-#pcache
+#public
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from function import redis_key_builder
+from function import where_clause
+from function import postgres_add_creator_key
 @router.get("/public")
 @cache(expire=60,key_builder=redis_key_builder)
-async def public(request:Request,mode:str,table:str=None,ids:str=None):
+async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -500,8 +502,33 @@ async def public(request:Request,mode:str,table:str=None,ids:str=None):
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":output}
+   if mode=="object_read":
+      if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+      param=dict(request.query_params)
+      response=await where_clause(param,column_datatype)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      where_string,where_value=response["message"][0],response["message"][1]
+      query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param=where_value
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+
+      
+      
    #final
    return response
+
+
+ 
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add action count
+   response=await function_postgres_add_action_count(postgres_object,"likes",output,table)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
 
 #location
 from fastapi import Request
