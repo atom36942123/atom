@@ -616,6 +616,9 @@ from config import ses_sender_email
 from function import postgtes_otp_verify
 @router.get("/otp")
 async def otp(request:Request,mode:str,email:str=None,mobile:str=None,otp:int=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #logic
    if mode=="send_otp_mobile_sns":
       if not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"mobile is must"})
