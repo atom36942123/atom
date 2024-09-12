@@ -372,7 +372,7 @@ from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
 @router.get("/my")
-async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None):
+async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None,mobile:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -394,6 +394,13 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,e
       response=await postgtes_otp_verify(postgres_object,otp,email,None)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       object={"id":user["id"],"updated_by_id":user["id"],"email":email}
+      response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+    if mode=="update_mobile":
+      if not otp or not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"otp/mobile must"})
+      response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
       response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
