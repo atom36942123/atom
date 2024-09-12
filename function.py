@@ -1,3 +1,73 @@
+#postgres object create
+import hashlib,json
+from datetime import datetime
+from fastapi import BackgroundTasks
+async def postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
+  background=BackgroundTasks()
+  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  column_to_insert_list=[*object_list[0]]
+  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=column_datatype[k]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if "int" in datatype:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if "time" in datatype:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
+  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":"done"}
+  
+#where clause
+import hashlib
+from datetime import datetime
+async def where_clause(request_query_param):
+  where_param_raw={k:v for k,v in request_query_param.items() if k in config_database_column}
+  where_param_raw={k:v for k,v in where_param_raw.items() if k not in ["location","metadata"]}
+  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
+  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
+  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  for k,v in where_param.items():
+    datatype=config_database_column[k][0]
+    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
+    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if "[]" in datatype:where_param[k]=v.split(",") if v else None
+  return {"status":1,"message":[where_string,where_param]}
+
+#postgres object update
+import hashlib,json
+from datetime import datetime
+from fastapi import BackgroundTasks
+async def postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
+  background=BackgroundTasks()
+  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+  if not object_list:return {"status":1,"message":"done"}
+  column_to_update_list=[*object_list[0]]
+  column_to_update_list.remove("id")
+  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
+  query_param_list=object_list
+  for index,object in enumerate(query_param_list):
+    for k,v in object.items():
+      datatype=column_datatype[k]
+      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if "int" in datatype:query_param_list[index][k]=int(v) if v else None
+      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
+      if "time" in datatype:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
+      if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
+  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
+  return {"status":1,"message":"updated"}
+
 #postgres object ownership check
 async def postgres_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
@@ -42,56 +112,6 @@ async def postgres_column_datatype(postgres_object):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   if output:column_datatype={item["column_name"]:item["data_type"] for item in output}
   return {"status":1,"message":column_datatype}
-
-#postgres object update
-import hashlib,json
-from datetime import datetime
-from fastapi import BackgroundTasks
-async def postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
-  background=BackgroundTasks()
-  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
-  if not object_list:return {"status":1,"message":"done"}
-  column_to_update_list=[*object_list[0]]
-  column_to_update_list.remove("id")
-  query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-  query_param_list=object_list
-  for index,object in enumerate(query_param_list):
-    for k,v in object.items():
-      datatype=column_datatype[k]
-      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if "int" in datatype:query_param_list[index][k]=int(v) if v else None
-      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if "time" in datatype:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
-  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
-  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":"updated"}
-
-#postgres object create
-import hashlib,json
-from datetime import datetime
-from fastapi import BackgroundTasks
-async def postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
-  background=BackgroundTasks()
-  if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
-  column_to_insert_list=[*object_list[0]]
-  query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-  query_param_list=object_list
-  for index,object in enumerate(query_param_list):
-    for k,v in object.items():
-      datatype=column_datatype[k]
-      if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if "int" in datatype:query_param_list[index][k]=int(v) if v else None
-      if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
-      if "time" in datatype:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
-      if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
-  if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
-  if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":"done"}
 
 #auth check
 import jwt,json
