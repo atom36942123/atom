@@ -163,8 +163,7 @@ async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:
    if mode=="read":
       response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      output=response["message"]
-      response=await postgres_add_creator_key(postgres_object,output)
+      response=await postgres_add_creator_key(postgres_object,response["message"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    if mode=="check":
       response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
