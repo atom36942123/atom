@@ -484,6 +484,16 @@ async def pcache(request:Request):
    #final
    return {"status":1,"message":temp}
 
+@router.get("/public/read-ids")
+async def function_public_read_ids(request:Request,table:str,ids:str):
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   query=f"select * from {table} where id in ({ids}) order by id desc;"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 #location
 from fastapi import Request
 from fastapi.responses import JSONResponse
