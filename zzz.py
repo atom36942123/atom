@@ -149,12 +149,6 @@ async def function_s3(mode,payload):
     output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
   return {"status":1,"message":output}
 
-#redis key
-from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
-  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
-  param=":".join(param)
-  return param
 
 
 
