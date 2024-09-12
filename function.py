@@ -411,14 +411,10 @@ async def postgres_init(postgres_object):
   "state":["text",["users"]],
   "city":["text",["users"]],
   }
-  #prequery/table/column/protected/postquery/trigger/index
+  #prequery/table/column
   for item in prequery:output=await postgres_object.fetch_all(query=item,values={})
   for item in table:await postgres_object.fetch_all(query=f"create table if not exists {item} ();",values={})
   [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in column.items() for item in v[1]]
-  for item in column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-  [await postgres_object.fetch_all(query=item,values={}) for item in postquery if ("add constraint" in item and item.split()[5] in schema_constraint_name_list)]
-  for item in column["updated_at"][1]:await postgres_object.fetch_all(query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();",values={})
-  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in index.items() for item in v[1]]
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in output]
@@ -427,10 +423,16 @@ async def postgres_init(postgres_object):
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   schema_column_table_identity={f"{item['column_name']}_{item['table_name']}":item["is_identity"] for item in schema_column}
   schema_column_table_default={f"{item['column_name']}_{item['table_name']}":item["column_default"] for item in schema_column}
-  #notnull/identity/default/unique
+  #protected/notnull/identity/default/unique
+  for item in column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={}) for k,v in notnull.items() for item in v if schema_column_table_nullable[f"{k}_{item}"]=="YES"]
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} add generated always as identity;",values={}) for k,v in identity.items() for item in v if schema_column_table_identity[f"{k}_{item}"]=="NO"]
   [await postgres_object.fetch_all(query=f"alter table {t} alter column {item[0]} set default {item[1]};",values={}) for item in default for t in item[2] if schema_column_table_default[f"{item[0]}_{t}"]==None]
   [await postgres_object.fetch_all(query=f"alter table {item} add constraint constraint_unique_{k.replace(',','_')}_{item} unique ({k});",values={}) for k,v in unique.items() for item in v if f"constraint_unique_{k.replace(',','_')}_{item}" not in schema_constraint_name_list]
+  #trigger/index/postquery
+  for item in column["updated_at"][1]:await postgres_object.fetch_all(query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();",values={})
+  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in index.items() for item in v[1]]
+  [await postgres_object.fetch_all(query=item,values={}) for item in postquery if ("add constraint" in item and item.split()[5] in schema_constraint_name_list)]
+  #final
   return {"status":1,"message":"done"}
   
