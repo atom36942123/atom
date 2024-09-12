@@ -17,21 +17,6 @@ async def init(request:Request):
    #final
    return response
 
-#clean
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_clean
-@router.get("/clean")
-async def clean(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -416,6 +401,30 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,e
       object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
       response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_clean
+from function import auth_check
+from config import jwt_secret_key
+@router.get("/clean")
+async def clean(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
