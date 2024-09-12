@@ -432,7 +432,7 @@ async def postgres_init(postgres_object):
   #trigger/index/postquery
   for item in column["updated_at"][1]:await postgres_object.fetch_all(query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();",values={})
   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in index.items() for item in v[1]]
-  [await postgres_object.fetch_all(query=item,values={}) for item in postquery if ("add constraint" in item and item.split()[5] in schema_constraint_name_list)]
+  [await postgres_object.fetch_all(query=item,values={}) for item in postquery if item.split()[5] not in schema_constraint_name_list]
   #final
   return {"status":1,"message":"done"}
   
