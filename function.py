@@ -22,10 +22,10 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
   if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"done"}
   
-#where clause
+#read where clause
 import hashlib
 from datetime import datetime
-async def where_clause(param,column_datatype):
+async def read_where_clause(param,column_datatype):
   param={k:v for k,v in param.items() if k in config_database_column}
   param={k:v for k,v in param.items() if k not in ["location","metadata"]}
   where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
