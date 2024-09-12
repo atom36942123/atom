@@ -1,5 +1,5 @@
 #postgres object ownership check
-async def function_postgres_object_ownership_check(postgres_object,table,id,user_id):
+async def postgres_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
     if id!=user_id:return {"status":0,"message":"ownership issue"}
   if table!="users":
@@ -12,7 +12,7 @@ async def function_postgres_object_ownership_check(postgres_object,table,id,user
   return {"status":1,"message":"done"}
 
 #postgres clean
-async def function_postgres_clean(postgres_object):
+async def postgres_clean(postgres_object):
   for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
     query=f"delete from {table} where created_by_id not in (select id from users);"
     query_param={}
@@ -26,7 +26,7 @@ async def function_postgres_clean(postgres_object):
 
 #csv to object list
 import csv,codecs
-async def function_csv_to_object_list(file):
+async def csv_to_object_list(file):
   if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
   file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
   object_list=[]
@@ -36,7 +36,7 @@ async def function_csv_to_object_list(file):
   return {"status":1,"message":object_list}
 
 #postgres column datatype
-async def function_postgres_column_datatype(postgres_object):
+async def postgres_column_datatype(postgres_object):
   query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -47,7 +47,7 @@ async def function_postgres_column_datatype(postgres_object):
 import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
-async def function_postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
+async def postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   if not object_list:return {"status":1,"message":"done"}
@@ -73,7 +73,7 @@ async def function_postgres_object_update(postgres_object,column_datatype,mode,t
 import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
-async def function_postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
+async def postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
   background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
@@ -95,7 +95,7 @@ async def function_postgres_object_create(postgres_object,column_datatype,mode,t
 
 #auth check
 import jwt,json
-async def function_auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
+async def auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"token is must"}
   token=authorization_header.split(" ",1)[1]
@@ -112,7 +112,7 @@ async def function_auth_check(request,jwt_secret_key,postgres_object,user_active
   
 #postgres verify otp
 from datetime import datetime,timezone
-async def function_postgtes_otp_verify(postgres_object,otp,email,mobile):
+async def postgtes_otp_verify(postgres_object,otp,email,mobile):
   if not otp:return {"status":0,"message":"otp mandatory"}
   if email and mobile:return {"status":0,"message":"only one contact allowed"}
   if not email and not mobile:return {"status":0,"message":"both contact cant be null"}
@@ -129,7 +129,7 @@ async def function_postgtes_otp_verify(postgres_object,otp,email,mobile):
   return {"status":1,"message":"otp verifed"}
 
 #postgres read user force
-async def function_postgres_read_user_force(postgres_object,column,value):
+async def postgres_read_user_force(postgres_object,column,value):
   if not value:return {"status":0,"message":"value mandatory"}
   query=f"select * from users where {column}=:value order by id desc limit 1;"
   query_param={"value":value}
@@ -147,7 +147,7 @@ async def function_postgres_read_user_force(postgres_object,column,value):
   return {"status":1,"message":user}
 
 #postgres add action count
-async def function_postgres_add_action_count(postgres_object,action,object_list,object_table):
+async def postgres_add_action_count(postgres_object,action,object_list,object_table):
   if not object_list:return {"status":1,"message":object_list}
   key_name=f"{action}_count"
   object_list=[dict(item)|{key_name:0} for item in object_list]
@@ -164,7 +164,7 @@ async def function_postgres_add_action_count(postgres_object,action,object_list,
   return {"status":1,"message":object_list}
 
 #postgres add creator key
-async def function_postgres_add_creator_key(postgres_object,object_list):
+async def postgres_add_creator_key(postgres_object,object_list):
   if not object_list:return {"status":1,"message":object_list}
   object_list=[dict(item)|{"created_by_username":None} for item in object_list]
   user_ids=','.join([str(item["created_by_id"]) for item in object_list if "created_by_id" in item and item["created_by_id"]])
@@ -182,7 +182,7 @@ async def function_postgres_add_creator_key(postgres_object,object_list):
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
-async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
+async def postgres_create_log(postgres_object,request,jwt_secret_key):
   #if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
   authorization_header=request.headers.get("Authorization")
@@ -199,7 +199,7 @@ async def function_postgres_create_log(postgres_object,request,jwt_secret_key):
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
-async def function_token_create(user,jwt_secret_key):
+async def token_create(user,jwt_secret_key):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
   data=json.dumps(data,default=str)
   expiry_days=10000
@@ -210,14 +210,14 @@ async def function_token_create(user,jwt_secret_key):
 
 #redis key builder
 from fastapi import Request,Response
-def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+def redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
   param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
   param=":".join(param)
   return param
 
 #router list
 import os,glob
-def function_router_list():
+def router_list():
   current_directory_path=os.path.dirname(os.path.realpath(__file__))
   filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
   filename_all_list=[item.rsplit("/",1)[1].split(".")[0] for item in filepath_all_list]
@@ -229,7 +229,7 @@ def function_router_list():
   return {"status":1,"message":router_list}
 
 #middleware error
-async def function_middleware_error(error_tuple):
+async def middleware_error(error_tuple):
   error="".join(error_tuple)
   if "constraint_unique_likes" in error:error="already liked"
   if "constraint_unique_users" in error:error="user already exist"
@@ -241,14 +241,14 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
-async def function_redis_start(redis_server_url):
+async def redis_start(redis_server_url):
   FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
 
 #server start
 import uvicorn,asyncio
-def function_server_start(app):
+def server_start(app):
   uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
   loop=asyncio.new_event_loop()
   asyncio.set_event_loop(loop)
@@ -257,7 +257,7 @@ def function_server_start(app):
 
 #elasticsearch
 from elasticsearch import Elasticsearch
-async def function_elasticsearch(elasticsearch_username,elasticsearch_password,elasticsearch_cloud_id,mode,table,payload):
+async def elasticsearch(elasticsearch_username,elasticsearch_password,elasticsearch_cloud_id,mode,table,payload):
   elasticsearch_object=Elasticsearch(cloud_id=elasticsearch_cloud_id,basic_auth=(elasticsearch_username,elasticsearch_cloud_id))
   if mode=="create":
     id,data=payload["id"],payload["data"]
@@ -281,7 +281,7 @@ async def function_elasticsearch(elasticsearch_username,elasticsearch_password,e
 #mongo
 import motor.motor_asyncio
 from bson import ObjectId
-async def function_mongo(mongo_server_url,mode,database,table,payload):
+async def mongo(mongo_server_url,mode,database,table,payload):
   mongo_object=motor.motor_asyncio.AsyncIOMotorClient(mongo_server_url)
   if mode=="create":
     if database=="test" and table=="users":
@@ -305,7 +305,7 @@ async def function_mongo(mongo_server_url,mode,database,table,payload):
   return {"status":1,"message":output}
 
 #postgres init
-async def function_postgres_init(postgres_object):
+async def postgres_init(postgres_object):
   #config
   query_pre=["create extension if not exists postgis"]
   table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
@@ -313,7 +313,7 @@ async def function_postgres_init(postgres_object):
   identity={"id":table}
   default=[["created_at","now()",table]]
   unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
-  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
+  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
   index={
   "id":"btree",
   "created_at":"brin",
@@ -459,7 +459,7 @@ async def function_postgres_init(postgres_object):
         output=await postgres_object.fetch_all(query=query,values=query_param)
   #trigger set updated_at
   for item in column["updated_at"][1]:
-    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
