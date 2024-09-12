@@ -369,8 +369,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
+from function import postgtes_otp_verify
+from function import postgres_object_update
 @router.get("/my")
-async def my(request:Request,mode:str,table:str=None,ids:str=None):
+async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -387,29 +389,16 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
       query_param={"created_by_id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"ids deleted"}
+   if mode=="update_email":
+      if not otp or not email:return JSONResponse(status_code=400,content={"status":0,"message":"otp/email must"})
+      response=await postgtes_otp_verify(postgres_object,otp,email,None)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      object={"id":user["id"],"updated_by_id":user["id"],"email":email}
+      response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
-from function import function_otp_verify
-from function import function_object_update
-@router.put("/my/update-contact")
-async def function_my_update_contact(request:Request,otp:int,email:str=None,mobile:str=None):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #otp verify
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   response=await function_otp_verify(postgres_object,otp,email,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #logic
-   if email:object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-   if mobile:object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
-   response=await function_object_update(postgres_object,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-   
 #csv
 from fastapi import Request
 from fastapi.responses import JSONResponse
