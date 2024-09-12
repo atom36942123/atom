@@ -26,7 +26,7 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
 import hashlib
 from datetime import datetime
 async def read_where_clause(param,column_datatype):
-  param={k:v for k,v in param.items() if k in config_database_column}
+  param={k:v for k,v in param.items() if k in column_datatype}
   param={k:v for k,v in param.items() if k not in ["location","metadata"]}
   where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
   where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
