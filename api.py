@@ -118,12 +118,59 @@ async def profile(request:Request):
    #final
    return response
 
-#my
+#token
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import token_create
+@router.get("/token")
+async def token(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#exit
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.get("/exit")
+async def exit(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":"account deleted"}
+   #final
+   return response
+
+#my
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
 @router.get("/my")
 async def my(request:Request,mode:str,table:str=None,ids:str=None):
    #middleware
@@ -133,21 +180,7 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #logic
-   if mode=="token":
-      query="select * from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0] if output else None
-      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-      response=await token_create(user,jwt_secret_key)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   if mode=="exit":
-      if True:return {"status":1,"message":"exit not allowed"}
-      query="delete from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":"account deleted"}
+   #logic      
    if mode=="delete_ids":
       if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
       if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
