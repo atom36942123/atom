@@ -70,7 +70,7 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
   return {"status":1,"message":"updated"}
 
 #postgres parent read
-async def postgres_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
+async def postgres_parent_read(postgres_object,table,parent_table,order,limit,offset,created_by_id):
   query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
   query_param={"parent_table":parent_table,"created_by_id":created_by_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -79,6 +79,15 @@ async def postgres_parent_read(postgres_object,table,parent_table,created_by_id,
   query_param={}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
+
+#postgres parent check
+async def postgres_parent_check(postgres_object,table,parent_table,parent_ids,created_by_id):
+  parent_ids_list=[int(item) for item in parent_ids.split(",")]
+  query=f"select parent_id from {table} join unnest(array{parent_ids_list}::int[]) with ordinality t(parent_id, ord) using (parent_id) where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null);"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_filtered=list(set([item["parent_id"] for item in output if item["parent_id"]]))
+  return {"status":1,"message":parent_ids_filtered}
 
 #postgres object ownership check
 async def postgres_object_ownership_check(postgres_object,table,id,user_id):
