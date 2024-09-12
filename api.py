@@ -407,7 +407,7 @@ from fastapi.responses import JSONResponse
 from function import postgres_clean
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/clean")
+@router.delete("/clean")
 async def clean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
