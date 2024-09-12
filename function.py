@@ -424,8 +424,6 @@ async def postgres_init(postgres_object):
   schema_constraint_name_list=[item["constraint_name"] for item in output]
   output=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column=output
-  output=await postgres_object.fetch_all(query="select proname from pg_proc;",values={})
-  schema_routine_name_list=[item["proname"] for item in output]
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   schema_column_table_identity={f"{item['column_name']}_{item['table_name']}":item["is_identity"] for item in schema_column}
   schema_column_table_default={f"{item['column_name']}_{item['table_name']}":item["column_default"] for item in schema_column}
