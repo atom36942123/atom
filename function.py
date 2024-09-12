@@ -418,7 +418,7 @@ async def postgres_init(postgres_object):
   for item in column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
   [await postgres_object.fetch_all(query=item,values={}) for item in postquery if ("add constraint" in item and item.split()[5] in schema_constraint_name_list)]
   for item in column["updated_at"][1]:await postgres_object.fetch_all(query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();",values={})
-  for k,v in index.items() for item in v[1]:await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={})
+  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in index.items() for item in v[1]]
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in output]
