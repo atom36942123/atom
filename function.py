@@ -361,28 +361,6 @@ async def postgres_init(postgres_object):
   #config
   query_pre=["create extension if not exists postgis"]
   table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
-  not_null={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
-  identity={"id":table}
-  default=[["created_at","now()",table]]
-  unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
-  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
-  index={
-  "id":"btree",
-  "created_at":"brin",
-  "is_deleted":"btree",
-  "is_verified":"btree",
-  "is_active":"btree",
-  "parent_table":"btree",
-  "parent_id":"btree",
-  "type":"btree",
-  "created_by_id":"btree",
-  "status":"btree",
-  "email":"btree",
-  "password":"btree",
-  "location":"gist",
-  "tag":"btree",
-  "tag_array":"gin"
-  }
   column={
   "id":["bigint",table],
   "created_at":["timestamptz",table],
@@ -427,22 +405,38 @@ async def postgres_init(postgres_object):
   "state":["text",["users"]],
   "city":["text",["users"]],
   }
-  #query pre
-  for item in query_pre:
-    query=item
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  #table
-  for item in table:
-    query=f"create table if not exists {item} ();"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  #column
-  for k,v in column.items():
-    for item in v[1]:
-      query=f"alter table {item} add column if not exists {k} {v[0]};"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
+  not_null={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
+  identity={"id":table}
+
+
+
+  query_post=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
+  default=[["created_at","now()",table]]
+  unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
+  index={"id":["btree",table],"created_at":["brin",table],"created_by_id":["btree",table],"is_deleted":["btree",table],"is_active":["btree",["users","post"]],"is_verified":["btree",["users","post"]],"parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],"parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],"type":["btree",["users","post","box","atom","helpdesk"]],"status":["btree",["report","helpdesk","message"]],"email":["btree",["users","post","box","atom","otp","helpdesk"]],"password":["btree",["users"]],"location":["gist",["users","post","box","atom"]],"tag":["btree",["users","post","box","atom"]],"tag_array":["gin",["atom"]],}
+ 
+  #core
+  for item in query_pre:output=await postgres_object.fetch_all(query=item,values={})
+  for item in table:await postgres_object.fetch_all(query=f"create table if not exists {item} ();",values={})
+  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in column.items() for item in v[1]]
+  #schema
+  output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in output]
+  output=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  schema_column=output
+  output=await postgres_object.fetch_all(query="select proname from pg_proc;",values={})
+  schema_routine_name_list=[item["proname"] for item in output]
+  #helper
+  schema_column_is_nullable={item["column_name"]:item["is_nullable"] for item in schema_column}
+  
+  #not null
+  for k,v in not_null.items():
+    for item in v:
+      state=[x["is_nullable"] for x in schema_column if x["table_name"]==item and x["column_name"]==k]
+      if state[0]=="YES":
+  await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={})
+    
+    
   #index
   for k,v in column.items():
     if k in index:
@@ -450,34 +444,13 @@ async def postgres_init(postgres_object):
         query=f"create index concurrently if not exists index_{k}_{item} on {item} using {index[k]} ({k});"
         query_param={}
         output=await postgres_object.fetch_all(query=query,values=query_param)
-  #schema constraint
-  query="select constraint_name from information_schema.constraint_column_usage;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_constraint_name_list=[item["constraint_name"] for item in output]
-  #schema column
-  query="select * from information_schema.columns where table_schema='public';"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_column=output
-  #schema routine
-  query="select proname from pg_proc;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  schema_routine_name_list=[item["proname"] for item in output]
+  
   #protected
   for item in column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
     query_param={}
     output=await postgres_object.fetch_all(query=query,values=query_param)
-  #not null
-  for k,v in not_null.items():
-    for item in v:
-      state=[x["is_nullable"] for x in schema_column if x["table_name"]==item and x["column_name"]==k]
-      if state[0]=="YES":
-        query=f"alter table {item} alter column {k} set not null;"
-        query_param={}
-        output=await postgres_object.fetch_all(query=query,values=query_param)
+ 
   #identity
   for k,v in identity.items():
     for item in v:
