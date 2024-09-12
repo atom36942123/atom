@@ -252,7 +252,7 @@ async def object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-from function import function_parent_read
+from function import postgres_parent_read
 @router.get("/my/parent-read")
 async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
    #auth
