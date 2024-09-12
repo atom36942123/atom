@@ -81,33 +81,6 @@ async def function_admin_object_update(request:Request,table:str):
    #final
    return response
 
-#public
-from function import function_where_clause
-@router.get("/public/object-read")
-@cache(expire=60,key_builder=function_redis_key_builder)
-async def function_public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #where clause
-   request_query_param=dict(request.query_params)
-   response=await function_where_clause(request_query_param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add action count
-   response=await function_postgres_add_action_count(postgres_object,"likes",output,table)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-   
-
 ########################
 
 #sns
