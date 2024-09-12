@@ -71,4 +71,4 @@ Below are the generic modules that are already built in atom that can be used di
 5. run python main.py
 
 # api collection
-![Screenshot 2024-09-08 at 4 33 57 PM](https://github.com/user-attachments/assets/f34b6202-677e-4c7c-95d8-ca510803222f)
+![image](https://github.com/user-attachments/assets/b6bf32dd-6885-460e-90a3-6ba8c2f60d2c)
