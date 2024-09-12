@@ -469,30 +469,27 @@ from fastapi_cache.decorator import cache
 from function import redis_key_builder
 @router.get("/pcache")
 @cache(expire=60,key_builder=redis_key_builder)
-async def pcache(request:Request):
+async def pcache(request:Request,mode:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   temp={}
-   for k,v in query_dict.items():
-      query=v
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      temp[k]=output
+   if mode=="pcache":
+      query_dict={"user_count":"select count(*) from users;"}
+      temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
+      response={"status":1,"message":temp}
    #final
-   return {"status":1,"message":temp}
+   return response
 
-@router.get("/public/read-ids")
-async def function_public_read_ids(request:Request,table:str,ids:str):
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   query=f"select * from {table} where id in ({ids}) order by id desc;"
-   query_param={}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+# @router.get("/public/read-ids")
+# async def function_public_read_ids(request:Request,table:str,ids:str):
+#    #logic
+#    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+#    query=f"select * from {table} where id in ({ids}) order by id desc;"
+#    query_param={}
+#    output=await postgres_object.fetch_all(query=query,values=query_param)
+#    #final
+#    return {"status":1,"message":output}
 
 #location
 from fastapi import Request
