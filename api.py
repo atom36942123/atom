@@ -89,14 +89,41 @@ async def login(request:Request,mode:str,username:str=None,password:str=None,goo
    #final
    return {"status":1,"message":token}
 
+#profile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from datetime import datetime
+from function import postgres_object_update
+@router.get("/profile")
+async def profile(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   response={"status":1,"message":user}
+   #update last active at
+   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
+   await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
+   #final
+   return response
+
 #my
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import token_create
-from datetime import datetime
-from function import postgres_object_update
 @router.get("/my")
 async def my(request:Request,mode:str,table:str=None,ids:str=None):
    #middleware
@@ -107,13 +134,6 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="profile":
-      query="select * from users where id=:id;"
-      query_param={"id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0] if output else None
-      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-      response={"status":1,"message":user}
    if mode=="token":
       query="select * from users where id=:id;"
       query_param={"id":user["id"]}
@@ -136,9 +156,6 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
       query_param={"created_by_id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"ids deleted"}
-   #update last active at
-   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
    #final
    return response
 
@@ -176,8 +193,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from datetime import datetime
 from fastapi import BackgroundTasks
+from datetime import datetime
 from function import postgres_object_update
 @router.get("/message")
 async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None,message_id:int=None):
