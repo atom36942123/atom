@@ -1,6 +1,7 @@
 import random,boto3
 from config import aws_default_region,aws_access_key_id,aws_secret_access_key
 from config import ses_sender_email
+from function import postgres_otp_verify
 @router.get("/utility")
 async def utility(request:Request,mode:str,email:str=None,mobile:str=None):
    #logic
@@ -22,7 +23,8 @@ async def utility(request:Request,mode:str,email:str=None,mobile:str=None):
       query_param={"otp":otp,"email":email}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"otp sent"}
-   if mode=="otp_verify_email":
+   if mode=="otp_verify":
+      
    #final
    return response
 
@@ -30,7 +32,6 @@ async def utility(request:Request,mode:str,email:str=None,mobile:str=None):
 
 
 
-from function import function_otp_verify
 @router.get("/utility/otp-verify")
 async def function_utility_otp_verify(request:Request,otp:int,email:str=None,mobile:str=None):
    #logic
