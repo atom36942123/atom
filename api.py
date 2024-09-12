@@ -284,7 +284,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import read_where_clause
+from function import where_clause
 @router.get("/object")
 async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
@@ -296,7 +296,7 @@ async def object_read(request:Request,table:str,order:str="id desc",limit:int=10
    user=response["message"]
    #logic
    param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await read_where_clause(param,column_datatype)
+   response=await where_clause(param,column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
@@ -342,7 +342,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import read_where_clause
+from function import where_clause
 @router.delete("/object")
 async def object_delete(request:Request,table:str):
    #middleware
@@ -355,7 +355,7 @@ async def object_delete(request:Request,table:str):
    #logic
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await read_where_clause(param,column_datatype)
+   response=await where_clause(param,column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"delete from {table} {where_string};"
@@ -489,19 +489,19 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import read_where_clause
-from function import function_location_search
-@router.get("/utility/location-search")
-async def function_utility_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where clause
-   request_query_param=dict(request.query_params)
-   response=await function_where_clause(request_query_param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
+from function import where_clause
+from function import postgres_location_search
+@router.get("location")
+async def location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
    #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   response=await function_location_search(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   response=await function_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
