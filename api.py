@@ -63,16 +63,19 @@ async def login(request:Request,mode:str,username:str=None,password:str=None,goo
       user=output[0] if output else None
       if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if mode=="oauth_google":
+      if not google_id:return JSONResponse(status_code=400,content={"status":0,"message":"google_id is must"})
       response=await postgres_read_user_force(postgres_object,"google_id",google_id)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    if mode=="otp_email":
+      if not otp or not email:return JSONResponse(status_code=400,content={"status":0,"message":"otp/email is must"})
       response=await postgres_otp_verify(postgres_object,otp,email,None)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       response=await postgres_read_user_force(postgres_object,"email",email)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    if mode=="otp_mobile":
+      if not otp or not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"otp/mobile is must"})
       response=await postgres_otp_verify(postgres_object,otp,None,mobile)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       response=await postgres_read_user_force(postgres_object,"mobile",mobile)
@@ -182,6 +185,7 @@ async def object_create(request:Request,table:str):
    #logic
    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
@@ -235,6 +239,7 @@ async def object_update(request:Request,table:str):
    #logic
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["updated_by_id"]=user["id"]
    response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -296,6 +301,7 @@ async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:
       response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    if mode=="check":
+      if not parent_ids:return JSONResponse(status_code=400,content={"status":0,"message":"parent_ids is must"})
       response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
@@ -332,6 +338,7 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
       query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
       query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    if mode=="thread":
+      if not user_id:return JSONResponse(status_code=400,content={"status":0,"message":"user_id is must"})
       query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
       query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
    if mode=="delete_created_all":
@@ -344,6 +351,7 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
       query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
       query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    if mode=="delete_single":
+      if not message_id:return JSONResponse(status_code=400,content={"status":0,"message":"message_id is must"})
       query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
       query_param={"parent_table":"users","id":message_id,"created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -592,8 +600,45 @@ async def objecta_update(request:Request,table:str):
    #logic
    if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["updated_by_id"]=user["id"]
    response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#otp
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import random,boto3
+from config import aws_default_region,aws_access_key_id,aws_secret_access_key
+from config import ses_sender_email
+from function import postgtes_otp_verify
+@router.get("/otp")
+async def otp(request:Request,mode:str,email:str=None,mobile:str=None,otp:int=None):
+   #logic
+   if mode=="send_otp_mobile_sns":
+      if not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"mobile is must"})
+      otp=random.randint(100000,999999)
+      sns_client=boto3.client("sns",region_name=aws_default_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+      output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
+      query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
+      query_param={"otp":otp,"mobile":mobile}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"otp sent"}
+   if mode=="send_otp_email_ses":
+      if not email:return JSONResponse(status_code=400,content={"status":0,"message":"email is must"})
+      otp=random.randint(100000,999999)
+      ses_client=boto3.client("ses",region_name=aws_default_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+      output=ses_client.send_email(Source=ses_sender_email,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
+      query="insert into otp (otp,email) values (:otp,:email) returning *;"
+      query_param={"otp":otp,"email":email}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"otp sent"}
+   if mode=="otp_verify":
+      if not otp:return JSONResponse(status_code=400,content={"status":0,"message":"otp is must"})
+      if not email and not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"email/mobile any ome is must"})
+      response=await postgtes_otp_verify(postgres_object,otp,email,mobile)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
