@@ -188,7 +188,7 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
       query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    if mode=="thread":
       query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param={"user_1":user["id"],"user_2":user_id}
+      query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #background
    if mode=="thread":
