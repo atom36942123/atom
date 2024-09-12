@@ -43,22 +43,6 @@ async def function_utility_file(request:Request,mode:str,filename:str=None,url:s
    #final
    return response
 
-from function import function_where_clause
-from function import function_location_search
-@router.get("/utility/location-search")
-async def function_utility_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #where clause
-   request_query_param=dict(request.query_params)
-   response=await function_where_clause(request_query_param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   response=await function_location_search(postgres_object,table,where_string,where_param,location,within,order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #admin
 from function import function_where_clause
 @router.get("/admin/object-read")
