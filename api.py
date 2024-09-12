@@ -541,30 +541,6 @@ async def objecta_read(request:Request,table:str,order:str="id desc",limit:int=1
    #final
    return response
 
-#object update admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_object_update
-@router.put("/objecta")
-async def objecta_update(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   object=await request.json()
-   object["updated_by_id"]=user["id"]
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #object read public
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -594,6 +570,30 @@ async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=1
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    response=await postgres_add_action_count(postgres_object,"likes",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object update admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+@router.put("/objecta")
+async def objecta_update(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
