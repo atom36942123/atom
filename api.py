@@ -165,7 +165,7 @@ from datetime import datetime
 from fastapi import BackgroundTasks
 from function import postgres_object_update
 @router.get("/message")
-async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None):
+async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None,message_id:int=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -189,6 +189,18 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
    if mode=="thread":
       query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
       query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
+   if mode=="delete_created_all":
+      query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
+      query_param={"parent_table":"users","created_by_id":user["id"]}
+   if mode=="delete_received_all":
+      query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
+      query_param={"parent_table":"users","parent_id":user["id"]}
+   if mode=="delete_all":
+      query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
+     query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="delete_single":
+      query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      query_param={"parent_table":"users","id":message_id,"created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #background
    if mode=="thread":
@@ -201,7 +213,7 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
-
+   
 #object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
