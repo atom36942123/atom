@@ -165,7 +165,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import function_where_clause
+from function import where_clause
 @router.get("/object")
 async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
@@ -175,12 +175,11 @@ async def object_read(request:Request,table:str,order:str="id desc",limit:int=10
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #where clause
+   #logic
    request_query_param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_clause(request_query_param)
+   response=await where_clause(request_query_param)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_param=response["message"][0],response["message"][1]
-   #logic
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
    query_param=where_param
    output=await postgres_object.fetch_all(query=query,values=query_param)
