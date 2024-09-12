@@ -1,3 +1,17 @@
+#postgres location search
+async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
+  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
+  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
+  query=f'''
+  with
+  x as (select * from {table} {where_string}),
+  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
+  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
+  '''
+  query_param=where_value
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+  
 #postgres object create
 import hashlib,json
 from datetime import datetime
