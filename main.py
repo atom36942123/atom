@@ -23,8 +23,8 @@ from function import postgres_column_datatype
 async def lifespan(app:FastAPI):
   await redis_start(redis_server_url)
   await postgres_object.connect()
-  response=await postgres_column_datatype(postgres_object)
   global column_datatype
+  response=await postgres_column_datatype(postgres_object)
   column_datatype=response["message"]
   yield
   await postgres_object.disconnect()
