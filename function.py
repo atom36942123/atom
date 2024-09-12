@@ -426,9 +426,9 @@ async def postgres_init(postgres_object):
   schema_column=output
   output=await postgres_object.fetch_all(query="select proname from pg_proc;",values={})
   schema_routine_name_list=[item["proname"] for item in output]
-  schema_column_table_nullable={item["column_name"]+"_"item["table_name"]:item["is_nullable"] for item in schema_column}
-  schema_column_table_identity={item["column_name"]+"_"item["table_name"]:item["is_identity"] for item in schema_column}
-  schema_column_table_default={item["column_name"]+"_"item["table_name"]:item["column_default"] for item in schema_column}
+  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  schema_column_table_identity={f"{item['column_name']}_{item['table_name']}":item["is_identity"] for item in schema_column}
+  schema_column_table_default={f"{item['column_name']}_{item['table_name']}":item["column_default"] for item in schema_column}
   #notnull/identity/default/unique
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={}) for k,v in notnull.items() for item in v if schema_column_table_nullable[f"{k}_{item}"]=="YES"]
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} add generated always as identity;",values={}) for k,v in identity.items() for item in v if schema_column_table_identity[f"{k}_{item}"]=="NO"]
