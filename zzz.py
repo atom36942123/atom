@@ -2,40 +2,6 @@ from fastapi import BackgroundTasks
 from function import function_postgres_add_creator_key
 from function import function_postgres_add_action_count
 
-
-
-from function import function_parent_read
-@router.get("/my/parent-read")
-async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_parent_read(postgres_object,table,parent_table,user["id"],"id desc",limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-from function import function_parent_check
-@router.get("/my/parent-check")
-async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
 from datetime import datetime
 from function import function_message_read
 from function import function_object_update
