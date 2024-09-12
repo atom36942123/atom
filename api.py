@@ -98,7 +98,7 @@ from datetime import datetime
 from function import token_create
 from function import postgres_object_update
 @router.get("/my")
-async def my(request:Request,mode:str):
+async def my(request:Request,mode:str,table:str=None,ids:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -128,6 +128,13 @@ async def my(request:Request,mode:str):
       query_param={"id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"account deleted"}
+   if mode=="delete_ids":
+      if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+      if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+      query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
+      query_param={"created_by_id":user["id"]}
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":"ids deleted"}
    #update last active at
    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
    await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
