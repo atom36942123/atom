@@ -194,7 +194,7 @@ from config import jwt_secret_key
 from function import postgres_object_update
 from function import postgres_object_ownership_check
 @router.put("/object")
-async def object_update(request:Request,mode:str,table:str):
+async def object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
