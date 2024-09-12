@@ -218,6 +218,33 @@ async def object_update(request:Request,table:str):
    #final
    return response
 
+#object delete
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import read_where_clause
+@router.delete("/object")
+async def object_delete(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await read_where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"delete from {table} {where_string};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
 #csv
 from fastapi import Request
 from fastapi.responses import JSONResponse
