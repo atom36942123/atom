@@ -491,7 +491,7 @@ from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
 from function import postgres_location_search
-@router.get("location")
+@router.get("/location")
 async def location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
