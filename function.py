@@ -69,6 +69,17 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
   if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"updated"}
 
+#postgres parent read
+async def postgres_parent_read(postgres_object,table,parent_table,created_by_id,order,limit,offset):
+  query=f"select parent_id from {table} where parent_table=:parent_table and (created_by_id=:created_by_id or :created_by_id is null) order by {order} limit {limit} offset {offset};"
+  query_param={"parent_table":parent_table,"created_by_id":created_by_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  parent_ids_list=[item["parent_id"] for item in output]
+  query=f"select * from {parent_table} join unnest(array{parent_ids_list}::int[]) with ordinality t(id, ord) using (id) order by t.ord;"
+  query_param={}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
 #postgres object ownership check
 async def postgres_object_ownership_check(postgres_object,table,id,user_id):
   if table=="users":
