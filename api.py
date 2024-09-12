@@ -454,41 +454,6 @@ async def csv(request:Request,mode:str,table:str,file:UploadFile):
    #final
    return response
 
-#admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-from function import postgres_object_update
-@router.post("/admin")
-async def admin(request:Request,mode:str,table:str=None,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="object_read":
-      param=dict(request.query_params)
-      response=await where_clause(param,column_datatype)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      where_string,where_value=response["message"][0],response["message"][1]
-      query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param=where_value
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":output}
-   if mode=="object_update":
-      if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      object=await request.json()
-      object["updated_by_id"]=user["id"]
-      response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #qrunner
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -509,49 +474,6 @@ async def qrunner(request:Request,mode:str,query:str):
    #final
    return {"status":1,"message":output}
 
-#public
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-from function import where_clause
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
-@router.get("/public")
-@cache(expire=60,key_builder=redis_key_builder)
-async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   if mode=="pcache":
-      query_dict={"user_count":"select count(*) from users;"}
-      temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
-      response={"status":1,"message":temp}
-   if mode=="read_ids":
-      if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
-      if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      query=f"select * from {table} where id in ({ids}) order by id desc;"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":output}
-   if mode=="object_read":
-      if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      param=dict(request.query_params)
-      response=await where_clause(param,column_datatype)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      where_string,where_value=response["message"][0],response["message"][1]
-      query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param=where_value
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response=await postgres_add_creator_key(postgres_object,output)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      output=response["message"]
-      response=await postgres_add_action_count(postgres_object,"likes",table,output)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #location
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -570,6 +492,108 @@ async def location(request:Request,table:str,location:str,within:str,order:str="
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#pcache
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+@router.get("/pcache")
+@cache(expire=60,key_builder=redis_key_builder)
+async def pcache(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
+   response={"status":1,"message":temp}
+   #final
+   return response
+
+#object read admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/objecta")
+async def objecta_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
+
+#object update admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+@router.put("/objecta")
+async def objecta_update(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object read public
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+@router.get("/objectp")
+@cache(expire=60,key_builder=redis_key_builder)
+async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await postgres_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   response=await postgres_add_action_count(postgres_object,"likes",table,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
