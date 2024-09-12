@@ -394,7 +394,7 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,e
       response=await postgtes_otp_verify(postgres_object,otp,email,None)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-      response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+      response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
