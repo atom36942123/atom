@@ -514,33 +514,6 @@ async def pcache(request:Request):
    #final
    return response
 
-#object read admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/objecta")
-async def objecta_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-
 #object read public
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -571,6 +544,33 @@ async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=1
    output=response["message"]
    response=await postgres_add_action_count(postgres_object,"likes",table,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object read admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/objecta")
+async def objecta_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
    #final
    return response
 
