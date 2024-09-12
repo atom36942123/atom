@@ -97,8 +97,11 @@ from config import jwt_secret_key
 from datetime import datetime
 from function import token_create
 from function import postgres_object_update
+from function import postgres_parent_read
+from function import postgres_parent_check
+from function import postgres_add_creator_key
 @router.get("/my")
-async def my(request:Request,mode:str,table:str=None,ids:str=None):
+async def my(request:Request,mode:str,table:str=None,ids:str=None,parent_table:str=None,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -136,42 +139,22 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
       query_param={"created_by_id":user["id"]}
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"ids deleted"}
+   if mode=="parent_read":
+      if not table or not parent_table:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table must"})
+      response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      output=response["message"]
+      response=await postgres_add_creator_key(postgres_object,output)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode=="parent_check":
+      if not table or not parent_table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table/ids must"})
+      response=await postgres_parent_check(postgres_object,table,parent_table,ids,user["id"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #update last active at
    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
    await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
    #final
    return response
-
-
-
-from function import postgres_parent_read
-@router.get("/my/parent-read")
-async def function_my_parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
-
-   #logic
-   response=await function_parent_read(postgres_object,table,parent_table,user["id"],order,limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-from function import function_parent_check
-@router.get("/my/parent-check")
-async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
 
 #object create
 from fastapi import Request
