@@ -171,7 +171,6 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgres_parent_read
 from function import postgres_parent_check
-from function import postgres_add_creator_key
 @router.get("/parent")
 async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:str=None,order:str="id desc",limit:int=100,page:int=1):
    #middleware
@@ -184,8 +183,6 @@ async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:
    #logic
    if mode=="read":
       response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      response=await postgres_add_creator_key(postgres_object,response["message"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    if mode=="check":
       response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
@@ -484,6 +481,7 @@ from fastapi_cache.decorator import cache
 from function import redis_key_builder
 from function import where_clause
 from function import postgres_add_creator_key
+from function import postgres_add_action_count
 @router.get("/public")
 @cache(expire=60,key_builder=redis_key_builder)
 async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str="id desc",limit:int=100,page:int=1):
@@ -511,6 +509,10 @@ async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str=
       query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
       query_param=where_value
       output=await postgres_object.fetch_all(query=query,values=query_param)
+      response=await postgres_add_creator_key(postgres_object,output)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      output=response["message"]
+      response=await postgres_add_action_count(postgres_object,"likes",output,table)
 
       
       
@@ -518,13 +520,11 @@ async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str=
    return response
 
 
- 
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
+
+   
+   
    #add action count
-   response=await function_postgres_add_action_count(postgres_object,"likes",output,table)
+   
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
    #final
