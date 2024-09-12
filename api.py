@@ -160,14 +160,14 @@ async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="parent_read":
+   if mode=="read":
       if not table or not parent_table:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table must"})
       response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       output=response["message"]
       response=await postgres_add_creator_key(postgres_object,output)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   if mode=="parent_check":
+   if mode=="check":
       if not table or not parent_table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table/ids must"})
       response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
