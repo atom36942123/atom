@@ -1,4 +1,3 @@
-
 import random
 from function import function_sns
 from function import function_ses
@@ -42,25 +41,7 @@ async def function_utility_file(request:Request,mode:str,filename:str=None,url:s
    #final
    return response
 
-#admin
-from function import function_where_clause
-@router.get("/admin/object-read")
-async def function_admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #auth
-   response=await function_auth("jwt",request,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #where clause
-   request_query_param=dict(request.query_params)
-   response=await function_where_clause(request_query_param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
+
 
 ########################
 
