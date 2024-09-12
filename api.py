@@ -193,20 +193,14 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
    response=await function_message_read(postgres_object,"users",mode,user["id"],user["id"],order,limit,(page-1)*limit)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    output=response["message"]
-
-   
-
    #background
    if mode=="thread":
       query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
       query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user["id"],"parent_id":user["id"]}
       background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    if mode in ["received","received_unread"]:
-      object_list=[]
-      for item in output:
-         object={"id":item["id"],"status":"read","updated_by_id":user["id"]}
-         object_list.append(object)
-      response=await function_object_update(postgres_object,"background","message",object_list)
+      object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
+      response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
