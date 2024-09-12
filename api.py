@@ -159,7 +159,7 @@ async def object(request:Request,mode:str,table:str):
       for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
          if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
       response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
-   if mode=="create":
+   if mode=="update":
       if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
       object=await request.json()
       object["updated_by_id"]=user["id"]
