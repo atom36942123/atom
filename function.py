@@ -25,22 +25,23 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
 #where clause
 import hashlib
 from datetime import datetime
-async def where_clause(request_query_param):
-  where_param_raw={k:v for k,v in request_query_param.items() if k in config_database_column}
-  where_param_raw={k:v for k,v in where_param_raw.items() if k not in ["location","metadata"]}
-  where_param={k:v.split(',',1)[1] for k,v in where_param_raw.items()}
-  where_param_operator={k:v.split(',',1)[0] for k,v in where_param_raw.items()}
-  key_list=[f"({k} {where_param_operator[k]} :{k} or :{k} is null)" for k,v in where_param.items()]
+async def where_clause(param,column_datatype):
+  param={k:v for k,v in param.items() if k in config_database_column}
+  param={k:v for k,v in param.items() if k not in ["location","metadata"]}
+  where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
+  where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
+  key_list=[f"({k} {where_key_operator[k]} :{k} or :{k} is null)" for k,v in where_key_value.items()]
   key_joined=' and '.join(key_list)
   where_string=f"where {key_joined}" if key_joined else ""
-  for k,v in where_param.items():
-    datatype=config_database_column[k][0]
-    if k in ["password","google_id"]:where_param[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if datatype in ["bigint","int"]:where_param[k]=int(v) if v else None
-    if datatype in ["numeric"]:where_param[k]=round(float(v),3) if v else None
-    if datatype in ["timestamptz","date"]:where_param[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if "[]" in datatype:where_param[k]=v.split(",") if v else None
-  return {"status":1,"message":[where_string,where_param]}
+  for k,v in where_key_value.items():
+    datatype=column_datatype[k]
+    if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if "int" in datatype:where_key_value[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
+    if "time" in datatype:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if datatype in ["date"]:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if datatype in ["ARRAY"]:where_key_value[k]=v.split(",") if v else None
+  return {"status":1,"message":[where_string,where_key_value]}
 
 #postgres object update
 import hashlib,json
