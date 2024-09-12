@@ -1,24 +1,6 @@
 from function import function_postgres_add_action_count
 
-from function import function_otp_verify
-from function import function_object_update
-@router.put("/my/update-contact")
-async def function_my_update_contact(request:Request,otp:int,email:str=None,mobile:str=None):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #otp verify
-   if email and mobile:return JSONResponse(status_code=400,content={"status":0,"message":"send either email or mobile"})
-   response=await function_otp_verify(postgres_object,otp,email,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #logic
-   if email:object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-   if mobile:object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
-   response=await function_object_update(postgres_object,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
+
 
 import random
 from function import function_sns
