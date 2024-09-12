@@ -1,4 +1,3 @@
-from function import function_postgres_add_action_count
 
 import random
 from function import function_sns
