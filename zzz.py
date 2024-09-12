@@ -1,20 +1,5 @@
 from function import function_postgres_add_action_count
 
-
-
-from function import function_message_delete
-@router.delete("/my/message-delete")
-async def function_my_message_delete(request:Request,mode:str,id:int=None):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_message_delete(postgres_object,"users",mode,user["id"],id)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 from function import function_otp_verify
 from function import function_object_update
 @router.put("/my/update-contact")
