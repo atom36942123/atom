@@ -432,7 +432,7 @@ async def postgres_init(postgres_object):
   #notnull/identity/default/unique
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={}) for k,v in notnull.items() for item in v if schema_column_table_nullable[f"{k}_{item}"]=="YES"]
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} add generated always as identity;",values={}) for k,v in identity.items() for item in v if schema_column_table_identity[f"{k}_{item}"]=="NO"]
-  [await postgres_object.fetch_all(query=f"alter table {t} alter column {item[0]} set default {item[1]};",values={})for item1 in default for item2 in item[2] if schema_column_table_default[f"{item1}_{item2}"]==None]
+  [await postgres_object.fetch_all(query=f"alter table {t} alter column {item[0]} set default {item[1]};",values={}) for item in default for t in item[2] if schema_column_table_default[f"{item[0]}_{t}"]==None]
   [await postgres_object.fetch_all(query=f"alter table {item} add constraint constraint_unique_{k}_{item} unique ({k});".replace(",","_"),values={}) for k,v in unique.items() for item in v if f"constraint_unique_{k}_{item}".replace(",","_") not in schema_constraint_name_list]
   return {"status":1,"message":"done"}
   
