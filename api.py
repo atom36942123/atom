@@ -134,16 +134,14 @@ async def my(request:Request,mode:str):
    #final
    return response
 
-#object
+#object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgres_object_create
-from function import postgres_object_update
-from function import postgres_object_ownership_check
 @router.post("/object")
-async def object(request:Request,mode:str,table:str):
+async def object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -152,25 +150,71 @@ async def object(request:Request,mode:str,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="create":
-      if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      object=await request.json()
-      object["created_by_id"]=user["id"]
-      for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import function_where_clause
+@router.get("/object")
+async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #where clause
+   request_query_param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await function_where_clause(request_query_param)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_param=response["message"][0],response["message"][1]
+   #logic
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_param
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#object update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+from function import postgres_object_ownership_check
+@router.put("/object")
+async def object_update(request:Request,mode:str,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   if table=="users":
+      for item in ["email","mobile"]:
          if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-      response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
-   if mode=="update":
-      if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      object=await request.json()
-      object["updated_by_id"]=user["id"]
-      response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-      if table=="users":
-         for item in ["email","mobile"]:
-            if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-      response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
