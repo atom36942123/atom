@@ -129,6 +129,7 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
       output=await postgres_object.fetch_all(query=query,values=query_param)
       response={"status":1,"message":"account deleted"}
    if mode=="delete_ids":
+      if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
       if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
       if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
       query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
@@ -140,6 +141,37 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
    await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
    #final
    return response
+
+
+
+from function import postgres_parent_read
+@router.get("/my/parent-read")
+async def function_my_parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
+
+   #logic
+   response=await function_parent_read(postgres_object,table,parent_table,user["id"],order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #add creator key
+   response=await function_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
+
+from function import function_parent_check
+@router.get("/my/parent-check")
+async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
+   #auth
+   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #final
+   return {"status":1,"message":output}
 
 #object create
 from fastapi import Request
@@ -251,39 +283,7 @@ async def object_delete(request:Request,table:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
-
-from function import postgres_parent_read
-@router.get("/my/parent-read")
-async def function_my_parent_read(request:Request,table:str,parent_table:str,limit:int=100,page:int=1):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_parent_read(postgres_object,table,parent_table,user["id"],"id desc",limit,(page-1)*limit)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #add creator key
-   response=await function_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
-from function import function_parent_check
-@router.get("/my/parent-check")
-async def function_my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await function_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
-
+   
 #csv
 from fastapi import Request
 from fastapi.responses import JSONResponse
