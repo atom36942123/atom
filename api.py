@@ -142,6 +142,96 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None):
    #final
    return response
 
+#parent
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_parent_read
+from function import postgres_parent_check
+from function import postgres_add_creator_key
+@router.get("/parent")
+async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:str=None,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="parent_read":
+      if not table or not parent_table:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table must"})
+      response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      output=response["message"]
+      response=await postgres_add_creator_key(postgres_object,output)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode=="parent_check":
+      if not table or not parent_table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table/ids must"})
+      response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#message
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from datetime import datetime
+from fastapi import BackgroundTasks
+from function import postgres_object_update
+@router.get("/message")
+async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None,message_id:int=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="received":
+      query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param={"parent_table":"users","parent_id":user["id"]}
+   if mode=="received_unread":
+      query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param={"parent_table":"users","parent_id":user["id"]}
+   if mode=="inbox":
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
+      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="inbox_unread":
+      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="thread":
+      query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
+   if mode=="delete_created_all":
+      query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
+      query_param={"parent_table":"users","created_by_id":user["id"]}
+   if mode=="delete_received_all":
+      query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
+      query_param={"parent_table":"users","parent_id":user["id"]}
+   if mode=="delete_all":
+      query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="delete_single":
+      query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+      query_param={"parent_table":"users","id":message_id,"created_by_id":user["id"],"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #background
+   if mode=="thread":
+      query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user["id"],"parent_id":user["id"]}
+      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   if mode in ["received","received_unread"]:
+      object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
+      response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":output}
+
 #object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -250,96 +340,6 @@ async def object_delete(request:Request,table:str):
    query=f"delete from {table} {where_string};"
    query_param=where_value
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#parent
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_parent_read
-from function import postgres_parent_check
-from function import postgres_add_creator_key
-@router.get("/parent")
-async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:str=None,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="parent_read":
-      if not table or not parent_table:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table must"})
-      response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      output=response["message"]
-      response=await postgres_add_creator_key(postgres_object,output)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   if mode=="parent_check":
-      if not table or not parent_table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/parent_table/ids must"})
-      response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#message
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from datetime import datetime
-from fastapi import BackgroundTasks
-from function import postgres_object_update
-@router.get("/message")
-async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None,message_id:int=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="received":
-      query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param={"parent_table":"users","parent_id":user["id"]}
-   if mode=="received_unread":
-      query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param={"parent_table":"users","parent_id":user["id"]}
-   if mode=="inbox":
-      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
-      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
-   if mode=="inbox_unread":
-      query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
-   if mode=="thread":
-      query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
-      query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
-   if mode=="delete_created_all":
-      query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
-      query_param={"parent_table":"users","created_by_id":user["id"]}
-   if mode=="delete_received_all":
-      query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
-      query_param={"parent_table":"users","parent_id":user["id"]}
-   if mode=="delete_all":
-      query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
-   if mode=="delete_single":
-      query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"parent_table":"users","id":message_id,"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #background
-   if mode=="thread":
-      query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user["id"],"parent_id":user["id"]}
-      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-   if mode in ["received","received_unread"]:
-      object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-      response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
    
