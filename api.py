@@ -156,6 +156,44 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None,parent_table:s
    #final
    return response
 
+#message
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from datetime import datetime
+from function import postgres_object_update
+@router.get("/message")
+async def message(request:Request,background:BackgroundTasks,mode:str,order:str="id desc",limit:int=100,page:int=1,user_id:int=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await function_message_read(postgres_object,"users",mode,user["id"],user_id,order,limit,(page-1)*limit)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+
+   
+
+   #background
+   if mode=="thread":
+      query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+      query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
+      background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   if mode in ["received","received_unread"]:
+      object_list=[]
+      for item in output:
+         object={"id":item["id"],"status":"read","updated_by_id":user["id"]}
+         object_list.append(object)
+      response=await function_object_update(postgres_object,"background","message",object_list)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":output}
+
 #object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
