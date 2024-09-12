@@ -647,11 +647,22 @@ async def otp(request:Request,mode:str,email:str=None,mobile:str=None,otp:int=No
    return response
 
 #blob
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
 from config import aws_default_region,aws_access_key_id,aws_secret_access_key
 from config import s3_bucket_name
 import boto3,uuid
 @router.get("/blob")
 async def blob(request:Request,mode:str,filename:str=None,url:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    #logic
    if mode=="create_s3_url":
       if not filename:return JSONResponse(status_code=400,content={"status":0,"message":"filename must"})
@@ -660,12 +671,14 @@ async def blob(request:Request,mode:str,filename:str=None,url:str=None):
       output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
       response={"status":1,"message":output}
    if mode=="delete_s3_url":
+      if user["type"] not in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"not allowed"})
       if not url:return JSONResponse(status_code=400,content={"status":0,"message":"url must"})
       key=url.rsplit("/",1)[1]
       s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
       output=s3_resource.Object(s3_bucket_name,key).delete()
       response={"status":1,"message":output}
    if mode=="delete_s3_all":
+      if user["type"] not in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"not allowed"})
       s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
       output=s3_resource.Bucket(s3_bucket_name).objects.all().delete()
       response={"status":1,"message":output}
