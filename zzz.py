@@ -161,20 +161,6 @@ async def function_s3(mode,payload):
     output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
   return {"status":1,"message":output}
 
-#location search
-async def function_location_search(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
-  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
-  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
-  query=f'''
-  with
-  x as (select * from {table} {where_string}),
-  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
-  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
-  '''
-  query_param=where_param
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
-
 #redis key
 from fastapi import Request,Response
 def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
