@@ -454,26 +454,6 @@ async def csv(request:Request,mode:str,table:str,file:UploadFile):
    #final
    return response
 
-#qrunner
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.get("/qrunner")
-async def qrunner(request:Request,mode:str,query:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="single":output=await postgres_object.fetch_all(query=query,values={})
-   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
-   #final
-   return {"status":1,"message":output}
-
 #admin
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -508,6 +488,26 @@ async def admin(request:Request,mode:str,table:str=None,order:str="id desc",limi
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#qrunner
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.get("/qrunner")
+async def qrunner(request:Request,mode:str,query:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="single":output=await postgres_object.fetch_all(query=query,values={})
+   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
+   #final
+   return {"status":1,"message":output}
 
 #public
 from fastapi import Request
