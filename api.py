@@ -479,9 +479,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
+from function import where_clause
 from function import postgres_object_update
 @router.post("/admin")
-async def admin(request:Request,table:str):
+async def admin(request:Request,mode:str,table:str=None,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -489,14 +490,22 @@ async def admin(request:Request,table:str):
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #object
-   object=await request.json()
-   object["updated_by_id"]=user["id"]
-   #object check
-   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #logic
-   response=await function_object_update(postgres_object,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if mode=="object_read":
+      param=dict(request.query_params)
+      response=await where_clause(param,column_datatype)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      where_string,where_value=response["message"][0],response["message"][1]
+      query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+      query_param=where_value
+      output=await postgres_object.fetch_all(query=query,values=query_param)
+      response={"status":1,"message":output}
+   if mode=="object_update":
+      if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+      object=await request.json()
+      object["updated_by_id"]=user["id"]
+      response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
