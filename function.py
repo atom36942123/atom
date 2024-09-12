@@ -202,7 +202,7 @@ async def postgres_read_user_force(postgres_object,column,value):
   return {"status":1,"message":user}
 
 #postgres add action count
-async def postgres_add_action_count(postgres_object,action,object_list,object_table):
+async def postgres_add_action_count(postgres_object,action,object_table,object_list):
   if not object_list:return {"status":1,"message":object_list}
   key_name=f"{action}_count"
   object_list=[dict(item)|{key_name:0} for item in object_list]
