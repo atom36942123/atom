@@ -512,23 +512,10 @@ async def public(request:Request,mode:str,table:str=None,ids:str=None,order:str=
       response=await postgres_add_creator_key(postgres_object,output)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       output=response["message"]
-      response=await postgres_add_action_count(postgres_object,"likes",output,table)
-
-      
-      
+      response=await postgres_add_action_count(postgres_object,"likes",table,output)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-
-
-   
-   
-   #add action count
-   
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #final
-   return {"status":1,"message":output}
 
 #location
 from fastapi import Request
