@@ -8,28 +8,6 @@ from function import function_postgres_add_action_count
 
 
 
-from config import config_is_delete_object_self
-from function import function_where_clause
-@router.delete("/my/object-delete")
-async def function_my_object_delete(request:Request,table:str):
-   #auth
-   response=await function_auth("jwt",request,config_key_root,config_key_jwt,postgres_object,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #permisson check
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   if int(config_is_delete_object_self)==0:return {"status":1,"message":"object deletion not allowed"}
-   #where clause
-   request_query_param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await function_where_clause(request_query_param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_param=response["message"][0],response["message"][1]
-   #logic
-   query=f"delete from {table} {where_string};"
-   query_param=where_param
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
 @router.delete("/my/delete-ids")
 async def function_my_delete_ids(request:Request,table:str,ids:str):
