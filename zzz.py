@@ -1,7 +1,5 @@
 from function import function_postgres_add_action_count
 
-
-
 import random
 from function import function_sns
 from function import function_ses
@@ -135,3 +133,74 @@ async def function_public_read_ids(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+
+
+########################
+
+#sns
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
+async def function_sns(mode,payload):
+  sns_client=boto3.client("sns",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="send_sms":
+    mobile,message=payload["mobile"],payload["message"]
+    output=sns_client.publish(PhoneNumber=mobile,Message=message)
+  return {"status":1,"message":output}
+
+#ses
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
+from config import config_ses_sender_email
+import boto3
+async def function_ses(mode,payload):
+  ses_client=boto3.client("ses",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="send_email":
+    to,title,description=payload["to"],payload["title"],payload["description"]
+    output=ses_client.send_email(Source=config_ses_sender_email,Destination={"ToAddresses":[to]},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":description}}})
+  return {"status":1,"message":output}
+
+#s3
+from config import config_aws_default_region,config_aws_access_key_id,config_aws_secret_access_key
+from config import  config_s3_bucket_name
+import boto3,uuid
+async def function_s3(mode,payload):
+  s3_client=boto3.client("s3",region_name=config_aws_default_region,aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  s3_resource=boto3.resource("s3",aws_access_key_id=config_aws_access_key_id,aws_secret_access_key=config_aws_secret_access_key)
+  if mode=="create":
+    filename=payload["filename"]
+    key=str(uuid.uuid4())+"-"+filename
+    output=s3_client.generate_presigned_post(Bucket=config_s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
+  if mode=="delete":
+    url=payload["url"]
+    key=url.rsplit("/",1)[1]
+    output=s3_resource.Object(config_s3_bucket_name,key).delete()
+  if mode=="delete_all":
+    output=s3_resource.Bucket(config_s3_bucket_name).objects.all().delete()
+  return {"status":1,"message":output}
+
+#location search
+async def function_location_search(postgres_object,table,where_string,where_param,location,within,order,limit,offset):
+  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
+  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
+  query=f'''
+  with
+  x as (select * from {table} {where_string}),
+  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
+  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
+  '''
+  query_param=where_param
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":output}
+
+#redis key
+from fastapi import Request,Response
+def function_redis_key_builder(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):
+  param=[request.method.lower(),request.url.path,namespace,repr(sorted(request.query_params.items()))]
+  param=":".join(param)
+  return param
+
+
+
+
+
+
+
