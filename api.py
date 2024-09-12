@@ -197,7 +197,7 @@ async def message(request:Request,background:BackgroundTasks,mode:str,order:str=
       query_param={"parent_table":"users","parent_id":user["id"]}
    if mode=="delete_all":
       query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
-     query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
+      query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    if mode=="delete_single":
       query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
       query_param={"parent_table":"users","id":message_id,"created_by_id":user["id"],"parent_id":user["id"]}
