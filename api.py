@@ -501,7 +501,7 @@ async def location(request:Request,table:str,location:str,within:str,order:str="
    response=await where_clause(param,column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
-   response=await function_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
+   response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
