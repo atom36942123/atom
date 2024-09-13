@@ -237,8 +237,8 @@ async def postgres_add_creator_key(postgres_object,object_list):
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
-async def postgres_create_log(postgres_object,request,jwt_secret_key):
-  if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
+async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time):
+  #if request.method not in ["DELETE"]:return {"status":1,"message":"done"}
   created_by_id=None
   authorization_header=request.headers.get("Authorization")
   if authorization_header:created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
@@ -246,8 +246,8 @@ async def postgres_create_log(postgres_object,request,jwt_secret_key):
   request_query_param=json.dumps(dict(request.query_params))
   #request_body=json.dumps(dict(request.json()))
   request_body=None
-  query="insert into log (created_by_id,request_path,request_query_param,request_body) values (:created_by_id,:request_path,:request_query_param,:request_body);"
-  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":request_query_param,"request_body":request_body}
+  query="insert into log (created_by_id,request_path,request_query_param,request_body,response_time) values (:created_by_id,:request_path,:request_query_param,:request_body,:response_time);"
+  query_param={"created_by_id":created_by_id,"request_path":request.url.path,"request_query_param":request_query_param,"request_body":request_body,"response_time":response_time}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
