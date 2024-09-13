@@ -236,6 +236,14 @@ async def delete_account(request:Request):
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #read user
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if user["is_protected"]==1:return JSONResponse(status_code=400,content={"status":0,"message":"protected object not allowed"})
+   if user["type"] in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"type admin not allowed"})
    #logic
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
