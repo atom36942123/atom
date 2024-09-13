@@ -196,14 +196,14 @@ async def profile(request:Request):
    #final
    return response
 
-#token
+#token refresh
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import token_create
-@router.get("/token")
-async def token(request:Request):
+@router.get("/token-refresh")
+async def token_refresh(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
