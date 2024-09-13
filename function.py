@@ -370,7 +370,7 @@ async def postgres_init(postgres_object):
   identity={"id":table}
   default=[["created_at","now()",table]]
   unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
-  index={"id":["btree",table],"created_at":["brin",table],"created_by_id":["btree",table],"is_deleted":["btree",table],"is_active":["btree",["users","post"]],"is_verified":["btree",["users","post"]],"parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],"parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],"type":["btree",["users","post","box","atom","helpdesk"]],"status":["btree",["report","helpdesk","message"]],"email":["btree",["users","post","box","atom","otp","helpdesk"]],"password":["btree",["users"]],"location":["gist",["users","post","box","atom"]],"tag":["btree",["users","post","box","atom"]],"tag_array":["gin",["atom"]],}
+  index={"id":["btree",table],"created_at":["brin",table],"created_by_id":["btree",table],"is_deleted":["btree",["users","post","box","atom"]],"is_active":["btree",["users","post"]],"is_verified":["btree",["users","post"]],"parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],"parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],"type":["btree",["users","post","box","atom","helpdesk"]],"status":["btree",["report","helpdesk","message"]],"email":["btree",["users","post","box","atom","otp","helpdesk"]],"password":["btree",["users"]],"location":["gist",["users","post","box","atom"]],"tag":["btree",["users","post","box","atom"]],"tag_array":["gin",["atom"]],}
   column={
   "id":["bigint",table],
   "created_at":["timestamptz",table],
