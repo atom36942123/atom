@@ -115,6 +115,58 @@ async def login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
+#login email
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+@router.post("/login-email")
+async def login_email(request:Request,email:str,otp:int,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   response=await postgres_read_user_force(postgres_object,"email",email)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
+#login mobile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+@router.post("/login-mobile")
+async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   response=await postgres_read_user_force(postgres_object,"mobile",mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
 #profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
