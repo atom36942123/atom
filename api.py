@@ -227,7 +227,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/my/delete-account")
+@router.delete("/my/delete-account")
 async def my_delete_account(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
