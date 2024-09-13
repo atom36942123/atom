@@ -128,7 +128,7 @@ async def login_email(request:Request,email:str,otp:int,type:str=None):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   response=await postgres_otp_verify(postgres_object,otp,email,None)
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    response=await postgres_read_user_force(postgres_object,"email",email)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -154,7 +154,7 @@ async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   response=await postgres_otp_verify(postgres_object,otp,None,mobile)
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    response=await postgres_read_user_force(postgres_object,"mobile",mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
