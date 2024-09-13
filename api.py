@@ -490,7 +490,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/my/message-delete-created-all")
+@router.delete("/my/message-delete-created-all")
 async def my_message_delete_created_all(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
@@ -511,7 +511,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/my/message-delete-received-all")
+@router.delete("/my/message-delete-received-all")
 async def my_message_delete_received_all(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
@@ -532,7 +532,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/my/message-delete-all")
+@router.delete("/my/message-delete-all")
 async def my_message_delete_all(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
@@ -553,7 +553,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/my/message-delete-single")
+@router.delete("/my/message-delete-single")
 async def my_message_delete_single(request:Request,id:int):
    #middleware
    postgres_object=request.state.postgres_object
