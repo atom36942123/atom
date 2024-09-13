@@ -365,15 +365,14 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-#parent
+#parent read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgres_parent_read
-from function import postgres_parent_check
-@router.get("/parent")
-async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:str=None,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/my/parent-read")
+async def my_parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -382,13 +381,29 @@ async def parent(request:Request,mode:str,table:str,parent_table:str,parent_ids:
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="read":
-      response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   if mode=="check":
-      if not parent_ids:return JSONResponse(status_code=400,content={"status":0,"message":"parent_ids is must"})
-      response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#parent check
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_parent_check
+@router.get("/my/parent-check")
+async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
