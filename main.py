@@ -48,10 +48,12 @@ import time
 @app.middleware("http")
 async def middleware(request:Request,api_function):
   try:
+    start=time.time()
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
     response=await api_function(request)
-    await postgres_create_log(postgres_object,request,jwt_secret_key)
+    end=time.time()
+    await postgres_create_log(postgres_object,request,jwt_secret_key,end-start)
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
