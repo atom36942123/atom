@@ -702,7 +702,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 @router.get("/query-runner")
-async def query_runner(request:Request,query:str,mode:str="single"):
+async def query_runner(request:Request,query:str,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -711,7 +711,7 @@ async def query_runner(request:Request,query:str,mode:str="single"):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="single":output=await postgres_object.fetch_all(query=query,values={})
+   if not mode:output=await postgres_object.fetch_all(query=query,values={})
    if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
    #final
    return {"status":1,"message":output}
