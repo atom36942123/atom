@@ -386,7 +386,7 @@ async def postgres_init(postgres_object):
   "id":["bigint",table],
   "created_at":["timestamptz",table],
   "created_by_id":["bigint",table],
-  "is_deleted":["int",table],
+  "is_deleted":["int",["users","post","box","atom"]],
   "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
   "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
   "is_active":["int",["users","post"]],
@@ -425,6 +425,7 @@ async def postgres_init(postgres_object):
   "country":["text",["users"]],
   "state":["text",["users"]],
   "city":["text",["users"]],
+  "response_time":["int",["log"]],
   }
   #time
   temp={}
