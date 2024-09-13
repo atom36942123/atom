@@ -2,12 +2,12 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["core"])
 
-#postgres-init
+#database-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
-@router.get("/postgres-init")
-async def postgres_init(request:Request):
+@router.get("/database-init")
+async def database_init(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
