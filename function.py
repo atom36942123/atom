@@ -375,7 +375,7 @@ import time
 async def postgres_init(postgres_object):
   #config
   prequery=["create extension if not exists postgis"]
-  postquery=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';","CREATE OR REPLACE VIEW view_table_master AS with x as (select relname as table_name,n_live_tup as count_row from pg_stat_user_tables),y as (select table_name,count(*) as count_column from information_schema.columns group by table_name) select x.*,y.count_column from x left join y on x.table_name=y.table_name order by count_column desc;","CREATE OR REPLACE VIEW view_column_master AS select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;","create materialized view if not exists mat_table_object_count as select relname as table_name,n_live_tup as count_object from pg_stat_user_tables order by count_object desc",]
+  postquery=["insert into users (username,password,type,is_protected) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3','admin',1) on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",]
   table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
   notnull={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
   identity={"id":table}
@@ -557,4 +557,3 @@ async def postgres_init(postgres_object):
   print(f"trigger={delta}")
   #final
   return {"status":1,"message":temp}
-  
