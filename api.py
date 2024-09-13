@@ -77,12 +77,36 @@ async def login_username(request:Request,username:str,password:str,type:str=None
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #read user
+   #logic
    query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
+#login google
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+from function import postgres_read_user_force
+@router.post("/login-google")
+async def login_google(request:Request,google_id:str,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_read_user_force(postgres_object,"google_id",google_id)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
    if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
