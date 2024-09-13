@@ -849,8 +849,8 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgres_object_update
-@router.put("/objecta")
-async def objecta_update(request:Request,table:str):
+@router.put("/object-update-admin")
+async def object_update_admin(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
