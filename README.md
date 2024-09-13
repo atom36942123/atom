@@ -69,6 +69,3 @@ Below are the generic modules that are already built in atom that can be used di
 3. create .env file as per config.py
 4. start postgres/redis server added in .env
 5. run python main.py
-
-# api collection
-![image](https://github.com/user-attachments/assets/b6bf32dd-6885-460e-90a3-6ba8c2f60d2c)
