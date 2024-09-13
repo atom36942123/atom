@@ -251,17 +251,6 @@ async def postgres_create_log(postgres_object,request,jwt_secret_key,response_ti
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
-#postgres index delete_all
-async def postgres_index_delete_all(postgres_object):
-  query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
-  query_param={}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  if output[0]["output"]:
-    query=output[0]["output"]
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
