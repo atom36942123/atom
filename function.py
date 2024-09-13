@@ -249,7 +249,7 @@ async def postgres_create_log(postgres_object,request,jwt_secret_key,response_ti
   request_query_param=json.dumps(dict(request.query_params))
   request_body=None
   #request_body=json.dumps(dict(request.json()))
-  query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time) values (:created_by_id,:request_path,:request_query_param,:request_body,:response_time);"
+  query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time) values (:created_by_id,:request_url_path,:request_query_param,:request_body,:response_time);"
   query_param={"created_by_id":created_by_id,"request_url_path":request_url_path,"request_query_param":request_query_param,"request_body":request_body,"response_time":response_time}
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
