@@ -414,7 +414,7 @@ async def postgres_init(postgres_object):
   "country":["text",["users"]],
   "state":["text",["users"]],
   "city":["text",["users"]],
-  "response_time":["int",["log"]],
+  "response_time":["numeric",["log"]],
   }
   #time
   temp={}
