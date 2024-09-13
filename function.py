@@ -1,6 +1,6 @@
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
-  lat,long=float(location.split(",")[0]),float(location.split(",")[1])
+  long,lat=float(location.split(",")[0]),float(location.split(",")[1])
   min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
   query=f'''
   with
