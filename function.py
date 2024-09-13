@@ -435,6 +435,7 @@ async def postgres_init(postgres_object):
     await postgres_object.fetch_all(query=query,values=query_param)
   t2=time.time()
   temp["prequery"]=t2-t1
+  print(temp)
   #table
   for item in table:
     query=f"create table if not exists {item} ();"
@@ -442,6 +443,7 @@ async def postgres_init(postgres_object):
     await postgres_object.fetch_all(query=query,values=query_param)
   t3=time.time()
   temp["table"]=t3-t2
+  print(temp)
   #column
   for k,v in column.items():
     for item in v[1]:
@@ -450,6 +452,7 @@ async def postgres_init(postgres_object):
       await postgres_object.fetch_all(query=query,values=query_param)
   t4=time.time()
   temp["column"]=t4-t3
+  print(temp)
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in output]
@@ -460,6 +463,7 @@ async def postgres_init(postgres_object):
   schema_column_table_default={f"{item['column_name']}_{item['table_name']}":item["column_default"] for item in schema_column}
   t5=time.time()
   temp["schema"]=t5-t4
+  print(temp)
   #protected
   for item in column["is_protected"][1]:
     query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;"
@@ -467,6 +471,7 @@ async def postgres_init(postgres_object):
     await postgres_object.fetch_all(query=query,values=query_param)
   t6=time.time()
   temp["protected"]=t6-t5
+  print(temp)
   #notnull
   for k,v in notnull.items():
     for item in v:
@@ -476,6 +481,7 @@ async def postgres_init(postgres_object):
         await postgres_object.fetch_all(query=query,values=query_param)
   t7=time.time()
   temp["notnull"]=t7-t6
+  print(temp)
   #identity
   for k,v in identity.items():
     for item in v:
@@ -485,6 +491,7 @@ async def postgres_init(postgres_object):
         await postgres_object.fetch_all(query=query,values=query_param)
   t8=time.time()
   temp["identity"]=t8-t7
+  print(temp)
   #default
   for item in default:
     for t in item[2]:
@@ -494,6 +501,7 @@ async def postgres_init(postgres_object):
         await postgres_object.fetch_all(query=query,values=query_param)
   t9=time.time()
   temp["default"]=t9-t8
+  print(temp)
   #unique
   for k,v in unique.items():
     for item in v:
@@ -504,6 +512,7 @@ async def postgres_init(postgres_object):
         await postgres_object.fetch_all(query=query,values=query_param)
   t10=time.time()
   temp["unique"]=t10-t9
+  print(temp)
   #trigger
   for item in column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();"
@@ -511,6 +520,7 @@ async def postgres_init(postgres_object):
     await postgres_object.fetch_all(query=query,values=query_param)
   t11=time.time()
   temp["trigger"]=t11-t10
+  print(temp)
   #index
   for k,v in index.items():
     for item in v[1]:
@@ -519,6 +529,7 @@ async def postgres_init(postgres_object):
       await postgres_object.fetch_all(query=query,values=query_param)
   t12=time.time()
   temp["index"]=t12-t11
+  print(temp)
   #postquery
   for item in postquery:
     if "add constraint" in item and item.split()[5] not in schema_constraint_name_list:
@@ -527,6 +538,7 @@ async def postgres_init(postgres_object):
       await postgres_object.fetch_all(query=query,values=query_param)
   t13=time.time()
   temp["postquery"]=t13-t12
+  print(temp)
   #final
   return {"status":1,"message":temp}
   
