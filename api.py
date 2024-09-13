@@ -642,7 +642,7 @@ async def my_update_mobile(request:Request,otp:int,mobile:str):
    #final
    return response
 
-#csv
+#csv create
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
@@ -650,9 +650,8 @@ from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_create
-from function import postgres_object_update
-@router.post("/csv")
-async def csv(request:Request,mode:str,table:str,file:UploadFile):
+@router.post("/csv-create")
+async def csv_create(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -665,8 +664,34 @@ async def csv(request:Request,mode:str,table:str,file:UploadFile):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
-   if mode=="create":response=await postgres_object_create(postgres_object,column_datatype,"normal",table,object_list)
-   if mode=="update":response=await postgres_object_update(postgres_object,column_datatype,"normal",table,object_list)
+   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#csv update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from fastapi import UploadFile
+from function import csv_to_object_list
+from function import postgres_object_update
+@router.post("/csv-update")
+async def csv_update(request:Request,table:str,file:UploadFile):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #file
+   response=await csv_to_object_list(file)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object_list=response["message"]
+   #logic
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
