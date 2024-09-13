@@ -535,10 +535,11 @@ async def postgres_init(postgres_object):
   print(f"index={delta}")
   #postquery
   for item in postquery:
-    if "add constraint" in item and item.split()[5] not in schema_constraint_name_list:
+    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
+    else:
       query=item
       query_param={}
-      await postgres_object.fetch_all(query=query,values=query_param)
+      await postgres_object.fetch_all(query=query,values=query_param)  
   t12=time.time()
   delta=t12-t11
   temp["postquery"]=delta
