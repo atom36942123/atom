@@ -886,7 +886,7 @@ async def otp_send_mobile_sns(request:Request,mobile:str):
    query_param={"otp":otp,"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":"otp sent"}
 
 #otp send email ses
 from fastapi import Request
@@ -906,7 +906,7 @@ async def otp_send_email_ses(request:Request,email:str):
    query_param={"otp":otp,"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":"otp sent"}
 
 #otp verify email
 from fastapi import Request
@@ -938,16 +938,15 @@ async def ot_verify_mobile(request:Request,otp:int,mobile:str):
    #final
    return response
 
-
-#blob
+#s3 create url
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-import boto3,uuid
 from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
-@router.get("/blob")
-async def blob(request:Request,mode:str,filename:str=None,url:str=None):
+import boto3,uuid
+@router.get("/s3-create-url")
+async def s3_create_url(request:Request,filename:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -956,23 +955,53 @@ async def blob(request:Request,mode:str,filename:str=None,url:str=None):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   if mode=="create_s3_url":
-      if not filename:return JSONResponse(status_code=400,content={"status":0,"message":"filename must"})
-      key=str(uuid.uuid4())+"-"+filename
-      s3_client=boto3.client("s3",region_name=aws_default_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-      output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
-      response={"status":1,"message":output}
-   if mode=="delete_s3_url":
-      if user["type"] not in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"not allowed"})
-      if not url:return JSONResponse(status_code=400,content={"status":0,"message":"url must"})
-      key=url.rsplit("/",1)[1]
-      s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-      output=s3_resource.Object(s3_bucket_name,key).delete()
-      response={"status":1,"message":output}
-   if mode=="delete_s3_all":
-      if user["type"] not in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"not allowed"})
-      s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
-      output=s3_resource.Bucket(s3_bucket_name).objects.all().delete()
-      response={"status":1,"message":output}
+   key=str(uuid.uuid4())+"-"+filename
+   s3_client=boto3.client("s3",region_name=aws_default_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=10,Conditions=[['content-length-range',1,250*1024]])
    #final
-   return response
+   return {"status":1,"message":output}
+
+#s3 delete url
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
+import boto3
+@router.get("/s3-delete-url")
+async def s3_delete_url(request:Request,url:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   key=url.rsplit("/",1)[1]
+   s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=s3_resource.Object(s3_bucket_name,key).delete()
+   #final
+   return {"status":1,"message":output}
+
+#s3 delete all
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
+import boto3
+@router.get("/s3-delete-all")
+async def s3_delete_all(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   s3_resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=s3_resource.Bucket(s3_bucket_name).objects.all().delete()
+   #final
+   return {"status":1,"message":output}
