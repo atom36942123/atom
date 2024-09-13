@@ -513,22 +513,14 @@ async def postgres_init(postgres_object):
   t10=time.time()
   temp["unique"]=t10-t9
   print(temp)
-  #trigger
-  for item in column["updated_at"][1]:
-    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();"
-    query_param={}
-    await postgres_object.fetch_all(query=query,values=query_param)
-  t11=time.time()
-  temp["trigger"]=t11-t10
-  print(temp)
   #index
   for k,v in index.items():
     for item in v[1]:
       query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});"
       query_param={}
       await postgres_object.fetch_all(query=query,values=query_param)
-  t12=time.time()
-  temp["index"]=t12-t11
+  t11=time.time()
+  temp["index"]=t11-t10
   print(temp)
   #postquery
   for item in postquery:
@@ -536,8 +528,16 @@ async def postgres_init(postgres_object):
       query=item
       query_param={}
       await postgres_object.fetch_all(query=query,values=query_param)
+  t12=time.time()
+  temp["postquery"]=t12-t11
+  print(temp)
+  #trigger
+  for item in column["updated_at"][1]:
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();"
+    query_param={}
+    await postgres_object.fetch_all(query=query,values=query_param)
   t13=time.time()
-  temp["postquery"]=t13-t12
+  temp["trigger"]=t13-t12
   print(temp)
   #final
   return {"status":1,"message":temp}
