@@ -373,6 +373,7 @@ async def mongo(mongo_server_url,mode,database,table,payload):
 #postgres init
 import time
 async def postgres_init(postgres_object):
+  #time
   temp={}
   t1=time.time()
   print(f"started={t1}")
