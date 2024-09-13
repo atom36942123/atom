@@ -441,10 +441,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from fastapi import BackgroundTasks
-from datetime import datetime
 @router.get("/my/message-inbox")
-async def my_message_inbox(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
+async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -457,10 +455,6 @@ async def my_message_inbox(request:Request,background:BackgroundTasks,order:str=
    if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
-   #background
-   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user["id"],"parent_id":user["id"]}
-   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
 
@@ -469,8 +463,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
+from fastapi import BackgroundTasks
+from datetime import datetime
 @router.get("/my/message-thread")
-async def my_message_thread(request:Request,user_id:int,order:str="id desc",limit:int=100,page:int=1):
+async def my_message_thread(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -482,6 +478,10 @@ async def my_message_thread(request:Request,user_id:int,order:str="id desc",limi
    query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
+   #background
+   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table=:parent_table and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   query_param={"parent_table":"users","status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
+   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
 
