@@ -82,7 +82,7 @@ async def login(request:Request,mode:str,username:str=None,password:str=None,goo
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
       user=response["message"]
    #user type check
-   if type and user["type"]!=type:return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -552,6 +552,33 @@ async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=1
    output=response["message"]
    response=await postgres_add_action_count(postgres_object,"likes",table,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object read login
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/objectl")
+async def objectl_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
    #final
    return response
 
