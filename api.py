@@ -721,10 +721,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import where_clause
 from function import postgres_location_search
-@router.get("/location")
-async def location(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+from function import where_clause
+@router.get("/location-search")
+async def location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -738,14 +738,14 @@ async def location(request:Request,table:str,location:str,within:str,order:str="
    #final
    return response
 
-#pcache
+#project cache
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from function import redis_key_builder
-@router.get("/pcache")
+@router.get("/project-cache")
 @cache(expire=60,key_builder=redis_key_builder)
-async def pcache(request:Request):
+async def project_cache(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
