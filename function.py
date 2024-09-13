@@ -11,6 +11,27 @@ async def postgres_location_search(postgres_object,table,location,within,order,l
   query_param=where_value
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":output}
+
+#where clause
+import hashlib
+from datetime import datetime
+async def where_clause(param,column_datatype):
+  param={k:v for k,v in param.items() if k in column_datatype}
+  param={k:v for k,v in param.items() if k not in ["location","metadata"]}
+  where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
+  where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
+  key_list=[f"({k} {where_key_operator[k]} :{k} or :{k} is null)" for k,v in where_key_value.items()]
+  key_joined=' and '.join(key_list)
+  where_string=f"where {key_joined}" if key_joined else ""
+  for k,v in where_key_value.items():
+    datatype=column_datatype[k]
+    if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+    if "int" in datatype:where_key_value[k]=int(v) if v else None
+    if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
+    if "time" in datatype:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if datatype in ["date"]:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+    if datatype in ["ARRAY"]:where_key_value[k]=v.split(",") if v else None
+  return {"status":1,"message":[where_string,where_key_value]}
   
 #postgres object create
 import hashlib,json
@@ -36,27 +57,6 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
   if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
   return {"status":1,"message":"done"}
   
-#where clause
-import hashlib
-from datetime import datetime
-async def where_clause(param,column_datatype):
-  param={k:v for k,v in param.items() if k in column_datatype}
-  param={k:v for k,v in param.items() if k not in ["location","metadata"]}
-  where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
-  where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
-  key_list=[f"({k} {where_key_operator[k]} :{k} or :{k} is null)" for k,v in where_key_value.items()]
-  key_joined=' and '.join(key_list)
-  where_string=f"where {key_joined}" if key_joined else ""
-  for k,v in where_key_value.items():
-    datatype=column_datatype[k]
-    if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-    if "int" in datatype:where_key_value[k]=int(v) if v else None
-    if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
-    if "time" in datatype:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if datatype in ["date"]:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-    if datatype in ["ARRAY"]:where_key_value[k]=v.split(",") if v else None
-  return {"status":1,"message":[where_string,where_key_value]}
-
 #postgres object update
 import hashlib,json
 from datetime import datetime
@@ -72,6 +72,7 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       datatype=column_datatype[k]
+      if not v:query_param_list[index][k]=None
       if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
       if "int" in datatype:query_param_list[index][k]=int(v) if v else None
       if datatype in ["numeric"]:query_param_list[index][k]=round(float(v),3) if v else None
