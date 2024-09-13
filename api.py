@@ -569,15 +569,13 @@ async def my_message_delete_single(request:Request,id:int):
    #final
    return {"status":1,"message":output}
 
-#my
+#delete ids
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import postgtes_otp_verify
-from function import postgres_object_update
-@router.get("/my")
-async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None,mobile:str=None):
+@router.delete("/my/delete-ids")
+async def my_delete_ids(request:Request,table:str,ids:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -586,30 +584,63 @@ async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,e
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic      
-   if mode=="delete_ids":
-      if not table or not ids:return JSONResponse(status_code=400,content={"status":0,"message":"table/ids must"})
-      if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-      if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
-      query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
-      query_param={"created_by_id":user["id"]}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      response={"status":1,"message":"ids deleted"}
-   if mode=="update_email":
-      if not otp or not email:return JSONResponse(status_code=400,content={"status":0,"message":"otp/email must"})
-      response=await postgtes_otp_verify(postgres_object,otp,email,None)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-      response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   if mode=="update_mobile":
-      if not otp or not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"otp/mobile must"})
-      response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
-      response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
+
+#update email
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+from function import postgres_object_update
+@router.delete("/my/update-email")
+async def my_update_email(request:Request,otp:int,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object={"id":user["id"],"updated_by_id":user["id"],"email":email}
+   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":output}
+
+#update mobile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+from function import postgres_object_update
+@router.delete("/my/update-email")
+async def my_update_email(request:Request,otp:int,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
+   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":output}
 
 #csv
 from fastapi import Request
