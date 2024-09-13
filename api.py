@@ -615,7 +615,7 @@ async def my_update_email(request:Request,otp:int,email:str):
    response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #update mobile
 from fastapi import Request
@@ -640,7 +640,7 @@ async def my_update_email(request:Request,otp:int,mobile:str):
    response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #csv
 from fastapi import Request
