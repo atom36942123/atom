@@ -374,8 +374,8 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
-@router.get("/myops")
-async def myops(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None,mobile:str=None):
+@router.get("/my")
+async def my(request:Request,mode:str,table:str=None,ids:str=None,otp:int=None,email:str=None,mobile:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
