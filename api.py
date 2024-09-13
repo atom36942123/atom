@@ -72,8 +72,8 @@ from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
-@router.post("/login-username")
-async def login_username(request:Request,username:str,password:str,type:str=None):
+@router.post("/login")
+async def login(request:Request,username:str,password:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
