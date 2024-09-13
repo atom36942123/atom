@@ -599,7 +599,7 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
-@router.delete("/my/update-email")
+@router.put("/my/update-email")
 async def my_update_email(request:Request,otp:int,email:str):
    #middleware
    postgres_object=request.state.postgres_object
@@ -624,7 +624,7 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
-@router.delete("/my/update-email")
+@router.put("/my/update-email")
 async def my_update_email(request:Request,otp:int,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
