@@ -433,7 +433,7 @@ async def postgres_init(postgres_object):
   query="select 'drop index ' || string_agg(i.indexrelid::regclass::text,', ' order by n.nspname,i.indrelid::regclass::text, cl.relname) as output from pg_index i join pg_class cl ON cl.oid = i.indexrelid join pg_namespace n ON n.oid = cl.relnamespace left join pg_constraint co ON co.conindid = i.indexrelid where  n.nspname <> 'information_schema' and n.nspname not like 'pg\_%' and co.conindid is null and not i.indisprimary and not i.indisunique and not i.indisexclusion and not i.indisclustered and not i.indisreplident;"
   output=await postgres_object.fetch_all(query=query,values={})
   drop_all_index_query= output[0]["output"]
-  if drop_all_index_query:await postgres_object.fetch_all(query=drop_all_index_query,values=query_param)
+  if drop_all_index_query:await postgres_object.fetch_all(query=drop_all_index_query,values={})
   #table
   for item in table:
     query=f"create table if not exists {item} ();"
