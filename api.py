@@ -425,8 +425,8 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
-   if mode=="unread":query=f"select * from message where parent_table=:parent_table and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
+   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":"users","parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #background
@@ -451,8 +451,8 @@ async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,pag
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
-   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
+   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
@@ -475,11 +475,11 @@ async def my_message_thread(request:Request,background:BackgroundTasks,user_id:i
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query=f"select * from message where parent_table=:parent_table and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
+   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"parent_table":"users","user_1":user["id"],"user_2":user_id}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #background
-   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table=:parent_table and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
    query_param={"parent_table":"users","status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
    background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
    #final
@@ -500,7 +500,7 @@ async def my_message_delete_created_all(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query="delete from message where parent_table=:parent_table and created_by_id=:created_by_id;"
+   query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
    query_param={"parent_table":"users","created_by_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
@@ -521,7 +521,7 @@ async def my_message_delete_received_all(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query="delete from message where parent_table=:parent_table and parent_id=:parent_id;"
+   query="delete from message where parent_table='users' and parent_id=:parent_id;"
    query_param={"parent_table":"users","parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
@@ -542,7 +542,7 @@ async def my_message_delete_all(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query="delete from message where parent_table=:parent_table and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
    query_param={"parent_table":"users","created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
@@ -563,7 +563,7 @@ async def my_message_delete_single(request:Request,id:int):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query="delete from message where parent_table=:parent_table and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+   query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
    query_param={"parent_table":"users","id":id,"created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
