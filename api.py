@@ -2,12 +2,12 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["core"])
 
-#database-init
+#postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
-@router.get("/database-init")
-async def database_init(request:Request):
+@router.get("/postgres-init")
+async def api_postgres_init(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -17,14 +17,14 @@ async def database_init(request:Request):
    #final
    return response
 
-#database clean
+#postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import postgres_clean
 from function import auth_check
 from config import jwt_secret_key
-@router.delete("/database-clean")
-async def database_clean(request:Request):
+from function import postgres_clean
+@router.delete("/postgres-clean")
+async def api_postgres_clean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
