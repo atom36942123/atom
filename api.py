@@ -222,13 +222,13 @@ async def token_refresh(request:Request):
    #final
    return response
 
-#exit
+#delete account
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/exit")
-async def exit(request:Request):
+@router.get("/delete-account")
+async def delete_account(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
