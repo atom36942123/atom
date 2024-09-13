@@ -702,7 +702,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 @router.get("/query-runner")
-async def query_runner(request:Request,mode:str="single",query:str):
+async def query_runner(request:Request,query:str,mode:str="single"):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
