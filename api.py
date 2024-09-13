@@ -696,13 +696,13 @@ async def csv_update(request:Request,table:str,file:UploadFile):
    #final
    return response
 
-#qrunner
+#query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/qrunner")
-async def qrunner(request:Request,mode:str,query:str):
+@router.get("/query-runner")
+async def query_runner(request:Request,mode:str="single",query:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
