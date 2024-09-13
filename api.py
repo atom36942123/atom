@@ -258,7 +258,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgres_object_create
-@router.post("/object")
+@router.post("/object-create")
 async def object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
@@ -285,7 +285,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-@router.get("/object")
+@router.get("/object-read")
 async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
@@ -312,7 +312,7 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgres_object_update
 from function import postgres_object_ownership_check
-@router.put("/object")
+@router.put("/object-update")
 async def object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
@@ -344,7 +344,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-@router.delete("/object")
+@router.delete("/object-delete")
 async def object_delete(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
