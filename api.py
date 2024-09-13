@@ -762,13 +762,13 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
 from fastapi_cache.decorator import cache
 from function import redis_key_builder
-@router.get("/objectp")
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+@router.get("/object-read-public")
 @cache(expire=60,key_builder=redis_key_builder)
-async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+async def object_read_public(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -789,14 +789,14 @@ async def objectp_read(request:Request,table:str,order:str="id desc",limit:int=1
    #final
    return response
 
-#object read login
+#object read private
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-@router.get("/objectl")
-async def objectl_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/object-read-private")
+async def object_read_private(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -822,8 +822,8 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-@router.get("/objecta")
-async def objecta_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/object-read-admin")
+async def object_read_admin(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
