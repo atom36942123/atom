@@ -7,7 +7,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 @router.get("/postgres-init")
-async def api_postgres_init(request:Request):
+async def postgresinit(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -24,7 +24,7 @@ from function import auth_check
 from config import jwt_secret_key
 from function import postgres_clean
 @router.delete("/postgres-clean")
-async def api_postgres_clean(request:Request):
+async def postgresclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -72,40 +72,17 @@ from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
-from function import postgres_read_user_force
-from function import postgtes_otp_verify
-@router.post("/login")
-async def login(request:Request,mode:str,username:str=None,password:str=None,google_id:str=None,otp:int=None,email:str=None,mobile:str=None,type:str=None):
+@router.post("/login-username")
+async def login_username(request:Request,username:str,password:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #logic
-   if mode=="username_password":
-      query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
-      query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-      user=output[0] if output else None
-      if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if mode=="oauth_google":
-      if not google_id:return JSONResponse(status_code=400,content={"status":0,"message":"google_id is must"})
-      response=await postgres_read_user_force(postgres_object,"google_id",google_id)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      user=response["message"]
-   if mode=="otp_email":
-      if not otp or not email:return JSONResponse(status_code=400,content={"status":0,"message":"otp/email is must"})
-      response=await postgres_otp_verify(postgres_object,otp,email,None)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      response=await postgres_read_user_force(postgres_object,"email",email)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      user=response["message"]
-   if mode=="otp_mobile":
-      if not otp or not mobile:return JSONResponse(status_code=400,content={"status":0,"message":"otp/mobile is must"})
-      response=await postgres_otp_verify(postgres_object,otp,None,mobile)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      response=await postgres_read_user_force(postgres_object,"mobile",mobile)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      user=response["message"]
-   #user type check
+   #read user
+   query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
+   query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
