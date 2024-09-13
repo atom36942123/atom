@@ -638,8 +638,7 @@ async def objecta_update(request:Request,table:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import random,boto3
-from config import aws_default_region,aws_access_key_id,aws_secret_access_key
-from config import ses_sender_email
+from config import aws_default_region,aws_access_key_id,aws_secret_access_key,ses_sender_email
 from function import postgtes_otp_verify
 @router.get("/otp")
 async def otp(request:Request,mode:str,email:str=None,mobile:str=None,otp:int=None):
@@ -678,9 +677,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import aws_default_region,aws_access_key_id,aws_secret_access_key
-from config import s3_bucket_name
 import boto3,uuid
+from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
 @router.get("/blob")
 async def blob(request:Request,mode:str,filename:str=None,url:str=None):
    #middleware
