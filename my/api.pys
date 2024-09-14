@@ -233,18 +233,13 @@ async def my_delete_account(request:Request):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
+   response=await auth_check(request,jwt_secret_key,postgres_object,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
-   #read user
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
+   #logic
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if user["is_protected"]==1:return JSONResponse(status_code=400,content={"status":0,"message":"protected object not allowed"})
    if user["type"] in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"type admin not allowed"})
-   #logic
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
@@ -968,7 +963,7 @@ from function import auth_check
 from config import jwt_secret_key
 from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
 import boto3
-@router.get("/s3-delete-url")
+@router.delete("/s3-delete-url")
 async def s3_delete_url(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
@@ -991,7 +986,7 @@ from function import auth_check
 from config import jwt_secret_key
 from config import aws_default_region,aws_access_key_id,aws_secret_access_key,s3_bucket_name
 import boto3
-@router.get("/s3-delete-all")
+@router.delete("/s3-delete-all")
 async def s3_delete_all(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
