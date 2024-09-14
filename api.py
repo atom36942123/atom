@@ -221,36 +221,12 @@ async def exit(request:Request):
    user=response["message"]
    #logic
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if user["is_protected"]==1:return JSONResponse(status_code=400,content={"status":0,"message":"protected object not allowed"})
-   if user["type"] in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"type admin not allowed"})
+   if user["is_protected"]==1:return JSONResponse(status_code=400,content={"status":0,"message":"protected user cant deleted"})
+   if user["type"] in ["admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"type admin cant deleted"})
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    response={"status":1,"message":"account deleted"}
-   #final
-   return response
-
-#postgres clean
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_clean
-@router.delete("/postgres-clean")
-async def postgresclean(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
@@ -287,8 +263,8 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-@router.get("/object-read")
-async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/object-read-self")
+async def object_read_self(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -315,7 +291,7 @@ from config import jwt_secret_key
 from function import postgres_object_update
 from function import postgres_object_ownership_check
 @router.put("/object-update-self")
-async def bject_update_self(request:Request,table:str):
+async def object_update_self(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -640,6 +616,30 @@ async def my_update_mobile(request:Request,otp:int,mobile:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
    response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#postgres clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_clean
+@router.delete("/postgres-clean")
+async def postgresclean(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
