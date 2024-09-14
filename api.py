@@ -230,456 +230,6 @@ async def exit(request:Request):
    #final
    return response
 
-#object create self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_object_create
-@router.post("/object-create-self")
-async def object_create_self(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
-   object["created_by_id"]=user["id"]
-   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#object read self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/object-read-self")
-async def object_read_self(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#object update self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_object_update
-from function import postgres_object_ownership_check
-@router.put("/object-update-self")
-async def object_update_self(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
-   object["updated_by_id"]=user["id"]
-   response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   if table=="users":
-      for item in ["email","mobile"]:
-         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#object delete self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.delete("/object-delete-self")
-async def object_delete_self(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"delete from {table} {where_string};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#object read public
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
-@router.get("/object-read-public")
-@cache(expire=60,key_builder=redis_key_builder)
-async def object_read_public(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response=await postgres_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   response=await postgres_add_action_count(postgres_object,"likes",table,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#object read private
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/object-read-private")
-async def object_read_private(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-
-#object read admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/object-read-admin")
-async def object_read_admin(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-
-#object update admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_object_update
-@router.put("/object-update-admin")
-async def object_update_admin(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
-   object["updated_by_id"]=user["id"]
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#parent read self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_parent_read
-@router.get("/parent-read-self")
-async def parent_read_self(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#parent check self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_parent_check
-@router.get("/parent-check-self")
-async def parent_check_self(request:Request,table:str,parent_table:str,parent_ids:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#message received self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from fastapi import BackgroundTasks
-from datetime import datetime
-from function import postgres_object_update
-@router.get("/message-received-self")
-async def message_received_self(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
-   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #background
-   object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-   response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return {"status":1,"message":output}
-
-#message inbox self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.get("/message-inbox-self")
-async def message_inbox_self(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
-   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#message thread self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from fastapi import BackgroundTasks
-from datetime import datetime
-@router.get("/message-thread-self")
-async def message_thread_self(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param={"user_1":user["id"],"user_2":user_id}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #background
-   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
-   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-   #final
-   return {"status":1,"message":output}
-
-#message delete self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/message-delete-self")
-async def message_delete_self(request:Request,mode:str,id:int=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if mode=="created":
-     query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
-     query_param={"created_by_id":user["id"]}
-   if mode=="received":
-     query="delete from message where parent_table='users' and parent_id=:parent_id;"
-     query_param={"parent_id":user["id"]}
-   if mode=="all":
-     query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-     query_param={"created_by_id":user["id"],"parent_id":user["id"]}
-   if mode=="single":
-     if not id:return JSONResponse(status_code=400,content={"status":0,"message":"id must"})
-     query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
-     query_param={"id":id,"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#delete ids self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/delete-ids-self")
-async def delete_ids_self(request:Request,table:str,ids:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic      
-   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
-   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
-   query_param={"created_by_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#update email self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgtes_otp_verify
-from function import postgres_object_update
-@router.put("/update-email-self")
-async def update_email_self(request:Request,otp:int,email:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic      
-   response=await postgtes_otp_verify(postgres_object,otp,email,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#update mobile self
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgtes_otp_verify
-from function import postgres_object_update
-@router.put("/update-mobile-self")
-async def update_mobile_self(request:Request,otp:int,mobile:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic      
-   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
-   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -777,28 +327,6 @@ async def query_runner(request:Request,query:str,mode:str=None):
    if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
    #final
    return {"status":1,"message":output}
-
-#location
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_location_search
-from function import where_clause
-@router.get("/location-search")
-async def location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 #project cache
 from fastapi import Request
@@ -955,3 +483,481 @@ async def s3_delete_all(request:Request):
    output=s3_resource.Bucket(s3_bucket_name).objects.all().delete()
    #final
    return {"status":1,"message":output}
+
+#message received
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from fastapi import BackgroundTasks
+from datetime import datetime
+from function import postgres_object_update
+@router.get("/message-received")
+async def message_received(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
+   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param={"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #background
+   object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
+   response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return {"status":1,"message":output}
+
+#message inbox
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.get("/message-inbox")
+async def message_inbox(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
+   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#message thread
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from fastapi import BackgroundTasks
+from datetime import datetime
+@router.get("/message-thread")
+async def message_thread(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param={"user_1":user["id"],"user_2":user_id}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #background
+   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
+   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
+   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+   #final
+   return {"status":1,"message":output}
+
+#message delete
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.delete("/message-delete")
+async def message_delete(request:Request,mode:str,id:int=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if mode=="created":
+     query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
+     query_param={"created_by_id":user["id"]}
+   if mode=="received":
+     query="delete from message where parent_table='users' and parent_id=:parent_id;"
+     query_param={"parent_id":user["id"]}
+   if mode=="all":
+     query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+     query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="single":
+     if not id:return JSONResponse(status_code=400,content={"status":0,"message":"id must"})
+     query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+     query_param={"id":id,"created_by_id":user["id"],"parent_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#parent read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_parent_read
+@router.get("/parent-read")
+async def parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#parent check
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_parent_check
+@router.get("/parent-check")
+async def parent_check(request:Request,table:str,parent_table:str,parent_ids:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#location
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_location_search
+from function import where_clause
+@router.get("/location-search")
+async def location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   param["created_by_id"]=f"=,{user['id']}"
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#update email
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+from function import postgres_object_update
+@router.put("/update-email")
+async def update_email(request:Request,otp:int,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object={"id":user["id"],"updated_by_id":user["id"],"email":email}
+   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#update mobile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+from function import postgres_object_update
+@router.put("/update-mobile")
+async def update_mobile(request:Request,otp:int,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
+   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#delete ids
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.delete("/delete-ids")
+async def delete_ids(request:Request,table:str,ids:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic      
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
+   query=f"delete from {table} where created_by_id=:created_by_id and id in ({ids});"
+   query_param={"created_by_id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#object create
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_create
+@router.post("/object-create")
+async def object_create(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
+   object["created_by_id"]=user["id"]
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+from function import postgres_object_ownership_check
+@router.put("/object-update")
+async def object_update(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   if table=="users":
+      for item in ["email","mobile"]:
+         if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object update admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+@router.put("/object-update-admin")
+async def object_update_admin(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object delete
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.delete("/object-delete")
+async def object_delete(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"delete from {table} {where_string};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/object-read")
+async def object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   param["created_by_id"]=f"=,{user['id']}"
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#object read public
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+@router.get("/object-read-public")
+@cache(expire=60,key_builder=redis_key_builder)
+async def object_read_public(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await postgres_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   response=await postgres_add_action_count(postgres_object,"likes",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#object read private
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/object-read-private")
+async def object_read_private(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
+
+#object read admin
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/object-read-admin")
+async def object_read_admin(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
