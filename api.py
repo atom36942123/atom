@@ -150,32 +150,6 @@ async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    #final
    return {"status":1,"message":token}
 
-
-#postgres clean
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_clean
-@router.delete("/postgres-clean")
-async def postgresclean(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_clean(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-
 #profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -253,6 +227,30 @@ async def exit(request:Request):
    query_param={"id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    response={"status":1,"message":"account deleted"}
+   #final
+   return response
+
+#postgres clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_clean
+@router.delete("/postgres-clean")
+async def postgresclean(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_clean(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
