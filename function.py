@@ -257,7 +257,7 @@ async def postgres_create_log(postgres_object,request,jwt_secret_key,response_ti
 import jwt,json,time
 from datetime import datetime,timedelta
 async def token_create(user,jwt_secret_key):
-  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"]}
+  data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"],"is_protected":user["is_protected"]}
   data=json.dumps(data,default=str)
   expiry_days=10000
   expiry_time=time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple())
