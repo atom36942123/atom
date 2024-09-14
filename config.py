@@ -8,6 +8,7 @@ mongo_server_url=env("mongo_server_url")
 sentry_dsn=env("sentry_dsn")
 jwt_secret_key=env("jwt_secret_key")
 elasticsearch=env("elasticsearch")
+sns=
 
 
 aws_default_region=env("aws_default_region")
