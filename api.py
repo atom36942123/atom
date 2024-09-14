@@ -607,21 +607,13 @@ async def message_delete_self(request:Request,mode:str,id:int=None):
    #final
    return {"status":1,"message":output}
 
-
-
-
-
-
-
-
-
-#delete ids
+#delete ids self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.delete("/my/delete-ids")
-async def my_delete_ids(request:Request,table:str,ids:str):
+@router.delete("/delete-ids-self")
+async def delete_ids_self(request:Request,table:str,ids:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -638,15 +630,15 @@ async def my_delete_ids(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#update email
+#update email self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
-@router.put("/my/update-email")
-async def my_update_email(request:Request,otp:int,email:str):
+@router.put("/update-email-self")
+async def update_email_self(request:Request,otp:int,email:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -663,15 +655,15 @@ async def my_update_email(request:Request,otp:int,email:str):
    #final
    return response
 
-#update mobile
+#update mobile self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
-@router.put("/my/update-mobile")
-async def my_update_mobile(request:Request,otp:int,mobile:str):
+@router.put("/update-mobile-self")
+async def update_mobile_self(request:Request,otp:int,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
