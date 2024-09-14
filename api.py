@@ -455,23 +455,6 @@ async def object_update_admin(request:Request,table:str):
    #final
    return response
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #parent read self
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -514,7 +497,7 @@ async def parent_check_self(request:Request,table:str,parent_table:str,parent_id
    #final
    return response
 
-#message received
+#message received self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
@@ -522,8 +505,8 @@ from config import jwt_secret_key
 from fastapi import BackgroundTasks
 from datetime import datetime
 from function import postgres_object_update
-@router.get("/message-received")
-async def message_received(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
+@router.get("/message-received-self")
+async def message_received_self(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -543,13 +526,13 @@ async def message_received(request:Request,background:BackgroundTasks,order:str=
    #final
    return {"status":1,"message":output}
 
-#message inbox
+#message inbox self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/message-inbox")
-async def message_inbox(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
+@router.get("/message-inbox-self")
+async def message_inbox_self(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -565,15 +548,15 @@ async def message_inbox(request:Request,order:str="id desc",limit:int=100,page:i
    #final
    return {"status":1,"message":output}
 
-#message thread
+#message thread self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from fastapi import BackgroundTasks
 from datetime import datetime
-@router.get("/message-thread")
-async def message_thread(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/message-thread-self")
+async def message_thread_self(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
