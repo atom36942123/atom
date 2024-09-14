@@ -575,13 +575,21 @@ async def message_thread_self(request:Request,background:BackgroundTasks,user_id
    #final
    return {"status":1,"message":output}
 
-#message delete created all
+
+
+
+
+
+
+
+
+#message delete self
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.delete("/message-delete-created-all")
-async def message_delete_created_all(request:Request):
+@router.delete("/message-delete-self")
+async def message_delete_self(request:Request,mode:str,id:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
