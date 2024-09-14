@@ -598,74 +598,25 @@ async def message_delete_self(request:Request,mode:str,id:str=None):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
-   query_param={"created_by_id":user["id"]}
+   if mode=="created":
+     query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
+     query_param={"created_by_id":user["id"]}
+   if mode=="received":
+     query="delete from message where parent_table='users' and parent_id=:parent_id;"
+     query_param={"parent_id":user["id"]}
+   if mode=="all":
+     query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
+     query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   if mode=="single":
+     if not id:return JSONResponse(status_code=400,content={"status":0,"message":"id must"})
+     query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
+     query_param={"id":id,"created_by_id":user["id"],"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
 
-#message delete received all
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/my/message-delete-received-all")
-async def my_message_delete_received_all(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="delete from message where parent_table='users' and parent_id=:parent_id;"
-   query_param={"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
-#message delete all
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/my/message-delete-all")
-async def my_message_delete_all(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
-#message delete single
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/my/message-delete-single")
-async def my_message_delete_single(request:Request,id:int):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
-   query_param={"id":id,"created_by_id":user["id"],"parent_id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
 
 #delete ids
 from fastapi import Request
