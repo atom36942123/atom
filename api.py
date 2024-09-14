@@ -2,9 +2,10 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#root api
+#root
 from fastapi import Request
-@app.get("/")
+from fastapi.responses import JSONResponse
+@router.get("/")
 async def root(request:Request):
   return {"status":1,"message":"welcome to atom"}
 
