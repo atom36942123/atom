@@ -289,7 +289,7 @@ from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_update
-@router.post("/csv-update")
+@router.put("/csv-update")
 async def csv_update(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
@@ -424,7 +424,7 @@ from config import jwt_secret_key
 from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
 from fastapi import UploadFile
 import boto3,uuid
-@router.get("/s3-upload-file")
+@router.post("/s3-upload-file")
 async def s3_upload_file(request:Request,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
@@ -996,7 +996,7 @@ from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
-@router.delete("/rekognition-compare")
+@router.get("/rekognition-compare")
 async def rekognition_compare(request:Request,bucket_source:str,bucket_target:str,url_source:str,url_target:str):
    #middleware
    postgres_object=request.state.postgres_object
