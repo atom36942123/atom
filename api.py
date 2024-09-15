@@ -436,11 +436,10 @@ async def s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,f
    #logic
    key=str(uuid.uuid4())+"-"+file.filename
    s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_client.upload_fileobj(file.file,s3_bucket_name,key)
-   output={}
-   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
+   s3_client.upload_fileobj(file.file,s3_bucket_name,key)
+   s3_url=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":s3_url}
 
 #s3 create presigned url
 from fastapi import Request
