@@ -437,7 +437,7 @@ async def s3_upload_file(request:Request,file:UploadFile):
    key=str(uuid.uuid4())+"-"+file.filename
    s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
    output=s3_client.upload_fileobj(file.file,s3_bucket_name,key)
-   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/"
+   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
    #final
    return {"status":1,"message":output}
 
@@ -461,7 +461,7 @@ async def s3_create_url(request:Request,filename:str):
    key=str(uuid.uuid4())+"-"+filename
    s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
    output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
-   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/"
+   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
    #final
    return {"status":1,"message":output}
 
