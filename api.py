@@ -498,7 +498,7 @@ from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 import boto3
 @router.delete("/s3-delete-all")
-async def s3_delete_all(request:Request,s3_region_name:str,s3_bucket_name:str):
+async def s3_delete_all(request:Request,s3_bucket_name:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
