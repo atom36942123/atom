@@ -20,12 +20,11 @@ sns_secret_access_key=env("sns_secret_access_key")
 ses_region=env("ses_region")
 ses_access_key_id=env("ses_access_key_id")
 ses_secret_access_key=env("ses_secret_access_key")
-ses_email=env("ses_email")
 
 s3_region=env("s3_region")
+s3_bucket_name=env("s3_bucket_name")
 s3_access_key_id=env("s3_access_key_id")
 s3_secret_access_key=env("s3_secret_access_key")
-s3_bucket_name=env("s3_bucket_name")
 
 rekognition_region=env("rekognition_region")
 rekognition_access_key_id=env("rekognition_access_key_id")
