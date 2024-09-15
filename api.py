@@ -425,7 +425,7 @@ from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_nam
 from fastapi import UploadFile
 import boto3,uuid
 @router.get("/s3-upload-file")
-async def s3_upload-file(request:Request,file:UploadFile):
+async def s3_upload_file(request:Request,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
