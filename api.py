@@ -349,7 +349,7 @@ async def project_cache(request:Request):
 #otp send mobile sns
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import sns_region,sns_access_key_id,sns_secret_access_key
+from config import sns_region_name,sns_access_key_id,sns_secret_access_key
 import boto3,random
 @router.get("/otp-send-mobile-sns")
 async def otp_send_mobile_sns(request:Request,mobile:str):
@@ -358,7 +358,7 @@ async def otp_send_mobile_sns(request:Request,mobile:str):
    column_datatype=request.state.column_datatype
    #logic
    otp=random.randint(100000,999999)
-   sns_client=boto3.client("sns",region_name=sns_region,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
+   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
    output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
    query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
    query_param={"otp":otp,"mobile":mobile}
@@ -369,7 +369,7 @@ async def otp_send_mobile_sns(request:Request,mobile:str):
 #otp send email ses
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import ses_region,ses_access_key_id,ses_secret_access_key
+from config import ses_region_name,ses_access_key_id,ses_secret_access_key
 import boto3,random
 @router.get("/otp-send-email-ses")
 async def otp_send_email_ses(request:Request,ses_identity:str,email:str):
@@ -378,7 +378,7 @@ async def otp_send_email_ses(request:Request,ses_identity:str,email:str):
    column_datatype=request.state.column_datatype
    #logic
    otp=random.randint(100000,999999)
-   ses_client=boto3.client("ses",region_name=ses_region,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
+   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
    output=ses_client.send_email(Source=ses_identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
    query="insert into otp (otp,email) values (:otp,:email) returning *;"
    query_param={"otp":otp,"email":email}
@@ -425,7 +425,7 @@ from config import s3_access_key_id,s3_secret_access_key
 from fastapi import UploadFile
 import boto3,uuid
 @router.post("/s3-upload-file")
-async def s3_upload_file(request:Request,s3_region:str,,file:UploadFile):
+async def s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -435,7 +435,7 @@ async def s3_upload_file(request:Request,s3_region:str,,file:UploadFile):
    user=response["message"]
    #logic
    key=str(uuid.uuid4())+"-"+file.filename
-   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
+   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
    output=s3_client.upload_fileobj(file.file,s3_bucket_name,key)
    output={}
    output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
@@ -447,10 +447,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
+from config import s3_access_key_id,s3_secret_access_key
 import boto3,uuid
 @router.get("/s3-create-presigned-url")
-async def s3_create_presigned_url(request:Request,filename:str):
+async def s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -461,7 +461,7 @@ async def s3_create_presigned_url(request:Request,filename:str):
    #logic
    if "." not in filename:return JSONResponse(status_code=400,content={"status":0,"message":"extension must"})
    key=str(uuid.uuid4())+"-"+filename
-   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
+   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
    output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
    output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
    #final
@@ -472,10 +472,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
+from config import s3_access_key_id,s3_secret_access_key
 import boto3
 @router.delete("/s3-delete-url")
-async def s3_delete_url(request:Request,url:str):
+async def s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:str,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -486,7 +486,7 @@ async def s3_delete_url(request:Request,url:str):
    #logic
    key=url.rsplit("/",1)[1]
    s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_resource.Object(s3_region,key).delete()
+   output=s3_resource.Object(s3_bucket_name,key).delete()
    #final
    return {"status":1,"message":output}
 
@@ -495,10 +495,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
+from config import s3_access_key_id,s3_secret_access_key
 import boto3
 @router.delete("/s3-delete-all")
-async def s3_delete_all(request:Request):
+async def s3_delete_all(request:Request,s3_region_name:str,s3_bucket_name:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -995,7 +995,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import rekognition_region,rekognition_access_key_id,rekognition_secret_access_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/rekognition-compare")
 async def rekognition_compare(request:Request,bucket_source:str,bucket_target:str,url_source:str,url_target:str):
@@ -1007,7 +1007,7 @@ async def rekognition_compare(request:Request,bucket_source:str,bucket_target:st
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
    output=rekognition_client.compare_faces(
    SourceImage={"S3Object":{"Bucket":bucket_source,"Name":url_source.rsplit("/",1)[1]}},
 	 TargetImage={"S3Object":{"Bucket":bucket_target,"Name":url_target.rsplit("/",1)[1]}},
