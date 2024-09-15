@@ -416,6 +416,30 @@ async def ot_verify_mobile(request:Request,otp:int,mobile:str):
    #final
    return response
 
+#s3 upload file
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
+from fastapi import UploadFile
+import boto3,uuid
+@router.get("/s3-upload-file")
+async def s3_upload-file(request:Request,file:UploadFile):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   key=str(uuid.uuid4())+"-"+file.filename
+   s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
+   output=s3_client.upload_file(file,s3_bucket_name,NAME_FOR_S3)
+   #final
+   return {"status":1,"message":output}
+
 #s3 create url
 from fastapi import Request
 from fastapi.responses import JSONResponse
