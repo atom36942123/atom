@@ -22,7 +22,6 @@ ses_access_key_id=env("ses_access_key_id")
 ses_secret_access_key=env("ses_secret_access_key")
 
 s3_region=env("s3_region")
-s3_bucket_name=env("s3_bucket_name")
 s3_access_key_id=env("s3_access_key_id")
 s3_secret_access_key=env("s3_secret_access_key")
 
