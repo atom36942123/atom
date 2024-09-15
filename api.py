@@ -55,7 +55,7 @@ from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
-@router.post("/login")
+@router.get("/login")
 async def login(request:Request,username:str,password:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
@@ -81,7 +81,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgres_read_user_force
-@router.post("/login-google")
+@router.get("/login-google")
 async def login_google(request:Request,google_id:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
@@ -105,7 +105,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.post("/login-email")
+@router.get("/login-email")
 async def login_email(request:Request,email:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
@@ -131,7 +131,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.post("/login-mobile")
+@router.get("/login-mobile")
 async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
