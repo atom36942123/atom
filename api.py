@@ -421,11 +421,11 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from config import s3_region,s3_access_key_id,s3_secret_access_key,s3_bucket_name
+from config import s3_access_key_id,s3_secret_access_key
 from fastapi import UploadFile
 import boto3,uuid
 @router.post("/s3-upload-file")
-async def s3_upload_file(request:Request,file:UploadFile):
+async def s3_upload_file(request:Request,s3_region:str,,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
