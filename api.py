@@ -372,14 +372,14 @@ from fastapi.responses import JSONResponse
 from config import ses_region_name,ses_access_key_id,ses_secret_access_key
 import boto3,random
 @router.get("/otp-send-email-ses")
-async def otp_send_email_ses(request:Request,ses_identity:str,email:str):
+async def otp_send_email_ses(request:Request,identity:str,email:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
    otp=random.randint(100000,999999)
    ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
-   output=ses_client.send_email(Source=ses_identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
+   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
    query="insert into otp (otp,email) values (:otp,:email) returning *;"
    query_param={"otp":otp,"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
