@@ -435,7 +435,7 @@ async def s3_create_url(request:Request,filename:str):
    #logic
    key=str(uuid.uuid4())+"-"+filename
    s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=100,Conditions=[['content-length-range',1,250*1024]])
+   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
    #final
    return {"status":1,"message":output}
 
