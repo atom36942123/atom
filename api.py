@@ -221,8 +221,8 @@ async def exit(request:Request):
    user=response["message"]
    #logic
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if user["is_protected"]==1:return {"status":1,"message":"protected user cant deleted"}
-   if user["type"] in ["admin"]:return {"status":1,"message":"type admin cant deleted"}
+   if user["is_protected"]==1:return {"status":1,"message":"protected user cant be deleted"}
+   if user["type"] in ["admin"]:return {"status":1,"message":"type admin cant be deleted"}
    query="delete from users where id=:id;"
    query_param={"id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
