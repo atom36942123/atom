@@ -13,17 +13,17 @@ elasticsearch_username=env("elasticsearch_username")
 elasticsearch_password=env("elasticsearch_password")
 elasticsearch_cloud_id=env("elasticsearch_cloud_id")
 
-sns_region=env("sns_region")
+sns_region_name=env("sns_region_name")
 sns_access_key_id=env("sns_access_key_id")
 sns_secret_access_key=env("sns_secret_access_key")
 
-ses_region=env("ses_region")
+ses_region_name=env("ses_region_name")
 ses_access_key_id=env("ses_access_key_id")
 ses_secret_access_key=env("ses_secret_access_key")
 
 s3_access_key_id=env("s3_access_key_id")
 s3_secret_access_key=env("s3_secret_access_key")
 
-rekognition_region=env("rekognition_region")
+rekognition_region_name=env("rekognition_region_name")
 rekognition_access_key_id=env("rekognition_access_key_id")
 rekognition_secret_access_key=env("rekognition_secret_access_key")
