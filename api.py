@@ -988,3 +988,28 @@ async def object_read_admin(request:Request,table:str,order:str="id desc",limit:
    response={"status":1,"message":output}
    #final
    return response
+
+#rekognition compare
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.delete("/rekognition-compare")
+async def rekognition_compare(request:Request,bucket_name:str,url_source:str,url_target:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.compare_faces(
+   SourceImage={"S3Object":{"Bucket":bucket_name,"Name":url_source.rsplit("/",1)[1]}},
+	 TargetImage={"S3Object":{"Bucket":bucket_name,"Name":url_target.rsplit("/",1)[1]}},
+	 SimilarityThreshold=80)
+   #final
+   return {"status":1,"message":output}
