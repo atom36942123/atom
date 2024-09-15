@@ -362,9 +362,9 @@ async def otp_send_mobile_sns(request:Request,mobile:str):
    output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
    query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
    query_param={"otp":otp,"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
+   await postgres_object.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":"otp sent"}
+   return {"status":1,"message":output}
 
 #otp send email ses
 from fastapi import Request
