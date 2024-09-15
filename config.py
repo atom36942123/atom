@@ -27,5 +27,6 @@ s3_access_key_id=env("s3_access_key_id")
 s3_secret_access_key=env("s3_secret_access_key")
 s3_bucket_name=env("s3_bucket_name")
 
-
-
+rekognition_region=env("rekognition_region")
+rekognition_access_key_id=env("rekognition_access_key_id")
+rekognition_secret_access_key=env("rekognition_secret_access_key")
