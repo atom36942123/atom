@@ -436,7 +436,7 @@ async def s3_upload_file(request:Request,file:UploadFile):
    #logic
    key=str(uuid.uuid4())+"-"+file.filename
    s3_client=boto3.client("s3",region_name=s3_region,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_client.upload_file(file,s3_bucket_name,key)
+   output=s3.upload_fileobj(file.file,s3_bucket_name,key)
    #final
    return {"status":1,"message":output}
 
