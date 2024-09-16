@@ -1017,7 +1017,7 @@ from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
-import boto3ew
+import boto3
 @router.get("/rekognition-detect-label")
 async def rekognition_compare_face(request:Request,url:str):
    #middleware
