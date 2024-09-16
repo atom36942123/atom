@@ -1033,7 +1033,7 @@ async def rekognition_detect_label(request:Request,url:str):
    bucket_name=url.split("//",1)[1].split(".",1)[0]
    key=url.rsplit("/",1)[1]
    rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key,}},MaxLabels=10,MinConfidence=90)
+   output=rekognition_client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MaxLabels=10,MinConfidence=90)
    #final
    return {"status":1,"message":output}
 
@@ -1057,6 +1057,30 @@ async def rekognition_detect_face(request:Request,url:str):
    bucket_name=url.split("//",1)[1].split(".",1)[0]
    key=url.rsplit("/",1)[1]
    rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key,}},Attributes=['ALL'])
+   output=rekognition_client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},Attributes=['ALL'])
+   #final
+   return {"status":1,"message":output}
+
+#rekognition detect moderation
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.get("/rekognition-detect-moderation")
+async def rekognition_detect_moderation(request:Request,url:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   bucket_name=url.split("//",1)[1].split(".",1)[0]
+   key=url.rsplit("/",1)[1]
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.detect_moderation_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MinConfidence=80)
    #final
    return {"status":1,"message":output}
