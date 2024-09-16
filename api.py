@@ -997,7 +997,7 @@ from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/rekognition-compare-face")
-async def rekognition_compare_face(request:Request,bucket_source:str,bucket_target:str,url_source:str,url_target:str):
+async def rekognition_compare_face(request:Request,url_source:str,url_target:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1006,8 +1006,10 @@ async def rekognition_compare_face(request:Request,bucket_source:str,bucket_targ
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
+   bucket_name_source=url_source.split("//",1)[1].split(".",1)[0]
+   bucket_name_target=url_target.split("//",1)[1].split(".",1)[0]
    rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_source,"Name":url_source.rsplit("/",1)[1]}},TargetImage={"S3Object":{"Bucket":bucket_target,"Name":url_target.rsplit("/",1)[1]}},SimilarityThreshold=80)
+   output=rekognition_client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_name_source,"Name":url_source.rsplit("/",1)[1]}},TargetImage={"S3Object":{"Bucket":bucket_name_target,"Name":url_target.rsplit("/",1)[1]}},SimilarityThreshold=80)
    #final
    return {"status":1,"message":output}
 
