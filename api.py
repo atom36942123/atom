@@ -1019,7 +1019,7 @@ from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/rekognition-detect-label")
-async def rekognition_compare_face(request:Request,url:str):
+async def rekognition_detect_label(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
