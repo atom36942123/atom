@@ -828,54 +828,12 @@ async def public_otp_send_email_ses(request:Request,identity:str,email:str):
    #final
    return {"status":1,"message":"otp sent"}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#otp verify email
+#public/otp verify email
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgtes_otp_verify
-@router.get("/otp-verify-email")
-async def ot_verify_email(request:Request,otp:int,email:str):
+@router.get("/public/otp-verify-email")
+async def public_otp_verify_email(request:Request,otp:int,email:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -885,12 +843,12 @@ async def ot_verify_email(request:Request,otp:int,email:str):
    #final
    return response
 
-#otp verify mobile
+#public/otp verify mobile
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgtes_otp_verify
-@router.get("/otp-verify-mobile")
-async def ot_verify_mobile(request:Request,otp:int,mobile:str):
+@router.get("/public/otp-verify-mobile")
+async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -899,6 +857,50 @@ async def ot_verify_mobile(request:Request,otp:int,mobile:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #s3 upload file
 from fastapi import Request
