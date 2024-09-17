@@ -11,7 +11,7 @@ from config import jwt_secret_key
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
 @router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
-async def signup(request:Request,username:str,password:str):
+async def auth_signup(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -27,14 +27,13 @@ async def signup(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":[user,token]}
 
-#login
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 @router.get("/auth/login")
-async def login(request:Request,username:str,password:str,type:str=None):
+async def auth_login(request:Request,username:str,password:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -52,15 +51,14 @@ async def login(request:Request,username:str,password:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login google
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgres_read_user_force
-@router.get("/login-google")
-async def login_google(request:Request,google_id:str,type:str=None):
+@router.get("/auth/login-google")
+async def auth_login_google(request:Request,google_id:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -76,15 +74,14 @@ async def login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login email
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.get("/login-email")
-async def login_email(request:Request,email:str,otp:int,type:str=None):
+@router.get("/auth/login-email")
+async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -102,15 +99,14 @@ async def login_email(request:Request,email:str,otp:int,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login mobile
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.get("/login-mobile")
-async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
+@router.get("/auth/login-mobile")
+async def auth_login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -127,6 +123,17 @@ async def login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    token=response["message"]
    #final
    return {"status":1,"message":token}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
