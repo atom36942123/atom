@@ -393,33 +393,6 @@ async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:
    #final
    return response
 
-#my/location search
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_location_search
-from function import where_clause
-@router.get("/my/location-search")
-async def my_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   param["created_by_id"]=f"=,{user['id']}"
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #my/update email
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -466,6 +439,33 @@ async def my_update_mobile(request:Request,otp:int,mobile:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
    response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#my/location search
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_location_search
+from function import where_clause
+@router.get("/my/location-search")
+async def my_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   param["created_by_id"]=f"=,{user['id']}"
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
