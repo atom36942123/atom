@@ -705,36 +705,6 @@ async def admin_query_runner(request:Request,query:str,mode:str=None):
    #final
    return {"status":1,"message":output}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #public/postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -749,23 +719,15 @@ async def public_postgres_init(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-
-
-
-
-
-
-
-
-#project cache
+   
+#public/project cache
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from function import redis_key_builder
-@router.get("/project-cache")
+@router.get("/public/project-cache")
 @cache(expire=60,key_builder=redis_key_builder)
-async def project_cache(request:Request):
+async def public_project_cache(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -776,13 +738,13 @@ async def project_cache(request:Request):
    #final
    return response
 
-#otp send mobile sns
+#public/otp send mobile sns
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import sns_region_name,sns_access_key_id,sns_secret_access_key
 import boto3,random
-@router.get("/otp-send-mobile-sns")
-async def otp_send_mobile_sns(request:Request,mobile:str):
+@router.get("/public/otp-send-mobile-sns")
+async def public_otp_send_mobile_sns(request:Request,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -796,13 +758,13 @@ async def otp_send_mobile_sns(request:Request,mobile:str):
    #final
    return {"status":1,"message":output}
 
-#otp send email ses
+#public/otp send email ses
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import ses_region_name,ses_access_key_id,ses_secret_access_key
 import boto3,random
-@router.get("/otp-send-email-ses")
-async def otp_send_email_ses(request:Request,identity:str,email:str):
+@router.get("/public/otp-send-email-ses")
+async def public_otp_send_email_ses(request:Request,identity:str,email:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -815,6 +777,48 @@ async def otp_send_email_ses(request:Request,identity:str,email:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":"otp sent"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #otp verify email
 from fastapi import Request
