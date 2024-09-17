@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#signup
+#auth
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
