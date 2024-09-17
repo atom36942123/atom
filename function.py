@@ -55,13 +55,14 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
       if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  output=None
   if len(object_list)==1:
     if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
     if mode=="normal":output=await postgres_object.fetch_all(query=query,values=query_param_list[0])
   else:
     if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
     if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":"done"}
+  return {"status":1,"message":output}
   
 #postgres object update
 import hashlib,json
@@ -86,13 +87,14 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
       if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  output=None
   if len(object_list)==1:
     if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
     if mode=="normal":output=await postgres_object.fetch_all(query=query,values=query_param_list[0])
   else:
     if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
     if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
-  return {"status":1,"message":"done"}
+  return {"status":1,"message":output}
 
 #postgres parent read
 async def postgres_parent_read(postgres_object,table,parent_table,order,limit,offset,created_by_id):
