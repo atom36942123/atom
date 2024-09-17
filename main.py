@@ -60,6 +60,13 @@ async def middleware(request:Request,api_function):
     return JSONResponse(status_code=400,content=response)
   return response
 
+#root
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@app.get("/")
+async def root(request:Request):
+  return {"status":1,"message":"welcome to atom"}
+
 #router
 from function import router_list
 response=router_list()
