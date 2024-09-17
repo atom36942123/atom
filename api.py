@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#auth
+#signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -27,6 +27,7 @@ async def auth_signup(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":[user,token]}
 
+#login
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -51,6 +52,7 @@ async def auth_login(request:Request,username:str,password:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
+#login google
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -83,6 +85,7 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
+#login email
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -119,6 +122,7 @@ async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
    #final
    return {"status":1,"message":token}
 
+#login mobile
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -154,6 +158,8 @@ async def auth_login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    token=response["message"]
    #final
    return {"status":1,"message":token}
+
+
 
 
 
