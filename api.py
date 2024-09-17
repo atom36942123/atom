@@ -94,12 +94,23 @@ async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #logic
+   #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   response=await postgres_read_user_force(postgres_object,"email",email)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   #logic
+   query=f"select * from users where email=:email order by id desc limit 1;"
+   query_param={"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:
+     query=f"insert into users (email) values (:email) returning *;"
+     query_param={"email":email}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user_id=output[0]["id"]
+     query="select * from users where id=:id;"
+     query_param={"id":user_id}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user=output[0]
    if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
@@ -119,12 +130,23 @@ async def auth_login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #logic
+   #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   response=await postgres_read_user_force(postgres_object,"mobile",mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   #logic
+   query=f"select * from users where mobile=:mobile order by id desc limit 1;"
+   query_param={"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:
+     query=f"insert into users (mobile) values (:mobile) returning *;"
+     query_param={"mobile":mobile}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user_id=output[0]["id"]
+     query="select * from users where id=:id;"
+     query_param={"id":user_id}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user=output[0]
    if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
