@@ -800,6 +800,58 @@ async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
    #final
    return {"status":1,"message":output}
 
+#admin/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/admin/object-read")
+async def admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
+
+#admin/object update
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_object_update
+@router.put("/admin/object-update")
+async def admin_object_update(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth
+   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   object=await request.json()
+   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
+   object["updated_by_id"]=user["id"]
+   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #public/postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -1003,33 +1055,6 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
 
 
 
-
-
-#object update admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import postgres_object_update
-@router.put("/object-update-admin")
-async def object_update_admin(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
-   object["updated_by_id"]=user["id"]
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #object read public
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -1076,33 +1101,6 @@ async def object_read_private(request:Request,table:str,order:str="id desc",limi
    column_datatype=request.state.column_datatype
    #auth
    response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-
-#object read admin
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/object-read-admin")
-async def object_read_admin(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
