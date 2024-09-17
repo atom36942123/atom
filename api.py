@@ -10,7 +10,7 @@ from function import token_create
 from config import jwt_secret_key
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
-@router.post("/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
+@router.post("/auth/signup",dependencies=[Depends(RateLimiter(times=1,seconds=3))])
 async def signup(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
-@router.get("/login")
+@router.get("/auth/login")
 async def login(request:Request,username:str,password:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
