@@ -2,24 +2,6 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#postgres read user force
-async def postgres_read_user_force(postgres_object,column,value):
-  if not value:return {"status":0,"message":"value mandatory"}
-  query=f"select * from users where {column}=:value order by id desc limit 1;"
-  query_param={"value":value}
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  user=output[0] if output else None
-  if not user:
-    query=f"insert into users ({column}) values (:value) returning *;"
-    query_param={"value":value}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user_id=output[0]["id"]
-    query="select * from users where id=:id;"
-    query_param={"id":user_id}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0]
-  return {"status":1,"message":user}
-
 #auth
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -74,16 +56,25 @@ from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
-from function import postgres_read_user_force
 @router.get("/auth/login-google")
 async def auth_login_google(request:Request,google_id:str,type:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   response=await postgres_read_user_force(postgres_object,"google_id",google_id)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   query=f"select * from users where google_id=:google_id order by id desc limit 1;"
+   query_param={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:
+     query=f"insert into users (google_id) values (:google_id) returning *;"
+     query_param={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user_id=output[0]["id"]
+     query="select * from users where id=:id;"
+     query_param={"id":user_id}
+     output=await postgres_object.fetch_all(query=query,values=query_param)
+     user=output[0]
    if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
