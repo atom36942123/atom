@@ -955,6 +955,39 @@ async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
    #final
    return response
 
+#public/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+@router.get("/public/object-read")
+@cache(expire=60,key_builder=redis_key_builder)
+async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await postgres_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   response=await postgres_add_action_count(postgres_object,"likes",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #private/s3 upload file
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -1005,97 +1038,14 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
    #final
    return {"status":1,"message":output}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#object read public
+#private/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
-@router.get("/object-read-public")
-@cache(expire=60,key_builder=redis_key_builder)
-async def object_read_public(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response=await postgres_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   response=await postgres_add_action_count(postgres_object,"likes",table,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#object read private
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/object-read-private")
-async def object_read_private(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+@router.get("/private/object-read")
+async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1114,16 +1064,16 @@ async def object_read_private(request:Request,table:str,order:str="id desc",limi
    response={"status":1,"message":output}
    #final
    return response
-
-#rekognition compare
+   
+#private/rekognition compare
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
-@router.get("/rekognition-compare-face")
-async def rekognition_compare_face(request:Request,url_source:str,url_target:str):
+@router.get("/private/rekognition-compare-face")
+async def private_rekognition_compare_face(request:Request,url_source:str,url_target:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1139,15 +1089,15 @@ async def rekognition_compare_face(request:Request,url_source:str,url_target:str
    #final
    return {"status":1,"message":output}
 
-#rekognition detetct label
+#private/rekognition detetct label
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
-@router.get("/rekognition-detect-label")
-async def rekognition_detect_label(request:Request,url:str):
+@router.get("/private/rekognition-detect-label")
+async def private_rekognition_detect_label(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1163,15 +1113,15 @@ async def rekognition_detect_label(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
-#rekognition detetct face
+#private/rekognition detetct face
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
-@router.get("/rekognition-detect-face")
-async def rekognition_detect_face(request:Request,url:str):
+@router.get("/private/rekognition-detect-face")
+async def private_rekognition_detect_face(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1187,15 +1137,15 @@ async def rekognition_detect_face(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
-#rekognition detect moderation
+#private/rekognition detect moderation
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
-@router.get("/rekognition-detect-moderation")
-async def rekognition_detect_moderation(request:Request,url:str):
+@router.get("/private/rekognition-detect-moderation")
+async def private_rekognition_detect_moderation(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
