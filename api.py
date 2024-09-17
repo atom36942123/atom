@@ -85,15 +85,15 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login email
+#login email otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.get("/auth/login-email")
-async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
+@router.get("/auth/login-email-otp")
+async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -105,6 +105,7 @@ async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
    query_param={"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
+   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user for email given"})
    if not user:
      query=f"insert into users (email) values (:email) returning *;"
      query_param={"email":email}
@@ -122,15 +123,15 @@ async def auth_login_email(request:Request,email:str,otp:int,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login mobile
+#login mobile otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
 from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
-@router.get("/auth/login-mobile")
-async def auth_login_mobile(request:Request,mobile:str,otp:int,type:str=None):
+@router.get("/auth/login-mobile-otp")
+async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -142,6 +143,7 @@ async def auth_login_mobile(request:Request,mobile:str,otp:int,type:str=None):
    query_param={"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
+   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user for mobile given"})
    if not user:
      query=f"insert into users (mobile) values (:mobile) returning *;"
      query_param={"mobile":mobile}
