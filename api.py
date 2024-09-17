@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#signup
+#auth/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -27,7 +27,7 @@ async def auth_signup(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":[user,token]}
 
-#login
+#auth/login
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -52,7 +52,7 @@ async def auth_login(request:Request,username:str,password:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login google
+#auth/login google
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -85,7 +85,7 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#login email otp
+#auth/login email otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -123,7 +123,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
    #final
    return {"status":1,"message":token}
 
-#login mobile otp
+#auth/login mobile otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -161,6 +161,86 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    #final
    return {"status":1,"message":token}
 
+#my/profile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from datetime import datetime
+from function import postgres_object_update
+@router.get("/my/profile")
+async def my_profile(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   response={"status":1,"message":user}
+   #update last active at
+   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
+   await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
+   #final
+   return response
+
+#my/token refresh
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import token_create
+@router.get("/my/token-refresh")
+async def my_token_refresh(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   query="select * from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#my/delete-account
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+@router.delete("/my/delete-account")
+async def my_delete_account(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,postgres_object,None,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if user["is_protected"]==1:return {"status":1,"message":"protected user cant be deleted"}
+   if user["type"] in ["admin"]:return {"status":1,"message":"type admin cant be deleted"}
+   query="delete from users where id=:id;"
+   query_param={"id":user["id"]}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":"account deleted"}
+   #final
+   return response
+
 
 
 
@@ -193,87 +273,6 @@ async def postgresinit(request:Request):
    #logic
    response=await postgres_init(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-
-#profile
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from datetime import datetime
-from function import postgres_object_update
-@router.get("/profile")
-async def profile(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   response={"status":1,"message":user}
-   #update last active at
-   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
-   #final
-   return response
-
-#token refresh
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import token_create
-@router.get("/token-refresh")
-async def token_refresh(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   query="select * from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   response=await token_create(user,jwt_secret_key)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#exit
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-@router.delete("/exit")
-async def exit(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if user["is_protected"]==1:return {"status":1,"message":"protected user cant be deleted"}
-   if user["type"] in ["admin"]:return {"status":1,"message":"type admin cant be deleted"}
-   query="delete from users where id=:id;"
-   query_param={"id":user["id"]}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":"account deleted"}
    #final
    return response
 
