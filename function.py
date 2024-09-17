@@ -1,3 +1,4 @@
+
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
   long,lat=float(location.split(",")[0]),float(location.split(",")[1])
@@ -283,6 +284,15 @@ from redis import asyncio as aioredis
 async def redis_start(redis_server_url):
   FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
+  return {"status":1,"message":"done"}
+
+#server start
+import uvicorn,asyncio
+def server_start(app):
+  uvicorn_object=uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio"))
+  loop=asyncio.new_event_loop()
+  asyncio.set_event_loop(loop)
+  loop.run_until_complete(uvicorn_object.serve())
   return {"status":1,"message":"done"}
 
 #elasticsearch
