@@ -161,6 +161,56 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    #final
    return {"status":1,"message":token}
 
+#auth/login email password
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+@router.get("/auth/login-email-password")
+async def auth_login_email_password(request:Request,email:str,password:str,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   query=f"select * from users where email=:email and password=:password order by id desc limit 1;"
+   query_param={"email":email,"password":hashlib.sha256(password.encode()).hexdigest()}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
+#auth/login mobile password
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+@router.get("/auth/login-mobile-password")
+async def auth_login_mobile_password(request:Request,mobile:str,password:str,type:str=None):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   query=f"select * from users where mobile=:mobile and password=:password order by id desc limit 1;"
+   query_param={"mobile":mobile,"password":hashlib.sha256(password.encode()).hexdigest()}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
 #my/profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
