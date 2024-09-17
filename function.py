@@ -1,4 +1,3 @@
-
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
   long,lat=float(location.split(",")[0]),float(location.split(",")[1])
