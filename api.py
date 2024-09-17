@@ -607,57 +607,14 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#postgres-init
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_init
-@router.get("/postgres-init")
-async def postgresinit(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_init(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#postgres clean
+#admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from function import postgres_clean
-@router.delete("/postgres-clean")
-async def postgresclean(request:Request):
+@router.delete("/admin/postgres-clean")
+async def admin_postgresclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -674,7 +631,7 @@ async def postgresclean(request:Request):
    #final
    return response
 
-#csv create
+#admin/csv create
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
@@ -682,8 +639,8 @@ from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_create
-@router.post("/csv-create")
-async def csv_create(request:Request,table:str,file:UploadFile):
+@router.post("/admin/csv-create")
+async def admin_csv_create(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -701,7 +658,7 @@ async def csv_create(request:Request,table:str,file:UploadFile):
    #final
    return response
 
-#csv update
+#admin/csv update
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
@@ -709,8 +666,8 @@ from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_update
-@router.put("/csv-update")
-async def csv_update(request:Request,table:str,file:UploadFile):
+@router.put("/admin/csv-update")
+async def admin_csv_update(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -728,13 +685,13 @@ async def csv_update(request:Request,table:str,file:UploadFile):
    #final
    return response
 
-#query runner
+#admin/query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-@router.get("/query-runner")
-async def query_runner(request:Request,query:str,mode:str=None):
+@router.get("/admin/query-runner")
+async def admin_query_runner(request:Request,query:str,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -747,6 +704,59 @@ async def query_runner(request:Request,query:str,mode:str=None):
    if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
    #final
    return {"status":1,"message":output}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#public/postgres-init
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_init
+@router.get("/public/postgres-init")
+async def public_postgres_init(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+
+
+
+
+
+
+
 
 #project cache
 from fastapi import Request
