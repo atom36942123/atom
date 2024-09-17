@@ -858,51 +858,7 @@ async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
    #final
    return response
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#s3 upload file
+#private/s3 upload file
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
@@ -910,8 +866,8 @@ from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 from fastapi import UploadFile
 import boto3,uuid
-@router.post("/s3-upload-file")
-async def s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
+@router.post("/private/s3-upload-file")
+async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -927,15 +883,15 @@ async def s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,f
    #final
    return {"status":1,"message":s3_url}
 
-#s3 create presigned url
+#private/s3 create presigned url
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 import boto3,uuid
-@router.get("/s3-create-presigned-url")
-async def s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
+@router.get("/private/s3-create-presigned-url")
+async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -951,6 +907,52 @@ async def s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_n
    output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
    #final
    return {"status":1,"message":output}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #s3 delete url
 from fastapi import Request
