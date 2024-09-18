@@ -489,5 +489,14 @@ async def postgres_init(postgres_object):
   delta=t13-t12
   temp["trigger"]=delta
   print(f"trigger={delta}")
+  #trigger delete disable
+  for item in column["updated_at"][1]:
+    query=f"CREATE OR REPLACE TRIGGER trigger_delete_disable_{item} AFTER DELETE ON {item} REFERENCING OLD TABLE AS deleted_rows FOR EACH STATEMENT EXECUTE PROCEDURE function_delete_disable(1);"
+    query_param={}
+    await postgres_object.fetch_all(query=query,values=query_param)
+  t13=time.time()
+  delta=t13-t12
+  temp["trigger"]=delta
+  print(f"trigger={delta}")
   #final
   return {"status":1,"message":temp}
