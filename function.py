@@ -234,15 +234,12 @@ import jwt,json
 from fastapi import BackgroundTasks
 async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time,request_method_allowed):
   request_url_path=request.url.path
-  print(request_url_path)
   if request_url_path in ["/","/docs"]:return None
   if "/root" in request_url_path:return None
   if request.method not in request_method_allowed:return None
   request_query_param=json.dumps(dict(request.query_params))
   request_body=None
-  created_by_id=None
-  authorization_header=request.headers.get("Authorization")
-  if authorization_header:created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
+  created_by_id=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"] if request.headers.get("Authorization") else None
   query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time) values (:created_by_id,:request_url_path,:request_query_param,:request_body,:response_time);"
   query_param={"created_by_id":created_by_id,"request_url_path":request_url_path,"request_query_param":request_query_param,"request_body":request_body,"response_time":response_time}
   background=BackgroundTasks()
