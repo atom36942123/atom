@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#auth/signup
+#auth check/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -27,7 +27,7 @@ async def auth_signup(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":[user,token]}
 
-#auth/login
+#auth check/login
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -52,7 +52,7 @@ async def auth_login(request:Request,username:str,password:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#auth/login google
+#auth check/login google
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -85,7 +85,7 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#auth/login email otp
+#auth check/login email otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -123,7 +123,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
    #final
    return {"status":1,"message":token}
 
-#auth/login mobile otp
+#auth check/login mobile otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -161,7 +161,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    #final
    return {"status":1,"message":token}
 
-#auth/login email password
+#auth check/login email password
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -186,7 +186,7 @@ async def auth_login_email_password(request:Request,email:str,password:str,type:
    #final
    return {"status":1,"message":token}
 
-#auth/login mobile password
+#auth check/login mobile password
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -223,7 +223,7 @@ async def my_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -251,7 +251,7 @@ async def my_token_refresh(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -276,7 +276,7 @@ async def my_delete_account(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,postgres_object,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -304,7 +304,7 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -330,7 +330,7 @@ async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,pag
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -354,7 +354,7 @@ async def my_message_thread(request:Request,background:BackgroundTasks,user_id:i
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -379,7 +379,7 @@ async def my_message_delete(request:Request,mode:str,id:int=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -412,7 +412,7 @@ async def my_parent_read(request:Request,table:str,parent_table:str,order:str="i
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -433,7 +433,7 @@ async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -455,7 +455,7 @@ async def my_update_email(request:Request,otp:int,email:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -480,7 +480,7 @@ async def my_update_mobile(request:Request,otp:int,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -505,7 +505,7 @@ async def my_location_search(request:Request,table:str,location:str,within:str,o
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -530,7 +530,7 @@ async def my_delete_ids(request:Request,table:str,ids:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
+   #auth check check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -554,7 +554,7 @@ async def my_object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -581,7 +581,7 @@ async def my_object_read(request:Request,table:str,order:str="id desc",limit:int
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -609,7 +609,7 @@ async def my_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -641,7 +641,7 @@ async def my_object_delete(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -657,6 +657,26 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
+#admin/postgres-init
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_init
+import hashlib
+@router.get("/admin/postgres-init")
+async def admin_postgres_init(request:Request):
+   #auth check
+   token=request.headers.get("Authorization").split(" ",1)[1]
+   token_hashed=hashlib.sha256(token.encode()).hexdigest()
+   if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"root token issue"})
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_init(postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -668,7 +688,7 @@ async def admin_postgresclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -694,7 +714,7 @@ async def admin_csv_create(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -721,7 +741,7 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -745,7 +765,7 @@ async def admin_query_runner(request:Request,query:str,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -767,7 +787,7 @@ async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -790,7 +810,7 @@ async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -811,7 +831,7 @@ async def admin_object_read(request:Request,table:str,order:str="id desc",limit:
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -838,7 +858,7 @@ async def admin_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -852,21 +872,6 @@ async def admin_object_update(request:Request,table:str):
    #final
    return response
 
-#public/postgres-init
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_init
-@router.get("/public/postgres-init")
-async def public_postgres_init(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_init(postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-   
 #public/project meta
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -1001,7 +1006,7 @@ async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_na
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1025,7 +1030,7 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1049,7 +1054,7 @@ async def private_object_read(request:Request,table:str,order:str="id desc",limi
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1077,7 +1082,7 @@ async def private_rekognition_compare_face(request:Request,url_source:str,url_ta
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1101,7 +1106,7 @@ async def private_rekognition_detect_label(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1125,7 +1130,7 @@ async def private_rekognition_detect_face(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
@@ -1149,7 +1154,7 @@ async def private_rekognition_detect_moderation(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth
+   #auth check
    response=await auth_check(request,jwt_secret_key,None,None,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
