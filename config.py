@@ -26,9 +26,9 @@ rekognition_secret_access_key=env("rekognition_secret_access_key")
 postgres_prequery=["create extension if not exists postgis"]
 postgres_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 postgres_column={
-"id":["bigint",table],
-"created_at":["timestamptz",table],
-"created_by_id":["bigint",table],
+"id":["bigint",postgres_table],
+"created_at":["timestamptz",postgres_table],
+"created_by_id":["bigint",postgres_table],
 "is_deleted":["int",["users","post","box","atom"]],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
@@ -70,14 +70,14 @@ postgres_column={
 "city":["text",["users"]],
 "response_time":["numeric",["log"]],
 }
-postgres_notnull={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
-postgres_identity={"id":table}
-postgres_default=[["created_at","now()",table]]
+postgres_notnull={"id":postgres_table,"created_at":postgres_table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
+postgres_identity={"id":postgres_table}
+postgres_default=[["created_at","now()",postgres_table]]
 postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
-"id":["btree",table],
-"created_at":["brin",table],
-"created_by_id":["btree",table],
+"id":["btree",postgres_table],
+"created_at":["brin",postgres_table],
+"created_by_id":["btree",postgres_table],
 "is_deleted":["btree",["users","post","box","atom"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
