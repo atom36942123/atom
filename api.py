@@ -451,7 +451,7 @@ from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
 @router.put("/my/update-email")
-async def my_update_email(request:Request,otp:int,email:str):
+async def my_update_email(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -476,7 +476,7 @@ from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
 @router.put("/my/update-mobile")
-async def my_update_mobile(request:Request,otp:int,mobile:str):
+async def my_update_mobile(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
