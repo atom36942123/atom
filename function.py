@@ -232,8 +232,11 @@ async def postgres_add_creator_key(postgres_object,object_list):
 #postgres create log
 import jwt,json
 from fastapi import BackgroundTasks
-async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time):
+async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time,request_method_allowed):
+  if request.method not in request_method_allowed:return None
   created_by_id=None
+  
+  
   authorization_header=request.headers.get("Authorization")
   if authorization_header:created_by_id=json.loads(jwt.decode(authorization_header.split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"]
   background=BackgroundTasks()
