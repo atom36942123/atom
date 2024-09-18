@@ -23,9 +23,9 @@ rekognition_access_key_id=env("rekognition_access_key_id")
 rekognition_secret_access_key=env("rekognition_secret_access_key")
 
 #database
-prequery=["create extension if not exists postgis"]
-table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
-column={
+postgres_prequery=["create extension if not exists postgis"]
+postgres_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
+postgres_column={
 "id":["bigint",table],
 "created_at":["timestamptz",table],
 "created_by_id":["bigint",table],
@@ -70,19 +70,19 @@ column={
 "city":["text",["users"]],
 "response_time":["numeric",["log"]],
 }
-notnull={
+postgres_notnull={
 "id":table,
 "created_at":table,
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
 "parent_id":["likes","bookmark","report","block","rating","comment","message"]
 }
-identity={"id":table}
+postgres_identity={"id":table}
 default=[["created_at","now()",table]]
 unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
 }
-index={
+postgres_index={
 "id":["btree",table],
 "created_at":["brin",table],
 "created_by_id":["btree",table],
@@ -99,7 +99,7 @@ index={
 "tag":["btree",["users","post","box","atom"]],
 "tag_array":["gin",["atom"]],
 }
-postquery=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
+postgres_postquery=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
 "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
 "CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
 "CREATE OR REPLACE FUNCTION function_delete_disable_bulk() RETURNS trigger LANGUAGE plpgsql AS $$DECLARE n bigint := TG_ARGV[0]; BEGIN IF (SELECT count(*) FROM deleted_rows) <= n IS NOT TRUE THEN RAISE EXCEPTION 'cant delete more than % rows', n; END IF; RETURN OLD; END;$$;",
