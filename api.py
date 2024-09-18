@@ -34,7 +34,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 @router.get("/auth/login")
-async def auth_login(request:Request,username:str,password:str,type:str=None):
+async def auth_login(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -44,7 +44,6 @@ async def auth_login(request:Request,username:str,password:str,type:str=None):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -59,7 +58,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 @router.get("/auth/login-google")
-async def auth_login_google(request:Request,google_id:str,type:str=None):
+async def auth_login_google(request:Request,google_id:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -77,7 +76,6 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
      query_param={"id":user_id}
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -93,7 +91,7 @@ from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-email-otp")
-async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,mode:str=None):
+async def auth_login_email_otp(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -105,7 +103,6 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
    query_param={"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for given email"})
    if not user:
      query=f"insert into users (email) values (:email) returning *;"
      query_param={"email":email}
@@ -115,7 +112,6 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
      query_param={"id":user_id}
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -131,7 +127,7 @@ from function import token_create
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-mobile-otp")
-async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None,mode:str=None):
+async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -143,7 +139,6 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    query_param={"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for given mobile"})
    if not user:
      query=f"insert into users (mobile) values (:mobile) returning *;"
      query_param={"mobile":mobile}
@@ -153,7 +148,6 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
      query_param={"id":user_id}
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -168,7 +162,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 @router.get("/auth/login-email-password")
-async def auth_login_email_password(request:Request,email:str,password:str,type:str=None):
+async def auth_login_email_password(request:Request,email:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -178,7 +172,6 @@ async def auth_login_email_password(request:Request,email:str,password:str,type:
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -193,7 +186,7 @@ import hashlib
 from function import token_create
 from config import jwt_secret_key
 @router.get("/auth/login-mobile-password")
-async def auth_login_mobile_password(request:Request,mobile:str,password:str,type:str=None):
+async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -203,7 +196,6 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str,typ
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   if type and user["type"] not in type.split(","):return JSONResponse(status_code=400,content={"status":0,"message":f"only {type} can login"})
    #token create
    response=await token_create(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
