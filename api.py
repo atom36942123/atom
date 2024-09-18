@@ -16,7 +16,7 @@ from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
 @router.get("/postgres-init")
-async def postgres_init(request:Request):
+async def pinit(request:Request):
    #auth check
    token=request.headers.get("Authorization").split(" ",1)[1]
    token_hashed=hashlib.sha256(token.encode()).hexdigest()
