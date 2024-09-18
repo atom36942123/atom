@@ -437,6 +437,8 @@ async def postgres_init(postgres_object):
   postquery=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
   "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
   "CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
+  "CREATE OR REPLACE FUNCTION function_delete_disable_bulk() RETURNS trigger LANGUAGE plpgsql AS $$DECLARE n bigint := TG_ARGV[0]; BEGIN IF (SELECT count(*) FROM deleted_rows) <= n IS NOT TRUE THEN RAISE EXCEPTION 'cant delete more than % rows', n; END IF; RETURN OLD; END;$$;",
+  "CREATE TRIGGER trigger_delete_disable_bulk_users AFTER DELETE ON users REFERENCING OLD TABLE AS deleted_rows FOR EACH STATEMENT EXECUTE PROCEDURE function_delete_disable_bulk(1);",
   ]
   #start
   temp={}
