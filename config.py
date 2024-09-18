@@ -104,3 +104,4 @@ postgres_postquery=["insert into users (username,password) values ('atom','a665a
 "CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
 "CREATE OR REPLACE FUNCTION function_delete_disable() RETURNS trigger LANGUAGE plpgsql AS $$DECLARE n bigint := TG_ARGV[0]; BEGIN IF (SELECT count(*) FROM deleted_rows) <= n IS NOT TRUE THEN RAISE EXCEPTION 'cant delete more than % rows', n; END IF; RETURN OLD; END;$$;",
 ]
+postgres_delete_disable={"users":1}
