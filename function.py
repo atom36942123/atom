@@ -246,8 +246,7 @@ import jwt,json
 from fastapi import BackgroundTasks
 async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time,request_method_allowed):
   request_url_path=request.url.path
-  if request_url_path in ["/","/docs"]:return None
-  if "/root" in request_url_path:return None
+  if request_url_path in ["/","/docs","/postgres-init"]:return None
   if request.method not in request_method_allowed:return None
   request_query_param=json.dumps(dict(request.query_params))
   request_body=None
