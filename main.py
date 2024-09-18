@@ -53,7 +53,7 @@ async def middleware(request:Request,api_function):
     request.state.column_datatype=column_datatype
     response=await api_function(request)
     end=time.time()
-    if request.url.path not in ["/","/docs"] and request.method in ["POST","GET","PUT","DELETE"]:await postgres_create_log(postgres_object,request,jwt_secret_key,end-start)
+    await postgres_create_log(postgres_object,request,jwt_secret_key,end-start,["POST","GET","PUT","DELETE"])
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
