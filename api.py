@@ -662,7 +662,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
-from config import postgres_prequery
+from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
 @router.get("/root/postgres-init")
 async def root_postgres_init(request:Request):
    #auth check
@@ -673,7 +673,7 @@ async def root_postgres_init(request:Request):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #logic
-   response=await postgres_init(postgres_object)
+   response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
