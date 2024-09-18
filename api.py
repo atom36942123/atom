@@ -745,7 +745,7 @@ async def admin_postgresclean(request:Request):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #middleware
@@ -771,7 +771,7 @@ async def admin_csv_create(request:Request,table:str,file:UploadFile):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
@@ -798,7 +798,7 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #file
@@ -822,7 +822,7 @@ async def admin_query_runner(request:Request,query:str,mode:str=None):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -888,7 +888,7 @@ async def admin_object_read(request:Request,table:str,order:str="id desc",limit:
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
@@ -915,7 +915,7 @@ async def admin_object_update(request:Request,table:str):
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object,1,["admin"])
+   response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    #logic
