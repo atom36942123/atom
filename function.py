@@ -359,29 +359,7 @@ import time
 async def postgres_init(postgres_object):
   #config
   prequery=["create extension if not exists postgis"]
-  postquery=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;","CREATE OR REPLACE FUNCTION set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",]
   table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
-  notnull={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
-  identity={"id":table}
-  default=[["created_at","now()",table]]
-  unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
-  index={
-  "id":["btree",table],
-  "created_at":["brin",table],
-  "created_by_id":["btree",table],
-  "is_deleted":["btree",["users","post","box","atom"]],
-  "is_active":["btree",["users","post"]],
-  "is_verified":["btree",["users","post"]],
-  "parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],
-  "parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],
-  "type":["btree",["users","post","box","atom","helpdesk"]],
-  "status":["btree",["report","helpdesk","message"]],
-  "email":["btree",["users","post","box","atom","otp","helpdesk"]],
-  "password":["btree",["users"]],
-  "location":["gist",["users","post","box","atom"]],
-  "tag":["btree",["users","post","box","atom"]],
-  "tag_array":["gin",["atom"]],
-  }
   column={
   "id":["bigint",table],
   "created_at":["timestamptz",table],
@@ -427,6 +405,39 @@ async def postgres_init(postgres_object):
   "city":["text",["users"]],
   "response_time":["numeric",["log"]],
   }
+  notnull={
+  "id":table,
+  "created_at":table,
+  "parent_table":["likes","bookmark","report","block","rating","comment","message"],
+  "parent_id":["likes","bookmark","report","block","rating","comment","message"]
+  }
+  identity={"id":table}
+  default=[["created_at","now()",table]]
+  unique={
+  "username":["users"],
+  "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
+  }
+  index={
+  "id":["btree",table],
+  "created_at":["brin",table],
+  "created_by_id":["btree",table],
+  "is_deleted":["btree",["users","post","box","atom"]],
+  "is_active":["btree",["users","post"]],
+  "is_verified":["btree",["users","post"]],
+  "parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],
+  "parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],
+  "type":["btree",["users","post","box","atom","helpdesk"]],
+  "status":["btree",["report","helpdesk","message"]],
+  "email":["btree",["users","post","box","atom","otp","helpdesk"]],
+  "password":["btree",["users"]],
+  "location":["gist",["users","post","box","atom"]],
+  "tag":["btree",["users","post","box","atom"]],
+  "tag_array":["gin",["atom"]],
+  }
+  postquery=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
+  "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
+  "CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
+  ]
   #start
   temp={}
   t1=time.time()
@@ -550,9 +561,9 @@ async def postgres_init(postgres_object):
   delta=t12-t11
   temp["postquery"]=delta
   print(f"postquery={delta}")
-  #trigger
+  #trigger updated at
   for item in column["updated_at"][1]:
-    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE set_updated_at_now();"
+    query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
     query_param={}
     await postgres_object.fetch_all(query=query,values=query_param)
   t13=time.time()
