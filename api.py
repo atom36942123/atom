@@ -662,6 +662,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
+from config import postgres_prequery
 @router.get("/root/postgres-init")
 async def root_postgres_init(request:Request):
    #auth check
