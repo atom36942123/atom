@@ -2,6 +2,27 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
+#root/postgres-init
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_init
+import hashlib
+from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
+@router.get("/root/postgres-init")
+async def root_postgres_init(request:Request):
+   #auth check
+   token=request.headers.get("Authorization").split(" ",1)[1]
+   token_hashed=hashlib.sha256(token.encode()).hexdigest()
+   if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #auth/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -704,27 +725,6 @@ async def my_object_delete(request:Request,table:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
-
-#root/postgres-init
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_init
-import hashlib
-from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
-@router.get("/root/postgres-init")
-async def root_postgres_init(request:Request):
-   #auth check
-   token=request.headers.get("Authorization").split(" ",1)[1]
-   token_hashed=hashlib.sha256(token.encode()).hexdigest()
-   if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 #admin/postgres clean
 from fastapi import Request
