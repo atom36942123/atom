@@ -657,15 +657,17 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
-#admin/postgres-init
+#root/postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
-@router.get("/admin/postgres-init")
-async def admin_postgres_init(request:Request):
+@router.get("/root/postgres-init")
+async def root_postgres_init(request:Request):
    #auth check
-   if hashlib.sha256(request.headers.get("Authorization").encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   token=request.headers.get("Authorization").split(" ",1)[1]
+   token_hashed=hashlib.sha256(token.encode()).hexdigest()
+   if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
