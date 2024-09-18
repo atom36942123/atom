@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#auth check/signup
+#auth/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -27,7 +27,7 @@ async def auth_signup(request:Request,username:str,password:str):
    #final
    return {"status":1,"message":[user,token]}
 
-#auth check/login
+#auth/login
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -52,7 +52,7 @@ async def auth_login(request:Request,username:str,password:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#auth check/login google
+#auth/login google
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -85,7 +85,7 @@ async def auth_login_google(request:Request,google_id:str,type:str=None):
    #final
    return {"status":1,"message":token}
 
-#auth check/login email otp
+#auth/login email otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -105,7 +105,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
    query_param={"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user for email given"})
+   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for given email"})
    if not user:
      query=f"insert into users (email) values (:email) returning *;"
      query_param={"email":email}
@@ -123,7 +123,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int,type:str=None,m
    #final
    return {"status":1,"message":token}
 
-#auth check/login mobile otp
+#auth/login mobile otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -143,7 +143,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    query_param={"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
-   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user for mobile given"})
+   if mode=="user_exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user exist for given mobile"})
    if not user:
      query=f"insert into users (mobile) values (:mobile) returning *;"
      query_param={"mobile":mobile}
@@ -161,7 +161,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,type:str=None
    #final
    return {"status":1,"message":token}
 
-#auth check/login email password
+#auth/login email password
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
@@ -186,7 +186,7 @@ async def auth_login_email_password(request:Request,email:str,password:str,type:
    #final
    return {"status":1,"message":token}
 
-#auth check/login mobile password
+#auth/login mobile password
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
