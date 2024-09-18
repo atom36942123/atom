@@ -70,18 +70,10 @@ postgres_column={
 "city":["text",["users"]],
 "response_time":["numeric",["log"]],
 }
-postgres_notnull={
-"id":table,
-"created_at":table,
-"parent_table":["likes","bookmark","report","block","rating","comment","message"],
-"parent_id":["likes","bookmark","report","block","rating","comment","message"]
-}
+postgres_notnull={"id":table,"created_at":table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
 postgres_identity={"id":table}
-default=[["created_at","now()",table]]
-unique={
-"username":["users"],
-"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
-}
+postgres_default=[["created_at","now()",table]]
+postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
 "id":["btree",table],
 "created_at":["brin",table],
@@ -104,4 +96,3 @@ postgres_postquery=["insert into users (username,password) values ('atom','a665a
 "CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
 "CREATE OR REPLACE FUNCTION function_delete_disable() RETURNS trigger LANGUAGE plpgsql AS $$DECLARE n bigint := TG_ARGV[0]; BEGIN IF (SELECT count(*) FROM deleted_rows) <= n IS NOT TRUE THEN RAISE EXCEPTION 'cant delete more than % rows', n; END IF; RETURN OLD; END;$$;",
 ]
-postgres_delete_disable={"users":1}
