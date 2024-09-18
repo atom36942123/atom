@@ -155,6 +155,62 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
    #final
    return {"status":1,"message":token}
 
+#auth/login email otp exist
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+@router.get("/auth/login-email-otp-exist")
+async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #otp verify
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   query=f"select * from users where email=:email order by id desc limit 1;"
+   query_param={"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
+#auth/login mobile otp exist
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import hashlib
+from function import token_create
+from config import jwt_secret_key
+from function import postgtes_otp_verify
+@router.get("/auth/login-mobile-otp-exist")
+async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #otp verify
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #logic
+   query=f"select * from users where mobile=:mobile order by id desc limit 1;"
+   query_param={"mobile":mobile}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   user=output[0] if output else None
+   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   #token create
+   response=await token_create(user,jwt_secret_key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   token=response["message"]
+   #final
+   return {"status":1,"message":token}
+
 #auth/login email password
 from fastapi import Request
 from fastapi.responses import JSONResponse
