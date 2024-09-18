@@ -356,7 +356,7 @@ async def mongo(mongo_server_url,mode,database,table,payload):
 
 #postgres init
 import time
-async def postgres_init(postgres_object):
+async def postgres_init(postgres_object,prequery,table,column,notnull,identity,default,unique,index,postquery):
   #start
   temp={}
   t1=time.time()
@@ -483,15 +483,6 @@ async def postgres_init(postgres_object):
   #trigger updated at
   for item in column["updated_at"][1]:
     query=f"CREATE OR REPLACE TRIGGER trigger_set_updated_at_now_{item} BEFORE UPDATE ON {item} FOR EACH ROW EXECUTE PROCEDURE function_set_updated_at_now();"
-    query_param={}
-    await postgres_object.fetch_all(query=query,values=query_param)
-  t13=time.time()
-  delta=t13-t12
-  temp["trigger"]=delta
-  print(f"trigger={delta}")
-  #trigger delete disable
-  for item in delete_disable:
-    query=f"CREATE OR REPLACE TRIGGER trigger_delete_disable_{item} AFTER DELETE ON {item} REFERENCING OLD TABLE AS deleted_rows FOR EACH STATEMENT EXECUTE PROCEDURE function_delete_disable(1);"
     query_param={}
     await postgres_object.fetch_all(query=query,values=query_param)
   t13=time.time()
