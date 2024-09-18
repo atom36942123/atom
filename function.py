@@ -161,23 +161,6 @@ async def postgres_column_datatype(postgres_object):
   column_datatype={item["column_name"]:item["data_type"] for item in output}
   return {"status":1,"message":column_datatype}
 
-#auth check
-import jwt,json
-async def auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
-  authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"token is must"}
-  token=authorization_header.split(" ",1)[1]
-  user=json.loads(jwt.decode(token,jwt_secret_key,algorithms="HS256")["data"])
-  if postgres_object==1:
-    query="select * from users where id=:id;"
-    query_param={"id":user["id"]}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-    user=output[0] if output else None
-    if not user:return {"status":0,"message":"no user for token passed"}
-  if user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
-  if user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
-  return {"status":1,"message":user}
-  
 #postgres otp verify
 from datetime import datetime,timezone
 async def postgtes_otp_verify(postgres_object,otp,email,mobile):
@@ -246,6 +229,23 @@ async def postgres_create_log(postgres_object,request,jwt_secret_key,response_ti
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
 
+#auth check
+import jwt,json
+async def auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
+  authorization_header=request.headers.get("Authorization")
+  if not authorization_header:return {"status":0,"message":"token is must"}
+  token=authorization_header.split(" ",1)[1]
+  user=json.loads(jwt.decode(token,jwt_secret_key,algorithms="HS256")["data"])
+  if postgres_object==1:
+    query="select * from users where id=:id;"
+    query_param={"id":user["id"]}
+    output=await postgres_object.fetch_all(query=query,values=query_param)
+    user=output[0] if output else None
+    if not user:return {"status":0,"message":"no user for token passed"}
+  if user_active_check and user["is_active"]==0:return {"status":0,"message":"user is not active"}
+  if user_type_allowed_list and user["type"] not in user_type_allowed_list:return {"status":0,"message":"user type not allowed"}
+  return {"status":1,"message":user}
+  
 #token create
 import jwt,json,time
 from datetime import datetime,timedelta
