@@ -867,14 +867,14 @@ async def public_postgres_init(request:Request):
    #final
    return response
    
-#public/project cache
+#public/project meta
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from function import redis_key_builder
-@router.get("/public/project-cache")
+@router.get("/public/project-meta")
 @cache(expire=60,key_builder=redis_key_builder)
-async def public_project_cache(request:Request):
+async def public_project_meta(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
