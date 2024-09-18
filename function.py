@@ -212,23 +212,6 @@ async def postgres_add_creator_key(postgres_object,object_list):
            break
   return {"status":1,"message":object_list}
 
-#postgres create log
-import jwt,json
-from fastapi import BackgroundTasks
-async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time,request_method_allowed):
-  request_url_path=request.url.path
-  if request_url_path in ["/","/docs"]:return None
-  if "/root" in request_url_path:return None
-  if request.method not in request_method_allowed:return None
-  request_query_param=json.dumps(dict(request.query_params))
-  request_body=None
-  created_by_id=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"] if request.headers.get("Authorization") else None
-  query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time) values (:created_by_id,:request_url_path,:request_query_param,:request_body,:response_time);"
-  query_param={"created_by_id":created_by_id,"request_url_path":request_url_path,"request_query_param":request_query_param,"request_body":request_body,"response_time":response_time}
-  background=BackgroundTasks()
-  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
-  return {"status":1,"message":"done"}
-
 #auth check
 import jwt,json
 async def auth_check(request,jwt_secret_key,postgres_object,user_active_check,user_type_allowed_list):
@@ -257,6 +240,23 @@ async def token_create(user,jwt_secret_key):
   payload={"exp":expiry_time,"data":data}
   token=jwt.encode(payload,jwt_secret_key)
   return {"status":1,"message":token}
+
+#postgres create log
+import jwt,json
+from fastapi import BackgroundTasks
+async def postgres_create_log(postgres_object,request,jwt_secret_key,response_time,request_method_allowed):
+  request_url_path=request.url.path
+  if request_url_path in ["/","/docs"]:return None
+  if "/root" in request_url_path:return None
+  if request.method not in request_method_allowed:return None
+  request_query_param=json.dumps(dict(request.query_params))
+  request_body=None
+  created_by_id=json.loads(jwt.decode(request.headers.get("Authorization").split(" ",1)[1],jwt_secret_key,algorithms="HS256")["data"])["id"] if request.headers.get("Authorization") else None
+  query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time) values (:created_by_id,:request_url_path,:request_query_param,:request_body,:response_time);"
+  query_param={"created_by_id":created_by_id,"request_url_path":request_url_path,"request_query_param":request_query_param,"request_body":request_body,"response_time":response_time}
+  background=BackgroundTasks()
+  background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
+  return {"status":1,"message":"done"}
 
 #redis key builder
 from fastapi import Request,Response
