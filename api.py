@@ -705,6 +705,300 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
+#private/s3 upload file
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import s3_access_key_id,s3_secret_access_key
+from fastapi import UploadFile
+import boto3,uuid
+@router.post("/private/s3-upload-file")
+async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   key=str(uuid.uuid4())+"-"+file.filename
+   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
+   s3_client.upload_fileobj(file.file,s3_bucket_name,key)
+   s3_url=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
+   #final
+   return {"status":1,"message":s3_url}
+
+#private/s3 create presigned url
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import s3_access_key_id,s3_secret_access_key
+import boto3,uuid
+@router.get("/private/s3-create-presigned-url")
+async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   if "." not in filename:return JSONResponse(status_code=400,content={"status":0,"message":"extension must"})
+   key=str(uuid.uuid4())+"-"+filename
+   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
+   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
+   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
+   #final
+   return {"status":1,"message":output}
+
+#private/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+@router.get("/private/object-read")
+async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
+   
+#private/rekognition compare
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.get("/private/rekognition-compare-face")
+async def private_rekognition_compare_face(request:Request,url_source:str,url_target:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   bucket_name_source=url_source.split("//",1)[1].split(".",1)[0]
+   bucket_name_target=url_target.split("//",1)[1].split(".",1)[0]
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_name_source,"Name":url_source.rsplit("/",1)[1]}},TargetImage={"S3Object":{"Bucket":bucket_name_target,"Name":url_target.rsplit("/",1)[1]}},SimilarityThreshold=80)
+   #final
+   return {"status":1,"message":output}
+
+#private/rekognition detetct label
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.get("/private/rekognition-detect-label")
+async def private_rekognition_detect_label(request:Request,url:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   bucket_name=url.split("//",1)[1].split(".",1)[0]
+   key=url.rsplit("/",1)[1]
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MaxLabels=10,MinConfidence=90)
+   #final
+   return {"status":1,"message":output}
+
+#private/rekognition detetct face
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.get("/private/rekognition-detect-face")
+async def private_rekognition_detect_face(request:Request,url:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   bucket_name=url.split("//",1)[1].split(".",1)[0]
+   key=url.rsplit("/",1)[1]
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},Attributes=['ALL'])
+   #final
+   return {"status":1,"message":output}
+
+#public/project meta
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+@router.get("/public/project-meta")
+@cache(expire=60,key_builder=redis_key_builder)
+async def public_project_meta(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
+   response={"status":1,"message":temp}
+   #final
+   return response
+
+#public/otp send mobile sns
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import sns_region_name,sns_access_key_id,sns_secret_access_key
+import boto3,random
+@router.get("/public/otp-send-mobile-sns")
+async def public_otp_send_mobile_sns(request:Request,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   otp=random.randint(100000,999999)
+   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
+   output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
+   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
+   query_param={"otp":otp,"mobile":mobile}
+   await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#public/otp send email ses
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import ses_region_name,ses_access_key_id,ses_secret_access_key
+import boto3,random
+@router.get("/public/otp-send-email-ses")
+async def public_otp_send_email_ses(request:Request,identity:str,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   otp=random.randint(100000,999999)
+   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
+   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
+   query="insert into otp (otp,email) values (:otp,:email) returning *;"
+   query_param={"otp":otp,"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
+
+#public/otp verify email
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgtes_otp_verify
+@router.get("/public/otp-verify-email")
+async def public_otp_verify_email(request:Request,otp:int,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#public/otp verify mobile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgtes_otp_verify
+@router.get("/public/otp-verify-mobile")
+async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#public/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import where_clause
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+@router.get("/public/object-read")
+@cache(expire=60,key_builder=redis_key_builder)
+async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response=await postgres_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   response=await postgres_add_action_count(postgres_object,"likes",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#private/rekognition detect moderation
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+import boto3
+@router.get("/private/rekognition-detect-moderation")
+async def private_rekognition_detect_moderation(request:Request,url:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #logic
+   bucket_name=url.split("//",1)[1].split(".",1)[0]
+   key=url.rsplit("/",1)[1]
+   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
+   output=rekognition_client.detect_moderation_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MinConfidence=80)
+   #final
+   return {"status":1,"message":output}
+
 #admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -931,297 +1225,3 @@ async def admin_object_update(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-#public/project meta
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-@router.get("/public/project-meta")
-@cache(expire=60,key_builder=redis_key_builder)
-async def public_project_meta(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
-   response={"status":1,"message":temp}
-   #final
-   return response
-
-#public/otp send mobile sns
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import sns_region_name,sns_access_key_id,sns_secret_access_key
-import boto3,random
-@router.get("/public/otp-send-mobile-sns")
-async def public_otp_send_mobile_sns(request:Request,mobile:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   otp=random.randint(100000,999999)
-   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
-   output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
-   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
-   query_param={"otp":otp,"mobile":mobile}
-   await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#public/otp send email ses
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import ses_region_name,ses_access_key_id,ses_secret_access_key
-import boto3,random
-@router.get("/public/otp-send-email-ses")
-async def public_otp_send_email_ses(request:Request,identity:str,email:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   otp=random.randint(100000,999999)
-   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
-   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
-   query="insert into otp (otp,email) values (:otp,:email) returning *;"
-   query_param={"otp":otp,"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"otp sent"}
-
-#public/otp verify email
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgtes_otp_verify
-@router.get("/public/otp-verify-email")
-async def public_otp_verify_email(request:Request,otp:int,email:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgtes_otp_verify(postgres_object,otp,email,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#public/otp verify mobile
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgtes_otp_verify
-@router.get("/public/otp-verify-mobile")
-async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#public/object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
-@router.get("/public/object-read")
-@cache(expire=60,key_builder=redis_key_builder)
-async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #logic
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response=await postgres_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   response=await postgres_add_action_count(postgres_object,"likes",table,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#private/s3 upload file
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import s3_access_key_id,s3_secret_access_key
-from fastapi import UploadFile
-import boto3,uuid
-@router.post("/private/s3-upload-file")
-async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   key=str(uuid.uuid4())+"-"+file.filename
-   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   s3_client.upload_fileobj(file.file,s3_bucket_name,key)
-   s3_url=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
-   #final
-   return {"status":1,"message":s3_url}
-
-#private/s3 create presigned url
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import s3_access_key_id,s3_secret_access_key
-import boto3,uuid
-@router.get("/private/s3-create-presigned-url")
-async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   if "." not in filename:return JSONResponse(status_code=400,content={"status":0,"message":"extension must"})
-   key=str(uuid.uuid4())+"-"+filename
-   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
-   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
-   #final
-   return {"status":1,"message":output}
-
-#private/object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from function import where_clause
-@router.get("/private/object-read")
-async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-   
-#private/rekognition compare
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
-import boto3
-@router.get("/private/rekognition-compare-face")
-async def private_rekognition_compare_face(request:Request,url_source:str,url_target:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   bucket_name_source=url_source.split("//",1)[1].split(".",1)[0]
-   bucket_name_target=url_target.split("//",1)[1].split(".",1)[0]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_name_source,"Name":url_source.rsplit("/",1)[1]}},TargetImage={"S3Object":{"Bucket":bucket_name_target,"Name":url_target.rsplit("/",1)[1]}},SimilarityThreshold=80)
-   #final
-   return {"status":1,"message":output}
-
-#private/rekognition detetct label
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
-import boto3
-@router.get("/private/rekognition-detect-label")
-async def private_rekognition_detect_label(request:Request,url:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   bucket_name=url.split("//",1)[1].split(".",1)[0]
-   key=url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MaxLabels=10,MinConfidence=90)
-   #final
-   return {"status":1,"message":output}
-
-#private/rekognition detetct face
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
-import boto3
-@router.get("/private/rekognition-detect-face")
-async def private_rekognition_detect_face(request:Request,url:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   bucket_name=url.split("//",1)[1].split(".",1)[0]
-   key=url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},Attributes=['ALL'])
-   #final
-   return {"status":1,"message":output}
-
-#private/rekognition detect moderation
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
-import boto3
-@router.get("/private/rekognition-detect-moderation")
-async def private_rekognition_detect_moderation(request:Request,url:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
-   #logic
-   bucket_name=url.split("//",1)[1].split(".",1)[0]
-   key=url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_moderation_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MinConfidence=80)
-   #final
-   return {"status":1,"message":output}
