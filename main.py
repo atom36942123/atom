@@ -71,11 +71,11 @@ for item in router_list:app.include_router(item)
 async def root():
   return {"status":1,"message":"welcome to atom"}
 
-#api urls
-@app.get("/urls")
-def urls():
-    url_list=[{"path":route.path,"name":route.name} for route in app.routes]
-    return url_list
+#api apis
+@app.get("/api")
+def api():
+    api_list=[{"path":route.path,"name":route.name} for route in app.routes]
+    return api_list
 
 #api pinit
 from fastapi import Request
