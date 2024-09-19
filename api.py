@@ -1019,13 +1019,11 @@ async def admin_create_user(request:Request):
    #logic
    object=await request.json()
    object["created_by_id"]=user["id"]
-   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    response=await postgres_object_create(postgres_object,column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
+   
 #admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
