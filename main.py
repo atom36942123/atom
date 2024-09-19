@@ -67,10 +67,8 @@ router_list=response["message"]
 for item in router_list:app.include_router(item)
 
 #api root
-from fastapi import Request
-from fastapi.responses import JSONResponse
 @app.get("/")
-async def root(request:Request):
+async def root():
   return {"status":1,"message":"welcome to atom"}
 
 #api postgres-init
@@ -94,10 +92,10 @@ async def pinit(request:Request):
    #final
    return response
 
-# Using FastAPI instance
+#api urls
 @app.get("/urls")
-def get_all_urls():
-    url_list = [{"path": route.path, "name": route.name} for route in app.routes]
+def urls():
+    url_list=[{"path":route.path,"name":route.name} for route in app.routes]
     return url_list
 
 #server start
