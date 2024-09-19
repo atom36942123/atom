@@ -71,7 +71,7 @@ for item in router_list:app.include_router(item)
 async def root():
   return {"status":1,"message":"welcome to atom"}
 
-#api apis
+#api api
 @app.get("/api")
 def api():
     api_list=[{"path":route.path,"name":route.name} for route in app.routes]
