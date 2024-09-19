@@ -720,6 +720,7 @@ async def admin_postgresclean(request:Request):
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -749,7 +750,10 @@ async def admin_csv_create(request:Request,table:str,file:UploadFile):
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #file
    response=await csv_to_object_list(file)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -777,7 +781,10 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #file
    response=await csv_to_object_list(file)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -802,7 +809,10 @@ async def admin_query_runner(request:Request,query:str,mode:str=None):
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    if not mode:output=await postgres_object.fetch_all(query=query,values={})
    if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
@@ -825,7 +835,10 @@ async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    key=url.rsplit("/",1)[1]
    s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
@@ -849,7 +862,10 @@ async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
    output=s3_resource.Bucket(s3_bucket_name).objects.all().delete()
@@ -871,7 +887,10 @@ async def admin_object_read(request:Request,table:str,order:str="id desc",limit:
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    param=dict(request.query_params)
    response=await where_clause(param,column_datatype)
@@ -899,7 +918,10 @@ async def admin_object_update(request:Request,table:str):
    response=await auth_check(request,jwt_secret_key,postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
+   #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
