@@ -69,6 +69,7 @@ postgres_column={
 "state":["text",["users"]],
 "city":["text",["users"]],
 "response_time_ms":["numeric",["log"]],
+"api_access":["text",["users"]],
 }
 postgres_notnull={"id":postgres_table,"created_at":postgres_table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
 postgres_identity={"id":postgres_table}
