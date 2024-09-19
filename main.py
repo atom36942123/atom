@@ -71,19 +71,19 @@ for item in router_list:app.include_router(item)
 async def root():
   return {"status":1,"message":"welcome to atom"}
 
-#api api
-@app.get("/api")
-def api():
+#api api list
+@app.get("/api-list")
+def api_list():
     api_list=[route.path for route in app.routes]
     return api_list
 
-#api pinit
+#api postgres init
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
-@app.get("/pinit")
+@app.get("/postgres-init")
 async def pinit(request:Request):
    #auth check
    authorization_header=request.headers.get("Authorization")
