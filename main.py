@@ -71,6 +71,12 @@ for item in router_list:app.include_router(item)
 async def root():
   return {"status":1,"message":"welcome to atom"}
 
+#api urls
+@app.get("/urls")
+def urls():
+    url_list=[{"path":route.path,"name":route.name} for route in app.routes]
+    return url_list
+
 #api postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -91,12 +97,6 @@ async def pinit(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-#api urls
-@app.get("/urls")
-def urls():
-    url_list=[{"path":route.path,"name":route.name} for route in app.routes]
-    return url_list
 
 #server start
 from function import server_start
