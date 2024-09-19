@@ -94,6 +94,12 @@ async def pinit(request:Request):
    #final
    return response
 
+# Using FastAPI instance
+@app.get("/urls")
+def get_all_urls():
+    url_list = [{"path": route.path, "name": route.name} for route in app.routes]
+    return url_list
+
 #server start
 from function import server_start
 if __name__=="__main__":
