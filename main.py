@@ -60,6 +60,12 @@ async def middleware(request:Request,api_function):
     return JSONResponse(status_code=400,content=response)
   return response
 
+#router
+from function import router_list
+response=router_list()
+router_list=response["message"]
+for item in router_list:app.include_router(item)
+
 #api root
 @app.get("/")
 async def root():
@@ -91,12 +97,6 @@ async def pinit(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
-
-#router
-from function import router_list
-response=router_list()
-router_list=response["message"]
-for item in router_list:app.include_router(item)
 
 #server start
 from function import server_start
