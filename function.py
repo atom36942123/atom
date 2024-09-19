@@ -175,7 +175,7 @@ async def postgtes_otp_verify(postgres_object,otp,email,mobile):
     query_param={"mobile":mobile}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   if not output:return {"status":0,"message":"otp not found"}
-  if int(datetime.now(timezone.utc).strftime('%s'))-int(output[0]["created_at"].strftime('%s'))>600:return {"status":0,"message":"otp expired"}
+  if int(datetime.now(timezone.utc).strftime('%s'))-int(output[0]["created_at"].strftime('%s'))>6000000000000:return {"status":0,"message":"otp expired"}
   if int(output[0]["otp"])!=int(otp):return {"status":0,"message":"otp mismatch"}
   return {"status":1,"message":"otp verifed"}
 
