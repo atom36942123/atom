@@ -64,7 +64,14 @@ async def middleware(request:Request,api_function):
 from function import router_list
 response=router_list()
 router_list=response["message"]
-for item in router_list:app.include_router(item)  
+for item in router_list:app.include_router(item)
+
+endpoints=[]
+for route in app.routes:
+  if isinstance(route, APIRoute):
+    endpoints.append({"path": route.path})
+print(endpoints)
+        
   
 #server start
 from function import server_start
