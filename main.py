@@ -74,7 +74,7 @@ async def root():
 #api api
 @app.get("/api")
 def api():
-    api_list=[{"path":route.path,"name":route.name} for route in app.routes]
+    api_list=[route.path for route in app.routes]
     return api_list
 
 #api pinit
