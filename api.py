@@ -609,7 +609,6 @@ async def my_object_create(request:Request,table:str):
    #logic
    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
@@ -664,7 +663,6 @@ async def my_object_update(request:Request,table:str):
    #logic
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
-   if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["updated_by_id"]=user["id"]
    response=await postgres_object_ownership_check(postgres_object,table,object["id"],user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -999,14 +997,14 @@ async def private_rekognition_detect_moderation(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
-#admin/postgres clean
+#admin/create-user
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import auth_check
 from config import jwt_secret_key
-from function import postgres_clean
-@router.delete("/admin/postgres-clean")
-async def admin_postgresclean(request:Request):
+from function import postgres_object_create
+@router.post("/admin/create-user")
+async def admin_create_user(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
@@ -1018,9 +1016,35 @@ async def admin_postgresclean(request:Request):
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   #logic
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   response=await postgres_object_create(postgres_object,column_datatype,"normal","users",[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#admin/postgres clean
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import auth_check
+from config import jwt_secret_key
+from function import postgres_clean
+@router.delete("/admin/postgres-clean")
+async def admin_pclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   #auth check
+   response=await auth_check(request,jwt_secret_key,postgres_object)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   user=response["message"]
+   #access check
+   if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    response=await postgres_clean(postgres_object)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
