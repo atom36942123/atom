@@ -86,7 +86,9 @@ from config import postgres_prequery,postgres_table,postgres_column,postgres_not
 @app.get("/pinit")
 async def pinit(request:Request):
    #auth check
-   token=request.headers.get("Authorization").split(" ",1)[1]
+   authorization_header=request.headers.get("Authorization")
+   if not authorization_header:return JSONResponse(status_code=400,content={"status":0,"message":"authorization_header must"})
+   token=authorization_header.split(" ",1)[1]
    token_hashed=hashlib.sha256(token.encode()).hexdigest()
    if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    #middleware
