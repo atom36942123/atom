@@ -77,13 +77,13 @@ def urls():
     url_list=[{"path":route.path,"name":route.name} for route in app.routes]
     return url_list
 
-#api postgres-init
+#api pinit
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
-@app.get("/postgres-init")
+@app.get("/pinit")
 async def pinit(request:Request):
    #auth check
    token=request.headers.get("Authorization").split(" ",1)[1]
