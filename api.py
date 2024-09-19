@@ -721,6 +721,7 @@ async def admin_postgresclean(request:Request):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    user=response["message"]
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
+   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
