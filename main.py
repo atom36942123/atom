@@ -92,10 +92,12 @@ for item in router_list:app.include_router(item)
 
 #root api
 @app.get("/")
-async def root():return {"status":1,"message":"welcome to atom"}
+async def root():
+  return {"status":1,"message":"welcome to atom"}
   
 @app.get("/api-list")
-def api_list():return [route.path for route in app.routes]
+def api_list():
+  return [route.path for route in app.routes]
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -108,6 +110,19 @@ async def pinit(request:Request):
    response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    return response
+  
+from fastapi import Request
+@app.get("/grant-all-api-access")
+def grant_all_api_access(request:Request,user_id:int):
+  if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+  api_admin_list=[route.path for route in app.routes if "/admin" in route]
+  api_admin_str=",".join(api_admin_list)
+  query="update users set api_access=:api_access where id=:id"
+  query_param={"api_access":api_admin_str,"id":user_id}
+
+  
+  
+  return response
 
 #server start
 from function import server_start
