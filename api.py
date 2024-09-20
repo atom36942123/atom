@@ -896,18 +896,13 @@ async def public_object_read(request:Request,table:str,order:str="id desc",limit
 #admin/create-user
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_object_create
 @router.post("/admin/create-user")
 async def admin_create_user(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -923,18 +918,13 @@ async def admin_create_user(request:Request):
 #admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_clean
 @router.delete("/admin/postgres-clean")
 async def admin_pclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -948,8 +938,6 @@ async def admin_pclean(request:Request):
 #admin/csv create
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_create
@@ -958,10 +946,7 @@ async def admin_csv_create(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -979,8 +964,6 @@ async def admin_csv_create(request:Request,table:str,file:UploadFile):
 #admin/csv update
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from fastapi import UploadFile
 from function import csv_to_object_list
 from function import postgres_object_update
@@ -989,10 +972,7 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -1010,17 +990,12 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
 #admin/query runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 @router.get("/admin/query-runner")
 async def admin_query_runner(request:Request,query:str,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -1034,8 +1009,6 @@ async def admin_query_runner(request:Request,query:str,mode:str=None):
 #admin/s3 delete url
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 import boto3
 @router.delete("/admin/s3-delete-url")
@@ -1043,10 +1016,7 @@ async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -1061,8 +1031,6 @@ async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:
 #admin/s3 delete all
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 import boto3
 @router.delete("/admin/s3-delete-all")
@@ -1070,10 +1038,7 @@ async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -1087,18 +1052,13 @@ async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
 #admin/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import where_clause
 @router.get("/admin/object-read")
 async def admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
@@ -1118,18 +1078,13 @@ async def admin_object_read(request:Request,table:str,order:str="id desc",limit:
 #admin/object update
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_object_update
 @router.put("/admin/object-update")
 async def admin_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,postgres_object)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #access check
    if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
    if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
