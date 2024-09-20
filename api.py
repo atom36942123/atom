@@ -269,6 +269,7 @@ async def my_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #logic
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
