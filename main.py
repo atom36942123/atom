@@ -117,12 +117,10 @@ def grant_all_api_access(request:Request,user_id:int):
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
   api_admin_list=[route.path for route in app.routes if "/admin" in route]
   api_admin_str=",".join(api_admin_list)
-  query="update users set api_access=:api_access where id=:id"
+  query="update users set api_access=:api_access where id=:id returning *"
   query_param={"api_access":api_admin_str,"id":user_id}
-
-  
-  
-  return response
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  return output
 
 #server start
 from function import server_start
