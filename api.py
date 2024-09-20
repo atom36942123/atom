@@ -8,6 +8,7 @@ async def root():
   return {"status":1,"message":"welcome to atom"}
 
 #api api list
+from main import app
 @router.get("/api-list")
 def api_list():
     api_list=[route.path for route in app.routes]
