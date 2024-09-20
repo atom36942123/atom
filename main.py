@@ -96,13 +96,14 @@ async def root():return {"status":1,"message":"welcome to atom"}
   
 @app.get("/api-list")
 def api_list():return [route.path for route in app.routes]
-    
+
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
 @app.get("/postgres-init")
-async def pinit():
+async def pinit(request:Request):
    if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
