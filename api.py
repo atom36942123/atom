@@ -1017,10 +1017,6 @@ async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
    user=request.state.user
-   #access check
-   if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
-   if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
-   if request.url.path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
    #logic
    key=url.rsplit("/",1)[1]
    s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
