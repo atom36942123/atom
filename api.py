@@ -971,21 +971,6 @@ async def admin_csv_update(request:Request,table:str,file:UploadFile):
    #final
    return response
 
-#admin/query runner
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@router.get("/admin/query-runner")
-async def admin_query_runner(request:Request,query:str,mode:str=None):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   user=request.state.user
-   #logic
-   if not mode:output=await postgres_object.fetch_all(query=query,values={})
-   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
-   #final
-   return {"status":1,"message":output}
-
 #admin/s3 delete url
 from fastapi import Request
 from fastapi.responses import JSONResponse
