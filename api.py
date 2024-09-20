@@ -631,8 +631,6 @@ async def my_object_delete(request:Request,table:str):
 #private/s3 upload file
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 from fastapi import UploadFile
 import boto3,uuid
@@ -641,6 +639,7 @@ async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_na
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -656,8 +655,6 @@ async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_na
 #private/s3 create presigned url
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import s3_access_key_id,s3_secret_access_key
 import boto3,uuid
 @router.get("/private/s3-create-presigned-url")
@@ -665,6 +662,7 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -681,14 +679,13 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
 #private/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import where_clause
 @router.get("/private/object-read")
 async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -708,8 +705,6 @@ async def private_object_read(request:Request,table:str,order:str="id desc",limi
 #private/rekognition compare
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/private/rekognition-compare-face")
@@ -717,6 +712,7 @@ async def private_rekognition_compare_face(request:Request,url_source:str,url_ta
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -732,8 +728,6 @@ async def private_rekognition_compare_face(request:Request,url_source:str,url_ta
 #private/rekognition detetct label
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/private/rekognition-detect-label")
@@ -741,6 +735,7 @@ async def private_rekognition_detect_label(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -756,8 +751,6 @@ async def private_rekognition_detect_label(request:Request,url:str):
 #private/rekognition detetct face
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
 @router.get("/private/rekognition-detect-face")
@@ -765,6 +758,7 @@ async def private_rekognition_detect_face(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #auth check
    response=await auth_check(request,jwt_secret_key,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
