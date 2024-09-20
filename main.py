@@ -116,6 +116,15 @@ async def grant_all_api_access(request:Request,user_id:int):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return output
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@app.get("/query-runner")
+async def query_runner(request:Request,query:str,mode:str=None):
+  if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+  if not mode:output=await postgres_object.fetch_all(query=query,values={})
+  if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
+  return {"status":1,"message":output}
+
 #router
 from function import router_list
 response=router_list()
