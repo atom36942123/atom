@@ -84,12 +84,6 @@ async def middleware(request:Request,api_function):
     return JSONResponse(status_code=400,content=response)
   return response
 
-#router
-from function import router_list
-response=router_list()
-router_list=response["message"]
-for item in router_list:app.include_router(item)
-
 #root api
 @app.get("/")
 async def root():
@@ -122,6 +116,12 @@ async def grant_all_api_access(request:Request,user_id:int):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   return output
 
+#router
+from function import router_list
+response=router_list()
+router_list=response["message"]
+for item in router_list:app.include_router(item)
+  
 #server start
 from function import server_start
 if __name__=="__main__":
