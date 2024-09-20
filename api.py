@@ -2,6 +2,40 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
+#api root
+@router.get("/")
+async def root():
+  return {"status":1,"message":"welcome to atom"}
+
+#api api list
+@router.get("/api-list")
+def api_list():
+    api_list=[route.path for route in app.routes]
+    return api_list
+
+#api postgres init
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_init
+import hashlib
+from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
+@router.get("/postgres-init")
+async def pinit(request:Request):
+   #auth check
+   authorization_header=request.headers.get("Authorization")
+   if not authorization_header:return JSONResponse(status_code=400,content={"status":0,"message":"authorization_header must"})
+   token=authorization_header.split(" ",1)[1]
+   token_hashed=hashlib.sha256(token.encode()).hexdigest()
+   if token_hashed!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   #logic
+   response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #auth/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
