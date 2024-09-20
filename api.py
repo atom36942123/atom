@@ -262,8 +262,8 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
 #my/profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from datetime import datetime
 from function import postgres_object_update
+from datetime import datetime
 @router.get("/my/profile")
 async def my_profile(request:Request):
    #middleware
@@ -327,20 +327,15 @@ async def my_delete_account(request:Request):
 #my/message received
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from fastapi import BackgroundTasks
-from datetime import datetime
 from function import postgres_object_update
+from datetime import datetime
 @router.get("/my/message-received")
 async def my_message_received(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
    if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
@@ -356,17 +351,12 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
 #my/message inbox
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 @router.get("/my/message-inbox")
 async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
    if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
@@ -378,8 +368,6 @@ async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,pag
 #my/message thread
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from fastapi import BackgroundTasks
 from datetime import datetime
 @router.get("/my/message-thread")
@@ -387,10 +375,7 @@ async def my_message_thread(request:Request,background:BackgroundTasks,user_id:i
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"user_1":user["id"],"user_2":user_id}
@@ -405,17 +390,12 @@ async def my_message_thread(request:Request,background:BackgroundTasks,user_id:i
 #my/message delete
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 @router.delete("/my/message-delete")
 async def my_message_delete(request:Request,mode:str,id:int=None):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    if mode=="created":
      query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
@@ -437,18 +417,13 @@ async def my_message_delete(request:Request,mode:str,id:int=None):
 #my/parent read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_parent_read
 @router.get("/my/parent-read")
 async def my_parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -458,18 +433,13 @@ async def my_parent_read(request:Request,table:str,parent_table:str,order:str="i
 #my/parent check
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_parent_check
 @router.get("/my/parent-check")
 async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -479,8 +449,6 @@ async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:
 #my/update email
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
 @router.put("/my/update-email")
@@ -488,10 +456,7 @@ async def my_update_email(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic      
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -504,8 +469,6 @@ async def my_update_email(request:Request,email:str,otp:int):
 #my/update mobile
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgtes_otp_verify
 from function import postgres_object_update
 @router.put("/my/update-mobile")
@@ -513,10 +476,7 @@ async def my_update_mobile(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic      
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -529,8 +489,6 @@ async def my_update_mobile(request:Request,mobile:str,otp:int):
 #my/location search
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_location_search
 from function import where_clause
 @router.get("/my/location-search")
@@ -538,10 +496,7 @@ async def my_location_search(request:Request,table:str,location:str,within:str,o
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    param=dict(request.query_params)
    param["created_by_id"]=f"=,{user['id']}"
@@ -556,17 +511,12 @@ async def my_location_search(request:Request,table:str,location:str,within:str,o
 #my/delete ids
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 @router.delete("/my/delete-ids")
 async def my_delete_ids(request:Request,table:str,ids:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic      
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    if len(ids.split(","))>3:return JSONResponse(status_code=400,content={"status":0,"message":"ids length not allowed"})
@@ -579,18 +529,13 @@ async def my_delete_ids(request:Request,table:str,ids:str):
 #my/object create
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_object_create
 @router.post("/my/object-create")
 async def my_object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
@@ -605,18 +550,13 @@ async def my_object_create(request:Request,table:str):
 #my/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import where_clause
 @router.get("/my/object-read")
 async def my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    param=dict(request.query_params)
    param["created_by_id"]=f"=,{user['id']}"
@@ -632,8 +572,6 @@ async def my_object_read(request:Request,table:str,order:str="id desc",limit:int
 #my/object update
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import postgres_object_update
 from function import postgres_object_ownership_check
 @router.put("/my/object-update")
@@ -641,10 +579,7 @@ async def my_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
@@ -664,18 +599,13 @@ async def my_object_update(request:Request,table:str):
 #my/object delete
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import where_clause
 @router.delete("/my/object-delete")
 async def my_object_delete(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
