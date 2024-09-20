@@ -342,9 +342,10 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    query_param={"parent_id":user["id"]}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #background
-   object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-   response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   if output:
+      object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
+      response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
 
