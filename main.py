@@ -90,34 +90,22 @@ response=router_list()
 router_list=response["message"]
 for item in router_list:app.include_router(item)
 
-#api root
+#root api
 @app.get("/")
-async def root():
-  return {"status":1,"message":"welcome to atom"}
-
-#api api list
+async def root():return {"status":1,"message":"welcome to atom"}
+  
 @app.get("/api-list")
-def api_list():
-    api_list=[route.path for route in app.routes]
-    return api_list
-
-#api postgres init
-from fastapi import Request
+def api_list():return [route.path for route in app.routes]
+    
 from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
 @app.get("/postgres-init")
-async def pinit(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
-   #auth
+async def pinit():
    if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-   #logic
    response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
    return response
 
 #server start
