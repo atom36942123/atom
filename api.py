@@ -286,18 +286,13 @@ async def my_profile(request:Request):
 #my/token refresh
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from function import token_create
 @router.get("/my/token-refresh")
 async def my_token_refresh(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
@@ -312,17 +307,12 @@ async def my_token_refresh(request:Request):
 #my/delete-account
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 @router.delete("/my/delete-account")
 async def my_delete_account(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,postgres_object,None,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
+   user=request.state.user
    #logic
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if user["is_protected"]==1:return {"status":1,"message":"protected user cant be deleted"}
