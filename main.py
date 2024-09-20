@@ -54,10 +54,12 @@ async def middleware(request:Request,api_function):
     #auth
     user=None
     path=request.url.path
-    if "/my" in path or "/private":
-      response=await auth_check(request,jwt_secret_key,None)
-      if response["status"]==0:return JSONResponse(status_code=400,content=response)
-      user=response["message"]
+    for item in ["/my","private","/admin"]:
+      if item in path:
+        if item=="/admin":response=await auth_check(request,jwt_secret_key,postgres_object)
+        else:response=await auth_check(request,jwt_secret_key,None)
+        if response["status"]==0:return JSONResponse(status_code=400,content=response)
+        user=response["message"]
     #assign
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
