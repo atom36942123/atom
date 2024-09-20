@@ -15,6 +15,7 @@ async def auth_signup(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -38,6 +39,7 @@ async def auth_login(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #logic
    query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
    query_param={"username":username,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -62,6 +64,7 @@ async def auth_login_google(request:Request,google_id:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #logic
    query=f"select * from users where google_id=:google_id order by id desc limit 1;"
    query_param={"google_id":hashlib.sha256(google_id.encode()).hexdigest()}
@@ -95,6 +98,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -131,6 +135,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -167,6 +172,7 @@ async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -195,6 +201,7 @@ async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -222,6 +229,7 @@ async def auth_login_email_password(request:Request,email:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #logic
    query=f"select * from users where email=:email and password=:password order by id desc limit 1;"
    query_param={"email":email,"password":hashlib.sha256(password.encode()).hexdigest()}
@@ -246,6 +254,7 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
+   user=request.state.user
    #logic
    query=f"select * from users where mobile=:mobile and password=:password order by id desc limit 1;"
    query_param={"mobile":mobile,"password":hashlib.sha256(password.encode()).hexdigest()}
