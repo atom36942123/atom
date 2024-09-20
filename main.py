@@ -36,24 +36,39 @@ app=FastAPI(lifespan=lifespan,title="atom")
 #cors
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
-
+  
 #middleware
 from fastapi import Request
 from fastapi.responses import JSONResponse
-import traceback
-from function import middleware_error
-from function import postgres_create_log
-from config import jwt_secret_key
 import time
+import traceback
+from function import postgres_create_log
+from function import middleware_error
+from function import auth_check 
+from config import jwt_secret_key
 @app.middleware("http")
 async def middleware(request:Request,api_function):
   try:
+    #start
     start=time.time()
+    #auth
+    user=None
+    path=request.url.path
+    if "/my" in path:
+      response=await auth_check(request,jwt_secret_key,None)
+      if response["status"]==0:return JSONResponse(status_code=400,content=response)
+      user=response["message"]
+    #assign
     request.state.postgres_object=postgres_object
     request.state.column_datatype=column_datatype
+    request.state.user=user
+    #response
     response=await api_function(request)
+    #end
     end=time.time()
-    await postgres_create_log(postgres_object,request,jwt_secret_key,(end-start)*1000,["POST","GET","PUT","DELETE"])
+    response_time_ms=(end-start)*1000
+    #log
+    await postgres_create_log(postgres_object,request,jwt_secret_key,response_time_ms,["POST","GET","PUT","DELETE"])
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
