@@ -96,7 +96,7 @@ async def root():
   return {"status":1,"message":"welcome to atom"}
   
 @app.get("/api-list")
-def api_list():
+async def api_list():
   return [route.path for route in app.routes]
 
 from fastapi import Request
@@ -113,7 +113,7 @@ async def pinit(request:Request):
   
 from fastapi import Request
 @app.get("/grant-all-api-access")
-def grant_all_api_access(request:Request,user_id:int):
+async def grant_all_api_access(request:Request,user_id:int):
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
   api_admin_list=[route.path for route in app.routes if "/admin" in route]
   api_admin_str=",".join(api_admin_list)
