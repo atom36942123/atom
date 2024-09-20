@@ -262,8 +262,6 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
 #my/profile
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
-from config import jwt_secret_key
 from datetime import datetime
 from function import postgres_object_update
 @router.get("/my/profile")
@@ -271,10 +269,6 @@ async def my_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
    column_datatype=request.state.column_datatype
-   #auth check check
-   response=await auth_check(request,jwt_secret_key,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   user=response["message"]
    #logic
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
