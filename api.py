@@ -778,7 +778,7 @@ async def private_openai(request:Request,text:str):
    column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
-   llm=OpenAI(temperature=0.7)
+   llm=OpenAI(api_key=openai_secret_key,temperature=0.7)
    output=llm(text)
    #final
    return {"status":1,"message":output}
