@@ -3,12 +3,12 @@ from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
 #root/index
-@app.get("/")
+@router.get("/")
 async def root():
   return {"status":1,"message":"welcome to atom"}
 
 #root/api-list
-@app.get("/api-list")
+@router.get("/api-list")
 async def api_list():
   api_list=[route.path for route in request.state.app.routes]
   return api_list
@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from function import postgres_init
 import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
-@app.get("/postgres-init")
+@router.get("/postgres-init")
 async def pinit(request:Request):
    if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
    response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
@@ -28,7 +28,7 @@ async def pinit(request:Request):
 
 #root/grant-all-api-access
 from fastapi import Request
-@app.put("/grant-all-api-access")
+@router.put("/grant-all-api-access")
 async def grant_all_api_access(request:Request,user_id:int):
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
   api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
@@ -41,7 +41,7 @@ async def grant_all_api_access(request:Request,user_id:int):
 #root/query-runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
-@app.get("/query-runner")
+@router.get("/query-runner")
 async def query_runner(request:Request,query:str,mode:str=None):
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
   if not mode:output=await postgres_object.fetch_all(query=query,values={})
