@@ -10,7 +10,8 @@ async def root():
 #root/api-list
 @app.get("/api-list")
 async def api_list():
-  return [route.path for route in app.routes]
+  api_list=[route.path for route in request.state.app.routes]
+  return api_list
 
 #root/postgres-init
 from fastapi import Request
