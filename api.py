@@ -14,7 +14,6 @@ from fastapi_limiter.depends import RateLimiter
 async def auth_signup(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #create user
    query="insert into users (username,password) values (:username,:password) returning *;"
@@ -38,7 +37,6 @@ from config import jwt_secret_key
 async def auth_login(request:Request,username:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from users where username=:username and password=:password order by id desc limit 1;"
@@ -63,7 +61,6 @@ from config import jwt_secret_key
 async def auth_login_google(request:Request,google_id:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from users where google_id=:google_id order by id desc limit 1;"
@@ -97,7 +94,6 @@ from function import postgtes_otp_verify
 async def auth_login_email_otp(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
@@ -134,7 +130,6 @@ from function import postgtes_otp_verify
 async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
@@ -171,7 +166,6 @@ from function import postgtes_otp_verify
 async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
@@ -200,7 +194,6 @@ from function import postgtes_otp_verify
 async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #otp verify
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
@@ -228,7 +221,6 @@ from config import jwt_secret_key
 async def auth_login_email_password(request:Request,email:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from users where email=:email and password=:password order by id desc limit 1;"
@@ -253,7 +245,6 @@ from config import jwt_secret_key
 async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from users where mobile=:mobile and password=:password order by id desc limit 1;"
@@ -277,7 +268,6 @@ from datetime import datetime
 async def my_profile(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query="select * from users where id=:id;"
@@ -288,7 +278,7 @@ async def my_profile(request:Request):
    response={"status":1,"message":user}
    #update last active at
    object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   await postgres_object_update(postgres_object,column_datatype,"background","users",[object])
+   await postgres_object_update(postgres_object,request.state.column_datatype,"background","users",[object])
    #final
    return response
 
@@ -300,7 +290,6 @@ from function import token_create
 async def my_token_refresh(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query="select * from users where id=:id;"
@@ -320,7 +309,6 @@ from fastapi.responses import JSONResponse
 async def my_delete_account(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
@@ -343,7 +331,6 @@ from datetime import datetime
 async def my_message_received(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
@@ -353,7 +340,7 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    #background
    if output:
       object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-      response=await postgres_object_update(postgres_object,column_datatype,"background","message",object_list)
+      response=await postgres_object_update(postgres_object,request.state.column_datatype,"background","message",object_list)
       if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return {"status":1,"message":output}
@@ -365,7 +352,6 @@ from fastapi.responses import JSONResponse
 async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
@@ -384,7 +370,6 @@ from datetime import datetime
 async def my_message_thread(request:Request,background:BackgroundTasks,user_id:int,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
@@ -404,7 +389,6 @@ from fastapi.responses import JSONResponse
 async def my_message_delete(request:Request,mode:str,id:int=None):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if mode=="created":
@@ -432,7 +416,6 @@ from function import postgres_parent_read
 async def my_parent_read(request:Request,table:str,parent_table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    response=await postgres_parent_read(postgres_object,table,parent_table,order,limit,(page-1)*limit,user["id"])
@@ -448,7 +431,6 @@ from function import postgres_parent_check
 async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    response=await postgres_parent_check(postgres_object,table,parent_table,parent_ids,user["id"])
@@ -465,13 +447,12 @@ from function import postgres_object_update
 async def my_update_email(request:Request,email:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic      
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object={"id":user["id"],"updated_by_id":user["id"],"email":email}
-   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   response=await postgres_object_update(postgres_object,request.state.column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -485,13 +466,12 @@ from function import postgres_object_update
 async def my_update_mobile(request:Request,mobile:str,otp:int):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic      
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object={"id":user["id"],"updated_by_id":user["id"],"mobile":mobile}
-   response=await postgres_object_update(postgres_object,column_datatype,"normal","users",[object])
+   response=await postgres_object_update(postgres_object,request.state.column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -505,12 +485,11 @@ from function import where_clause
 async def my_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    param=dict(request.query_params)
    param["created_by_id"]=f"=,{user['id']}"
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    response=await postgres_location_search(postgres_object,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
@@ -525,7 +504,6 @@ from fastapi.responses import JSONResponse
 async def my_delete_ids(request:Request,table:str,ids:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic      
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
@@ -544,7 +522,6 @@ from function import postgres_object_create
 async def my_object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
@@ -552,7 +529,7 @@ async def my_object_create(request:Request,table:str):
    object["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,[object])
+   response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -565,12 +542,11 @@ from function import where_clause
 async def my_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    param=dict(request.query_params)
    param["created_by_id"]=f"=,{user['id']}"
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
@@ -588,7 +564,6 @@ from function import postgres_object_ownership_check
 async def my_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
@@ -601,7 +576,7 @@ async def my_object_update(request:Request,table:str):
    if table=="users":
       for item in ["email","mobile"]:
          if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   response=await postgres_object_update(postgres_object,request.state.column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -614,12 +589,11 @@ from function import where_clause
 async def my_object_delete(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"delete from {table} {where_string};"
@@ -638,7 +612,6 @@ import boto3,uuid
 async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    key=str(uuid.uuid4())+"-"+file.filename
@@ -657,7 +630,6 @@ import boto3,uuid
 async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if "." not in filename:return JSONResponse(status_code=400,content={"status":0,"message":"extension must"})
@@ -676,11 +648,10 @@ from function import where_clause
 async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
@@ -699,7 +670,6 @@ import boto3
 async def private_rekognition_compare_face(request:Request,url_source:str,url_target:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    bucket_name_source=url_source.split("//",1)[1].split(".",1)[0]
@@ -718,7 +688,6 @@ import boto3
 async def private_rekognition_detect_label(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    bucket_name=url.split("//",1)[1].split(".",1)[0]
@@ -737,7 +706,6 @@ import boto3
 async def private_rekognition_detect_face(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    bucket_name=url.split("//",1)[1].split(".",1)[0]
@@ -756,7 +724,6 @@ import boto3
 async def private_rekognition_detect_moderation(request:Request,url:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    bucket_name=url.split("//",1)[1].split(".",1)[0]
@@ -775,7 +742,6 @@ from langchain.llms import OpenAI
 async def private_openai(request:Request,text:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    llm=OpenAI(api_key=openai_secret_key,temperature=0.7)
@@ -793,7 +759,6 @@ from function import redis_key_builder
 async def public_project_meta(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    query_dict={"user_count":"select count(*) from users;"}
@@ -811,7 +776,6 @@ import boto3,random
 async def public_otp_send_mobile_sns(request:Request,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    otp=random.randint(100000,999999)
@@ -832,7 +796,6 @@ import boto3,random
 async def public_otp_send_email_ses(request:Request,identity:str,email:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    otp=random.randint(100000,999999)
@@ -852,7 +815,6 @@ from function import postgtes_otp_verify
 async def public_otp_verify_email(request:Request,otp:int,email:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    response=await postgtes_otp_verify(postgres_object,otp,email,None)
@@ -868,7 +830,6 @@ from function import postgtes_otp_verify
 async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
@@ -891,12 +852,11 @@ from function import postgres_add_action_count
 async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
@@ -918,12 +878,11 @@ from function import postgres_object_create
 async def admin_create_user(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    object=await request.json()
    object["created_by_id"]=user["id"]
-   response=await postgres_object_create(postgres_object,column_datatype,"normal","users",[object])
+   response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal","users",[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -936,7 +895,6 @@ from function import postgres_clean
 async def admin_pclean(request:Request):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    response=await postgres_clean(postgres_object)
@@ -954,14 +912,13 @@ from function import postgres_object_create
 async def admin_csv_create(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #file
    response=await csv_to_object_list(file)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
-   response=await postgres_object_create(postgres_object,column_datatype,"normal",table,object_list)
+   response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal",table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -976,14 +933,13 @@ from function import postgres_object_update
 async def admin_csv_update(request:Request,table:str,file:UploadFile):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #file
    response=await csv_to_object_list(file)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    object_list=response["message"]
    #logic
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,object_list)
+   response=await postgres_object_update(postgres_object,request.state.column_datatype,"normal",table,object_list)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -997,7 +953,6 @@ import boto3
 async def admin_s3_delete_url(request:Request,s3_region_name:str,s3_bucket_name:str,url:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    key=url.rsplit("/",1)[1]
@@ -1015,7 +970,6 @@ import boto3
 async def admin_s3_delete_all(request:Request,s3_bucket_name:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
@@ -1031,11 +985,10 @@ from function import where_clause
 async def admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
+   response=await where_clause(param,request.state.column_datatype)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
@@ -1053,14 +1006,13 @@ from function import postgres_object_update
 async def admin_object_update(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
-   column_datatype=request.state.column_datatype
    user=request.state.user
    #logic
    if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    object=await request.json()
    if not object:return JSONResponse(status_code=400,content={"status":0,"message":"body is must"})
    object["updated_by_id"]=user["id"]
-   response=await postgres_object_update(postgres_object,column_datatype,"normal",table,[object])
+   response=await postgres_object_update(postgres_object,request.state.column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
