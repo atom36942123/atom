@@ -21,6 +21,7 @@ s3_secret_access_key=env("s3_secret_access_key")
 rekognition_region_name=env("rekognition_region_name")
 rekognition_access_key_id=env("rekognition_access_key_id")
 rekognition_secret_access_key=env("rekognition_secret_access_key")
+openai_secret_key=env("openai_secret_key")
 
 #postgres schema
 postgres_prequery=["create extension if not exists postgis"]
