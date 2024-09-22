@@ -737,7 +737,7 @@ async def private_rekognition_detect_moderation(request:Request,url:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import openai_secret_key
-from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
 @router.get("/private/openai")
 async def private_openai(request:Request,text:str):
    #middleware
