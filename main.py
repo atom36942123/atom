@@ -69,8 +69,8 @@ async def middleware(request:Request,api_function):
       if path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
     #assign
     request.state.postgres_object=postgres_object
-    request.state.column_datatype=column_datatype
     request.state.user=user
+    request.state.column_datatype=column_datatype
     #response
     response=await api_function(request)
     #end
