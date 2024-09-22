@@ -70,6 +70,7 @@ async def middleware(request:Request,api_function):
     #assign
     request.state.postgres_object=postgres_object
     request.state.user=user
+    request.state.app=app
     request.state.column_datatype=column_datatype
     #response
     response=await api_function(request)
