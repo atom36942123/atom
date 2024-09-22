@@ -30,10 +30,12 @@ async def pinit(request:Request):
 
 #root/grant-all-api-access
 from fastapi import Request
+import hashlib
 @router.put("/grant-all-api-access")
 async def grant_all_api_access(request:Request,user_id:int):
+  postgres_object=request.state.postgres_object
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
-  api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
+  api_admin_list=[route.path for route in request.state.app.routes if "/admin" in route.path]
   api_admin_str=",".join(api_admin_list)
   query="update users set api_access=:api_access where id=:id returning *"
   query_param={"api_access":api_admin_str,"id":user_id}
@@ -43,8 +45,10 @@ async def grant_all_api_access(request:Request,user_id:int):
 #root/query-runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
+import hashlib
 @router.get("/query-runner")
 async def query_runner(request:Request,query:str,mode:str=None):
+  postgres_object=request.state.postgres_object
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
   if not mode:output=await postgres_object.fetch_all(query=query,values={})
   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
