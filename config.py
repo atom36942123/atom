@@ -23,7 +23,7 @@ rekognition_access_key_id=env("rekognition_access_key_id")
 rekognition_secret_access_key=env("rekognition_secret_access_key")
 openai_secret_key=env("openai_secret_key")
 
-#postgres schema
+#postgres
 postgres_prequery=["create extension if not exists postgis"]
 postgres_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 postgres_column={
