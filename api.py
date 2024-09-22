@@ -8,8 +8,9 @@ async def root():
   return {"status":1,"message":"welcome to atom"}
 
 #root/api-list
+from fastapi import Request
 @router.get("/api-list")
-async def api_list():
+async def api_list(request:Request):
   api_list=[route.path for route in request.state.app.routes]
   return api_list
 
