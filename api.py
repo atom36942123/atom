@@ -766,6 +766,23 @@ async def private_rekognition_detect_moderation(request:Request,url:str):
    #final
    return {"status":1,"message":output}
 
+#private/openai
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import openai_secret_key
+from langchain.llms import OpenAI
+@router.get("/private/openai")
+async def private_openai(request:Request,text:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   column_datatype=request.state.column_datatype
+   user=request.state.user
+   #logic
+   llm=OpenAI(temperature=0.7)
+   output=llm(text)
+   #final
+   return {"status":1,"message":output}
+
 #public/project meta
 from fastapi import Request
 from fastapi.responses import JSONResponse
