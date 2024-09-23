@@ -5,13 +5,25 @@ router=APIRouter(tags=["api"])
 #root/index
 @router.get("/")
 async def root():
-  return {"status":1,"message":"welcome to atom"}
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  #logic
+  response={"status":1,"message":"welcome to atom"}
+  #final
+  return response
 
 #root/api-list
 from fastapi import Request
 @router.get("/api-list")
 async def api_list(request:Request):
-  api_list=[route.path for route in request.state.app.routes]
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  app=request.state.app
+  #logic
+  api_list=[route.path for route in app.routes]
+  #final
   return api_list
 
 #root/postgres-init
@@ -22,10 +34,15 @@ import hashlib
 from config import postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery
 @router.get("/postgres-init")
 async def pinit(request:Request):
+  #middleware
   postgres_object=request.state.postgres_object
+  user=request.state.user
+  #auth
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+  #logic
   response=await postgres_init(postgres_object,postgres_prequery,postgres_table,postgres_column,postgres_notnull,postgres_identity,postgres_default,postgres_unique,postgres_index,postgres_postquery)
   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+  #final
   return response
 
 #root/grant-all-api-access
@@ -33,14 +50,19 @@ from fastapi import Request
 import hashlib
 @router.put("/grant-all-api-access")
 async def grant_all_api_access(request:Request,user_id:int):
+  #middleware
   postgres_object=request.state.postgres_object
+  user=request.state.user
+  #auth
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+  #logic
   api_admin_list=[route.path for route in request.state.app.routes if "/admin" in route.path]
   api_admin_str=",".join(api_admin_list)
   query="update users set api_access=:api_access where id=:id returning *"
   query_param={"api_access":api_admin_str,"id":user_id}
   output=await postgres_object.fetch_all(query=query,values=query_param)
-  return output
+  #final
+  return {"status":1,"message":output}
 
 #root/query-runner
 from fastapi import Request
@@ -48,10 +70,15 @@ from fastapi.responses import JSONResponse
 import hashlib
 @router.get("/query-runner")
 async def query_runner(request:Request,query:str,mode:str=None):
+  #middleware
   postgres_object=request.state.postgres_object
+  user=request.state.user
+  #auth
   if hashlib.sha256(request.headers.get("Authorization").split(" ",1)[1].encode()).hexdigest()!="a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":return JSONResponse(status_code=400,content={"status":0,"message":"token root issue"})
+  #logic
   if not mode:output=await postgres_object.fetch_all(query=query,values={})
   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
+  #final
   return {"status":1,"message":output}
 
 #auth/signup
