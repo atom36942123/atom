@@ -3,8 +3,9 @@ from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
 #root/index
+from fastapi import Request
 @router.get("/")
-async def root():
+async def root(request:Request):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
