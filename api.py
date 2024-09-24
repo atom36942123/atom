@@ -608,13 +608,14 @@ async def my_object_create(request:Request,table:str):
    #middleware
    postgres_object=request.state.postgres_object
    user=request.state.user
-   #check
-   if table in ["spatial_ref_sys","users","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #object
    object=await request.json()
    object["created_by_id"]=user["id"]
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   #check
+   if table not in ["post","likes","bookmark","report","block","rating","comment","message","helpdesk"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   if table in ["likes","bookmark","report","block","rating","comment","message"] and (not object["parent_table"] or not object["parent_id"]):return JSONResponse(status_code=400,content={"status":0,"message":"parent table/id must"})
    #logic
    response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
