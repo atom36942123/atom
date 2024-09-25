@@ -105,7 +105,7 @@ async def auth_signup(request:Request,username:str,password:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
-   return {"status":1,"message":[user,token]}
+   return {"status":1,"message":{"user":user,"token":token}}
 
 #auth/login
 from fastapi import Request
