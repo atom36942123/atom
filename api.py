@@ -1118,3 +1118,18 @@ async def admin_object_update(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#admin/delete ids
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.put("/admin/delete-ids")
+async def admin_delete_ids(request:Request,table:str,ids:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   query=f"delete from {table} where id in ({ids});"
+   query_param={}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
