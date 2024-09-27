@@ -42,31 +42,20 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import time
 import traceback
+from function import auth_check_middleware 
+from function import jwt_token_decode
+from config import jwt_secret_key
 from function import postgres_create_log
 from function import middleware_error
-from function import jwt_token_decode 
-from config import jwt_secret_key
 @app.middleware("http")
 async def middleware(request:Request,api_function):
   try:
     #start
     start=time.time()
     #auth check
-    user=None
-    path=request.url.path
-    for item in ["/my","private","/admin"]:
-      if item in path:
-        if item=="/admin":response=await jwt_token_decode(request,jwt_secret_key,postgres_object)
-        else:response=await jwt_token_decode(request,jwt_secret_key,None)
-        if response["status"]==0:return JSONResponse(status_code=400,content=response)
-        user=response["message"]
-    #active check
-    if "/admin" in path:
-      if user["is_active"]==0:return JSONResponse(status_code=400,content={"status":0,"message":"user not active"})
-    #api access check
-    if "/admin" in path:
-      if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
-      if path not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
+    response=await auth_check_middleware(request,jwt_token_decode,jwt_secret_key,postgres_object)
+    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+    user=response["message"]
     #assign
     request.state.postgres_object=postgres_object
     request.state.user=user
