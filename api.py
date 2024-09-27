@@ -935,7 +935,6 @@ async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
 #public/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import auth_check
 from config import jwt_secret_key
 from function import where_clause
 from fastapi_cache.decorator import cache
