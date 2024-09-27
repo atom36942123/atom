@@ -86,7 +86,7 @@ async def query_runner(request:Request,query:str,mode:str=None):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 from fastapi import Depends
 from fastapi_limiter.depends import RateLimiter
@@ -101,7 +101,7 @@ async def auth_signup(request:Request,username:str,password:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=user=output[0]
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -111,7 +111,7 @@ async def auth_signup(request:Request,username:str,password:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 @router.get("/auth/login")
 async def auth_login(request:Request,username:str,password:str):
@@ -125,7 +125,7 @@ async def auth_login(request:Request,username:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -135,7 +135,7 @@ async def auth_login(request:Request,username:str,password:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 @router.get("/auth/login-google")
 async def auth_login_google(request:Request,google_id:str):
@@ -157,7 +157,7 @@ async def auth_login_google(request:Request,google_id:str):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -167,7 +167,7 @@ async def auth_login_google(request:Request,google_id:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-email-otp")
@@ -193,7 +193,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -203,7 +203,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-mobile-otp")
@@ -229,7 +229,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -239,7 +239,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-email-otp-exist")
@@ -257,7 +257,7 @@ async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -267,7 +267,7 @@ async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-mobile-otp-exist")
@@ -285,7 +285,7 @@ async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -295,7 +295,7 @@ async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 @router.get("/auth/login-email-password")
 async def auth_login_email_password(request:Request,email:str,password:str):
@@ -309,7 +309,7 @@ async def auth_login_email_password(request:Request,email:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -319,7 +319,7 @@ async def auth_login_email_password(request:Request,email:str,password:str):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import hashlib
-from function import token_create
+from function import jwt_token_encode
 from config import jwt_secret_key
 @router.get("/auth/login-mobile-password")
 async def auth_login_mobile_password(request:Request,mobile:str,password:str):
@@ -333,7 +333,7 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token create
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -365,7 +365,7 @@ async def my_profile(request:Request):
 #my/token refresh
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from function import token_create
+from function import jwt_token_encode
 @router.get("/my/token-refresh")
 async def my_token_refresh(request:Request):
    #middleware
@@ -377,7 +377,7 @@ async def my_token_refresh(request:Request):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   response=await token_create(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
