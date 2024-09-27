@@ -212,9 +212,9 @@ async def postgres_add_creator_key(postgres_object,object_list):
            break
   return {"status":1,"message":object_list}
 
-#auth check
+#jwt token decode
 import jwt,json
-async def auth_check(request,jwt_secret_key,postgres_object):
+async def jwt_token_decode(request,jwt_secret_key,postgres_object):
   authorization_header=request.headers.get("Authorization")
   if not authorization_header:return {"status":0,"message":"token is must"}
   token=authorization_header.split(" ",1)[1]
@@ -227,10 +227,10 @@ async def auth_check(request,jwt_secret_key,postgres_object):
     if not user:return {"status":0,"message":"no user for token passed"}
   return {"status":1,"message":user}
   
-#token create
+#jwt token create
 import jwt,json,time
 from datetime import datetime,timedelta
-async def token_create(user,jwt_secret_key):
+async def jwt_token_encode(user,jwt_secret_key):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"],"is_protected":user["is_protected"]}
   data=json.dumps(data,default=str)
   expiry_days=10000
