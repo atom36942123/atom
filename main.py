@@ -56,17 +56,17 @@ async def middleware(request:Request,api_function):
     response=await auth_check_middleware(request,jwt_token_decode,jwt_secret_key,postgres_object)
     if response["status"]==0:return JSONResponse(status_code=400,content=response)
     user=response["message"]
-    #assign
+    #request assign
     request.state.postgres_object=postgres_object
     request.state.user=user
     request.state.column_datatype=column_datatype
     request.state.app=app
-    #response
+    #api response
     response=await api_function(request)
     #end
     end=time.time()
     response_time_ms=(end-start)*1000
-    #log
+    #log create
     await postgres_create_log(postgres_object,request,jwt_secret_key,response_time_ms,["POST","GET","PUT","DELETE"])
   except Exception as e:
     print(traceback.format_exc())
