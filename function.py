@@ -227,7 +227,7 @@ async def jwt_token_decode(request,jwt_secret_key,postgres_object):
     if not user:return {"status":0,"message":"no user for token passed"}
   return {"status":1,"message":user}
   
-#jwt token create
+#jwt token encode
 import jwt,json,time
 from datetime import datetime,timedelta
 async def jwt_token_encode(user,jwt_secret_key):
