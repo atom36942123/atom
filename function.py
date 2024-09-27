@@ -288,7 +288,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
-async def redis_start(redis_server_url):
+async def redis_service_start(redis_server_url):
   FastAPICache.init(RedisBackend(aioredis.from_url(redis_server_url)))
   await FastAPILimiter.init(aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True))
   return {"status":1,"message":"done"}
