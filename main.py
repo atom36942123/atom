@@ -44,7 +44,7 @@ import time
 import traceback
 from function import postgres_create_log
 from function import middleware_error
-from function import auth_check 
+from function import jwt_token_decode 
 from config import jwt_secret_key
 @app.middleware("http")
 async def middleware(request:Request,api_function):
@@ -56,8 +56,8 @@ async def middleware(request:Request,api_function):
     path=request.url.path
     for item in ["/my","private","/admin"]:
       if item in path:
-        if item=="/admin":response=await auth_check(request,jwt_secret_key,postgres_object)
-        else:response=await auth_check(request,jwt_secret_key,None)
+        if item=="/admin":response=await jwt_token_decode(request,jwt_secret_key,postgres_object)
+        else:response=await jwt_token_decode(request,jwt_secret_key,None)
         if response["status"]==0:return JSONResponse(status_code=400,content=response)
         user=response["message"]
     #active check
