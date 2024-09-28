@@ -47,15 +47,18 @@ Below are the generic modules that are already built in atom that can be used di
 4. redis
 5. mongodb
 6. elasticsearch
-7. ec2
-8. s3
-9. ses
+7. aws ec2
+8. aws s3
+9. aws ses
 10. jenkins
 11. postman
 12. retool/appsmith
 13. sentry
 14. postgis
 15. render
+16. aws sns
+17. aws rekognition
+18. openai
 
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.
