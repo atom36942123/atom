@@ -599,28 +599,6 @@ async def my_delete_ids(request:Request,table:str,ids:str):
    #final
    return {"status":1,"message":output}
 
-#my/object create
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_object_create
-@router.post("/my/object-create")
-async def my_object_create(request:Request,table:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #check
-   if table not in ["post","likes","bookmark","report","block","rating","comment","message","helpdesk"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #object
-   object=await request.json()
-   object["created_by_id"]=user["id"]
-   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
-      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
-   #logic
-   response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal",table,[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
 #my/object read
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -694,6 +672,50 @@ async def my_object_delete(request:Request,table:str):
    #final
    return {"status":1,"message":output}
 
+#private/object create
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgres_object_create
+@router.post("/private/object-create")
+async def private_object_create(request:Request,table:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #check
+   if table not in ["post","likes","bookmark","report","block","rating","comment","message","helpdesk"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #object
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
+      if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
+   #logic
+   response=await postgres_object_create(postgres_object,request.state.column_datatype,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#private/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import where_clause
+@router.get("/private/object-read")
+async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #where
+   param=dict(request.query_params)
+   response=await where_clause(param,request.state.column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   #logic
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   response={"status":1,"message":output}
+   #final
+   return response
+
 #private/s3 upload file
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -732,28 +754,6 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
    #final
    return {"status":1,"message":output}
 
-#private/object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import where_clause
-@router.get("/private/object-read")
-async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #where
-   param=dict(request.query_params)
-   response=await where_clause(param,request.state.column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   #logic
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   response={"status":1,"message":output}
-   #final
-   return response
-   
 #private/rekognition compare face
 from fastapi import Request
 from fastapi.responses import JSONResponse
