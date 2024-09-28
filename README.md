@@ -40,7 +40,7 @@ Below are the generic modules that are already built in atom that can be used di
 20. all major datatype supported in api's - string,timestamp,int,numeric,list,jsonb,geometric
 21. rate limiter to stop malicious bot activity
    
-# tech stack
+# tech stack used
 1. python
 2. fastapi
 3. postgres
