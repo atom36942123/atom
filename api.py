@@ -66,14 +66,8 @@ async def postgres_init(request:Request):
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in output]
-  output=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column=output
-  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   #notnull
-  for k,v in postgres_notnull.items():
-    for item in v:
-      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
-        await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={})
+
   #unique
   for k,v in postgres_unique.items():
     for item in v:
