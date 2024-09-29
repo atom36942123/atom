@@ -49,7 +49,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
 from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
-from function import postgres_set_updated_at_now
+from function import postgres_set_updated_at_now,postgres_delete_disable_bulk
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -80,9 +80,9 @@ async def postgres_init(request:Request):
       constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
       if constraint_name not in schema_constraint_name_list:
         await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
-  #set updated at now
+  #function call
   await postgres_set_updated_at_now(postgres_object)
-  #delete disable bulk
+  await postgres_delete_disable_bulk(postgres_object,[["users",1]])
   #root user
   query_list=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"]
   for item in query_list:await postgres_object.fetch_all(query=item,values={})
