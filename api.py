@@ -70,9 +70,7 @@ async def postgres_init(request:Request):
   await postgres_delete_disable_bulk(postgres_object,[["users",1]])
   await postgres_create_root_user(postgres_object)
   #query
-  for item in postgres_query:
-    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
-    await postgres_object.fetch_all(query=item,values={})
+
   #final
   return {"status":1,"message":"done"}
 
