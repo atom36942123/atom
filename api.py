@@ -48,7 +48,7 @@ async def postgres_runner(request:Request,query:str,mode:str=None):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
-from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
+import database
 from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user,postgres_set_notnull,postgres_set_unique,postgres_execute_query
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
