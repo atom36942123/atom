@@ -1,21 +1,14 @@
- output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in output]
-  for k,v in postgres_unique.items():
-    for item in v:
-      constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
-      if constraint_name not in schema_constraint_name_list:
-        await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
-
 #postgres set unique
 async def postgres_set_unique(postgres_object,config):
-  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
   for k,v in config.items():
     for item in v:
-      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
-        query=f"alter table {item} alter column {k} set not null;"
-        query_param={}
-        await postgres_object.fetch_all(query=query,values=query_param)
+     constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
+     if constraint_name not in schema_constraint_name_list:
+      query=f"alter table {item} add constraint {constraint_name} unique ({k});"
+      query_param={}
+      await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
 #postgres set notnull
@@ -25,9 +18,9 @@ async def postgres_set_notnull(postgres_object,config):
   for k,v in config.items():
     for item in v:
       if schema_column_table_nullable[f"{k}_{item}"]=="YES":
-        query=f"alter table {item} alter column {k} set not null;"
-        query_param={}
-        await postgres_object.fetch_all(query=query,values=query_param)
+       query=f"alter table {item} alter column {k} set not null;"
+       query_param={}
+       await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
   
 #postgres create root user
@@ -55,9 +48,9 @@ async def postgres_set_updated_at_now(postgres_object):
   for item in schema_column:
     table,column=item["table_name"],item["column_name"]
     if column=="updated_at":
-      query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();"
-      query_param={}
-      await postgres_object.fetch_all(query=query,values=query_param)
+     query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();"
+     query_param={}
+     await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
 #postgres location search
