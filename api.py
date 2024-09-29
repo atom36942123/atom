@@ -83,10 +83,7 @@ async def postgres_init(request:Request):
   [await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{item['table_name']} before update on {item['table_name']} for each row execute procedure function_set_updated_at_now();",values={})for item in schema_column if item["column_name"]=="updated_at"]
   #delete disable bulk
   await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
-  for item in d:await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});",values={})
-  #root user
-  query_list=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"]
-  for item in query_list:await postgres_object.fetch_all(query=item,values={})
+  for k,v in dbschema.bulk_delete_disable.items():await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{k} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});",values={})
   #query
   for item in postgres_query:
     if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
