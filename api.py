@@ -49,6 +49,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
 from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
+from function import postgres_set_updated_at_now
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -80,6 +81,7 @@ async def postgres_init(request:Request):
       if constraint_name not in schema_constraint_name_list:
         await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
   #set updated at now
+  await postgres_set_updated_at_now(postgres_object)
   #delete disable bulk
   await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
   for item in [["users",1]]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});",values={})
