@@ -71,4 +71,5 @@ unique={
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
 }
+bulk_delete_disable={"users":1}
 query=[]
