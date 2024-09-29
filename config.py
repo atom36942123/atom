@@ -74,7 +74,6 @@ postgres_column={
 "api_access":["text",["users"]],
 }
 postgres_notnull={"id":postgres_table,"created_at":postgres_table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
-postgres_default=[["created_at","now()",postgres_table]]
 postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
 "id":["btree",postgres_table],
