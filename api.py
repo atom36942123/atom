@@ -63,15 +63,6 @@ async def postgres_init(request:Request):
   [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in postgres_column.items() for item in v[1]]     
   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in postgres_index.items() for item in v[1]]
   for item in postgres_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-  #schema
-  output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in output]
-  #unique
-  for k,v in postgres_unique.items():
-    for item in v:
-      constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
-      if constraint_name not in schema_constraint_name_list:
-        await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
   #function call
   await postgres_set_not_null(postgres_object,postgres_notnull)
   await postgres_set_updated_at_now(postgres_object)
