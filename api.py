@@ -48,8 +48,7 @@ async def postgres_runner(request:Request,query:str,mode:str=None):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
-import database
-from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user,postgres_set_notnull,postgres_set_unique,postgres_execute_query
+from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -58,17 +57,41 @@ async def postgres_init(request:Request):
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #prequery/table/column/index/protected
+  for item in ["create extension if not exists postgis"]:await postgres_object.fetch_all(query=item,values={})
   for item in postgres_table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
   [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in postgres_column.items() for item in v[1]]     
   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in postgres_index.items() for item in v[1]]
   for item in postgres_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-  #function call
-  await postgres_set_unique(postgres_object,postgres_unique)
-  await postgres_set_notnull(postgres_object,postgres_notnull)
-  await postgres_set_updated_at_now(postgres_object)
-  await postgres_delete_disable_bulk(postgres_object,[["users",1]])
-  await postgres_create_root_user(postgres_object)
-  await postgres_execute_query(postgres_object,postgres_query)
+  #schema
+  output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in output]
+  output=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  schema_column=output
+  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  #notnull
+  for k,v in postgres_notnull.items():
+    for item in v:
+      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
+        await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={})
+  #unique
+  for k,v in postgres_unique.items():
+    for item in v:
+      constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
+      if constraint_name not in schema_constraint_name_list:
+        await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
+  #set updated at now
+  await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
+  for item in postgres_column["updated_at"][1]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{item} before update on {item} for each row execute procedure function_set_updated_at_now();",values={})
+  #delete disable bulk
+  await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
+  for item in [["users",1]]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});",values={})
+  #root user
+  query_list=["insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;","create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"]
+  for item in query_list:await postgres_object.fetch_all(query=item,values={})
+  #query
+  for item in postgres_query:
+    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
+    await postgres_object.fetch_all(query=item,values={})
   #final
   return {"status":1,"message":"done"}
 
