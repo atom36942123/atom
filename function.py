@@ -1,14 +1,11 @@
-  for item in postgres_column["updated_at"][1]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{item} before update on {item} for each row execute procedure function_set_updated_at_now();",values={})
-
-
 #postgres set updated at now
 async def postgres_set_updated_at_now(postgres_object):
-  query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';"
-  query_param={}
-  await postgres_object.fetch_all(query=query,values=query_param)
-
- 
-  return {"status":1,"message":output}
+  await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  for item in schema_column:
+    table,column=item["table_name"],item["column_name"]
+    if column=="updated_at":await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();",values={})
+  return {"status":1,"message":"done"}
 
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
