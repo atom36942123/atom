@@ -1,5 +1,25 @@
-#postgres set not null
-async def postgres_set_not_null(postgres_object,config):
+ output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in output]
+  for k,v in postgres_unique.items():
+    for item in v:
+      constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
+      if constraint_name not in schema_constraint_name_list:
+        await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
+
+#postgres set unique
+async def postgres_set_unique(postgres_object,config):
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  for k,v in config.items():
+    for item in v:
+      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
+        query=f"alter table {item} alter column {k} set not null;"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
+#postgres set notnull
+async def postgres_set_notnull(postgres_object,config):
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   for k,v in config.items():
