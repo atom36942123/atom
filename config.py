@@ -25,11 +25,10 @@ rekognition_secret_access_key=env("rekognition_secret_access_key")
 openai_secret_key=env("openai_secret_key")
 
 #postgres
-postgres_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 postgres_column={
-"id":["bigint",postgres_table],
-"created_at":["timestamptz",postgres_table],
-"created_by_id":["bigint",postgres_table],
+"id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
+"created_at":["timestamptz",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
+"created_by_id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
 "is_deleted":["int",["users","post","box","atom"]],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
@@ -72,6 +71,7 @@ postgres_column={
 "response_time_ms":["numeric",["log"]],
 "api_access":["text",["users"]],
 }
+
 postgres_notnull={"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
 postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
