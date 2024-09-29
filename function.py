@@ -394,7 +394,7 @@ async def postgres_init(postgres_object,table,column,index,notnull,unique,query)
   for k,v in notnull.items():
     for item in v:
       if schema_column_table_nullable[f"{k}_{item}"]=="YES":
-        await postgres_object.fetch_all(query==f"alter table {item} alter column {k} set not null;",values={})
+        await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={})
   #unique
   for k,v in unique.items():
     for item in v:
