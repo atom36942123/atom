@@ -1,3 +1,4 @@
+extension=["postgis"]
 table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 column={
 "id":["bigint",table],
