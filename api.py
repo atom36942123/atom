@@ -80,8 +80,6 @@ async def postgres_init(request:Request):
       if constraint_name not in schema_constraint_name_list:
         await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
   #set updated at now
-  await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
-  for item in postgres_column["updated_at"][1]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{item} before update on {item} for each row execute procedure function_set_updated_at_now();",values={})
   #delete disable bulk
   await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
   for item in [["users",1]]:await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});",values={})
