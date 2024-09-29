@@ -41,7 +41,7 @@ async def pinit(request:Request):
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #logic
-  response=await postgres_init(postgres_object,postgres_column,postgres_notnull,postgres_identity,postgres_unique,postgres_index,postgres_postquery)
+  response=await postgres_init(postgres_object,postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query)
   if response["status"]==0:return JSONResponse(status_code=400,content=response)
   #final
   return response
