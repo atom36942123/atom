@@ -32,7 +32,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
 from config import root_secret_key
-from config import postgres_column,postgres_notnull,postgres_unique,postgres_index,postgres_postquery
+from config import postgres_table,postgres_column,postgres_notnull,postgres_unique,postgres_index,postgres_postquery
 @router.get("/postgres-init")
 async def pinit(request:Request):
   #middleware
