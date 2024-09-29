@@ -57,19 +57,18 @@ async def postgres_init(request:Request):
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #extension/table/column/index/protected
-  for item in database.extension:await postgres_object.fetch_all(query="create extension if not exists {item}",values={})
-  for item in database.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
-  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in database.column.items() for item in v[1]]     
-  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in database.index.items() for item in v[1]]
-  for item in postgres_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
+  for item in dbschema.extension:await postgres_object.fetch_all(query="create extension if not exists {item}",values={})
+  for item in dbschema.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
+  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in dbschema.column.items() for item in v[1]]     
+  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in dbschema.index.items() for item in v[1]]
+  for item in dbschema.column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
   #schema
-  output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in output]
-  output=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column=output
+  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   #notnull
-  for k,v in postgres_notnull.items():
+  for k,v in dbschema.notnull.items():
     for item in v:
       if schema_column_table_nullable[f"{k}_{item}"]=="YES":
         await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={})
