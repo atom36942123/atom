@@ -85,9 +85,9 @@ async def postgres_init(request:Request):
   await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
   for k,v in dbschema.bulk_delete_disable.items():await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{k} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});",values={})
   #query
-  for item in postgres_query:
-    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
-    await postgres_object.fetch_all(query=item,values={})
+  for k,v in dbschema.query.items():
+    if "add constraint" in v and v.split()[5] in schema_constraint_name_list:continue
+    await postgres_object.fetch_all(query=v,values={})
   #final
   return {"status":1,"message":"done"}
 
