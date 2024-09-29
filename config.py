@@ -25,10 +25,11 @@ rekognition_secret_access_key=env("rekognition_secret_access_key")
 openai_secret_key=env("openai_secret_key")
 
 #postgres
+postgres_table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]
 postgres_column={
-"id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
-"created_at":["timestamptz",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
-"created_by_id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log"]],
+"id":["bigint",postgres_table],
+"created_at":["timestamptz",postgres_table],
+"created_by_id":["bigint",postgres_table],
 "is_deleted":["int",["users","post","box","atom"]],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk"]],
@@ -71,9 +72,6 @@ postgres_column={
 "response_time_ms":["numeric",["log"]],
 "api_access":["text",["users"]],
 }
-
-postgres_notnull={"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
-postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
 "id":["btree",postgres_table],
 "created_at":["brin",postgres_table],
@@ -91,10 +89,12 @@ postgres_index={
 "tag":["btree",["users","post","box","atom"]],
 "tag_array":["gin",["atom"]],
 }
-postgres_postquery=[
-"insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
-"create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;",
-"CREATE OR REPLACE FUNCTION function_set_updated_at_now() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ language 'plpgsql';",
-"CREATE OR REPLACE FUNCTION function_delete_disable_bulk() RETURNS trigger LANGUAGE plpgsql AS $$DECLARE n bigint := TG_ARGV[0]; BEGIN IF (SELECT count(*) FROM deleted_rows) <= n IS NOT TRUE THEN RAISE EXCEPTION 'cant delete more than % rows', n; END IF; RETURN OLD; END;$$;",
-"CREATE OR REPLACE TRIGGER trigger_delete_disable_bulk_users AFTER DELETE ON users REFERENCING OLD TABLE AS deleted_rows FOR EACH STATEMENT EXECUTE PROCEDURE function_delete_disable_bulk(1);",
-]
+postgres_notnull={
+"parent_table":["likes","bookmark","report","block","rating","comment","message"],
+"parent_id":["likes","bookmark","report","block","rating","comment","message"]
+}
+postgres_unique={
+"username":["users"],
+"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
+}
+postgres_query=[]
