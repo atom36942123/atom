@@ -366,3 +366,8 @@ async def mongo(mongo_server_url,mode,database,table,payload):
       output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
       output={"status":1,"message":output.deleted_count}
   return {"status":1,"message":output}
+
+#postgres init
+async def postgres_init(postgres_object,dbschema):
+ 
+  return {"status":0,"message":"done"}
