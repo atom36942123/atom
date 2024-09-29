@@ -1,3 +1,15 @@
+#postgres set not null
+async def postgres_set_not_null(postgres_object,config):
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  for k,v in config.items():
+    for item in v:
+      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
+        query=f"alter table {item} alter column {k} set not null;"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+  
 #postgres create root user
 async def postgres_create_root_user(postgres_object):
   query_list=[
