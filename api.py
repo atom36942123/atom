@@ -49,7 +49,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
 from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
-from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user
+from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user,postgres_set_not_null
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -66,8 +66,6 @@ async def postgres_init(request:Request):
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in output]
-  #notnull
-
   #unique
   for k,v in postgres_unique.items():
     for item in v:
@@ -75,6 +73,7 @@ async def postgres_init(request:Request):
       if constraint_name not in schema_constraint_name_list:
         await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
   #function call
+  await postgres_set_not_null(postgres_object,postgres_notnull)
   await postgres_set_updated_at_now(postgres_object)
   await postgres_delete_disable_bulk(postgres_object,[["users",1]])
   await postgres_create_root_user(postgres_object)
