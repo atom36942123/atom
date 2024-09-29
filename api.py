@@ -49,7 +49,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
 from function import postgres_init
-import dbschema
+import pschema
 @router.get("/postgres-init")
 async def pinit(request:Request):
   #middleware
@@ -58,7 +58,7 @@ async def pinit(request:Request):
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #logic
-  await postgres_init(postgres_object,dbschema)
+  await postgres_init(postgres_object,pschema)
   #final
   return {"status":1,"message":"done"}
 
