@@ -1,3 +1,12 @@
+#postgres execute_query
+async def postgres_execute_query(postgres_object,query_list):
+  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
+  for item in query_list:
+    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
+    await postgres_object.fetch_all(query=item,values={})
+  return {"status":1,"message":"done"}
+
 #postgres set unique
 async def postgres_set_unique(postgres_object,config):
   schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
