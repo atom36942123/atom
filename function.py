@@ -1,10 +1,22 @@
+#postgres delete disable bulk
+async def postgres_delete_disable_bulk(postgres_object,config):
+  await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
+  for item in config:
+    query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});"
+    query_param={}
+    await postgres_object.fetch_all(query=query,values=query_param)
+  return {"status":1,"message":"done"}
+
 #postgres set updated at now
 async def postgres_set_updated_at_now(postgres_object):
   await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   for item in schema_column:
     table,column=item["table_name"],item["column_name"]
-    if column=="updated_at":await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();",values={})
+    if column=="updated_at":
+      query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();"
+      query_param={}
+      await postgres_object.fetch_all(query=query,values=query_param)
   return {"status":1,"message":"done"}
 
 #postgres location search
