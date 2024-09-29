@@ -48,14 +48,17 @@ async def postgres_runner(request:Request,query:str,mode:str=None):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
+from function import postgres_init
 import dbschema
 @router.get("/postgres-init")
-async def postgres_init(request:Request):
+async def pinit(request:Request):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
+  #logic
+  await postgres_init(postgres_object,dbschema)
   #final
   return {"status":1,"message":"done"}
 
