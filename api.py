@@ -57,7 +57,7 @@ async def postgres_init(request:Request):
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #extension/table/column/index/protected
-  for item in dbschema.extension:await postgres_object.fetch_all(query="create extension if not exists {item}",values={})
+  for item in dbschema.extension:await postgres_object.fetch_all(query=f"create extension if not exists {item}",values={})
   for item in dbschema.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
   [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in dbschema.column.items() for item in v[1]]     
   [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in dbschema.index.items() for item in v[1]]
