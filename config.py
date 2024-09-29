@@ -73,7 +73,7 @@ postgres_column={
 "response_time_ms":["numeric",["log"]],
 "api_access":["text",["users"]],
 }
-postgres_notnull={"id":postgres_table,"created_at":postgres_table,"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
+postgres_notnull={"parent_table":["likes","bookmark","report","block","rating","comment","message"],"parent_id":["likes","bookmark","report","block","rating","comment","message"]}
 postgres_unique={"username":["users"],"created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]}
 postgres_index={
 "id":["btree",postgres_table],
