@@ -49,7 +49,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
 from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
-from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user,postgres_set_notnull,postgres_set_unique
+from function import postgres_set_updated_at_now,postgres_delete_disable_bulk,postgres_create_root_user,postgres_set_notnull,postgres_set_unique,postgres_execute_query
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -69,8 +69,7 @@ async def postgres_init(request:Request):
   await postgres_set_updated_at_now(postgres_object)
   await postgres_delete_disable_bulk(postgres_object,[["users",1]])
   await postgres_create_root_user(postgres_object)
-  #query
-
+  await postgres_execute_query(postgres_object,postgres_query)
   #final
   return {"status":1,"message":"done"}
 
