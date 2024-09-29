@@ -48,7 +48,7 @@ async def postgres_runner(request:Request,query:str,mode:str=None):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
-from config import postgres_table,postgres_column,postgres_index,postgres_notnull,postgres_unique,postgres_query
+import dbschema
 @router.get("/postgres-init")
 async def postgres_init(request:Request):
   #middleware
@@ -56,11 +56,11 @@ async def postgres_init(request:Request):
   user=request.state.user
   #auth
   if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
-  #prequery/table/column/index/protected
-  for item in ["create extension if not exists postgis"]:await postgres_object.fetch_all(query=item,values={})
-  for item in postgres_table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
-  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in postgres_column.items() for item in v[1]]     
-  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in postgres_index.items() for item in v[1]]
+  #extension/table/column/index/protected
+  for item in database.extension:await postgres_object.fetch_all(query="create extension if not exists {item}",values={})
+  for item in database.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
+  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in database.column.items() for item in v[1]]     
+  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in database.index.items() for item in v[1]]
   for item in postgres_column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
   #schema
   output=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
