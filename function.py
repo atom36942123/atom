@@ -1,67 +1,3 @@
-#postgres execute_query
-async def postgres_execute_query(postgres_object,query_list):
-  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
-  for item in query_list:
-    if "add constraint" in item and item.split()[5] in schema_constraint_name_list:continue
-    await postgres_object.fetch_all(query=item,values={})
-  return {"status":1,"message":"done"}
-
-#postgres set unique
-async def postgres_set_unique(postgres_object,config):
-  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
-  for k,v in config.items():
-    for item in v:
-     constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
-     if constraint_name not in schema_constraint_name_list:
-      query=f"alter table {item} add constraint {constraint_name} unique ({k});"
-      query_param={}
-      await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
-#postgres set notnull
-async def postgres_set_notnull(postgres_object,config):
-  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
-  for k,v in config.items():
-    for item in v:
-      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
-       query=f"alter table {item} alter column {k} set not null;"
-       query_param={}
-       await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-  
-#postgres create root user
-async def postgres_create_root_user(postgres_object):
-  query_list=[
-  "insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
-  "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"
-  ]
-  for item in query_list:await postgres_object.fetch_all(query=item,values={})
-  return {"status":1,"message":"done"}
-
-#postgres delete disable bulk
-async def postgres_delete_disable_bulk(postgres_object,config):
-  await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
-  for item in config:
-    query=f"create or replace trigger trigger_delete_disable_bulk_{item[0]} after delete on {item[0]} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({item[1]});"
-    query_param={}
-    await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
-#postgres set updated at now
-async def postgres_set_updated_at_now(postgres_object):
-  await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
-  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  for item in schema_column:
-    table,column=item["table_name"],item["column_name"]
-    if column=="updated_at":
-     query=f"create or replace trigger trigger_set_updated_at_now_{table} before update on {table} for each row execute procedure function_set_updated_at_now();"
-     query_param={}
-     await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":"done"}
-
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
   long,lat=float(location.split(",")[0]),float(location.split(",")[1])
@@ -192,19 +128,6 @@ async def postgres_object_ownership_check(postgres_object,table,id,user_id):
     if not object:return {"status":0,"message":"no object"}
     if object["created_by_id"]!=user_id:return {"status":0,"message":"object ownership issue"}
   return {"status":1,"message":"done"}
-
-#postgres clean
-async def postgres_clean(postgres_object):
-  for table in ["post","likes","bookmark","report","block","rating","comment","message"]:
-    query=f"delete from {table} where created_by_id not in (select id from users);"
-    query_param={}
-    output=await postgres_object.fetch_all(query=query,values=query_param)
-  for table in ["likes","bookmark","report","block","rating","comment","message"]:
-    for parent_table in ["users","post","comment"]:
-      query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
-      query_param={}
-      output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
 
 #csv to object list
 import csv,codecs
