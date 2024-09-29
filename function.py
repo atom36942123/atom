@@ -1,3 +1,12 @@
+#postgres create root user
+async def postgres_create_root_user(postgres_object):
+  query_list=[
+  "insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
+  "create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"
+  ]
+  for item in query_list:await postgres_object.fetch_all(query=item,values={})
+  return {"status":1,"message":"done"}
+
 #postgres delete disable bulk
 async def postgres_delete_disable_bulk(postgres_object,config):
   await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
