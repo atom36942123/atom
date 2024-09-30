@@ -81,6 +81,8 @@ async def public_table_column(request:Request):
   postgres_object=request.state.postgres_object
   user=request.state.user
   #logic
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+
   
   #final
   return api_list
