@@ -18,7 +18,7 @@ async def root(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @router.get("/root/postgres-qrunner")
-async def root_postgres_runner(request:Request,query:str,mode:str=None):
+async def root_postgres_qrunner(request:Request,query:str,mode:str=None):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
