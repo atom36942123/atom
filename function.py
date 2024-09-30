@@ -217,6 +217,11 @@ import jwt,json
 async def auth_check_middleware(request,jwt_token_decode,jwt_secret_key,postgres_object):
   user=None
   path=request.url.path
+  if "/root" in path:
+    
+
+
+  
   for item in ["/my","/private","/admin"]:
     if item in path:
       if item=="/admin":response=await jwt_token_decode(request,jwt_secret_key,postgres_object)
