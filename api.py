@@ -82,6 +82,133 @@ async def grant_all_api_access(request:Request,user_id:int):
   #final
   return {"status":1,"message":output}
 
+#public/project meta
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+@router.get("/public/project-meta")
+@cache(expire=60,key_builder=redis_key_builder)
+async def public_project_meta(request:Request):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   query_dict={"user_count":"select count(*) from users;"}
+   temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
+   response={"status":1,"message":temp}
+   #final
+   return response
+
+#public/otp send mobile sns
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import sns_region_name,sns_access_key_id,sns_secret_access_key
+import boto3,random
+@router.get("/public/otp-send-mobile-sns")
+async def public_otp_send_mobile_sns(request:Request,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   otp=random.randint(100000,999999)
+   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
+   output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
+   #save otp
+   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
+   query_param={"otp":otp,"mobile":mobile}
+   await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#public/otp send email ses
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import ses_region_name,ses_access_key_id,ses_secret_access_key
+import boto3,random
+@router.get("/public/otp-send-email-ses")
+async def public_otp_send_email_ses(request:Request,identity:str,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   otp=random.randint(100000,999999)
+   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
+   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
+   #save otp
+   query="insert into otp (otp,email) values (:otp,:email) returning *;"
+   query_param={"otp":otp,"email":email}
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":"otp sent"}
+
+#public/otp verify email
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgtes_otp_verify
+@router.get("/public/otp-verify-email")
+async def public_otp_verify_email(request:Request,otp:int,email:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   response=await postgtes_otp_verify(postgres_object,otp,email,None)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#public/otp verify mobile
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from function import postgtes_otp_verify
+@router.get("/public/otp-verify-mobile")
+async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   #logic
+   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
+#public/object read
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from config import jwt_secret_key
+from function import where_clause
+from fastapi_cache.decorator import cache
+from function import redis_key_builder
+from function import postgres_add_creator_key
+from function import postgres_add_action_count
+@router.get("/public/object-read")
+@cache(expire=60,key_builder=redis_key_builder)
+async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
+   #middleware
+   postgres_object=request.state.postgres_object
+   user=request.state.user
+   column_datatype=request.state.column_datatype
+   #check
+   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #whwere
+   param=dict(request.query_params)
+   response=await where_clause(param,column_datatype)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   #logic
+   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param=where_value
+   output=await postgres_object.fetch_all(query=query,values=query_param)
+   #creator key
+   response=await postgres_add_creator_key(postgres_object,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   #action count
+   response=await postgres_add_action_count(postgres_object,"likes",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
+
 #auth/signup
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -785,8 +912,8 @@ async def private_rekognition_compare_face(request:Request,url_source:str,url_ta
 #private/rekognition detetct label
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 @router.get("/private/rekognition-detect-label")
 async def private_rekognition_detect_label(request:Request,url:str):
    #middleware
@@ -803,8 +930,8 @@ async def private_rekognition_detect_label(request:Request,url:str):
 #private/rekognition detetct face
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 @router.get("/private/rekognition-detect-face")
 async def private_rekognition_detect_face(request:Request,url:str):
    #middleware
@@ -821,8 +948,8 @@ async def private_rekognition_detect_face(request:Request,url:str):
 #private/rekognition detect moderation
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 import boto3
+from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 @router.get("/private/rekognition-detect-moderation")
 async def private_rekognition_detect_moderation(request:Request,url:str):
    #middleware
@@ -851,133 +978,6 @@ async def private_openai(request:Request,text:str):
    output=llm(text)
    #final
    return {"status":1,"message":output}
-
-#public/project meta
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-@router.get("/public/project-meta")
-@cache(expire=60,key_builder=redis_key_builder)
-async def public_project_meta(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #logic
-   query_dict={"user_count":"select count(*) from users;"}
-   temp={k:await postgres_object.fetch_all(query=v,values={}) for k,v in query_dict.items()}
-   response={"status":1,"message":temp}
-   #final
-   return response
-
-#public/otp send mobile sns
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import sns_region_name,sns_access_key_id,sns_secret_access_key
-import boto3,random
-@router.get("/public/otp-send-mobile-sns")
-async def public_otp_send_mobile_sns(request:Request,mobile:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #logic
-   otp=random.randint(100000,999999)
-   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
-   output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
-   #save otp
-   query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
-   query_param={"otp":otp,"mobile":mobile}
-   await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":output}
-
-#public/otp send email ses
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import ses_region_name,ses_access_key_id,ses_secret_access_key
-import boto3,random
-@router.get("/public/otp-send-email-ses")
-async def public_otp_send_email_ses(request:Request,identity:str,email:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #logic
-   otp=random.randint(100000,999999)
-   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
-   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
-   #save otp
-   query="insert into otp (otp,email) values (:otp,:email) returning *;"
-   query_param={"otp":otp,"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #final
-   return {"status":1,"message":"otp sent"}
-
-#public/otp verify email
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgtes_otp_verify
-@router.get("/public/otp-verify-email")
-async def public_otp_verify_email(request:Request,otp:int,email:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #logic
-   response=await postgtes_otp_verify(postgres_object,otp,email,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#public/otp verify mobile
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgtes_otp_verify
-@router.get("/public/otp-verify-mobile")
-async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #logic
-   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-
-#public/object read
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from config import jwt_secret_key
-from function import where_clause
-from fastapi_cache.decorator import cache
-from function import redis_key_builder
-from function import postgres_add_creator_key
-from function import postgres_add_action_count
-@router.get("/public/object-read")
-@cache(expire=60,key_builder=redis_key_builder)
-async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   column_datatype=request.state.column_datatype
-   #check
-   if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
-   #whwere
-   param=dict(request.query_params)
-   response=await where_clause(param,column_datatype)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   #logic
-   query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   #creator key
-   response=await postgres_add_creator_key(postgres_object,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   output=response["message"]
-   #action count
-   response=await postgres_add_action_count(postgres_object,"likes",table,output)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 #admin/create-user
 from fastapi import Request
