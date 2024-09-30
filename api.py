@@ -17,14 +17,11 @@ async def root(request:Request):
 #root/postgres-runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import root_secret_key
 @router.get("/root/postgres-runner")
 async def root_postgres_runner(request:Request,query:str,mode:str=None):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
-  #auth
-  if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #logic
   if not mode:output=await postgres_object.fetch_all(query=query,values={})
   if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
@@ -34,7 +31,6 @@ async def root_postgres_runner(request:Request,query:str,mode:str=None):
 #root/postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import root_secret_key
 from function import postgres_init
 import pschema
 @router.get("/root/postgres-init")
@@ -42,8 +38,6 @@ async def root_postgres_init(request:Request):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
-  #auth
-  if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #logic
   await postgres_init(postgres_object,pschema)
   #final
@@ -51,15 +45,12 @@ async def root_postgres_init(request:Request):
 
 #root/grant-all-api-access
 from fastapi import Request
-from config import root_secret_key
 @router.put("/root/grant-all-api-access")
 async def root_grant_all_api_access(request:Request,user_id:int):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   app=request.state.app
-  #auth
-  if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return JSONResponse(status_code=400,content={"status":0,"message":"auth issue"})
   #logic
   api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
   api_admin_str=",".join(api_admin_list)
