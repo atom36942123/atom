@@ -71,21 +71,20 @@ async def public_api_list(request:Request):
   #logic
   api_list=[route.path for route in app.routes]
   #final
-  return api_list
+  return {"status":1,"message":api_list}
 
 #public/table-column
 from fastapi import Request
 @router.get("/public/table-column")
-async def public_table_column(request:Request):
+async def public_table_column(request:Request,table:str):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   #logic
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-
-  
+  schema_column_table={item['column_name']:item["data_type"] for item in schema_column if item['table_name']==table}
   #final
-  return api_list
+  return {"status":1,"message":schema_column_table}
 
 #public/project meta
 from fastapi import Request
