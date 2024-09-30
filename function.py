@@ -218,7 +218,10 @@ async def auth_check_middleware(request,jwt_token_decode,jwt_secret_key,root_sec
   user=None
   path=request.url.path
   if "/root" in path:
-    if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return {"status":0,"message":"token issue"}
+    authorization_header=request.headers.get("Authorization")
+    if not authorization_header:return {"status":0,"message":"authorization header missing"}
+    token=authorization_header.split(" ",1)[1]
+    if token!=root_secret_key:return {"status":0,"message":"token mismatch"}
   if "/my" in path:
     response=await jwt_token_decode(request,jwt_secret_key,None)
     if response["status"]==0:return response
@@ -240,7 +243,7 @@ async def auth_check_middleware(request,jwt_token_decode,jwt_secret_key,root_sec
 import jwt,json
 async def jwt_token_decode(request,jwt_secret_key,postgres_object):
   authorization_header=request.headers.get("Authorization")
-  if not authorization_header:return {"status":0,"message":"token is must"}
+  if not authorization_header:return {"status":0,"message":"authorization header missing"}
   token=authorization_header.split(" ",1)[1]
   user=json.loads(jwt.decode(token,jwt_secret_key,algorithms="HS256")["data"])
   if postgres_object:
