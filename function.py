@@ -214,23 +214,26 @@ async def postgres_add_creator_key(postgres_object,object_list):
 
 #auth check middleware
 import jwt,json
-async def auth_check_middleware(request,jwt_token_decode,jwt_secret_key,postgres_object):
+async def auth_check_middleware(request,jwt_token_decode,jwt_secret_key,root_secret_key,postgres_object):
   user=None
   path=request.url.path
   if "/root" in path:
-    
-
-
-  
-  for item in ["/my","/private","/admin"]:
-    if item in path:
-      if item=="/admin":response=await jwt_token_decode(request,jwt_secret_key,postgres_object)
-      else:response=await jwt_token_decode(request,jwt_secret_key,None)
-      if response["status"]==0:return response
-      user=response["message"]
-  if "/admin" in path and user["is_active"]==0:return {"status":0,"message":"user not active"}
-  if "/admin" in path and not user["api_access"]:return {"status":0,"message":"api access denied"}
-  if "/admin" in path and path not in user["api_access"].split(","):return {"status":0,"message":"api access denied"}
+    if request.headers.get("Authorization").split(" ",1)[1]!=root_secret_key:return {"status":0,"message":"token issue"}
+  if "/my" in path:
+    response=await jwt_token_decode(request,jwt_secret_key,None)
+    if response["status"]==0:return response
+    user=response["message"]
+  if "/private" in path:
+    response=await jwt_token_decode(request,jwt_secret_key,None)
+    if response["status"]==0:return response
+    user=response["message"]
+  if "/admin" in path:
+    response=await jwt_token_decode(request,jwt_secret_key,postgres_object)
+    if response["status"]==0:return response
+    user=response["message"]
+    if user["is_active"]==0:return {"status":0,"message":"user not active"}
+    if not user["api_access"]:return {"status":0,"message":"api access denied"}
+    if path not in user["api_access"].split(","):return {"status":0,"message":"api access denied"}
   return {"status":1,"message":user}
 
 #jwt token decode
