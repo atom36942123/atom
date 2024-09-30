@@ -27,7 +27,7 @@ column={
 "mobile":["text",["users","post","box","atom","otp","helpdesk","workseeker"]],
 "date_of_birth":["date",["users","workseeker"]],
 "title":["text",["users","post","box","atom"]],
-"description":["text",["users","post","box","atom","report","block","comment","message","helpdesk",,"workseeker"]],
+"description":["text",["users","post","box","atom","report","block","comment","message","helpdesk","workseeker"]],
 "file_url":["text",["post","box","atom","comment","message","workseeker"]],
 "link_url":["text",["post","box","atom"]],
 "tag":["text",["users","post","box","atom","workseeker"]],
