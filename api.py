@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
-#root/index
+#index
 from fastapi import Request
 @router.get("/")
 async def root(request:Request):
@@ -13,19 +13,6 @@ async def root(request:Request):
   response={"status":1,"message":"welcome to atom"}
   #final
   return response
-
-#root/api-list
-from fastapi import Request
-@router.get("/api-list")
-async def api_list(request:Request):
-  #middleware
-  postgres_object=request.state.postgres_object
-  user=request.state.user
-  app=request.state.app
-  #logic
-  api_list=[route.path for route in app.routes]
-  #final
-  return api_list
 
 #root/postgres-runner
 from fastapi import Request
@@ -81,6 +68,19 @@ async def grant_all_api_access(request:Request,user_id:int):
   output=await postgres_object.fetch_all(query=query,values=query_param)
   #final
   return {"status":1,"message":output}
+
+#public/api-list
+from fastapi import Request
+@router.get("/public/api-list")
+async def public_api_list(request:Request):
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  app=request.state.app
+  #logic
+  api_list=[route.path for route in app.routes]
+  #final
+  return api_list
 
 #public/project meta
 from fastapi import Request
