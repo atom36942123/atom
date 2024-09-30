@@ -73,6 +73,18 @@ async def public_api_list(request:Request):
   #final
   return api_list
 
+#public/table-column
+from fastapi import Request
+@router.get("/public/table-column")
+async def public_table_column(request:Request):
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  #logic
+  
+  #final
+  return api_list
+
 #public/project meta
 from fastapi import Request
 from fastapi.responses import JSONResponse
