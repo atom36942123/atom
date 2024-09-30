@@ -18,8 +18,8 @@ async def root(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from config import root_secret_key
-@router.get("/postgres-runner")
-async def postgres_runner(request:Request,query:str,mode:str=None):
+@router.get("/root/postgres-runner")
+async def root_postgres_runner(request:Request,query:str,mode:str=None):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
@@ -37,8 +37,8 @@ from fastapi.responses import JSONResponse
 from config import root_secret_key
 from function import postgres_init
 import pschema
-@router.get("/postgres-init")
-async def pinit(request:Request):
+@router.get("/root/postgres-init")
+async def root_postgres_init(request:Request):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
@@ -52,8 +52,8 @@ async def pinit(request:Request):
 #root/grant-all-api-access
 from fastapi import Request
 from config import root_secret_key
-@router.put("/grant-all-api-access")
-async def grant_all_api_access(request:Request,user_id:int):
+@router.put("/root/grant-all-api-access")
+async def root_grant_all_api_access(request:Request,user_id:int):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
