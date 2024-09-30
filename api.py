@@ -197,6 +197,9 @@ async def public_object_read(request:Request,table:str,order:str="id desc",limit
    #action count
    response=await postgres_add_action_count(postgres_object,"likes",table,output)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   output=response["message"]
+   response=await postgres_add_action_count(postgres_object,"bookmark",table,output)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
