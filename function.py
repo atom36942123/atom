@@ -377,17 +377,18 @@ async def mongo(mongo_server_url,mode,database,table,payload):
 
 #postgres init
 async def postgres_init(postgres_object,pschema):
-  #extension/table/column/index/protected
+  #extension
   for item in pschema.extension:await postgres_object.fetch_all(query=f"create extension if not exists {item}",values={})
-  for item in pschema.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
-  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in pschema.column.items() for item in v[1]]     
-  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in pschema.index.items() for item in v[1]]
-  for item in pschema.column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
-  #schema
+  #helper
   schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
+  #/table/column/index/protected
+  for item in pschema.table:await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={})
+  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in pschema.column.items() for item in v[1]]     
+  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in pschema.index.items() for item in v[1]]
+  for item in pschema.column["is_protected"][1]:await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={})
   #notnull
   for k,v in pschema.notnull.items():
     for item in v:
