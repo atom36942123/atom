@@ -140,7 +140,7 @@ async def postgres_clean(postgres_object):
       query=f"delete from {table} where parent_table='{parent_table}' and parent_id not in (select id from {parent_table});"
       query_param={}
       output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
+  return {"status":1,"message":"done"}
 
 #csv to object list
 import csv,codecs
