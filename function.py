@@ -257,10 +257,9 @@ async def jwt_token_decode(request,jwt_secret_key,postgres_object):
 #jwt token encode
 import jwt,json,time
 from datetime import datetime,timedelta
-async def jwt_token_encode(user,jwt_secret_key):
+async def jwt_token_encode(user,jwt_secret_key,expiry_days):
   data={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"],"is_protected":user["is_protected"]}
   data=json.dumps(data,default=str)
-  expiry_days=10000
   expiry_time=time.mktime((datetime.now()+timedelta(days=expiry_days)).timetuple())
   payload={"exp":expiry_time,"data":data}
   token=jwt.encode(payload,jwt_secret_key)
