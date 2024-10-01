@@ -81,8 +81,9 @@ async def public_table_column(request:Request,table:str):
   postgres_object=request.state.postgres_object
   user=request.state.user
   #logic
+  column_generic=["id","created_at","created_by_id","is_deleted","updated_at","updated_by_id","is_active","is_verified","is_protected",]
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column_table={item['column_name']:item["data_type"] for item in schema_column if item['table_name']==table}
+  schema_column_table={item["column_name"]:item["data_type"] for item in schema_column if item['table_name']==table and item["column_name"] not in column_generic}
   #final
   return {"status":1,"message":schema_column_table}
 
