@@ -236,7 +236,7 @@ async def auth_signup(request:Request,username:str,password:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=user=output[0]
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -260,7 +260,7 @@ async def auth_login(request:Request,username:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -292,7 +292,7 @@ async def auth_login_google(request:Request,google_id:str):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -328,7 +328,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -364,7 +364,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -392,7 +392,7 @@ async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -420,7 +420,7 @@ async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -444,7 +444,7 @@ async def auth_login_email_password(request:Request,email:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -468,7 +468,7 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    token=response["message"]
    #final
@@ -513,7 +513,7 @@ async def my_token_refresh(request:Request):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   response=await jwt_token_encode(user,jwt_secret_key)
+   response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
