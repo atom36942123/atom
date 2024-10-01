@@ -399,7 +399,7 @@ async def postgres_init(postgres_object,pschema):
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
   schema_trigger=await postgres_object.fetch_all(query="select trigger_name from information_schema.triggers;",values={})
-  schema_trigger_name_list=[item["trigger_name"] for item in schema_rule]
+  schema_trigger_name_list=[item["trigger_name"] for item in schema_trigger]
   #notnull
   [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={}) for k,v in pschema.notnull.items() for item in v if schema_column_table_nullable[f"{k}_{item}"]=="YES"]
   #unique
