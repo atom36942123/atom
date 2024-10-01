@@ -388,7 +388,7 @@ async def postgres_init(postgres_object,pschema):
   schema_index=await postgres_object.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
   schema_index_name_list=[item["indexname"] for item in schema_index]
   schema_rule=await postgres_object.fetch_all(query="select rulename from pg_rules;",values={})
-  schema_rule_name_list=[item["rulename"] for item in schema_index]
+  schema_rule_name_list=[item["rulename"] for item in schema_rule]
   #table/column/index/protected/notnull
   [await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={}) for item in pschema.table if item not in table_list]
   [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in pschema.column.items() for item in v[1] if f'{k}_{v[1]}' not in schema_column_table_nullable]     
