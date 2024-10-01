@@ -379,42 +379,88 @@ async def mongo(mongo_server_url,mode,database,table,payload):
 #postgres init
 async def postgres_init(postgres_object,pschema):
   #extension
-  for item in pschema.extension:await postgres_object.fetch_all(query=f"create extension if not exists {item}",values={})
-  #helper
+  for item in pschema.extension:
+    query=f"create extension if not exists {item}"
+    query_param={}
+    await postgres_object.fetch_all(query=query,values=query_param)
+  #table
+  schema_table=await postgres_object.fetch_all(query="select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE';",values={})
+  schema_table_name_list=[item["table_name"] for item in schema_table]
+  for item in pschema.table:
+    if item not in schema_table_name_list:
+      query=f"create extension if not exists {item}"
+      query_param={}
+      await postgres_object.fetch_all(query=query,values=query_param)
+  #column
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  table_list=list(set([item['table_name'] for item in schema_column]))
   schema_column_table={f"{item['column_name']}_{item['table_name']}":item["data_type"] for item in schema_column}
-  schema_index=await postgres_object.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
-  schema_index_name_list=[item["indexname"] for item in schema_index]
+  for k,v in pschema.column.items():
+    for item in v[1]:
+      if f"{k}_{item}" not in schema_column_table:
+        query=f"alter table {item} add column if not exists {k} {v[0]};"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
+  #protected
   schema_rule=await postgres_object.fetch_all(query="select rulename from pg_rules;",values={})
   schema_rule_name_list=[item["rulename"] for item in schema_rule]
-  #table/column/index/protected
-  [await postgres_object.fetch_all(query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);",values={}) for item in pschema.table if item not in table_list]
-  [await postgres_object.fetch_all(query=f"alter table {item} add column if not exists {k} {v[0]};",values={}) for k,v in pschema.column.items() for item in v[1] if f'{k}_{v[1]}' not in schema_column_table]     
-  [await postgres_object.fetch_all(query=f"create index concurrently if not exists index_{k}_{item} on {item} using {v[0]} ({k});",values={}) for k,v in pschema.index.items() for item in v[1] if f'index_{k}_{item}' not in schema_index_name_list]
-  [await postgres_object.fetch_all(query=f"create or replace rule rule_delete_disable_{item} as on delete to {item} where old.is_protected=1 do instead nothing;",values={}) for item in pschema.column["is_protected"][1] if f'rule_delete_disable_{item}' not in schema_rule_name_list]
-  #helper
-  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
+  schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+  for item in schema_column:
+    if item["column_name"]=="is_protected":
+      rule_name=f"rule_delete_disable_{item['table_name']}"
+      if rule_name not in schema_rule_name_list:
+        query=f"create or replace rule {rule_name} as on delete to {item['table_name']} where old.is_protected=1 do instead nothing;"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
+  #notnull
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
-  schema_trigger=await postgres_object.fetch_all(query="select trigger_name from information_schema.triggers;",values={})
-  schema_trigger_name_list=[item["trigger_name"] for item in schema_trigger]
-  #notnull
-  [await postgres_object.fetch_all(query=f"alter table {item} alter column {k} set not null;",values={}) for k,v in pschema.notnull.items() for item in v if schema_column_table_nullable[f"{k}_{item}"]=="YES"]
+  for k,v in pschema.notnull.items():
+    for item in v:
+      if schema_column_table_nullable[f"{k}_{item}"]=="YES":
+        query=f"alter table {item} alter column {k} set not null;"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
   #unique
+  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
   for k,v in pschema.unique.items():
     for item in v:
       constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
       if constraint_name not in schema_constraint_name_list:
-        await postgres_object.fetch_all(query=f"alter table {item} add constraint {constraint_name} unique ({k});",values={})
+        query=f"alter table {item} add constraint {constraint_name} unique ({k});"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
+  #index
+  schema_index=await postgres_object.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
+  schema_index_name_list=[item["indexname"] for item in schema_index]
+  for k,v in pschema.index.items():
+    for item in v[1]:
+      index_name=f"index_{k}_{item}"
+      if index_name not in schema_index_name_list:
+        query=f"create index concurrently if not exists {index_name} on {item} using {v[0]} ({k});"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param) 
   #set updated at now
-  await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
-  [await postgres_object.fetch_all(query=f"create or replace trigger trigger_set_updated_at_now_{item['table_name']} before update on {item['table_name']} for each row execute procedure function_set_updated_at_now();",values={}) for item in schema_column (if item["column_name"]=="updated_at" and f'trigger_set_updated_at_now_{item['table_name']}' not in schema_trigger_name_list)]
+  schema_trigger=await postgres_object.fetch_all(query="select trigger_name from information_schema.triggers;",values={})
+  schema_trigger_name_list=[item["trigger_name"] for item in schema_trigger]
+  function_set_updated_at_now=await postgres_object.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
+  for item in schema_column:
+    if item["column_name"]=="updated_at":
+      trigger_name=f"trigger_set_updated_at_now_{item['table_name']}"
+      if trigger_name not in schema_trigger_name_list:
+        query=f"create or replace trigger {trigger_name} before update on {item['table_name']} for each row execute procedure function_set_updated_at_now();"
+        query_param={}
+        await postgres_object.fetch_all(query=query,values=query_param)
   #delete disable bulk
-  await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
-  for k,v in pschema.bulk_delete_disable.items():await postgres_object.fetch_all(query=f"create or replace trigger trigger_delete_disable_bulk_{k} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});",values={})
+  function_delete_disable_bulk=await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
+  for k,v in pschema.bulk_delete_disable.items():
+    trigger_name=f"trigger_delete_disable_bulk_{k}"
+    query=f"create or replace trigger {trigger_name} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});"
+    query_param={}
+    await postgres_object.fetch_all(query=query,values=query_param)
   #query
+  schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+  schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
   for k,v in pschema.query.items():
     if "add constraint" in v and v.split()[5] in schema_constraint_name_list:continue
     await postgres_object.fetch_all(query=v,values={})
