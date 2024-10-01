@@ -76,16 +76,21 @@ async def public_api_list(request:Request):
 #public/table-column
 from fastapi import Request
 @router.get("/public/table-column")
-async def public_table_column(request:Request,table:str):
+async def public_table_column(request:Request,table:str=None):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   #logic
-  column_generic=["id","created_at","created_by_id","is_deleted","updated_at","updated_by_id","is_active","is_verified","is_protected",]
+  column_generic=["id","created_at","created_by_id","is_deleted","updated_at","updated_by_id","is_active","is_verified","is_protected"]
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-  schema_column_table={item["column_name"]:item["data_type"] for item in schema_column if item['table_name']==table and item["column_name"] not in column_generic}
+  if not table:
+    output={}
+    table_list=list(set([item['table_name'] for item in schema_column]))
+    for table in table_list:
+      output[table]={item["column_name"]:item["data_type"] for item in schema_column if item['table_name']==table and item["column_name"] not in column_generic}
+  else:output={item["column_name"]:item["data_type"] for item in schema_column if item['table_name']==table and item["column_name"] not in column_generic}
   #final
-  return {"status":1,"message":schema_column_table}
+  return {"status":1,"message":output}
 
 #public/project meta
 from fastapi import Request
