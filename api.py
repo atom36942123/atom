@@ -14,20 +14,6 @@ async def root(request:Request):
   #final
   return response
 
-#root/postgres-qrunner
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@router.get("/root/postgres-qrunner")
-async def root_postgres_qrunner(request:Request,query:str,mode:str=None):
-  #middleware
-  postgres_object=request.state.postgres_object
-  user=request.state.user
-  #logic
-  if not mode:output=await postgres_object.fetch_all(query=query,values={})
-  if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
-  #final
-  return {"status":1,"message":output}
-
 #root/postgres-init
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -42,6 +28,20 @@ async def root_postgres_init(request:Request):
   await postgres_init(postgres_object,pschema)
   #final
   return {"status":1,"message":"done"}
+
+#root/postgres-qrunner
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.get("/root/postgres-qrunner")
+async def root_postgres_qrunner(request:Request,query:str,mode:str=None):
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  #logic
+  if not mode:output=await postgres_object.fetch_all(query=query,values={})
+  if mode=="bulk":output=[await postgres_object.fetch_all(query=item,values={}) for item in query.split("---")]
+  #final
+  return {"status":1,"message":output}
 
 #root/grant-all-api-access
 from fastapi import Request
