@@ -1,4 +1,9 @@
 # what is atom
+Any application has two major parts-backend/frontend. Backend is something that takes time and involves complexity. 
+Atom is written to simplify backend development which is common across any product. 
+With atom, anyone can deploy ~80% of the backend in ~2 weeks. Atom has gone through rigourus testing that can save a lot of devleopment time.
+After that,further development can be continued without any restriction.
+
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months
 2. atom is non opinionated and it was written with no bias for any particular application
 3. atom is fully scalable as per need
@@ -13,33 +18,25 @@
 4. any general saas
 5. any social media
 
-# atom features
-Any application has two major parts-backend/frontend.Backend is something that takes time and involves complexity. Atom is written to simplify backend development which is common across any product. With atom, anyone can deploy ~50% of the backend in ~2 weeks. After that,further development can be continued without any restriction.
+# atom core modules
 
-Below are the generic modules that are already built in atom that can be used directly while building any application. All modules are fully developed with rigourus testing which can save a lot of time while building any new application.
-
-1. auth = signup/login-email,mobile,oauth,password/token refresh
-2. object level crud operations including access based control
-3. any table/objects crud - post,like,bookmark,report,comment,support,block,rating,inventory,product,etc
-4. message module
-5. admin module with rbac
-6. csv uploader
-7. sql runner for operations/analytics
-8. feed api with caching
-9. s3 presigned url for media storage
-10. otp send/verify
-11. location search api
-12. database postgres/mongo configured
-13. redis configured for caching any api response
-14. master/slave replicas configured for get apis
-15. sentry added for performance monitoring
+1. auth
+2. object level crud
+3. rbac
+4. admin modules
+5. csv uploader
+6. redis caching
+7. blob storage
+8. ai/ml libraries
+9. location search
+10. master/slave replicas
+11. sentry for performance monitoring
+12. one click database schema
+13. postman collection with automated testing
+14. database indexing
+15. rate limiter to stop malicious bot activity
 16. one click deployment configured using render
-17. one click database schema setup with no restriction in schema
-18. postman collection/runner for automated testing
-19. one click indexing
-20. all major datatype supported in api's - string,timestamp,int,numeric,list,jsonb,geometric
-21. rate limiter to stop malicious bot activity
-   
+    
 # tech stack used
 1. python
 2. fastapi
@@ -70,4 +67,5 @@ Below are the generic modules that are already built in atom that can be used di
 1. download atom repo
 2. install requirement.txt
 3. create .env file as per config.py
-4. run python main.py
+4. run in prod env: python main.py / fastapi run main.py
+5. run in dev env: fastapi dev main.py
