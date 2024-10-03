@@ -29,9 +29,9 @@ pschema={
 "extension":["postgis"],
 "table":["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
 "column":{
-"id":["bigint",table],
-"created_at":["timestamptz",table],
-"created_by_id":["bigint",table],
+"id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_at":["timestamptz",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_by_id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "is_deleted":["int",["users","post","box","atom"]],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk","workseeker"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk","workseeker"]],
