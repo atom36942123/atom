@@ -81,7 +81,7 @@ pschema={
 },
 "index":{
 "id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
-"created_at":["brin",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_at":["brin",["users","post"]],
 "created_by_id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "is_deleted":["btree",["users","post","box","atom"]],
 "is_active":["btree",["users","post"]],
