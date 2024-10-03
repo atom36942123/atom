@@ -18,7 +18,7 @@ async def root(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
-import pschema
+from config import pschema
 @router.get("/root/postgres-init")
 async def root_postgres_init(request:Request):
   #middleware
