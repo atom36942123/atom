@@ -2,6 +2,10 @@
 from fastapi import APIRouter
 router=APIRouter(tags=["api"])
 
+from main import column_datatype
+print(column_datatype)
+
+
 #index
 from fastapi import Request
 @router.get("/")
