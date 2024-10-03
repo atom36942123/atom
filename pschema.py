@@ -1,5 +1,11 @@
-extension=["postgis"]
+x={
+extension=["postgis"],
 table=["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]
+
+
+}
+
+
 column={
 "id":["bigint",table],
 "created_at":["timestamptz",table],
