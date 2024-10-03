@@ -1,7 +1,9 @@
-#env
+#env read
 from environs import Env
 env=Env()
 env.read_env()
+
+#env variable
 postgres_database_url=env("postgres_database_url")
 redis_server_url=env("redis_server_url")
 mongo_server_url=env("mongo_server_url")
