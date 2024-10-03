@@ -68,3 +68,10 @@ After that,further development can be continued without any restriction.
 2. create .env file as per config.py in root folder
 3. install requirements.txt
 4. run command=python main.py / fastapi run main.py / fastapi dev main.py
+
+# how to run using docker
+1. download atom repo
+2. create .env file as per config.py in root folder
+3. install requirements.txt
+4. run command=python main.py / fastapi run main.py / fastapi dev main.py
+
