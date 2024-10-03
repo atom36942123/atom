@@ -80,9 +80,9 @@ pschema={
 "salary_expected":["int",["workseeker"]],
 },
 "index":{
-"id":["btree",table],
-"created_at":["brin",table],
-"created_by_id":["btree",table],
+"id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_at":["brin",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_by_id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "is_deleted":["btree",["users","post","box","atom"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
