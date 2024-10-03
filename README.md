@@ -65,6 +65,6 @@ After that,further development can be continued without any restriction.
   
 # how to run
 1. download atom repo
-2. create .env file as per config.py
-3. install requirement.txt
+2. create .env file as per config.py in root folder
+3. install requirements.txt
 4. run command=python main.py / fastapi run main.py / fastapi dev main.py
