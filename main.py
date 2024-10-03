@@ -1,4 +1,3 @@
-
 #runtime
 from config import postgres_database_url
 from databases import Database
