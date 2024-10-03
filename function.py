@@ -378,15 +378,24 @@ async def mongo(mongo_server_url,mode,database,table,payload):
 
 #postgres init
 async def postgres_init(postgres_object,pschema):
+  #pschema
+  pschema_extension=pschema["extension"]
+  pschema_table=pschema["table"]
+  pschema_column=pschema["column"]
+  pschema_notnull=pschema["notnull"]
+  pschema_unique=pschema["unique"]
+  pschema_index=pschema["index"]
+  pschema_bulk_delete_disable=pschema["bulk_delete_disable"]
+  pschema_query=pschema["query"]
   #extension
-  for item in pschema.extension:
+  for item in pschema_extension:
     query=f"create extension if not exists {item}"
     query_param={}
     await postgres_object.fetch_all(query=query,values=query_param)
   #table
   schema_table=await postgres_object.fetch_all(query="select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE';",values={})
   schema_table_name_list=[item["table_name"] for item in schema_table]
-  for item in pschema.table:
+  for item in pschema_table:
     if item not in schema_table_name_list:
       query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);"
       query_param={}
@@ -394,7 +403,7 @@ async def postgres_init(postgres_object,pschema):
   #column
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table={f"{item['column_name']}_{item['table_name']}":item["data_type"] for item in schema_column}
-  for k,v in pschema.column.items():
+  for k,v in pschema_column.items():
     for item in v[1]:
       if f"{k}_{item}" not in schema_column_table:
         query=f"alter table {item} add column if not exists {k} {v[0]};"
@@ -414,7 +423,7 @@ async def postgres_init(postgres_object,pschema):
   #notnull
   schema_column=await postgres_object.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
   schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in schema_column}
-  for k,v in pschema.notnull.items():
+  for k,v in pschema_notnull.items():
     for item in v:
       if schema_column_table_nullable[f"{k}_{item}"]=="YES":
         query=f"alter table {item} alter column {k} set not null;"
@@ -423,7 +432,7 @@ async def postgres_init(postgres_object,pschema):
   #unique
   schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
-  for k,v in pschema.unique.items():
+  for k,v in pschema_unique.items():
     for item in v:
       constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
       if constraint_name not in schema_constraint_name_list:
@@ -433,7 +442,7 @@ async def postgres_init(postgres_object,pschema):
   #index
   schema_index=await postgres_object.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
   schema_index_name_list=[item["indexname"] for item in schema_index]
-  for k,v in pschema.index.items():
+  for k,v in pschema_index.items():
     for item in v[1]:
       index_name=f"index_{k}_{item}"
       if index_name not in schema_index_name_list:
@@ -453,7 +462,7 @@ async def postgres_init(postgres_object,pschema):
         await postgres_object.fetch_all(query=query,values=query_param)
   #delete disable bulk
   function_delete_disable_bulk=await postgres_object.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
-  for k,v in pschema.bulk_delete_disable.items():
+  for k,v in pschema_bulk_delete_disable.items():
     trigger_name=f"trigger_delete_disable_bulk_{k}"
     query=f"create or replace trigger {trigger_name} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});"
     query_param={}
@@ -461,7 +470,7 @@ async def postgres_init(postgres_object,pschema):
   #query
   schema_constraint=await postgres_object.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
   schema_constraint_name_list=[item["constraint_name"] for item in schema_constraint]
-  for k,v in pschema.query.items():
+  for k,v in pschema_query.items():
     if "add constraint" in v and v.split()[5] in schema_constraint_name_list:continue
     await postgres_object.fetch_all(query=v,values={})
   #final
