@@ -1,11 +1,12 @@
 FROM python:3.12
 
-WORKDIR /code
+WORKDIR /atom
 
-COPY ./requirements.txt /code/requirements.txt
+COPY ./requirements.txt /atom/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /atom/requirements.txt
 
-COPY ./main.py /code/
+COPY ..
 
-CMD ["fastapi", "run", "main.py", "--port", "80"]
+CMD ["pythin","main.py","--port", "80"]
+
