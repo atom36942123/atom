@@ -1,9 +1,3 @@
-#runtime
-from config import postgres_database_url
-from databases import Database
-postgres_object=Database(postgres_database_url,min_size=1,max_size=100)
-column_datatype=None
-
 #logging
 import logging
 logging.basicConfig(level="INFO")
@@ -12,6 +6,12 @@ logging.basicConfig(level="INFO")
 from config import sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
+
+#runtime
+from config import postgres_database_url
+from databases import Database
+postgres_object=Database(postgres_database_url,min_size=1,max_size=100)
+column_datatype=None
 
 #lifespan
 from fastapi import FastAPI
