@@ -24,7 +24,7 @@ rekognition_access_key_id=env("rekognition_access_key_id")
 rekognition_secret_access_key=env("rekognition_secret_access_key")
 openai_secret_key=env("openai_secret_key")
 
-#pschema
+#postgres schema
 postgres_schema={
 "extension":["postgis"],
 "table":["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
