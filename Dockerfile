@@ -8,5 +8,5 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY ..
 
-CMD ["pythin","maivn.py","--port", "80"]
+CMD ["python","main.py","--port", "80"]
 
