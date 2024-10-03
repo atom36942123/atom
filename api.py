@@ -18,14 +18,14 @@ async def root(request:Request):
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from function import postgres_init
-from config import pschema
+from config import postgres_schema
 @router.get("/root/postgres-init")
 async def root_postgres_init(request:Request):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   #logic
-  await postgres_init(postgres_object,pschema)
+  await postgres_init(postgres_object,postgres_schema)
   #final
   return {"status":1,"message":"done"}
 
