@@ -7,10 +7,12 @@ from config import sentry_dsn
 import sentry_sdk
 if False:sentry_sdk.init(dsn=sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
 
-#runtime
+#postgtes object
 from config import postgres_database_url
 from databases import Database
 postgres_object=Database(postgres_database_url,min_size=1,max_size=100)
+
+#column datatype
 column_datatype=None
 
 #lifespan
@@ -21,12 +23,16 @@ from config import redis_server_url
 from function import postgres_column_datatype
 @asynccontextmanager
 async def lifespan(app:FastAPI):
+  #redis start
   await redis_service_start(redis_server_url)
+  #postgres connect
   await postgres_object.connect()
+  #column datatype
   global column_datatype
   response=await postgres_column_datatype(postgres_object)
   column_datatype=response["message"]
   yield
+  #postgres disconnect
   await postgres_object.disconnect()
   
 #app
