@@ -254,7 +254,7 @@ import hashlib
 from function import jwt_token_encode
 from config import jwt_secret_key
 @router.get("/auth/login")
-async def auth_login(request:Request,username:str,password:str):
+async def auth_login(request:Request,username:str,password:str,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    user=request.state.user
@@ -264,6 +264,7 @@ async def auth_login(request:Request,username:str,password:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
+   if mode=="admin" and not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"you are not admin"})
    #token encode
    response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
