@@ -1,8 +1,8 @@
 # what is atom
-Any application has two major parts-backend/frontend. Backend is something that takes time and involves complexity. 
-Atom is written to simplify backend development which is common across any product. 
-With atom, anyone can deploy ~80% of the backend in ~2 weeks. Atom has gone through rigourus testing that can save a lot of devleopment time.
-After that,further development can be continued without any restriction.
+Any application has two major parts-backend/frontend. Backend is something that takes time and involves complexity.  
+Atom is written to simplify backend development which is common across any product.  
+With atom, anyone can deploy ~80% of the backend in ~2 weeks. Atom has gone through rigourus testing that can save a lot of devleopment time.  
+After that,further development can be continued without any restriction.  
 
 1. atom has a complete set of pre-built modules that can be used to build production-ready applications in weeks instead of months
 2. atom is non opinionated and it was written with no bias for any particular application
