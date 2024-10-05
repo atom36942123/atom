@@ -993,24 +993,6 @@ async def private_openai(request:Request,text:str):
    #final
    return {"status":1,"message":output}
 
-#admin/create-user
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from function import postgres_object_create
-@router.post("/admin/create-user")
-async def admin_create_user(request:Request):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   column_datatype=request.state.column_datatype
-   #logic
-   object=await request.json()
-   object["created_by_id"]=user["id"]
-   response=await postgres_object_create(postgres_object,column_datatype,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
-   
 #admin/postgres clean
 from fastapi import Request
 from fastapi.responses import JSONResponse
