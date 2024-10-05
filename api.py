@@ -312,7 +312,7 @@ from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-email-otp")
-async def auth_login_email_otp(request:Request,email:str,otp:int):
+async def auth_login_email_otp(request:Request,email:str,otp:int,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    user=request.state.user
@@ -324,6 +324,7 @@ async def auth_login_email_otp(request:Request,email:str,otp:int):
    query_param={"email":email}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
+   if mode=="exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if not user:
      query=f"insert into users (email) values (:email) returning *;"
      query_param={"email":email}
@@ -348,7 +349,7 @@ from function import jwt_token_encode
 from config import jwt_secret_key
 from function import postgtes_otp_verify
 @router.get("/auth/login-mobile-otp")
-async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
+async def auth_login_mobile_otp(request:Request,mobile:str,otp:int,mode:str=None):
    #middleware
    postgres_object=request.state.postgres_object
    user=request.state.user
@@ -360,6 +361,7 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
    query_param={"mobile":mobile}
    output=await postgres_object.fetch_all(query=query,values=query_param)
    user=output[0] if output else None
+   if mode=="exist" and not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    if not user:
      query=f"insert into users (mobile) values (:mobile) returning *;"
      query_param={"mobile":mobile}
@@ -369,62 +371,6 @@ async def auth_login_mobile_otp(request:Request,mobile:str,otp:int):
      query_param={"id":user_id}
      output=await postgres_object.fetch_all(query=query,values=query_param)
      user=output[0]
-   #token encode
-   response=await jwt_token_encode(user,jwt_secret_key,30)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
-   #final
-   return {"status":1,"message":token}
-
-#auth/login email otp exist
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import hashlib
-from function import jwt_token_encode
-from config import jwt_secret_key
-from function import postgtes_otp_verify
-@router.get("/auth/login-email-otp-exist")
-async def auth_login_email_otp_exist(request:Request,email:str,otp:int):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #otp verify
-   response=await postgtes_otp_verify(postgres_object,otp,email,None)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #logic
-   query=f"select * from users where email=:email order by id desc limit 1;"
-   query_param={"email":email}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
-   #token encode
-   response=await jwt_token_encode(user,jwt_secret_key,30)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   token=response["message"]
-   #final
-   return {"status":1,"message":token}
-
-#auth/login mobile otp exist
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import hashlib
-from function import jwt_token_encode
-from config import jwt_secret_key
-from function import postgtes_otp_verify
-@router.get("/auth/login-mobile-otp-exist")
-async def auth_login_mobile_otp_exist(request:Request,mobile:str,otp:int):
-   #middleware
-   postgres_object=request.state.postgres_object
-   user=request.state.user
-   #otp verify
-   response=await postgtes_otp_verify(postgres_object,otp,None,mobile)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #logic
-   query=f"select * from users where mobile=:mobile order by id desc limit 1;"
-   query_param={"mobile":mobile}
-   output=await postgres_object.fetch_all(query=query,values=query_param)
-   user=output[0] if output else None
-   if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    #token encode
    response=await jwt_token_encode(user,jwt_secret_key,30)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
