@@ -27,10 +27,11 @@ openai_secret_key=env("openai_secret_key")
 #postgres schema
 postgres_schema={
 "extension":["postgis"],
-"table":["atom","users","box","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
+"table":["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
 "column":{
-"created_at":["timestamptz",["atom","users","box","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
-"created_by_id":["bigint",["atom","users","box","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_at":["timestamptz",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_by_id":["bigint",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "is_deleted":["int",["users","post","box","atom"]],
 "updated_at":["timestamptz",["users","post","box","atom","report","comment","message","helpdesk","workseeker"]],
 "updated_by_id":["bigint",["users","post","box","atom","report","comment","message","helpdesk","workseeker"]],
@@ -79,9 +80,9 @@ postgres_schema={
 "salary_expected":["int",["workseeker"]],
 },
 "index":{
-"id":["btree",["atom","users","box","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "created_at":["brin",["users","post"]],
-"created_by_id":["btree",["users","post","likes","bookmark","report","block","rating","comment","message","helpdesk"]],
+"created_by_id":["btree",["users","post","box","atom","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "is_deleted":["btree",["users","post","box","atom"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
