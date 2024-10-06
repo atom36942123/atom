@@ -77,7 +77,7 @@ postgres_schema={
 "experience":["int",["workseeker"]],
 "salary_currency":["text",["workseeker"]],
 "salary_current":["int",["workseeker"]],
-"salary_expected":["int",["workseeker"]],
+"salary_expected":["int",["workseeker"]]
 },
 "index":{
 "id":["btree",["atom","box","users","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
@@ -94,7 +94,7 @@ postgres_schema={
 "password":["btree",["users"]],
 "location":["gist",["users","post","box","atom"]],
 "tag":["btree",["users","post","box","atom"]],
-"tag_array":["gin",["atom"]],
+"tag_array":["gin",["atom"]]
 },
 "notnull":{
 "parent_table":["likes","bookmark","report","block","rating","comment","message"],
