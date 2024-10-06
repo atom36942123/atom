@@ -1090,3 +1090,18 @@ async def admin_delete_ids(request:Request,table:str,ids:str):
    output=await postgres_object.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#admin/postgres-qrunner
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.get("/admin/postgres-qrunner")
+async def admin_postgres_qrunner(request:Request,query:str):
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  #logic
+  for item in ["insert","update","delete","alter","drop"]:
+    if item in query:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed in query"})
+  output=await postgres_object.fetch_all(query=query,values={})
+  #final
+  return {"status":1,"message":output}
