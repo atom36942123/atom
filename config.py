@@ -27,7 +27,7 @@ openai_secret_key=env("openai_secret_key")
 #postgres schema
 postgres_schema={
 "extension":["postgis"],
-"table":["atom","box","users","post",,"likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
+"table":["atom","box","users","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"],
 "column":{
 "id":["bigint",["atom","box","users","post",,"likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
 "created_at":["timestamptz",["atom","box","users","post",,"likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
