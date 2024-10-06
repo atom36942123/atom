@@ -80,8 +80,8 @@ postgres_schema={
 "salary_expected":["int",["workseeker"]]
 },
 "index":{
-"created_at":["brin",["atom","box","users","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
-"created_by_id":["btree",["atom","box","users","post","likes","bookmark","report","block","rating","comment","message","helpdesk","otp","log","workseeker"]],
+"created_at":["brin",["users","post"]],
+"created_by_id":["btree",["post","likes","bookmark","report","block","rating","comment","message"]],
 "is_deleted":["btree",["users","post","box","atom"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
