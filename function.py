@@ -397,7 +397,7 @@ async def postgres_init(postgres_object,postgres_schema):
   schema_table_name_list=[item["table_name"] for item in schema_table]
   for item in postgres_schema_table:
     if item not in schema_table_name_list:
-      query=f"create table if not exists {item} (id bigint generated always as identity not null);"
+      query=f"create table if not exists {item} (id bigint generated always as identity not null,created_at timestamptz default now() not null,created_by_id bigint);"
       query_param={}
       await postgres_object.fetch_all(query=query,values=query_param)
   #column
