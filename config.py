@@ -82,7 +82,7 @@ postgres_schema={
 "index":{
 "created_at":["brin",["users","post"]],
 "created_by_id":["btree",["post","likes","bookmark","report","block","rating","comment","message"]],
-"is_deleted":["btree",["users","post","box","atom"]],
+"is_deleted":["btree",["users","post"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
 "parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],
