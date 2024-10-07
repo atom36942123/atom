@@ -1105,3 +1105,21 @@ async def admin_postgres_qrunner(request:Request,query:str):
   output=await postgres_object.fetch_all(query=query,values={})
   #final
   return {"status":1,"message":output}
+
+#admin/update-api-access
+from fastapi import Request
+@router.put("/admin/update-api-access")
+async def admin_update_api_access(request:Request,user_id:int,api_access:str):
+  #middleware
+  postgres_object=request.state.postgres_object
+  user=request.state.user
+  app=request.state.app
+  #logic
+  api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
+  api_admin_str=",".join(api_admin_list)
+  if api_access not in api_admin_str:return JSONResponse(status_code=400,content={"status":0,"message":"wrong api access string"})
+  query="update users set api_access=:api_access where id=:id returning *"
+  query_param={"api_access":api_access,"id":user_id}
+  output=await postgres_object.fetch_all(query=query,values=query_param)
+  #final
+  return {"status":1,"message":output}
