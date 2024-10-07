@@ -59,7 +59,6 @@ async def middleware(request:Request,api_function):
   try:
     #start
     start=time.time()
-    print(vars(request))
     #auth check
     response=await auth_check_middleware(request,jwt_token_decode,jwt_secret_key,root_secret_key,postgres_object)
     if response["status"]==0:return JSONResponse(status_code=400,content=response)
@@ -73,11 +72,10 @@ async def middleware(request:Request,api_function):
     response=await api_function(request)
     #end
     end=time.time()
-    response_time_ms=(end-start)*1000
     #log create
     if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
-      
-      await postgres_create_log(postgres_object,request,response_time_ms,user)
+      object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000,"request":vars(request)}
+      await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
