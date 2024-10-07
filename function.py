@@ -25,7 +25,7 @@ async def where_clause(param,column_datatype):
   where_string=f"where {key_joined}" if key_joined else ""
   for k,v in where_key_value.items():
     if k in column_datatype:datatype=column_datatype[k]
-    else:return {"status":0,"message":"column not in column_datatype"}
+    else:return {"status":0,"message":f"{k} column not in column_datatype"}
     if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
     if "int" in datatype:where_key_value[k]=int(v) if v else None
     if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
@@ -48,7 +48,7 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       if k in column_datatype:datatype=column_datatype[k]
-      else:return {"status":0,"message":"column not in column_datatype"}
+      else:return {"status":0,"message":f"{k} column not in column_datatype"}
       if not v:query_param_list[index][k]=None
       if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
       if "int" in datatype:query_param_list[index][k]=int(v) if v else None
@@ -81,7 +81,7 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
   for index,object in enumerate(query_param_list):
     for k,v in object.items():
       if k in column_datatype:datatype=column_datatype[k]
-      else:return {"status":0,"message":"column not in column_datatype"}
+      else:return {"status":0,"message":f"{k} column not in column_datatype"}
       if not v:query_param_list[index][k]=None
       if k in ["password","google_id"]:query_param_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
       if "int" in datatype:query_param_list[index][k]=int(v) if v else None
