@@ -52,7 +52,7 @@ from function import auth_check_middleware
 from function import jwt_token_decode
 from config import jwt_secret_key
 from config import root_secret_key
-from function import postgres_object_update
+from function import postgres_object_create
 from function import middleware_error
 @app.middleware("http")
 async def middleware(request:Request,api_function):
