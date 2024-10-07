@@ -1122,7 +1122,9 @@ async def admin_update_api_access(request:Request,body:schema_update_api_access)
   #logic
   api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
   api_admin_str=",".join(api_admin_list)
-  if body.api_access and body.api_access not in api_admin_str:return JSONResponse(status_code=400,content={"status":0,"message":"wrong api access string"})
+  if body.api_access:
+    for item in body.api_access.split(","):
+      if item not in api_admin_str:return JSONResponse(status_code=400,content={"status":0,"message":"wrong api access string"})
   query="update users set api_access=:api_access where id=:id returning *"
   query_param={"id":body.user_id,"api_access":body.api_access}
   output=await postgres_object.fetch_all(query=query,values=query_param)
