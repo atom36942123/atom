@@ -59,6 +59,8 @@ async def middleware(request:Request,api_function):
   try:
     #start
     start=time.time()
+    x=await request.json()
+    print(x)
     #auth check
     response=await auth_check_middleware(request,jwt_token_decode,jwt_secret_key,root_secret_key,postgres_object)
     if response["status"]==0:return JSONResponse(status_code=400,content=response)
