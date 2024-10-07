@@ -1109,8 +1109,12 @@ async def admin_postgres_qrunner(request:Request,query:str):
 
 #admin/update-api-access
 from fastapi import Request
+from pydantic import BaseModel
+class schema_update_api_access(BaseModel):
+  user_id:int
+  api_access:str|None=None
 @router.put("/admin/update-api-access")
-async def admin_update_api_access(request:Request,user_id:int,api_access:str):
+async def admin_update_api_access(request:Request,body:schema_update_api_access):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
@@ -1118,10 +1122,9 @@ async def admin_update_api_access(request:Request,user_id:int,api_access:str):
   #logic
   api_admin_list=[route.path for route in app.routes if "/admin" in route.path]
   api_admin_str=",".join(api_admin_list)
-  if api_access in ["",'''""''']:api_access=None
-  if api_access and api_access not in api_admin_str:return JSONResponse(status_code=400,content={"status":0,"message":"wrong api access string"})
+  if body.api_access and body.api_access not in api_admin_str:return JSONResponse(status_code=400,content={"status":0,"message":"wrong api access string"})
   query="update users set api_access=:api_access where id=:id returning *"
-  query_param={"api_access":api_access,"id":user_id}
+  query_param={"id":body.user_id,"api_access":body.api_access}
   output=await postgres_object.fetch_all(query=query,values=query_param)
   #final
   return {"status":1,"message":output}
