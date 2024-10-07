@@ -608,13 +608,14 @@ async def my_object_delete(request:Request,table:str):
 #public/api-list
 from fastapi import Request
 @router.get("/public/api-list")
-async def public_api_list(request:Request):
+async def public_api_list(request:Request,mode:str=None):
   #middleware
   postgres_object=request.state.postgres_object
   user=request.state.user
   app=request.state.app
   #logic
   api_list=[route.path for route in app.routes]
+  if mode=="admin":api_list=[route.path for route in app.routes if "/admin" in route.path]
   #final
   return {"status":1,"message":api_list}
 
