@@ -74,7 +74,7 @@ async def middleware(request:Request,api_function):
     end=time.time()
     #log create
     if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
-      object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000,"request_object":vars(request)}
+      object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000,"request_object":vars(request).decode("utf-8")}
       await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
   except Exception as e:
     print(traceback.format_exc())
