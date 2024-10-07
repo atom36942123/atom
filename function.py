@@ -270,7 +270,6 @@ import jwt,json
 from fastapi import BackgroundTasks
 async def postgres_create_log(postgres_object,request,response_time_ms,user):
   request_url_path=request.url.path
-  if request_url_path=="/":return {"status":1,"message":"skipped"}
   request_query_param=json.dumps(dict(request.query_params))
   request_body=None
   created_by_id=user["id"] if user else None
