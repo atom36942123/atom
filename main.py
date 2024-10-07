@@ -74,7 +74,9 @@ async def middleware(request:Request,api_function):
     end=time.time()
     response_time_ms=(end-start)*1000
     #log create
-    if request.method in ["POST","GET","PUT","DELETE"]:await postgres_create_log(postgres_object,request,response_time_ms,user)
+    if request.url.path not in ["/"]
+    if request.method in ["POST","GET","PUT","DELETE"]:
+      await postgres_create_log(postgres_object,request,response_time_ms,user)
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
