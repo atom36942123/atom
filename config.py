@@ -62,7 +62,6 @@ postgres_schema={
 "location":["geography(POINT)",["users","post","box","atom"]],
 "api":["text",["log"]],
 "response_time_ms":["numeric",["log"]],
-"request_object":["text",["log"]],
 "interest":["text",["users"]],
 "skill":["text",["users","workseeker"]],
 "gender":["text",["users","workseeker"]],
