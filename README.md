@@ -56,6 +56,7 @@ After that,further development can be continued without any restriction.
 16. aws sns
 17. aws rekognition
 18. openai
+19. pydantic
 
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.
