@@ -269,12 +269,8 @@ async def jwt_token_encode(user,jwt_secret_key,expiry_days):
 import jwt,json
 from fastapi import BackgroundTasks
 async def postgres_create_log(postgres_object,request,response_time_ms,user):
-  request_url_path=request.url.path
-  request_query_param=json.dumps(dict(request.query_params))
-  request_body=None
-  created_by_id=user["id"] if user else None
   query="insert into log (created_by_id,request_url_path,request_query_param,request_body,response_time_ms) values (:created_by_id,:request_url_path,:request_query_param,:request_body,:response_time_ms);"
-  query_param={"created_by_id":created_by_id,"request_url_path":request_url_path,"request_query_param":request_query_param,"request_body":request_body,"response_time_ms":response_time_ms}
+  query_param={"created_by_id":user["id"] if user else None,"request_url_path":request.url.path,"request_query_param":json.dumps(dict(request.query_params)),"request_body":None,"response_time_ms":response_time_ms}
   background=BackgroundTasks()
   background.add_task(await postgres_object.fetch_all(query=query,values=query_param))
   return {"status":1,"message":"done"}
