@@ -52,7 +52,7 @@ from function import auth_check_middleware
 from function import jwt_token_decode
 from config import jwt_secret_key
 from config import root_secret_key
-from function import postgres_create_log,postgres_object_create
+from function import postgres_log_create,postgres_object_create
 from function import middleware_error
 @app.middleware("http")
 async def middleware(request:Request,api_function):
@@ -73,7 +73,7 @@ async def middleware(request:Request,api_function):
     #end
     end=time.time()
     #log create
-    if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:await postgres_create_log(postgres_object,postgres_object_create,column_datatype,request,user,(end-start)*1000)
+    if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:await postgres_log_create(postgres_object,postgres_object_create,column_datatype,request,user,(end-start)*1000)
   #exception
   except Exception as e:
     print(traceback.format_exc())
