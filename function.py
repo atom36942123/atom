@@ -4,7 +4,7 @@ async def postgres_log_create(postgres_object,postgres_object_create,column_data
   global object_list_log
   object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":response_time_ms}
   object_list_log.append(object)
-  if len(object_list)>5:await postgres_object_create(postgres_object,column_datatype,"background","log",object_list_log)
+  if len(object_list_log)>5:await postgres_object_create(postgres_object,column_datatype,"background","log",object_list_log)
   return {"status":1,"message":"done"}
 
 #postgres location search
