@@ -1,6 +1,6 @@
-#postgres create log
+#postgres log create
 object_list_log=[]
-async def postgres_create_log(postgres_object,postgres_object_create,column_datatype,request,user,response_time_ms):
+async def postgres_log_create(postgres_object,postgres_object_create,column_datatype,request,user,response_time_ms):
   global object_list_log
   object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":response_time_ms}
   object_list_log.append(object)
