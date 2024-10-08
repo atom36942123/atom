@@ -54,6 +54,7 @@ from config import jwt_secret_key
 from config import root_secret_key
 from function import postgres_object_create
 from function import middleware_error
+object_list=[]
 @app.middleware("http")
 async def middleware(request:Request,api_function):
   try:
@@ -73,9 +74,13 @@ async def middleware(request:Request,api_function):
     #end
     end=time.time()
     #log create
+    global object_list
     if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
       object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000}
-      await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
+      object_list.append(object)
+      if len(object_list)>5:
+        await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
+        object_list=[]
   #exception
   except Exception as e:
     print(traceback.format_exc())
