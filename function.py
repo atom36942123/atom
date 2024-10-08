@@ -1,16 +1,11 @@
-#postgres location search
-async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
-  long,lat=float(location.split(",")[0]),float(location.split(",")[1])
-  min_meter,max_meter=int(within.split(",")[0]),int(within.split(",")[1])
-  query=f'''
-  with
-  x as (select * from {table} {where_string}),
-  y as (select *,st_distance(location,st_point({long},{lat})::geography) as distance_meter from x)
-  select * from y where distance_meter between {min_meter} and {max_meter} order by {order} limit {limit} offset {offset};
-  '''
-  query_param=where_value
-  output=await postgres_object.fetch_all(query=query,values=query_param)
-  return {"status":1,"message":output}
+#postgres log create
+object_list_log=[]
+async def postgres_log_create(postgres_object,postgres_object_create,column_datatype,request,user,response_time_ms):
+  global object_list_log
+  object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":response_time_ms}
+  object_list_log.append(object)
+  if len(object_list)>5:await postgres_object_create(postgres_object,column_datatype,"background","log",object_list_log)
+  return {"status":1,"message":"done"}
 
 #postgres location search
 async def postgres_location_search(postgres_object,table,location,within,order,limit,offset,where_string,where_value):
