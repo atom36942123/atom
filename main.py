@@ -76,10 +76,12 @@ async def middleware(request:Request,api_function):
     if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
       object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000}
       await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
+  #exception
   except Exception as e:
     print(traceback.format_exc())
     response=await middleware_error(e.args)
     return JSONResponse(status_code=400,content=response)
+  #final
   return response
 
 #router
