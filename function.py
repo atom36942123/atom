@@ -40,7 +40,6 @@ from datetime import datetime
 from fastapi import BackgroundTasks
 async def postgres_object_create(postgres_object,column_datatype,mode,table,object_list):
   if not object_list:return {"status":0,"message":"object list empty"}
-  background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_insert_list=[*object_list[0]]
   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
@@ -57,13 +56,14 @@ async def postgres_object_create(postgres_object,column_datatype,mode,table,obje
       if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  background=BackgroundTasks()
   output=None
   if len(object_list)==1:
-    if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
     if mode=="normal":output=await postgres_object.fetch_all(query=query,values=query_param_list[0])
+    if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
   else:
-    if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
     if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
+    if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
   return {"status":1,"message":output}
   
 #postgres object update
@@ -72,7 +72,6 @@ from datetime import datetime
 from fastapi import BackgroundTasks
 async def postgres_object_update(postgres_object,column_datatype,mode,table,object_list):
   if not object_list:return {"status":0,"message":"object list empty"}
-  background=BackgroundTasks()
   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
   column_to_update_list=[*object_list[0]]
   column_to_update_list.remove("id")
@@ -90,13 +89,14 @@ async def postgres_object_update(postgres_object,column_datatype,mode,table,obje
       if datatype in ["date"]:query_param_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
       if datatype in ["jsonb"]:query_param_list[index][k]=json.dumps(v) if v else None
       if datatype in ["ARRAY"]:query_param_list[index][k]=v.split(",") if v else None
+  background=BackgroundTasks()
   output=None
   if len(object_list)==1:
-    if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
     if mode=="normal":output=await postgres_object.fetch_all(query=query,values=query_param_list[0])
+    if mode=="background":background.add_task(await postgres_object.fetch_all(query=query,values=query_param_list[0]))
   else:
-    if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
     if mode=="normal":output=await postgres_object.execute_many(query=query,values=query_param_list)
+    if mode=="background":background.add_task(await postgres_object.execute_many(query=query,values=query_param_list))
   return {"status":1,"message":output}
 
 #postgres parent read
