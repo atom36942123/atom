@@ -79,7 +79,7 @@ async def middleware(request:Request,api_function):
       object={"created_by_id":user["id"] if user else None,"api":request.url.path,"response_time_ms":(end-start)*1000}
       object_list.append(object)
       if len(object_list)>5:
-        await postgres_object_create(postgres_object,column_datatype,"background","log",[object])
+        await postgres_object_create(postgres_object,column_datatype,"background","log",object_list)
         object_list=[]
   #exception
   except Exception as e:
