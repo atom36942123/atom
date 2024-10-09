@@ -9,7 +9,8 @@ After that,further development can be continued without any restriction.
 3. atom is fully scalable as per need
 4. atom follows functional programming paradigm with separation of logic and interface and emphasis on solid principles
 5. atom uses objects/datatypes as a fundamental concept with no affection to the type of object thus making it suitable for designing any system.
-6. api docs= https://atom-tbsk.onrender.com/docs
+6. core tech stack = python/fastapi/postgres
+7. api docs= https://atom-tbsk.onrender.com/docs
 
 # what type of applications atom can build
 1. ecommnerce
@@ -37,27 +38,6 @@ After that,further development can be continued without any restriction.
 15. rate limiter to stop malicious bot activity
 16. one click deployment configured using render
     
-# tech stack used
-1. python
-2. fastapi
-3. postgres
-4. redis
-5. mongodb
-6. elasticsearch
-7. aws ec2
-8. aws s3
-9. aws ses
-10. jenkins
-11. postman
-12. retool/appsmith
-13. sentry
-14. postgis
-15. render
-16. aws sns
-17. aws rekognition
-18. openai
-19. pydantic
-
 # vision
 1. My vision for atom is to help aspiring entrepreneurs with their technology part so that they can launch/validate faster.
 2. Primary motivation is to build as many applications using atom code and help startup founders.
