@@ -53,4 +53,5 @@ After that,further development can be continued without any restriction.
 # how to run using docker
 1. download atom repo
 2. create .env file in root folder as per config.py env variable section 
-3. build/run Dockerfile
+3. build Dockerfile=docker build . -f Dockerfile.txt -t atomapp
+4. run dockerimage=docker run atomapp
