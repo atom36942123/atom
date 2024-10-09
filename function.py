@@ -349,32 +349,6 @@ async def elasticsearch(elasticsearch_username,elasticsearch_password,elasticsea
     response=elasticsearch_object.search(index=table,body={"query":{"match":{key:value}},"size":limit})
   return {"status":1,"message":output}
   
-#mongo
-import motor.motor_asyncio
-from bson import ObjectId
-async def mongo(mongo_server_url,mode,database,table,payload):
-  mongo_object=motor.motor_asyncio.AsyncIOMotorClient(mongo_server_url)
-  if mode=="create":
-    if database=="test" and table=="users":
-      output=await mongo_object.test.users.insert_one(payload)
-      output={"status":1,"message":repr(output.inserted_id)}
-  if mode=="read":
-    if database=="test" and table=="users":
-      id=payload["id"]
-      output=response=await mongo_object.test.users.find_one({"_id":ObjectId(id)})
-      if output:output['_id']=str(output['_id'])
-  if mode=="update":
-    if database=="test" and table=="users":
-      id,data=payload["id"],payload["data"]
-      output=await mongo_object.test.users.update_one({"_id":ObjectId(id)},{"$set":data})
-      output={"status":1,"message":output.modified_count}
-  if mode=="delete":
-    if database=="test" and table=="users":
-      id=payload["id"]
-      output=await mongo_object.test.users.delete_one({"_id":ObjectId(id)})
-      output={"status":1,"message":output.deleted_count}
-  return {"status":1,"message":output}
-
 #postgres init
 async def postgres_init(postgres_object,postgres_schema):
   #postgres_schema
