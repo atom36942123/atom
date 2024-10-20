@@ -10,8 +10,9 @@ postgres_schema_default={
 "is_active":["int",["users","post","workseeker"]],
 "is_verified":["int",["users","post","workseeker"]],
 "is_protected":["int",["users","post","box","atom"]],
-"parent_table":["text",["likes","bookmark","report","block","rating","comment","message"]],
-"parent_id":["bigint",["likes","bookmark","report","block","rating","comment","message"]],
+"parent_table":["text",["likes","bookmark","report","block","rating","comment"]],
+"parent_id":["bigint",["likes","bookmark","report","block","rating","comment"]],
+"user_id":["bigint",["message"]],
 "type":["text",["users","post","box","atom","helpdesk","workseeker"]],
 "status":["text",["report","helpdesk","message","workseeker"]],
 "remark":["text",["report","helpdesk","workseeker"]],
@@ -55,8 +56,9 @@ postgres_schema_default={
 "is_deleted":["btree",["users","post"]],
 "is_active":["btree",["users","post"]],
 "is_verified":["btree",["users","post"]],
-"parent_table":["btree",["likes","bookmark","report","block","rating","comment","message"]],
-"parent_id":["btree",["likes","bookmark","report","block","rating","comment","message"]],
+"parent_table":["btree",["likes","bookmark","report","block","rating","comment"]],
+"parent_id":["btree",["likes","bookmark","report","block","rating","comment"]],
+"user_id":["btree",["message"]],
 "type":["btree",["users","post","box","atom","helpdesk"]],
 "status":["btree",["report","helpdesk","message"]],
 "email":["btree",["users","post","box","atom","otp","helpdesk"]],
@@ -66,14 +68,18 @@ postgres_schema_default={
 "tag_array":["gin",["atom"]]
 },
 "not_null":{
-"parent_table":["likes","bookmark","report","block","rating","comment","message"],
-"parent_id":["likes","bookmark","report","block","rating","comment","message"]
+"parent_table":["likes","bookmark","report","block","rating","comment"],
+"parent_id":["likes","bookmark","report","block","rating","comment"],
+"user_id":["message"],
+"created_by_id":["message"]
 },
 "unique":{
 "username":["users"],
 "created_by_id,parent_table,parent_id":["likes","bookmark","report","block"]
 },
-"bulk_delete_disable":{"users":1},
+"bulk_delete_disable":{
+"users":1
+},
 "query":{
 "create_root_user":"insert into users (username,password) values ('atom','a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3') on conflict do nothing;",
 "delete_disable_root_user":"create or replace rule rule_delete_disable_root_user as on delete to users where old.id=1 do instead nothing;"

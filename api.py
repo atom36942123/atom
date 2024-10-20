@@ -405,14 +405,14 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    user=request.state.user
    postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
    #read message
-   query=f"select * from message where parent_table='users' and parent_id=:parent_id order by {order} limit {limit} offset {(page-1)*limit};"
-   if mode=="unread":query=f"select * from message where parent_table='users' and parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param={"parent_id":user["id"]}
+   query=f"select * from message where user_id=:user_id order by {order} limit {limit} offset {(page-1)*limit};"
+   if mode=="unread":query=f"select * from message where user_id=:user_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param={"user_id":user["id"]}
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #mark status read
    if output:
       object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-      await update_postgres_object(postgres_client,postgres_schema_column_data_type,"background","users",object_list)
+      await update_postgres_object(postgres_client,postgres_schema_column_data_type,"background","message",object_list)
    #final
    return {"status":1,"message":output}
 
@@ -425,9 +425,9 @@ async def my_message_inbox(request:Request,order:str="id desc",limit:int=100,pag
    postgres_client=request.state.postgres_client
    user=request.state.user
    #read inbox
-   query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
-   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-parent_id) as unique_id from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where parent_id=:parent_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+   query=f"with mcr as (select id,abs(created_by_id-user_id) as unique_id from message where (created_by_id=:created_by_id or user_id=:user_id)),x as (select max(id) as id from mcr group by unique_id limit {limit} offset {(page-1)*limit}),y as (select m.* from x left join message as m on x.id=m.id) select * from y order by {order};"
+   if mode=="unread":query=f"with mcr as (select id,abs(created_by_id-user_id) as unique_id from message where (created_by_id=:created_by_id or user_id=:user_id)),x as (select max(id) as id from mcr group by unique_id),y as (select m.* from x left join message as m on x.id=m.id) select * from y where user_id=:user_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
+   query_param={"created_by_id":user["id"],"user_id":user["id"]}
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
@@ -443,12 +443,12 @@ async def my_message_thread(request:Request,background:BackgroundTasks,user_id:i
    postgres_client=request.state.postgres_client
    user=request.state.user
    #read message thread
-   query=f"select * from message where parent_table='users' and ((created_by_id=:user_1 and parent_id=:user_2) or (created_by_id=:user_2 and parent_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
+   query=f"select * from message where ((created_by_id=:user_1 and user_id=:user_2) or (created_by_id=:user_2 and user_id=:user_1)) order by {order} limit {limit} offset {(page-1)*limit};"
    query_param={"user_1":user["id"],"user_2":user_id}
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #mark status read
-   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where parent_table='users' and created_by_id=:created_by_id and parent_id=:parent_id returning *;"
-   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"parent_id":user["id"]}
+   query="update message set status=:status,updated_at=:updated_at,updated_by_id=:updated_by_id where created_by_id=:created_by_id and user_id=:user_id returning *;"
+   query_param={"status":"read","updated_at":datetime.now(),"updated_by_id":user['id'],"created_by_id":user_id,"user_id":user["id"]}
    background.add_task(await postgres_client.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
@@ -463,18 +463,18 @@ async def my_delete_message(request:Request,mode:str,id:int=None):
    user=request.state.user
    #logic
    if mode=="created":
-      query="delete from message where parent_table='users' and created_by_id=:created_by_id;"
+      query="delete from message where created_by_id=:created_by_id;"
       query_param={"created_by_id":user["id"]}
    if mode=="received":
-      query="delete from message where parent_table='users' and parent_id=:parent_id;"
-      query_param={"parent_id":user["id"]}
+      query="delete from message where user_id=:user_id;"
+      query_param={"user_id":user["id"]}
    if mode=="all":
-      query="delete from message where parent_table='users' and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"created_by_id":user["id"],"parent_id":user["id"]}
+      query="delete from message where (created_by_id=:created_by_id or user_id=:user_id);"
+      query_param={"created_by_id":user["id"],"user_id":user["id"]}
    if mode=="single":
       if not id:return JSONResponse(status_code=400,content={"status":0,"message":"id must"})
-      query="delete from message where parent_table='users' and id=:id and (created_by_id=:created_by_id or parent_id=:parent_id);"
-      query_param={"id":id,"created_by_id":user["id"],"parent_id":user["id"]}
+      query="delete from message where id=:id and (created_by_id=:created_by_id or user_id=:user_id);"
+      query_param={"id":id,"created_by_id":user["id"],"user_id":user["id"]}
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
