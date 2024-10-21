@@ -621,8 +621,7 @@ async def my_object_read(request:Request,table:str,order:str="id desc",limit:int
    where_string,where_value=response["message"][0],response["message"][1]
    #read object
    query=f"select * from {table} {where_string} order by {order} limit {limit} offset {(page-1)*limit};"
-   query_param=where_value
-   output=await postgres_client.fetch_all(query=query,values=query_param)
+   output=await postgres_client.fetch_all(query=query,values=where_value)
    #final
    return {"status":1,"message":output}
 
@@ -636,10 +635,11 @@ async def my_object_update(request:Request,table:str):
    postgres_client=request.state.postgres_client
    user=request.state.user
    postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
-   object=await request.json()
-   object["updated_by_id"]=user["id"]
    #check table
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
+   #object set
+   object=await request.json()
+   object["updated_by_id"]=user["id"]
    #check keys allowed
    for item in ["created_at","created_by_id","is_active","is_verified","type","google_id","otp","parent_table","parent_id"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
@@ -680,8 +680,7 @@ async def my_object_delete(request:Request,table:str):
    where_string,where_value=response["message"][0],response["message"][1]
    #delete object
    query=f"delete from {table} {where_string};"
-   query_param=where_value
-   await postgres_client.fetch_all(query=query,values=query_param)
+   await postgres_client.fetch_all(query=query,values=where_value)
    #final
    return {"status":1,"message":"done"}
 
@@ -707,6 +706,132 @@ async def my_location_search(request:Request,table:str,location:str,within:str,o
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#my/create-post
+from fastapi import Request
+@router.post("/my/create-post")
+async def my_create_post(request:Request,description:str,type:str=None,title:str=None,file_url:str=None,link_url:str=None,tag:str=None):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into post (created_by_id,type,title,description,file_url,link_url,tag) values (:created_by_id,:type,:title,:description,:file_url,:link_url,:tag) returning *;"
+   query_param={"created_by_id":user["id"],"type":type,"title":title,"description":description,"file_url":file_url,"link_url":link_url,"tag":tag}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-report
+from fastapi import Request
+@router.post("/my/create-report")
+async def my_create_report(request:Request,parent_table:str,parent_id:int,description:str):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into report (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-block
+from fastapi import Request
+@router.post("/my/create-block")
+async def my_create_block(request:Request,parent_table:str,parent_id:int,description:str):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into block (created_by_id,parent_table,parent_id,description) values (:created_by_id,:parent_table,:parent_id,:description) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-like
+from fastapi import Request
+@router.post("/my/create-like")
+async def my_create_like(request:Request,parent_table:str,parent_id:int):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into likes (created_by_id,parent_table,parent_id) values (:created_by_id,:parent_table,:parent_id) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-bookmark
+from fastapi import Request
+@router.post("/my/create-bookmark")
+async def my_create_bookmark(request:Request,parent_table:str,parent_id:int):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into bookmark (created_by_id,parent_table,parent_id) values (:created_by_id,:parent_table,:parent_id) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-comment
+from fastapi import Request
+@router.post("/my/create-comment")
+async def my_create_comment(request:Request,parent_table:str,parent_id:int,description:str,file_url:str=None):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into comment (created_by_id,parent_table,parent_id,description,file_url) values (:created_by_id,:parent_table,:parent_id,:description,:file_url) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"description":description,"file_url":file_url}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-rating
+from fastapi import Request
+@router.post("/my/create-rating")
+async def my_create_rating(request:Request,parent_table:str,parent_id:int,rating:int):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into rating (created_by_id,parent_table,parent_id,rating) values (:created_by_id,:parent_table,:parent_id,:rating) returning *;"
+   query_param={"created_by_id":user["id"],"parent_table":parent_table,"parent_id":parent_id,"rating":rating}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-message
+from fastapi import Request
+@router.post("/my/create-message")
+async def my_create_message(request:Request,user_id:int,description:str,file_url:str=None):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into message (created_by_id,user_id,description,file_url) values (:created_by_id,:user_id,:description,:file_url) returning *;"
+   query_param={"created_by_id":user["id"],"user_id":user_id,"description":description,"file_url":file_url}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
+
+#my/create-helpdesk
+from fastapi import Request
+@router.post("/my/create-helpdesk")
+async def my_create_helpdesk(request:Request,type:str,description:str,email:str=None,mobile:str=None):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   #create block
+   query="insert into helpdesk (created_by_id,type,description,email,mobile) values (:created_by_id,:type,:description,:email,:mobile) returning *;"
+   query_param={"created_by_id":user["id"],"type":type,"description":description,"email":email,"mobile":mobile}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
+   #final
+   return {"status":1,"message":output}
 
 #public/api-list
 from fastapi import Request
@@ -1086,19 +1211,6 @@ async def admin_s3_empty_bucket(request:Request,bucket_name:str):
    #final
    return {"status":1,"message":output}
 
-#admin/delete ids
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@router.put("/admin/delete-ids")
-async def admin_delete_ids(request:Request,table:str,ids:str):
-   #start
-   postgres_client=request.state.postgres_client
-   #logic
-   query=f"delete from {table} where id in ({ids});"
-   await postgres_client.fetch_all(query=query,values={})
-   #final
-   return {"status":1,"message":"done"}
-
 #admin/postgres-query-runner
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -1113,6 +1225,25 @@ async def admin_postgres_query_runner(request:Request,query:str):
   output=await postgres_client.fetch_all(query=query,values={})
   #final
   return {"status":1,"message":output}
+
+#admin/object create
+from function import create_postgres_object
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.post("/admin/object-create")
+async def admin_object_create(request:Request,table:str):
+   #start
+   postgres_client=request.state.postgres_client
+   user=request.state.user
+   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   #object set
+   object=await request.json()
+   object["created_by_id"]=user["id"]
+   #object create
+   response=await create_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
 
 #admin/object-read
 from function import read_where_clause
@@ -1155,4 +1286,17 @@ async def admin_object_update(request:Request,table:str):
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
+
+#admin/delete ids
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.put("/admin/delete-ids")
+async def admin_delete_ids(request:Request,table:str,ids:str):
+   #start
+   postgres_client=request.state.postgres_client
+   #logic
+   query=f"delete from {table} where id in ({ids});"
+   await postgres_client.fetch_all(query=query,values={})
+   #final
+   return {"status":1,"message":"done"}
 

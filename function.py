@@ -122,7 +122,7 @@ async def create_postgres_object(postgres_client,postgres_schema_column_data_typ
    if mode=="background":
       if len(object_list)==1:background.add_task(await postgres_client.fetch_all(query=query,values=object_list[0]))
       else:background.add_task(await postgres_client.execute_many(query=query,values=object_list))
-   else:
+   if mode=="normal":
       if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
       else:output=await postgres_client.execute_many(query=query,values=object_list)
    return {"status":1,"message":output}
@@ -158,5 +158,3 @@ async def update_postgres_object(postgres_client,postgres_schema_column_data_typ
       if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
       else:output=await postgres_client.execute_many(query=query,values=object_list)
    return {"status":1,"message":output}
-
-

@@ -66,6 +66,7 @@ async def middleware(request:Request,api_function):
    token=request.headers.get("Authorization").split(" ",1)[1] if request.headers.get("Authorization") else None
    api=request.url.path
    gate=api.split("/")[1]
+   global object_list_log
    try:
       #auth check
       if gate not in ["","docs","openapi.json","root","auth","my","public","private","admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"gate not allowed"}) 
@@ -95,21 +96,30 @@ async def middleware(request:Request,api_function):
       #api response
       response=await api_function(request)
       end=time.time()
+      response_time_ms=(end-start)*1000
       #log create
       if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
-         global object_list_log
-         object={"created_by_id":user["id"] if user else None,"api":api,"response_time_ms":(end-start)*1000}
+         object={"created_by_id":user["id"] if user else None,"api":api,"status_code":response.status_code,"response_time_ms":response_time_ms,"description":None}
          object_list_log.append(object)
-         if len(object_list_log)>1:
+         if len(object_list_log)>100:
             await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
             object_list_log=[]
    except Exception as e:
+      #catch error
       print(traceback.format_exc())
       error="".join(e.args)
       if "constraint_unique_likes" in error:error="already liked"
       if "constraint_unique_users" in error:error="user already exist"
       if "enough segments" in error:error="token issue"
+      #log create
+      object={"created_by_id":user["id"] if user else None,"api":api,"status_code":400,"response_time_ms":None,"description":error}
+      object_list_log.append(object)
+      if len(object_list_log)>100:
+         await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
+         object_list_log=[]
+      #final
       return JSONResponse(status_code=400,content={"status":0,"message":error})
+   #final
    return response
 
 #router
@@ -133,8 +143,3 @@ if __name__=="__main__":
       asyncio.set_event_loop(loop)
       loop.run_until_complete(uvicorn.Server(config=uvicorn.Config(app,"0.0.0.0",8000,workers=16,log_level="info",reload=False,lifespan="on",loop="asyncio")).serve())
    except KeyboardInterrupt:print("main file exited")
-
-
-
-
-
