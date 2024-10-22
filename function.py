@@ -22,7 +22,7 @@ import jwt,json,time
 from datetime import datetime,timedelta
 async def create_token(secret_key_jwt,user):
    user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"],"is_protected":user["is_protected"]}
-   expiry_time=time.mktime((datetime.now()+timedelta(days=36500)).timetuple())
+   expiry_time=time.mktime((datetime.now()+timedelta(days=100000000)).timetuple())
    payload={"exp":expiry_time,"data":json.dumps(user,default=str)}
    token=jwt.encode(payload,secret_key_jwt)
    return {"status":1,"message":token}

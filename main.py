@@ -12,9 +12,9 @@ postgres_client=Database(postgres_database_url,min_size=1,max_size=100)
 
 #redis client
 from config import redis_server_url
-from redis import asyncio as aioredis
-redis_client_1=aioredis.from_url(redis_server_url,encoding="utf-8",decode_responses=True)
-redis_client_2=aioredis.from_url(redis_server_url)
+import redis.asyncio as redis
+pool=redis.ConnectionPool.from_url(redis_server_url)
+redis_client=redis.Redis.from_pool(pool)
 
 #lifespan
 from fastapi import FastAPI
@@ -25,24 +25,34 @@ from fastapi_cache.backends.redis import RedisBackend
 postgres_schema_column_data_type=None
 @asynccontextmanager
 async def lifespan(app:FastAPI):
-   #connect
+   #postgres connect
    await postgres_client.connect()
    print("postgres connected")
-   await FastAPILimiter.init(redis_client_1)
+   #redis
+   print("redis status:",await redis_client.ping())
+   #ratelimiter connect
+   await FastAPILimiter.init(redis_client)
    print("rate limiter connected")
-   FastAPICache.init(RedisBackend(redis_client_2))
+   #cache connect
+   FastAPICache.init(RedisBackend(redis_client))
    print("redis cache connected")
-   #set postgres column data type
+   #set postgres schema column data type
    global postgres_schema_column_data_type
    query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    output=await postgres_client.fetch_all(query=query,values={})
    postgres_schema_column_data_type={item["column_name"]:item["data_type"] for item in output}
    print("postgres column data type set") 
    yield
+   #postgres disconnect
    await postgres_client.disconnect()
    print("postgres disconnected")
+   #ratelimiter disconnect
    await FastAPILimiter.close()
    print("rate limiter disconnected")
+   #redis disconnect
+   await redis_client.aclose()
+   await pool.aclose()
+   print("redis disconnected")
    
 #app
 from fastapi import FastAPI

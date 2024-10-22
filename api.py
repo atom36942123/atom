@@ -1011,7 +1011,6 @@ async def private_object_read(request:Request,table:str,order:str="id desc",limi
 #private/s3 upload file
 from config import s3_access_key_id,s3_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from fastapi import UploadFile
 import boto3,uuid
 @router.post("/private/s3-upload-file")
@@ -1027,7 +1026,6 @@ async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_na
 #private/s3 create presigned url
 from config import s3_access_key_id,s3_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 import boto3,uuid
 @router.get("/private/s3-create-presigned-url")
 async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
@@ -1043,7 +1041,6 @@ async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_
 #private/rekognition compare face
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 import boto3
 @router.get("/private/rekognition-compare-face")
 async def private_rekognition_compare_face(request:Request,s3_url_source:str,s3_url_target:str):
@@ -1060,7 +1057,6 @@ async def private_rekognition_compare_face(request:Request,s3_url_source:str,s3_
 #private/rekognition detetct label
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 import boto3
 @router.get("/private/rekognition-detect-label")
 async def private_rekognition_detect_label(request:Request,s3_url:str):
@@ -1075,7 +1071,6 @@ async def private_rekognition_detect_label(request:Request,s3_url:str):
 #private/rekognition detetct face
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 import boto3
 @router.get("/private/rekognition-detect-face")
 async def private_rekognition_detect_face(request:Request,s3_url:str):
@@ -1090,7 +1085,6 @@ async def private_rekognition_detect_face(request:Request,s3_url:str):
 #private/rekognition detect moderation
 from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
 from fastapi import Request
-from fastapi.responses import JSONResponse
 import boto3
 @router.get("/private/rekognition-detect-moderation")
 async def private_rekognition_detect_moderation(request:Request,s3_url:str):
@@ -1105,13 +1099,39 @@ async def private_rekognition_detect_moderation(request:Request,s3_url:str):
 #private/openai
 from config import secret_key_openai
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from langchain_community.llms import OpenAI
 @router.get("/private/openai")
 async def private_openai(request:Request,text:str):
    #logic
    llm=OpenAI(api_key=secret_key_openai,temperature=0.7)
    output=llm(text)
+   #final
+   return {"status":1,"message":output}
+
+#private/redis-set-object
+from main import redis_client
+from fastapi import Request
+import json
+@router.post("/private/redis-set-object")
+async def private_redis_set_object(request:Request,table:str):
+   #logic
+   body=await request.json()
+   for object in body["message"]:
+      key=f"{table}_{str(object['id'])}"
+      object=json.dumps(object)
+      async with redis_client.pipeline(transaction=True) as pipe:output=await (pipe.set(key,object)).execute()   
+   #final
+   return {"status":1,"message":output}
+
+#private/redis-get-object
+from main import redis_client
+from fastapi import Request
+@router.get("/private/redis-get-object")
+async def private_redis_get_object(request:Request,key:str):
+   #logic
+   async with redis_client.pipeline(transaction=True) as pipe:
+      output=await pipe.get(key).execute()
+      if output!=[None]:output=json.loads(output[0])
    #final
    return {"status":1,"message":output}
 
