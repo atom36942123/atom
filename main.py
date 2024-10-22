@@ -102,6 +102,7 @@ async def middleware(request:Request,api_function):
       request.state.user=user
       request.state.app=app
       request.state.postgres_client=postgres_client
+      request.state.redis_client=redis_client
       request.state.postgres_schema_column_data_type=postgres_schema_column_data_type
       #api response
       response=await api_function(request)

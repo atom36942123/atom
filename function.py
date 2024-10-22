@@ -1,3 +1,19 @@
+#redis set object
+import json
+async def redis_set_object(redis_client,key_list,object_list):
+   for index,object in enumerate(object_list):
+      key=str(key_list[index])
+      object=json.dumps(object)
+      async with redis_client.pipeline(transaction=True) as pipe:output=await (pipe.set(key,object)).execute()
+   return {"status":1,"message":output}
+
+#redis get object 
+async def redis_get_object(redis_client,key):
+   async with redis_client.pipeline(transaction=True) as pipe:
+      output=await pipe.get(key).execute()
+      if output!=[None]:output=json.loads(output[0])
+   return {"status":1,"message":output}
+
 #read redis key
 from fastapi import Request,Response
 def read_redis_key(func,namespace:str="",*,request:Request=None,response:Response=None,**kwargs):

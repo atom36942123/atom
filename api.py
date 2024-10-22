@@ -1108,33 +1108,6 @@ async def private_openai(request:Request,text:str):
    #final
    return {"status":1,"message":output}
 
-#private/redis-set-object
-from main import redis_client
-from fastapi import Request
-import json
-@router.post("/private/redis-set-object")
-async def private_redis_set_object(request:Request,table:str):
-   #logic
-   body=await request.json()
-   for object in body["message"]:
-      key=f"{table}_{str(object['id'])}"
-      object=json.dumps(object)
-      async with redis_client.pipeline(transaction=True) as pipe:output=await (pipe.set(key,object)).execute()   
-   #final
-   return {"status":1,"message":output}
-
-#private/redis-get-object
-from main import redis_client
-from fastapi import Request
-@router.get("/private/redis-get-object")
-async def private_redis_get_object(request:Request,key:str):
-   #logic
-   async with redis_client.pipeline(transaction=True) as pipe:
-      output=await pipe.get(key).execute()
-      if output!=[None]:output=json.loads(output[0])
-   #final
-   return {"status":1,"message":output}
-
 #admin/update-api-access
 from fastapi import Request
 from pydantic import BaseModel
