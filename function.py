@@ -1,3 +1,35 @@
+#mongo create object
+#call=await mongo_create_object(mongo_client,"atom","users",[{"_id":1,"username":"atom"},{"_id":2,"username":"neo"}])
+async def mongo_create_object(mongo_client,database,table,object_list):
+   db=mongo_client[database]
+   collection=db[table]
+   output=await collection.insert_many(object_list)
+   return output
+
+#mongo read object
+#call=await mongo_read_object(mongo_client,"atom","users",1)
+async def mongo_read_object(mongo_client,database,table,id):
+   db=mongo_client[database]
+   collection=db[table]
+   output=await collection.find_one({"_id":id})
+   return output
+
+#mongo update object
+#call=await mongo_update_object(mongo_client,"atom","users",1,{"username":"atom2"})
+async def mongo_update_object(mongo_client,database,table,id,object):
+   db=mongo_client[database]
+   collection=db[table]
+   output=await collection.update_one({"_id":id},{"$set":object})
+   return output
+
+#mongo delete object
+#call=await mongo_delete_object(mongo_client,"atom","users",1)
+async def mongo_delete_object(mongo_client,database,table,id):
+   db=mongo_client[database]
+   collection=db[table]
+   output=await collection.delete_one({"_id":id})
+   return output
+ 
 #redis set object
 import json
 async def redis_set_object(redis_client,key_list,object_list):

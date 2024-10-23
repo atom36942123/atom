@@ -46,7 +46,7 @@ pip freeze | xargs pip uninstall -y
 pip install pip-upgrader
 pip-upgrade
 
-#mongo
+#mongo brew
 brew tap mongodb/brew
 brew update
 brew install mongodb-community@8.0
@@ -55,9 +55,9 @@ brew services stop mongodb-community@8.0
 brew services info mongodb-community@8.0
 brew install --cask mongodb-compass
 
-#docker mongo
-docker pull mongodb/mongodb-community-server:latest
-docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest
+#mongo docker
+image=docker pull mongodb/mongodb-community-server:latest
+container=docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest
 terminal=mongosh
 check count=db.users.countDocuments({})
 

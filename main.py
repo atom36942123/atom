@@ -1,9 +1,7 @@
 #sentry
 from config import sentry_dsn
 import sentry_sdk
-if False:
-   sentry_sdk.init(dsn=sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
-   print("sentry connected")
+if False:sentry_sdk.init(dsn=sentry_dsn,traces_sample_rate=1.0,profiles_sample_rate=1.0)
    
 #postgtes client
 from config import postgres_database_url
@@ -15,6 +13,10 @@ from config import redis_server_url
 import redis.asyncio as redis
 pool=redis.ConnectionPool.from_url(redis_server_url)
 redis_client=redis.Redis.from_pool(pool)
+
+#mongo client
+import motor.motor_asyncio
+if False:mongo_client=motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
 
 #lifespan
 from fastapi import FastAPI
