@@ -11,100 +11,20 @@ async def root(request:Request):
 
 #root/create-postgres-schema
 from pschema import postgres_schema_default
+from function import create_postgres_schema
 from fastapi import Request
+from fastapi.responses import JSONResponse
 @router.post("/root/create-postgres-schema")
 async def root_create_postgres_schema(request:Request,mode:str):
    #start
    postgres_client=request.state.postgres_client
-   #assign schema
-   if mode=="default":postgres_schema_init=postgres_schema_default
-   if mode=="self":postgres_schema_init=await request.json()
-   #create extension
-   for item in postgres_schema_init["extension"]:
-      query=f"create extension if not exists {item}"
-      await postgres_client.fetch_all(query=query,values={})
-   #create table
-   postgres_schema_table=await postgres_client.fetch_all(query="select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE';",values={})
-   postgres_schema_table_name_list=[item["table_name"] for item in postgres_schema_table]
-   for item in postgres_schema_init["table"]:
-      if item not in postgres_schema_table_name_list:
-         query=f"create table if not exists {item} (id bigint primary key generated always as identity not null);"
-         await postgres_client.fetch_all(query=query,values={})
-   #create column
-   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-   postgres_schema_column_table={f"{item['column_name']}_{item['table_name']}":item["data_type"] for item in postgres_schema_column}
-   for k,v in postgres_schema_init["column"].items():
-      for item in v[1]:
-         if f"{k}_{item}" not in postgres_schema_column_table:
-            query=f"alter table {item} add column if not exists {k} {v[0]};"
-            await postgres_client.fetch_all(query=query,values={})
-   #alter notnull
-   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-   postgres_schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in postgres_schema_column}
-   for k,v in postgres_schema_init["not_null"].items():
-      for item in v:
-         if postgres_schema_column_table_nullable[f"{k}_{item}"]=="YES":
-            query=f"alter table {item} alter column {k} set not null;"
-            await postgres_client.fetch_all(query=query,values={})
-   #alter unique
-   postgres_schema_constraint=await postgres_client.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-   postgres_schema_constraint_name_list=[item["constraint_name"] for item in postgres_schema_constraint]
-   for k,v in postgres_schema_init["unique"].items():
-      for item in v:
-         constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
-         if constraint_name not in postgres_schema_constraint_name_list:
-            query=f"alter table {item} add constraint {constraint_name} unique ({k});"
-            await postgres_client.fetch_all(query=query,values={})
-   #create index
-   postgres_schema_index=await postgres_client.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
-   postgres_schema_index_name_list=[item["indexname"] for item in postgres_schema_index]
-   for k,v in postgres_schema_init["index"].items():
-      for item in v[1]:
-         index_name=f"index_{k}_{item}"
-         if index_name not in postgres_schema_index_name_list:
-            query=f"create index concurrently if not exists {index_name} on {item} using {v[0]} ({k});"
-            await postgres_client.fetch_all(query=query,values={})
-   #delete disable bulk
-   await postgres_client.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
-   for k,v in postgres_schema_init["bulk_delete_disable"].items():
-      trigger_name=f"trigger_delete_disable_bulk_{k}"
-      query=f"create or replace trigger {trigger_name} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});"
-      await postgres_client.fetch_all(query=query,values={})
-   #set created_at default (auto)
-   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-   for item in postgres_schema_column:
-      if item["column_name"]=="created_at" and not item["column_default"]:
-         query=f"alter table only {item['table_name']} alter column created_at set default now();"
-         await postgres_client.fetch_all(query=query,values={})
-   #set updated at now (auto)
-   await postgres_client.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
-   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-   postgres_schema_trigger=await postgres_client.fetch_all(query="select trigger_name from information_schema.triggers;",values={})
-   postgres_schema_trigger_name_list=[item["trigger_name"] for item in postgres_schema_trigger]
-   for item in postgres_schema_column:
-      if item["column_name"]=="updated_at":
-         trigger_name=f"trigger_set_updated_at_now_{item['table_name']}"
-         if trigger_name not in postgres_schema_trigger_name_list:
-            query=f"create or replace trigger {trigger_name} before update on {item['table_name']} for each row execute procedure function_set_updated_at_now();"
-            await postgres_client.fetch_all(query=query,values={})
-   #create rule protection (auto)
-   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
-   postgres_schema_rule=await postgres_client.fetch_all(query="select rulename from pg_rules;",values={})
-   postgres_schema_rule_name_list=[item["rulename"] for item in postgres_schema_rule]
-   for item in postgres_schema_column:
-      if item["column_name"]=="is_protected":
-         rule_name=f"rule_delete_disable_{item['table_name']}"
-         if rule_name not in postgres_schema_rule_name_list:
-            query=f"create or replace rule {rule_name} as on delete to {item['table_name']} where old.is_protected=1 do instead nothing;"
-            await postgres_client.fetch_all(query=query,values={})
-   #run misc query
-   postgres_schema_constraint=await postgres_client.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
-   postgres_schema_constraint_name_list=[item["constraint_name"] for item in postgres_schema_constraint]
-   for k,v in postgres_schema_init["query"].items():
-      if "add constraint" in v and v.split()[5] in postgres_schema_constraint_name_list:continue
-      await postgres_client.fetch_all(query=v,values={})
+   #logic
+   if mode=="default":postgres_schema=postgres_schema_default
+   if mode=="self":postgres_schema=await request.json()
+   response=await create_postgres_schema(postgres_client,postgres_schema)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":"done"}
+   return response
 
 #root/postgres-query-runner
 from fastapi import Request
@@ -878,44 +798,49 @@ async def public_project_meta(request:Request):
    return response
 
 #public/otp send mobile sns
-from config import sns_region_name,sns_access_key_id,sns_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import sns_send_message
 from fastapi import Request
 from fastapi.responses import JSONResponse
-import boto3,random
+import random
 @router.get("/public/otp-send-mobile-sns")
-async def public_otp_send_mobile_sns(request:Request,mobile:str):
+async def public_otp_send_mobile_sns(request:Request,sns_region_name:str,mobile:str):
    #start
    postgres_client=request.state.postgres_client
-   #send otp
    otp=random.randint(100000,999999)
-   sns_client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=sns_access_key_id,aws_secret_access_key=sns_secret_access_key)
-   output=sns_client.publish(PhoneNumber=mobile,Message=f"otp={otp}")
+   message=f"otp={otp}"
+   #logic
+   response=await sns_send_message(aws_access_key_id,aws_secret_access_key,sns_region_name,mobile,message)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
    query="insert into otp (otp,mobile) values (:otp,:mobile) returning *;"
    query_param={"otp":otp,"mobile":mobile}
    await postgres_client.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #public/otp send email ses
-from config import ses_region_name,ses_access_key_id,ses_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import ses_send_email
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import boto3,random
 @router.get("/public/otp-send-email-ses")
-async def public_otp_send_email_ses(request:Request,identity:str,email:str):
+async def public_otp_send_email_ses(request:Request,ses_region_name:str,sender:str,email:str):
    #start
    postgres_client=request.state.postgres_client
-   #send otp
    otp=random.randint(100000,999999)
-   ses_client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=ses_access_key_id,aws_secret_access_key=ses_secret_access_key)
-   output=ses_client.send_email(Source=identity,Destination={"ToAddresses":[email]},Message={"Subject":{"Charset":"UTF-8","Data":"otp"},"Body":{"Text":{"Charset":"UTF-8","Data":str(otp)}}})
+   title="otp from atom"
+   body=f"otp={str(otp)}"
+   #logic
+   response=await ses_send_email(aws_access_key_id,aws_secret_access_key,sender,ses_region_name,[email],title,body)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #save otp
    query="insert into otp (otp,email) values (:otp,:email) returning *;"
    query_param={"otp":otp,"email":email}
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
-   return {"status":1,"message":"otp sent"}
+   return response
 
 #public/otp verify email
 from function import verify_otp
@@ -1009,104 +934,117 @@ async def private_object_read(request:Request,table:str,order:str="id desc",limi
    return {"status":1,"message":output}
 
 #private/s3 upload file
-from config import s3_access_key_id,s3_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import s3_upload_file
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from fastapi import UploadFile
-import boto3,uuid
+import uuid
 @router.post("/private/s3-upload-file")
-async def private_s3_upload_file(request:Request,s3_region_name:str,s3_bucket_name:str,file:UploadFile):
-   #logic
+async def private_s3_upload_file(request:Request,s3_region_name:str,bucket_name:str,file:UploadFile):
+   #start
    key=str(uuid.uuid4())+"-"+file.filename
-   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   s3_client.upload_fileobj(file.file,s3_bucket_name,key)
-   s3_url=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
+   #logic
+   response=await s3_upload_file(aws_access_key_id,aws_secret_access_key,s3_region_name,bucket_name,key,file.file)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":s3_url}
+   return {"status":1,"message":f"https://{bucket_name}.s3.amazonaws.com/{key}"}
 
 #private/s3 create presigned url
-from config import s3_access_key_id,s3_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import s3_create_presigned_url
 from fastapi import Request
-import boto3,uuid
+from fastapi.responses import JSONResponse
+import uuid
 @router.get("/private/s3-create-presigned-url")
-async def private_s3_create_presigned_url(request:Request,s3_region_name:str,s3_bucket_name:str,filename:str):
-   #logic
+async def private_s3_create_presigned_url(request:Request,s3_region_name:str,bucket_name:str,filename:str):
+   #start
    if "." not in filename:return JSONResponse(status_code=400,content={"status":0,"message":"extension must"})
    key=str(uuid.uuid4())+"-"+filename
-   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_client.generate_presigned_post(Bucket=s3_bucket_name,Key=key,ExpiresIn=60,Conditions=[['content-length-range',1,250*1024]])
-   output["s3_url"]=f"https://{s3_bucket_name}.s3.amazonaws.com/{key}"
+   #logic
+   response=await s3_create_presigned_url(aws_access_key_id,aws_secret_access_key,s3_region_name,bucket_name,key,60,250)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return {"status":1,"message":f"https://{bucket_name}.s3.amazonaws.com/{key}"}
 
 #private/rekognition compare face
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import rekognition_compare_face
 from fastapi import Request
-import boto3
+from fastapi.responses import JSONResponse
 @router.get("/private/rekognition-compare-face")
-async def private_rekognition_compare_face(request:Request,s3_url_source:str,s3_url_target:str):
+async def private_rekognition_compare_face(request:Request,rekognition_region_name:str,s3_url_1:str,s3_url_2:str):
+   #start
+   bucket_name_1=s3_url_1.split("//",1)[1].split(".",1)[0]
+   key_1=s3_url_1.rsplit("/",1)[1]
+   bucket_name_2=s3_url_2.split("//",1)[1].split(".",1)[0]
+   key_2=s3_url_2.rsplit("/",1)[1]
    #logic
-   bucket_name_source=s3_url_source.split("//",1)[1].split(".",1)[0]
-   bucket_name_target=s3_url_target.split("//",1)[1].split(".",1)[0]
-   key_source=s3_url_source.rsplit("/",1)[1]
-   key_target=s3_url_target.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_name_source,"Name":key_source}},TargetImage={"S3Object":{"Bucket":bucket_name_target,"Name":key_target}},SimilarityThreshold=80)
+   response=await rekognition_compare_face(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name_1,key_1,bucket_name_2,key_2)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #private/rekognition detetct label
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+from config import  aws_access_key_id,aws_secret_access_key
+from function import rekognition_detect_label
 from fastapi import Request
-import boto3
+from fastapi.responses import JSONResponse
 @router.get("/private/rekognition-detect-label")
-async def private_rekognition_detect_label(request:Request,s3_url:str):
+async def private_rekognition_detect_label(request:Request,rekognition_region_name:str,s3_url:str):
    #logic
    bucket_name=s3_url.split("//",1)[1].split(".",1)[0]
    key=s3_url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MaxLabels=10,MinConfidence=90)
+   #start
+   response=await rekognition_detect_label(rekognition_region_name,aws_access_key_id,aws_secret_access_key,bucket_name,key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #private/rekognition detetct face
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import rekognition_detect_face
 from fastapi import Request
-import boto3
+from fastapi.responses import JSONResponse
 @router.get("/private/rekognition-detect-face")
-async def private_rekognition_detect_face(request:Request,s3_url:str):
-   #logic
+async def private_rekognition_detect_face(request:Request,rekognition_region_name:str,s3_url:str):
+   #start
    bucket_name=s3_url.split("//",1)[1].split(".",1)[0]
    key=s3_url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},Attributes=['ALL'])
+   #logic
+   response=await rekognition_detect_face(rekognition_region_name,aws_access_key_id,aws_secret_access_key,bucket_name,key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #private/rekognition detect moderation
-from config import rekognition_region_name,rekognition_access_key_id,rekognition_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import rekognition_detect_moderation
 from fastapi import Request
-import boto3
+from fastapi.responses import JSONResponse
 @router.get("/private/rekognition-detect-moderation")
-async def private_rekognition_detect_moderation(request:Request,s3_url:str):
-   #logic
+async def private_rekognition_detect_moderation(request:Request,rekognition_region_name:str,s3_url:str):
+   #start
    bucket_name=s3_url.split("//",1)[1].split(".",1)[0]
    key=s3_url.rsplit("/",1)[1]
-   rekognition_client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=rekognition_access_key_id,aws_secret_access_key=rekognition_secret_access_key)
-   output=rekognition_client.detect_moderation_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MinConfidence=80)
+   #logic
+   response=await rekognition_detect_moderation(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name,key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #private/openai
 from config import secret_key_openai
+from function import openai_prompt
 from fastapi import Request
-from langchain_community.llms import OpenAI
-@router.get("/private/openai")
-async def private_openai(request:Request,text:str):
+from fastapi.responses import JSONResponse
+@router.get("/private/openai-prompt")
+async def private_openai_prompt(request:Request,text:str):
    #logic
-   llm=OpenAI(api_key=secret_key_openai,temperature=0.7)
-   output=llm(text)
+   response=await openai_prompt(secret_key_openai,text)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #admin/update-api-access
 from fastapi import Request
@@ -1177,32 +1115,34 @@ async def admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile)
    return response
 
 #admin/s3 delete url
-from config import s3_access_key_id,s3_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import s3_delete_key
 from fastapi import Request
 from fastapi.responses import JSONResponse
-import boto3
 @router.delete("/admin/s3-delete-url")
 async def admin_s3_delete_url(request:Request,s3_url:str):
-   #logic
+   #start
    bucket_name=s3_url.split("//",1)[1].split(".",1)[0]
    key=s3_url.rsplit("/",1)[1]
-   s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_resource.Object(bucket_name,key).delete()
+   #logic
+   response=await s3_delete_key(aws_access_key_id,aws_secret_access_key,bucket_name,key)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #admin/s3 empty bucket
-from config import s3_access_key_id,s3_secret_access_key
+from config import aws_access_key_id,aws_secret_access_key
+from function import s3_empty_bucket
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import boto3
 @router.delete("/admin/s3-empty-bucket")
 async def admin_s3_empty_bucket(request:Request,bucket_name:str):
    #logic
-   s3_resource=boto3.resource("s3",aws_access_key_id=s3_access_key_id,aws_secret_access_key=s3_secret_access_key)
-   output=s3_resource.Bucket(bucket_name).objects.all().delete()
+   response=await s3_empty_bucket(aws_access_key_id,aws_secret_access_key,bucket_name)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
-   return {"status":1,"message":output}
+   return response
 
 #admin/postgres-query-runner
 from fastapi import Request

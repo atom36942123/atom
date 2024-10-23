@@ -101,10 +101,9 @@ async def middleware(request:Request,api_function):
          if not user["api_access"]:return JSONResponse(status_code=400,content={"status":0,"message":"user not admin"})
          if api not in user["api_access"].split(","):return JSONResponse(status_code=400,content={"status":0,"message":"api access denied"})
       #request state assign
-      request.state.user=user
       request.state.app=app
+      request.state.user=user
       request.state.postgres_client=postgres_client
-      request.state.redis_client=redis_client
       request.state.postgres_schema_column_data_type=postgres_schema_column_data_type
       #api response
       response=await api_function(request)
@@ -118,7 +117,6 @@ async def middleware(request:Request,api_function):
             await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
             object_list_log=[]
    except Exception as e:
-      #catch error
       print(traceback.format_exc())
       error="".join(e.args)
       if "constraint_unique_likes" in error:error="already liked"

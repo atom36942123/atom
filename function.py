@@ -1,10 +1,87 @@
+#openai
+from langchain_community.llms import OpenAI
+async def openai_prompt(secret_key_openai,text):
+   llm=OpenAI(api_key=secret_key_openai,temperature=0.7)
+   output=llm(text)
+   return {"status":1,"message":output}
+   
+#rekognition detect moderation
+import boto3
+async def rekognition_detect_moderation(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name,key):
+   client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.detect_moderation_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MinConfidence=80)
+   return {"status":1,"message":output}
+
+#rekognition detect label
+import boto3
+async def rekognition_detect_face(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name,key):
+   client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.detect_faces(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},Attributes=['ALL'])
+   return {"status":1,"message":output}
+
+#rekognition detect label
+import boto3
+async def rekognition_detect_label(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name,key):
+   client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.detect_labels(Image={"S3Object":{"Bucket":bucket_name,"Name":key}},MaxLabels=10,MinConfidence=90)
+   return {"status":1,"message":output}
+
+#rekognition compare face
+import boto3
+async def rekognition_compare_face(aws_access_key_id,aws_secret_access_key,rekognition_region_name,bucket_name_1,key_1,bucket_name_2,key_2):
+   client=boto3.client("rekognition",region_name=rekognition_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.compare_faces(SourceImage={"S3Object":{"Bucket":bucket_name_1,"Name":key_1}},TargetImage={"S3Object":{"Bucket":bucket_name_2,"Name":key_2}},SimilarityThreshold=80)
+   return {"status":1,"message":output}
+
+#s3 empty bucket
+import boto3
+async def s3_empty_bucket(aws_access_key_id,aws_secret_access_key,bucket_name):
+   resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=resource.Bucket(bucket_name).objects.all().delete()
+   return {"status":1,"message":output}
+
+#s3 delete url
+import boto3
+async def s3_delete_key(aws_access_key_id,aws_secret_access_key,bucket_name,key):
+   resource=boto3.resource("s3",aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=resource.Object(bucket_name,key).delete()
+   return {"status":1,"message":output}
+   
+#s3 create presigned url
+import boto3
+async def s3_create_presigned_url(aws_access_key_id,aws_secret_access_key,s3_region_name,bucket_name,key,expiry_sec,size_kb):
+   s3_client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=s3_client.generate_presigned_post(Bucket=bucket_name,Key=key,ExpiresIn=expiry_sec,Conditions=[['content-length-range',1,size_kb*1024]])
+   return {"status":1,"message":output}
+
+#s3 upload file
+import boto3
+async def s3_upload_file(aws_access_key_id,aws_secret_access_key,s3_region_name,bucket_name,key,file):
+   client=boto3.client("s3",region_name=s3_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.upload_fileobj(file,bucket_name,key)
+   return {"status":1,"message":output}
+
+#ses send email
+import boto3
+async def ses_send_email(aws_access_key_id,aws_secret_access_key,ses_region_name,sender,to_list,title,body):
+   client=boto3.client("ses",region_name=ses_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.send_email(Source=sender,Destination={"ToAddresses":to_list},Message={"Subject":{"Charset":"UTF-8","Data":title},"Body":{"Text":{"Charset":"UTF-8","Data":body}}})
+   return {"status":1,"message":output}
+
+#sns send message
+import boto3
+async def sns_send_message(aws_access_key_id,aws_secret_access_key,sns_region_name,mobile,message):
+   client=boto3.client("sns",region_name=sns_region_name,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+   output=client.publish(PhoneNumber=mobile,Message=message)
+   return {"status":1,"message":output}
+
 #mongo create object
 #call=await mongo_create_object(mongo_client,"atom","users",[{"_id":1,"username":"atom"},{"_id":2,"username":"neo"}])
 async def mongo_create_object(mongo_client,database,table,object_list):
    db=mongo_client[database]
    collection=db[table]
    output=await collection.insert_many(object_list)
-   return output
+   return {"status":1,"message":output}
 
 #mongo read object
 #call=await mongo_read_object(mongo_client,"atom","users",1)
@@ -12,7 +89,7 @@ async def mongo_read_object(mongo_client,database,table,id):
    db=mongo_client[database]
    collection=db[table]
    output=await collection.find_one({"_id":id})
-   return output
+   return {"status":1,"message":output}
 
 #mongo update object
 #call=await mongo_update_object(mongo_client,"atom","users",1,{"username":"atom2"})
@@ -20,7 +97,7 @@ async def mongo_update_object(mongo_client,database,table,id,object):
    db=mongo_client[database]
    collection=db[table]
    output=await collection.update_one({"_id":id},{"$set":object})
-   return output
+   return {"status":1,"message":output}
 
 #mongo delete object
 #call=await mongo_delete_object(mongo_client,"atom","users",1)
@@ -28,7 +105,7 @@ async def mongo_delete_object(mongo_client,database,table,id):
    db=mongo_client[database]
    collection=db[table]
    output=await collection.delete_one({"_id":id})
-   return output
+   return {"status":1,"message":output}
  
 #redis set object
 import json
@@ -206,3 +283,91 @@ async def update_postgres_object(postgres_client,postgres_schema_column_data_typ
       if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
       else:output=await postgres_client.execute_many(query=query,values=object_list)
    return {"status":1,"message":output}
+
+#create postgres schema
+async def create_postgres_schema(postgres_client,postgres_schema):
+   #create extension
+   for item in postgres_schema["extension"]:
+      query=f"create extension if not exists {item}"
+      await postgres_client.fetch_all(query=query,values={})
+   #create table
+   postgres_schema_table=await postgres_client.fetch_all(query="select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE';",values={})
+   postgres_schema_table_name_list=[item["table_name"] for item in postgres_schema_table]
+   for item in postgres_schema["table"]:
+      if item not in postgres_schema_table_name_list:
+         query=f"create table if not exists {item} (id bigint primary key generated always as identity not null);"
+         await postgres_client.fetch_all(query=query,values={})
+   #create column
+   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+   postgres_schema_column_table={f"{item['column_name']}_{item['table_name']}":item["data_type"] for item in postgres_schema_column}
+   for k,v in postgres_schema["column"].items():
+      for item in v[1]:
+         if f"{k}_{item}" not in postgres_schema_column_table:
+            query=f"alter table {item} add column if not exists {k} {v[0]};"
+            await postgres_client.fetch_all(query=query,values={})
+   #alter notnull
+   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+   postgres_schema_column_table_nullable={f"{item['column_name']}_{item['table_name']}":item["is_nullable"] for item in postgres_schema_column}
+   for k,v in postgres_schema["not_null"].items():
+      for item in v:
+         if postgres_schema_column_table_nullable[f"{k}_{item}"]=="YES":
+            query=f"alter table {item} alter column {k} set not null;"
+            await postgres_client.fetch_all(query=query,values={})
+   #alter unique
+   postgres_schema_constraint=await postgres_client.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+   postgres_schema_constraint_name_list=[item["constraint_name"] for item in postgres_schema_constraint]
+   for k,v in postgres_schema["unique"].items():
+      for item in v:
+         constraint_name=f"constraint_unique_{k}_{item}".replace(',','_')
+         if constraint_name not in postgres_schema_constraint_name_list:
+            query=f"alter table {item} add constraint {constraint_name} unique ({k});"
+            await postgres_client.fetch_all(query=query,values={})
+   #create index
+   postgres_schema_index=await postgres_client.fetch_all(query="select indexname from pg_indexes where schemaname='public';",values={})
+   postgres_schema_index_name_list=[item["indexname"] for item in postgres_schema_index]
+   for k,v in postgres_schema["index"].items():
+      for item in v[1]:
+         index_name=f"index_{k}_{item}"
+         if index_name not in postgres_schema_index_name_list:
+            query=f"create index concurrently if not exists {index_name} on {item} using {v[0]} ({k});"
+            await postgres_client.fetch_all(query=query,values={})
+   #delete disable bulk
+   await postgres_client.fetch_all(query="create or replace function function_delete_disable_bulk() returns trigger language plpgsql as $$declare n bigint := tg_argv[0]; begin if (select count(*) from deleted_rows) <= n is not true then raise exception 'cant delete more than % rows', n; end if; return old; end;$$;",values={})
+   for k,v in postgres_schema["bulk_delete_disable"].items():
+      trigger_name=f"trigger_delete_disable_bulk_{k}"
+      query=f"create or replace trigger {trigger_name} after delete on {k} referencing old table as deleted_rows for each statement execute procedure function_delete_disable_bulk({v});"
+      await postgres_client.fetch_all(query=query,values={})
+   #set created_at default (auto)
+   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+   for item in postgres_schema_column:
+      if item["column_name"]=="created_at" and not item["column_default"]:
+         query=f"alter table only {item['table_name']} alter column created_at set default now();"
+         await postgres_client.fetch_all(query=query,values={})
+   #set updated at now (auto)
+   await postgres_client.fetch_all(query="create or replace function function_set_updated_at_now() returns trigger as $$ begin new.updated_at= now(); return new; end; $$ language 'plpgsql';",values={})
+   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+   postgres_schema_trigger=await postgres_client.fetch_all(query="select trigger_name from information_schema.triggers;",values={})
+   postgres_schema_trigger_name_list=[item["trigger_name"] for item in postgres_schema_trigger]
+   for item in postgres_schema_column:
+      if item["column_name"]=="updated_at":
+         trigger_name=f"trigger_set_updated_at_now_{item['table_name']}"
+         if trigger_name not in postgres_schema_trigger_name_list:
+            query=f"create or replace trigger {trigger_name} before update on {item['table_name']} for each row execute procedure function_set_updated_at_now();"
+            await postgres_client.fetch_all(query=query,values={})
+   #create rule protection (auto)
+   postgres_schema_column=await postgres_client.fetch_all(query="select * from information_schema.columns where table_schema='public';",values={})
+   postgres_schema_rule=await postgres_client.fetch_all(query="select rulename from pg_rules;",values={})
+   postgres_schema_rule_name_list=[item["rulename"] for item in postgres_schema_rule]
+   for item in postgres_schema_column:
+      if item["column_name"]=="is_protected":
+         rule_name=f"rule_delete_disable_{item['table_name']}"
+         if rule_name not in postgres_schema_rule_name_list:
+            query=f"create or replace rule {rule_name} as on delete to {item['table_name']} where old.is_protected=1 do instead nothing;"
+            await postgres_client.fetch_all(query=query,values={})
+   #run misc query
+   postgres_schema_constraint=await postgres_client.fetch_all(query="select constraint_name from information_schema.constraint_column_usage;",values={})
+   postgres_schema_constraint_name_list=[item["constraint_name"] for item in postgres_schema_constraint]
+   for k,v in postgres_schema["query"].items():
+      if "add constraint" in v and v.split()[5] in postgres_schema_constraint_name_list:continue
+      await postgres_client.fetch_all(query=v,values={})
+   return {"status":1,"message":"done"}
