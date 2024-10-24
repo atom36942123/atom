@@ -250,16 +250,15 @@ async def auth_login_mobile_password(request:Request,mobile:str,password:str):
    return response
 
 #my/profile
-from function import update_postgres_object
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from datetime import datetime
+from fastapi import BackgroundTasks
 @router.get("/my/profile")
-async def my_profile(request:Request):
+async def my_profile(request:Request,background:BackgroundTasks):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
    #read user
    query="select * from users where id=:id;"
    query_param={"id":user["id"]}
@@ -268,8 +267,9 @@ async def my_profile(request:Request):
    if not user:return JSONResponse(status_code=400,content={"status":0,"message":"no user"})
    response={"status":1,"message":user}
    #update last active at
-   object={"id":user["id"],"last_active_at":datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}
-   await update_postgres_object(postgres_client,postgres_schema_column_data_type,"background","users",[object])
+   query="update users set last_active_at=:last_active_at where id=:id"
+   query_param={"id":user["id"],"last_active_at":datetime.now()}
+   background.add_task(await postgres_client.fetch_all(query=query,values=query_param))
    #final
    return response
 
@@ -313,17 +313,15 @@ async def my_delete_account(request:Request):
    return {"status":1,"message":"account deleted"}
 
 #my/message-received
-from function import update_postgres_object
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from fastapi import BackgroundTasks
 from datetime import datetime
+from fastapi import BackgroundTasks
 @router.get("/my/message-received")
 async def my_message_received(request:Request,background:BackgroundTasks,order:str="id desc",limit:int=100,page:int=1,mode:str=None):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
    #read message
    query=f"select * from message where user_id=:user_id order by {order} limit {limit} offset {(page-1)*limit};"
    if mode=="unread":query=f"select * from message where user_id=:user_id and status is null order by {order} limit {limit} offset {(page-1)*limit};"
@@ -331,8 +329,11 @@ async def my_message_received(request:Request,background:BackgroundTasks,order:s
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #mark status read
    if output:
-      object_list=[{"id":item["id"],"status":"read","updated_by_id":user["id"]} for item in output]
-      await update_postgres_object(postgres_client,postgres_schema_column_data_type,"background","message",object_list)
+      ids_list=[str(item["id"]) for item in output]
+      ids_string=",".join(ids_list)
+      query=f"update message set status='read',updated_by_id=:updated_by_id where id in ({ids_string});"
+      query_param={"updated_by_id":user["id"]}
+      background.add_task(await postgres_client.fetch_all(query=query,values=query_param))
    #final
    return {"status":1,"message":output}
 
@@ -438,48 +439,46 @@ async def my_parent_check(request:Request,table:str,parent_table:str,parent_ids:
    return {"status":1,"message":mapping}
 
 #my/update-email
-from function import update_postgres_object
 from function import verify_otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from datetime import datetime,timezone
+from datetime import datetime
 @router.put("/my/update-email")
 async def my_update_email(request:Request,email:str,otp:int):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #verify otp
    response=await verify_otp("email",postgres_client,otp,email)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #update email
-   object={"id":user["id"],"email":email,"updated_by_id":user["id"]}
-   response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query="update users set email=:email,updated_by_id=:updated_by_id where id=:id returning *;"
+   query_param={"id":user["id"],"email":email,"updated_by_id":user["id"]}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #my/update-mobile
-from function import update_postgres_object
 from function import verify_otp
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from datetime import datetime,timezone
+from datetime import datetime
 @router.put("/my/update-mobile")
 async def my_update_mobile(request:Request,mobile:str,otp:int):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #verify otp
    response=await verify_otp("mobile",postgres_client,otp,mobile)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #update mobile
-   object={"id":user["id"],"mobile":mobile,"updated_by_id":user["id"]}
-   response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"normal","users",[object])
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   query="update users set mobile=:mobile,updated_by_id=:updated_by_id where id=:id returning *;"
+   query_param={"id":user["id"],"mobile":mobile,"updated_by_id":user["id"]}
+   output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
-   return response
+   return {"status":1,"message":output}
 
 #my/delete-ids
 from fastapi import Request
@@ -508,7 +507,7 @@ async def my_object_create(request:Request,table:str):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check table
    if table not in ["post","likes","bookmark","report","block","rating","comment","message","helpdesk"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #object set
@@ -518,13 +517,13 @@ async def my_object_create(request:Request,table:str):
    for item in ["id","created_at","updated_at","updated_by_id","is_active","is_verified","is_protected","password","google_id","otp"]:
       if item in object:return JSONResponse(status_code=400,content={"status":0,"message":f"{item} not allowed"})
    #object create
-   response=await create_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
+   response=await create_postgres_object(postgres_client,table,[object],None,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
 #my/object-read
-from function import read_where_clause
+from function import create_where_clause
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @router.get("/my/object-read")
@@ -532,11 +531,10 @@ async def my_object_read(request:Request,table:str,order:str="id desc",limit:int
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #read where clause
-   param=dict(request.query_params)
-   param["created_by_id"]=f"=,{user['id']}"
-   response=await read_where_clause(postgres_schema_column_data_type,param)
+   param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
+   response=await create_where_clause(param,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    #read object
@@ -554,7 +552,7 @@ async def my_object_update(request:Request,table:str):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check table
    if table in ["spatial_ref_sys","otp","log","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #object set
@@ -576,13 +574,13 @@ async def my_object_update(request:Request,table:str):
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object"})
       if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"ownership issue"})
    #update object
-   response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
+   response=await update_postgres_object(postgres_client,table,[object],None,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
 #my/object-delete
-from function import read_where_clause
+from function import create_where_clause
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @router.delete("/my/object-delete")
@@ -590,12 +588,12 @@ async def my_object_delete(request:Request,table:str):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check
    if table in ["users"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #read where clause
    param=dict(request.query_params)|{"created_by_id":f"=,{user['id']}"}
-   response=await read_where_clause(postgres_schema_column_data_type,param)
+   response=await create_where_clause(param,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    #delete object
@@ -603,29 +601,6 @@ async def my_object_delete(request:Request,table:str):
    await postgres_client.fetch_all(query=query,values=where_value)
    #final
    return {"status":1,"message":"done"}
-
-#my/search-location
-from function import read_where_clause
-from function import search_postgres_location
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@router.get("/my/search-location")
-async def my_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
-   #start
-   postgres_client=request.state.postgres_client
-   user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
-   #read where clause
-   param=dict(request.query_params)
-   param["created_by_id"]=f"=,{user['id']}"
-   response=await read_where_clause(postgres_schema_column_data_type,param)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   where_string,where_value=response["message"][0],response["message"][1]
-   #logic
-   response=await search_postgres_location(postgres_client,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
-   if response["status"]==0:return JSONResponse(status_code=400,content=response)
-   #final
-   return response
 
 #my/create-post
 from fastapi import Request
@@ -871,7 +846,7 @@ async def public_otp_verify_mobile(request:Request,otp:int,mobile:str):
    return response
 
 #public/object read
-from function import read_where_clause
+from function import create_where_clause
 from function import read_redis_key
 from function import add_creator_key
 from function import add_action_count
@@ -883,12 +858,12 @@ from fastapi_cache.decorator import cache
 async def public_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #start
    postgres_client=request.state.postgres_client
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check table
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #read where clause
    param=dict(request.query_params)
-   response=await read_where_clause(postgres_schema_column_data_type,param)
+   response=await create_where_clause(param,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    #read object
@@ -908,7 +883,7 @@ async def public_object_read(request:Request,table:str,order:str="id desc",limit
    return response
 
 #private/object read
-from function import read_where_clause
+from function import create_where_clause
 from function import read_redis_key
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -918,12 +893,12 @@ from fastapi_cache.decorator import cache
 async def private_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #start
    postgres_client=request.state.postgres_client
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check table
    if table not in ["users","post","atom","box"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #read where clause
    param=dict(request.query_params)
-   response=await read_where_clause(postgres_schema_column_data_type,param)
+   response=await create_where_clause(param,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    #read object
@@ -932,6 +907,27 @@ async def private_object_read(request:Request,table:str,order:str="id desc",limi
    output=await postgres_client.fetch_all(query=query,values=query_param)
    #final
    return {"status":1,"message":output}
+
+#private/search-location
+from function import create_where_clause
+from function import search_postgres_location
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@router.get("/private/search-location")
+async def private_location_search(request:Request,table:str,location:str,within:str,order:str="id desc",limit:int=100,page:int=1):
+   #start
+   postgres_client=request.state.postgres_client
+   postgres_column_data_type=request.state.postgres_column_data_type
+   #read where clause
+   param=dict(request.query_params)
+   response=await create_where_clause(param,postgres_column_data_type)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   where_string,where_value=response["message"][0],response["message"][1]
+   #logic
+   response=await search_postgres_location(postgres_client,table,location,within,order,limit,(page-1)*limit,where_string,where_value)
+   if response["status"]==0:return JSONResponse(status_code=400,content=response)
+   #final
+   return response
 
 #private/s3 upload file
 from config import aws_access_key_id,aws_secret_access_key
@@ -1100,7 +1096,7 @@ import csv,codecs
 async def admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile):
    #start
    postgres_client=request.state.postgres_client
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #set object list
    if file.content_type!="text/csv":return {"status":0,"message":"file extension must be csv"}
    file_csv=csv.DictReader(codecs.iterdecode(file.file,'utf-8'))
@@ -1108,8 +1104,8 @@ async def admin_csv_uploader(request:Request,mode:str,table:str,file:UploadFile)
    for row in file_csv:object_list.append(row)
    await file.close()
    #logic
-   if mode=="create":response=await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background",table,object_list)
-   if mode=="update":response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"background",table,object_list)
+   if mode=="create":response=await create_postgres_object(postgres_client,table,object_list,"background",postgres_column_data_type)
+   if mode=="update":response=await update_postgres_object(postgres_client,table,object_list,"background",postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
@@ -1168,28 +1164,28 @@ async def admin_object_create(request:Request,table:str):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #object set
    object=await request.json()
    object["created_by_id"]=user["id"]
    #object create
-   response=await create_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
+   response=await create_postgres_object(postgres_client,table,[object],None,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response
 
 #admin/object-read
-from function import read_where_clause
+from function import create_where_clause
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @router.get("/admin/object-read")
 async def admin_object_read(request:Request,table:str,order:str="id desc",limit:int=100,page:int=1):
    #start
    postgres_client=request.state.postgres_client
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #read where clause
    param=dict(request.query_params)
-   response=await read_where_clause(postgres_schema_column_data_type,param)
+   response=await create_where_clause(param,postgres_column_data_type)
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    where_string,where_value=response["message"][0],response["message"][1]
    #read object
@@ -1208,14 +1204,14 @@ async def admin_object_update(request:Request,table:str):
    #start
    postgres_client=request.state.postgres_client
    user=request.state.user
-   postgres_schema_column_data_type=request.state.postgres_schema_column_data_type
+   postgres_column_data_type=request.state.postgres_column_data_type
    #check table
    if table in ["spatial_ref_sys","otp","log"]:return JSONResponse(status_code=400,content={"status":0,"message":"table not allowed"})
    #object set
    object=await request.json()
    object["updated_by_id"]=user["id"]
    #object update
-   response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
+   response=await update_postgres_object(postgres_client,postgres_column_data_type,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final
    return response

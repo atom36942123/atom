@@ -147,7 +147,7 @@ import jwt,json,time
 from datetime import datetime,timedelta
 async def create_token(secret_key_jwt,user):
    user={"created_at_token":datetime.today().strftime('%Y-%m-%d'),"id":user["id"],"is_active":user["is_active"],"type":user["type"],"is_protected":user["is_protected"]}
-   expiry_time=time.mktime((datetime.now()+timedelta(days=100000000)).timetuple())
+   expiry_time=time.mktime((datetime.now()+timedelta(days=36500)).timetuple())
    payload={"exp":expiry_time,"data":json.dumps(user,default=str)}
    token=jwt.encode(payload,secret_key_jwt)
    return {"status":1,"message":token}
@@ -185,29 +185,6 @@ async def add_action_count(postgres_client,action,object_table,object_list):
           break
   return {"status":1,"message":object_list}
 
-#read where clause
-import hashlib
-from datetime import datetime
-async def read_where_clause(postgres_schema_column_data_type,param):
-   param={k:v for k,v in param.items() if k not in ["table","order","limit","page"]}
-   param={k:v for k,v in param.items() if k not in ["location","metadata"]}
-   param={k:v for k,v in param.items() if k in postgres_schema_column_data_type}
-   where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
-   where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
-   key_list=[f"({k} {where_key_operator[k]} :{k} or :{k} is null)" for k,v in where_key_value.items()]
-   key_joined=' and '.join(key_list)
-   where_string=f"where {key_joined}" if key_joined else ""
-   for k,v in where_key_value.items():
-      if k in postgres_schema_column_data_type:datatype=postgres_schema_column_data_type[k]
-      else:return {"status":0,"message":f"{k} column not in postgres_schema_column_data_type"}
-      if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-      if "int" in datatype:where_key_value[k]=int(v) if v else None
-      if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
-      if "time" in datatype:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["date"]:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-      if datatype in ["ARRAY"]:where_key_value[k]=v.split(",") if v else None
-   return {"status":1,"message":[where_string,where_key_value]}
-
 #search postgres location 
 async def search_postgres_location(postgres_client,table,location,within,order,limit,offset,where_string,where_value):
   long,lat=float(location.split(",")[0]),float(location.split(",")[1])
@@ -221,65 +198,90 @@ async def search_postgres_location(postgres_client,table,location,within,order,l
   output=await postgres_client.fetch_all(query=query,values=where_value)
   return {"status":1,"message":output}
 
-#create postgres object
-import hashlib,json
+#create where clause
+import hashlib
 from datetime import datetime
-from fastapi import BackgroundTasks
-async def create_postgres_object(postgres_client,postgres_schema_column_data_type,mode,table,object_list):
-   if not object_list:return {"status":0,"message":"object list empty"}
-   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
-   column_to_insert_list=[*object_list[0]]
-   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
-   for index,object in enumerate(object_list):
-      for k,v in object.items():
-         if k in postgres_schema_column_data_type:datatype=postgres_schema_column_data_type[k]
-         else:return {"status":0,"message":f"{k} column not in postgres_schema_column_data_type"}
-         if not v:object_list[index][k]=None
-         if k in ["password","google_id"]:object_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if "int" in datatype:object_list[index][k]=int(v) if v else None
-         if datatype in ["numeric"]:object_list[index][k]=round(float(v),3) if v else None
-         if "time" in datatype:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-         if datatype in ["date"]:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-         if datatype in ["jsonb"]:object_list[index][k]=json.dumps(v) if v else None
-         if datatype in ["ARRAY"]:object_list[index][k]=v.split(",") if v else None
-   background=BackgroundTasks()
-   output=f"{len(object_list)} object created"
-   if mode=="background":
-      if len(object_list)==1:background.add_task(await postgres_client.fetch_all(query=query,values=object_list[0]))
-      else:background.add_task(await postgres_client.execute_many(query=query,values=object_list))
-   if mode=="normal":
-      if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
-      else:output=await postgres_client.execute_many(query=query,values=object_list)
-   return {"status":1,"message":output}
+async def create_where_clause(param,postgres_column_data_type):
+   param={k:v for k,v in param.items() if k not in ["table","order","limit","page"]}
+   param={k:v for k,v in param.items() if k not in ["location","metadata"]}
+   param={k:v for k,v in param.items() if k in postgres_column_data_type}
+   where_key_value={k:v.split(',',1)[1] for k,v in param.items()}
+   where_key_operator={k:v.split(',',1)[0] for k,v in param.items()}
+   key_list=[f"({k} {where_key_operator[k]} :{k} or :{k} is null)" for k,v in where_key_value.items()]
+   key_joined=' and '.join(key_list)
+   where_string=f"where {key_joined}" if key_joined else ""
+   for k,v in where_key_value.items():
+      if k in postgres_column_data_type:datatype=postgres_column_data_type[k]
+      else:return {"status":0,"message":f"{k} column not in postgres_column_data_type"}
+      if k in ["password","google_id"]:where_key_value[k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+      if "int" in datatype:where_key_value[k]=int(v) if v else None
+      if datatype in ["numeric"]:where_key_value[k]=round(float(v),3) if v else None
+      if "time" in datatype:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["date"]:where_key_value[k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+      if datatype in ["ARRAY"]:where_key_value[k]=v.split(",") if v else None
+   return {"status":1,"message":[where_string,where_key_value]}
 
 #update postgres object
 import hashlib,json
 from datetime import datetime
 from fastapi import BackgroundTasks
-async def update_postgres_object(postgres_client,postgres_schema_column_data_type,mode,table,object_list):
+async def update_postgres_object(postgres_client,table,object_list,mode,postgres_column_data_type):
    if not object_list:return {"status":0,"message":"object list empty"}
    if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
    column_to_update_list=[*object_list[0]]
    column_to_update_list.remove("id")
    query=f"update {table} set {','.join([f'{item}=coalesce(:{item},{item})' for item in column_to_update_list])} where id=:id returning *;"
-   for index,object in enumerate(object_list):
-      for k,v in object.items():
-         if k in postgres_schema_column_data_type:datatype=postgres_schema_column_data_type[k]
-         else:return {"status":0,"message":f"{k} column not in postgres_schema_column_data_type"}
-         if not v:object_list[index][k]=None
-         if k in ["password","google_id"]:object_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
-         if "int" in datatype:object_list[index][k]=int(v) if v else None
-         if datatype in ["numeric"]:object_list[index][k]=round(float(v),3) if v else None
-         if "time" in datatype:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-         if datatype in ["date"]:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
-         if datatype in ["jsonb"]:object_list[index][k]=json.dumps(v) if v else None
-         if datatype in ["ARRAY"]:object_list[index][k]=v.split(",") if v else None
+   if postgres_column_data_type:
+      for index,object in enumerate(object_list):
+         for k,v in object.items():
+            if k in postgres_column_data_type:datatype=postgres_column_data_type[k]
+            else:return {"status":0,"message":f"{k} column not in postgres_column_data_type"}
+            if not v:object_list[index][k]=None
+            if k in ["password","google_id"]:object_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+            if "int" in datatype:object_list[index][k]=int(v) if v else None
+            if datatype in ["numeric"]:object_list[index][k]=round(float(v),3) if v else None
+            if "time" in datatype:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+            if datatype in ["date"]:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+            if datatype in ["jsonb"]:object_list[index][k]=json.dumps(v) if v else None
+            if datatype in ["ARRAY"]:object_list[index][k]=v.split(",") if v else None
    background=BackgroundTasks()
    output=f"{len(object_list)} object updated"
    if mode=="background":
       if len(object_list)==1:background.add_task(await postgres_client.fetch_all(query=query,values=object_list[0]))
       else:background.add_task(await postgres_client.execute_many(query=query,values=object_list))
    else:
+      if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
+      else:output=await postgres_client.execute_many(query=query,values=object_list)
+   return {"status":1,"message":output}
+
+#create postgres object
+import hashlib,json
+from datetime import datetime
+from fastapi import BackgroundTasks
+async def create_postgres_object(postgres_client,table,object_list,mode,postgres_column_data_type):
+   if not object_list:return {"status":0,"message":"object list empty"}
+   if table in ["spatial_ref_sys"]:return {"status":0,"message":"table not allowed"}
+   column_to_insert_list=[*object_list[0]]
+   query=f"insert into {table} ({','.join(column_to_insert_list)}) values ({','.join([':'+item for item in column_to_insert_list])}) returning *;"
+   if postgres_column_data_type:
+      for index,object in enumerate(object_list):
+         for k,v in object.items():
+            if k in postgres_column_data_type:datatype=postgres_column_data_type[k]
+            else:return {"status":0,"message":f"{k} column not in postgres_column_data_type"}
+            if not v:object_list[index][k]=None
+            if k in ["password","google_id"]:object_list[index][k]=hashlib.sha256(v.encode()).hexdigest() if v else None
+            if "int" in datatype:object_list[index][k]=int(v) if v else None
+            if datatype in ["numeric"]:object_list[index][k]=round(float(v),3) if v else None
+            if "time" in datatype:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+            if datatype in ["date"]:object_list[index][k]=datetime.strptime(v,'%Y-%m-%dT%H:%M:%S') if v else None
+            if datatype in ["jsonb"]:object_list[index][k]=json.dumps(v) if v else None
+            if datatype in ["ARRAY"]:object_list[index][k]=v.split(",") if v else None
+   background=BackgroundTasks()
+   output=f"{len(object_list)} object created"
+   if mode=="background":
+      if len(object_list)==1:background.add_task(await postgres_client.fetch_all(query=query,values=object_list[0]))
+      else:background.add_task(await postgres_client.execute_many(query=query,values=object_list))
+   if not mode:
       if len(object_list)==1:output=await postgres_client.fetch_all(query=query,values=object_list[0])
       else:output=await postgres_client.execute_many(query=query,values=object_list)
    return {"status":1,"message":output}

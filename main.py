@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 from fastapi_limiter import FastAPILimiter
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-postgres_schema_column_data_type=None
+postgres_column_data_type=None
 @asynccontextmanager
 async def lifespan(app:FastAPI):
    #postgres connect
@@ -39,10 +39,10 @@ async def lifespan(app:FastAPI):
    FastAPICache.init(RedisBackend(redis_client))
    print("redis cache connected")
    #set postgres schema column data type
-   global postgres_schema_column_data_type
+   global postgres_column_data_type
    query="select column_name,count(*),max(data_type) as data_type,max(udt_name) as udt_name from information_schema.columns where table_schema='public' group by  column_name order by count desc;"
    output=await postgres_client.fetch_all(query=query,values={})
-   postgres_schema_column_data_type={item["column_name"]:item["data_type"] for item in output}
+   postgres_column_data_type={item["column_name"]:item["data_type"] for item in output}
    print("postgres column data type set") 
    yield
    #postgres disconnect
@@ -65,11 +65,12 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 
 #middleware
-from config import secret_key_root,secret_key_jwt
+from config import secret_key_root
+from config import secret_key_jwt
 from function import create_postgres_object
 from fastapi import Request
 from fastapi.responses import JSONResponse
-import traceback,time,jwt,json
+import time,jwt,json,traceback
 object_list_log=[]
 @app.middleware("http")
 async def middleware(request:Request,api_function):
@@ -78,7 +79,6 @@ async def middleware(request:Request,api_function):
    token=request.headers.get("Authorization").split(" ",1)[1] if request.headers.get("Authorization") else None
    api=request.url.path
    gate=api.split("/")[1]
-   global object_list_log
    try:
       #auth check
       if gate not in ["","docs","openapi.json","root","auth","my","public","private","admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"gate not allowed"}) 
@@ -97,33 +97,23 @@ async def middleware(request:Request,api_function):
       request.state.app=app
       request.state.user=user
       request.state.postgres_client=postgres_client
-      request.state.postgres_schema_column_data_type=postgres_schema_column_data_type
+      request.state.postgres_column_data_type=postgres_column_data_type
       #api response
       response=await api_function(request)
       end=time.time()
       response_time_ms=(end-start)*1000
+      response_status_code=response.status_code
       #log create
-      if request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
-         object={"created_by_id":user["id"] if user else None,"api":api,"status_code":response.status_code,"response_time_ms":response_time_ms,"description":None}
+      if True and request.url.path not in ["/"] and request.method in ["POST","GET","PUT","DELETE"]:
+         global object_list_log
+         object={"created_by_id":user["id"] if user else None,"api":api,"status_code":response_status_code,"response_time_ms":response_time_ms}
          object_list_log.append(object)
          if len(object_list_log)>100:
-            await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
+            await create_postgres_object(postgres_client,"log",object_list_log,"background",None)
             object_list_log=[]
    except Exception as e:
-      #error modify
-      error="".join(e.args)
-      if "constraint_unique_likes" in error:error="already liked"
-      if "constraint_unique_users" in error:error="user already exist"
-      if "enough segments" in error:error="token issue"
-      #log create
-      object={"created_by_id":user["id"] if user else None,"api":api,"status_code":400,"response_time_ms":None,"description":error}
-      object_list_log.append(object)
-      if len(object_list_log)>100:
-         await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
-         object_list_log=[]
-      #final
       print(traceback.format_exc())
-      return JSONResponse(status_code=400,content={"status":0,"message":error})
+      return JSONResponse(status_code=400,content={"status":0,"message":"".join(e.args)})
    #final
    return response
 
