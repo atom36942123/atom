@@ -10,7 +10,7 @@ async def root(request:Request):
   return response
 
 #root/create-postgres-schema
-from pschema import postgres_schema_default
+from config import postgres_schema_default
 from function import create_postgres_schema
 from fastapi import Request
 from fastapi.responses import JSONResponse
