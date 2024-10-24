@@ -575,7 +575,7 @@ async def my_object_update(request:Request,table:str):
       object=output[0] if output else None
       if not object:return JSONResponse(status_code=400,content={"status":0,"message":"no object"})
       if object["created_by_id"]!=user["id"]:return JSONResponse(status_code=400,content={"status":0,"message":"ownership issue"})
-   #logic
+   #update object
    response=await update_postgres_object(postgres_client,postgres_schema_column_data_type,"normal",table,[object])
    if response["status"]==0:return JSONResponse(status_code=400,content=response)
    #final

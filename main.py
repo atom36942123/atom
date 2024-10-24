@@ -82,17 +82,10 @@ async def middleware(request:Request,api_function):
    try:
       #auth check
       if gate not in ["","docs","openapi.json","root","auth","my","public","private","admin"]:return JSONResponse(status_code=400,content={"status":0,"message":"gate not allowed"}) 
-      if gate=="root":
-         if not token:return JSONResponse(status_code=400,content={"status":0,"message":"token missing"})
-         if token!=secret_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token mismatch"})
-      if gate=="my":
-         if not token:return JSONResponse(status_code=400,content={"status":0,"message":"token missing"})
-         user=json.loads(jwt.decode(token,secret_key_jwt,algorithms="HS256")["data"])
-      if gate=="private":
-         if not token:return JSONResponse(status_code=400,content={"status":0,"message":"token missing"})
-         user=json.loads(jwt.decode(token,secret_key_jwt,algorithms="HS256")["data"])
+      if gate=="root" and token!=secret_key_root:return JSONResponse(status_code=400,content={"status":0,"message":"token mismatch"})
+      if gate=="my":user=json.loads(jwt.decode(token,secret_key_jwt,algorithms="HS256")["data"])
+      if gate=="private":user=json.loads(jwt.decode(token,secret_key_jwt,algorithms="HS256")["data"])
       if gate=="admin":
-         if not token:return JSONResponse(status_code=400,content={"status":0,"message":"token missing"})
          user=json.loads(jwt.decode(token,secret_key_jwt,algorithms="HS256")["data"])
          output=await postgres_client.fetch_all(query="select * from users where id=:id;",values={"id":user["id"]})
          user=output[0] if output else None
@@ -117,7 +110,7 @@ async def middleware(request:Request,api_function):
             await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
             object_list_log=[]
    except Exception as e:
-      print(traceback.format_exc())
+      #error modify
       error="".join(e.args)
       if "constraint_unique_likes" in error:error="already liked"
       if "constraint_unique_users" in error:error="user already exist"
@@ -129,11 +122,12 @@ async def middleware(request:Request,api_function):
          await create_postgres_object(postgres_client,postgres_schema_column_data_type,"background","log",object_list_log)
          object_list_log=[]
       #final
+      print(traceback.format_exc())
       return JSONResponse(status_code=400,content={"status":0,"message":error})
    #final
    return response
 
-#router
+#router(api_<filename>)
 import os,glob
 current_directory_path=os.path.dirname(os.path.realpath(__file__))
 filepath_all_list=[item for item in glob.glob(f"{current_directory_path}/*.py")]
